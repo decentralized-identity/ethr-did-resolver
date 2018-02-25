@@ -23,6 +23,16 @@ contract('EthereumDIDRegistry', function(accounts) {
       })
     })
   }
+
+  function getLogs (filter) {
+    return new Promise((resolve, reject) => {
+      filter.get((error, events) => {
+        if (error) return reject(error)
+        resolve(events)
+      })
+    })
+  }
+
   describe('identityOwner()', () => {
     describe('default owner', () => {
       it('should return the identity address itself', async () => {
@@ -196,6 +206,28 @@ contract('EthereumDIDRegistry', function(accounts) {
           }
         })
       })
+    })
+  })
+
+  describe('Events', () => {
+    it('can create list', async () => {
+      const history = []
+      previousChange = await didReg.changed(identity)
+      while (previousChange) {
+        const filter = await didReg.allEvents({topics: [identity], fromBlock: previousChange, toBlock: previousChange})
+        const events = await getLogs(filter)
+        previousChange = undefined
+        for (let event of events) {
+          history.unshift(event.event)
+          previousChange = event.args.previousChange
+        }
+      }
+      assert.deepEqual(history, [
+        'DIDOwnerChanged',
+        'DIDOwnerChanged',
+        'DIDDelegateChanged',
+        'DIDAttributeChanged'
+      ])
     })
   })
 })
