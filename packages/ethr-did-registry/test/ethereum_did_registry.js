@@ -3,15 +3,26 @@ var EthereumDIDRegistry = artifacts.require("./EthereumDIDRegistry.sol");
 contract('EthereumDIDRegistry', function(accounts) {
   let didReg
   const identity = accounts[0]
+  let owner
+  let previousChange
   const identity2 = accounts[1]
   const delegate = accounts[2]
   const delegate2 = accounts[3]
-  const badboy = accounts[4]
+  const delegate3 = accounts[4]
+  const badboy = accounts[9]
   // console.log({identity,identity2, delegate, delegate2, badboy})
   before(async () => {
     didReg = await EthereumDIDRegistry.deployed()
   })
 
+  function getBlock (blockNumber) {
+    return new Promise((resolve, reject) => {
+      web3.eth.getBlock(blockNumber, (error, block) => {
+        if (error) return reject(error)
+        resolve(block)
+      })
+    })
+  }
   describe('identityOwner()', () => {
     describe('default owner', () => {
       it('should return the identity address itself', async () => {
@@ -39,7 +50,7 @@ contract('EthereumDIDRegistry', function(accounts) {
           tx = await didReg.changeOwner(identity, delegate, {from: identity})
         })
         it('should change owner mapping', async () => {
-          const owner = await didReg.owners(identity)
+          owner = await didReg.owners(identity)
           assert.equal(owner, delegate)
         })
         it('should sets changed to transaction block', async () => {
@@ -50,22 +61,21 @@ contract('EthereumDIDRegistry', function(accounts) {
           const event = tx.logs[0]
           assert.equal(event.event, 'DIDKeyChanged')
           assert.equal(event.args.identity, identity)
-          assert.equal(event.args.keyType, 'owner')
+          assert.equal(event.args.keyType, '0x6f776e6572000000000000000000000000000000000000000000000000000000')
           assert.equal(event.args.delegate, delegate)
-          assert.equal(event.args.validTo, 0)
+          assert.equal(event.args.validTo.toString(16), 'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff')
           assert.equal(event.args.previousChange.toNumber(), 0)
         })
       })
 
       describe('as new owner', () => {
-        let tx
-        let previousChange
+        let tx        
         before(async () => {
           previousChange = await didReg.changed(identity)
           tx = await didReg.changeOwner(identity, delegate2, {from: delegate})
         })
         it('should change owner mapping', async () => {
-          const owner = await didReg.owners(identity)
+          owner = await didReg.owners(identity)
           assert.equal(owner, delegate2)
         })
         it('should sets changed to transaction block', async () => {
@@ -76,9 +86,9 @@ contract('EthereumDIDRegistry', function(accounts) {
           const event = tx.logs[0]
           assert.equal(event.event, 'DIDKeyChanged')
           assert.equal(event.args.identity, identity)
-          assert.equal(event.args.keyType, 'owner')
+          assert.equal(event.args.keyType, '0x6f776e6572000000000000000000000000000000000000000000000000000000')
           assert.equal(event.args.delegate, delegate2)
-          assert.equal(event.args.validTo, 0)
+          assert.equal(event.args.validTo.toString(16), 'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff')
           assert.equal(event.args.previousChange.toNumber(), previousChange.toNumber())
         })
       })
@@ -97,8 +107,6 @@ contract('EthereumDIDRegistry', function(accounts) {
       describe('as attacker', () => {
         it('should fail', async () => {
           try {
-            const owner = await didReg.identityOwner(identity)
-            assert.notEqual(owner, badboy)
             const tx = await didReg.changeOwner(identity, badboy, {from: badboy})
             assert.equal(tx, undefined, 'this should not happen')
           } catch (error) {
@@ -107,6 +115,58 @@ contract('EthereumDIDRegistry', function(accounts) {
         })
       })
     })
+  })
+
+  describe('addDelegate()', () => {
+    describe('using msg.sender', () => {
+      it('validDelegate should be false', async () => {
+        const valid = await didReg.validDelegate(identity, 'attestor', delegate3)
+        assert.equal(valid, false, 'not yet assigned delegate correctly')
+      })
+      describe('as current owner', () => {
+        let tx
+        let block
+        before(async () => {
+          previousChange = await didReg.changed(identity)
+          tx = await didReg.addDelegate(identity, 'attestor', delegate3, 86400, {from: owner})
+          block = await getBlock(tx.receipt.blockNumber)
+        })
+        it('should change delegates mapping', async () => {
+          const validity = await didReg.delegates(identity, 'attestor', delegate3)
+          assert.equal(validity, block.timestamp + 86400)
+        })
+        it('validDelegate should be true', async () => {
+          const valid = await didReg.validDelegate(identity, 'attestor', delegate3)
+          assert.equal(valid, true, 'assigned delegate correctly')
+        })
+        it('should sets changed to transaction block', async () => {
+          const latest = await didReg.changed(identity)
+          assert.equal(latest, tx.receipt.blockNumber)
+        })
+        it('should create DIDKeyChanged event', () => {
+          const event = tx.logs[0]
+          assert.equal(event.event, 'DIDKeyChanged')
+          assert.equal(event.args.identity, identity)
+          assert.equal(event.args.keyType, '0x6174746573746f72000000000000000000000000000000000000000000000000')
+          assert.equal(event.args.delegate, delegate3)
+          assert.equal(event.args.validTo.toNumber(), block.timestamp + 86400)
+          assert.equal(event.args.previousChange.toNumber(), previousChange.toNumber())
+        })
+      })
+
+      describe('as attacker', () => {
+        it('should fail', async () => {
+          try {
+            const tx = await didReg.addDelegate(identity, 'attestor', badboy, 86400, {from: badboy})
+            assert.equal(tx, undefined, 'this should not happen')
+          } catch (error) {
+            assert.equal(error.message, 'VM Exception while processing transaction: revert')
+          }
+        })
+      })
+
+    })
+       
   })
 
 });
