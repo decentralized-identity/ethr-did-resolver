@@ -11,10 +11,18 @@ contract EthereumDIDRegistry {
     _;
   }
 
-  event DIDKeyChanged(
+  event DIDDelegateChanged(
     address indexed identity,
     bytes32 keyType,
     address delegate,
+    uint validTo,
+    uint previousChange
+  );
+
+  event DIDAttributeChanged(
+    address indexed identity,
+    string name,
+    bytes value,
     uint validTo,
     uint previousChange
   );
@@ -40,7 +48,7 @@ contract EthereumDIDRegistry {
 
   function changeOwner(address identity, address actor, address newOwner) internal onlyOwner(identity, actor) {
     owners[identity] = newOwner;
-    DIDKeyChanged(identity, "owner", newOwner, 2**256 - 1, changed[identity]);
+    DIDDelegateChanged(identity, "owner", newOwner, 2**256 - 1, changed[identity]);
     changed[identity] = block.number;
   }
 
@@ -51,12 +59,21 @@ contract EthereumDIDRegistry {
   function addDelegate(address identity, address actor, bytes32 delegateType, address delegate, uint validity ) internal onlyOwner(identity, actor) {
     require(bytes32("owner") != delegateType);
     delegates[identity][delegateType][delegate] = block.timestamp + validity;
-    DIDKeyChanged(identity, delegateType, delegate, block.timestamp + validity, changed[identity]);
+    DIDDelegateChanged(identity, delegateType, delegate, block.timestamp + validity, changed[identity]);
     changed[identity] = block.number;
   }
 
   function addDelegate(address identity, bytes32 delegateType, address delegate, uint validity) public {
     addDelegate(identity, msg.sender, delegateType, delegate, validity);
+  }
+
+  function setAttribute(address identity, address actor, string name, bytes value, uint validity ) internal onlyOwner(identity, actor) {
+    DIDAttributeChanged(identity, name, value, block.timestamp + validity, changed[identity]);
+    changed[identity] = block.number;
+  }
+
+  function setAttribute(address identity, string name, bytes value, uint validity) public {
+    setAttribute(identity, msg.sender, name, value, validity);
   }
 
 }

@@ -57,9 +57,9 @@ contract('EthereumDIDRegistry', function(accounts) {
           const latest = await didReg.changed(identity)
           assert.equal(latest, tx.receipt.blockNumber)
         })
-        it('should create DIDKeyChanged event', () => {
+        it('should create DIDDelegateChanged event', () => {
           const event = tx.logs[0]
-          assert.equal(event.event, 'DIDKeyChanged')
+          assert.equal(event.event, 'DIDDelegateChanged')
           assert.equal(event.args.identity, identity)
           assert.equal(event.args.keyType, '0x6f776e6572000000000000000000000000000000000000000000000000000000')
           assert.equal(event.args.delegate, delegate)
@@ -82,9 +82,9 @@ contract('EthereumDIDRegistry', function(accounts) {
           const latest = await didReg.changed(identity)
           assert.equal(latest, tx.receipt.blockNumber)
         })
-        it('should create DIDKeyChanged event', () => {
+        it('should create DIDDelegateChanged event', () => {
           const event = tx.logs[0]
-          assert.equal(event.event, 'DIDKeyChanged')
+          assert.equal(event.event, 'DIDDelegateChanged')
           assert.equal(event.args.identity, identity)
           assert.equal(event.args.keyType, '0x6f776e6572000000000000000000000000000000000000000000000000000000')
           assert.equal(event.args.delegate, delegate2)
@@ -143,9 +143,9 @@ contract('EthereumDIDRegistry', function(accounts) {
           const latest = await didReg.changed(identity)
           assert.equal(latest, tx.receipt.blockNumber)
         })
-        it('should create DIDKeyChanged event', () => {
+        it('should create DIDDelegateChanged event', () => {
           const event = tx.logs[0]
-          assert.equal(event.event, 'DIDKeyChanged')
+          assert.equal(event.event, 'DIDDelegateChanged')
           assert.equal(event.args.identity, identity)
           assert.equal(event.args.keyType, '0x6174746573746f72000000000000000000000000000000000000000000000000')
           assert.equal(event.args.delegate, delegate3)
@@ -164,9 +164,44 @@ contract('EthereumDIDRegistry', function(accounts) {
           }
         })
       })
-
     })
-       
   })
 
-});
+  describe('setAttribute()', () => {
+    describe('using msg.sender', () => {
+      describe('as current owner', () => {
+        let tx
+        let block
+        before(async () => {
+          previousChange = await didReg.changed(identity)
+          tx = await didReg.setAttribute(identity, 'encryptionKey', 'mykey', 86400, {from: owner})
+          block = await getBlock(tx.receipt.blockNumber)
+        })
+        it('should sets changed to transaction block', async () => {
+          const latest = await didReg.changed(identity)
+          assert.equal(latest, tx.receipt.blockNumber)
+        })
+        it('should create DIDAttributeChanged event', () => {
+          const event = tx.logs[0]
+          assert.equal(event.event, 'DIDAttributeChanged')
+          assert.equal(event.args.identity, identity)
+          assert.equal(event.args.name, 'encryptionKey')
+          assert.equal(event.args.value, '0x6d796b6579')
+          assert.equal(event.args.validTo.toNumber(), block.timestamp + 86400)
+          assert.equal(event.args.previousChange.toNumber(), previousChange.toNumber())
+        })
+      })
+
+      describe('as attacker', () => {
+        it('should fail', async () => {
+          try {
+            const tx = await didReg.setAttribute(identity, 'encryptionKey', 'mykey', 86400, {from: badboy})
+            assert.equal(tx, undefined, 'this should not happen')
+          } catch (error) {
+            assert.equal(error.message, 'VM Exception while processing transaction: revert')
+          }
+        })
+      })
+    })
+  })
+})
