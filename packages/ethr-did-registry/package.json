@@ -1,0 +1,34 @@
+{
+  "name": "ethereum-did-registry",
+  "version": "0.0.1",
+  "description": "A repository storing keys and other data about Decentralized Identifiers (DIDs)",
+  "main": "build/contracts/EthereumDIDRegistry.json",
+  "directories": {
+    "test": "test"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "ganache-cli": "^6.0.3",
+    "solhint": "^1.1.10",
+    "truffle": "^4.0.6",
+    "truffle-hdwallet-provider": "^0.0.3"
+  },
+  "scripts": {
+    "test": "./node_modules/.bin/truffle test",
+    "lint": "./node_modules/.bin/solhint contracts/EthereumDIDRegistry.sol",
+    "_deploy": "./node_modules/.bin/truffle migrate --network ",
+    "deploy-mainnet": "npm run _deploy mainnet",
+    "deploy-infuranet": "npm run _deploy infuranet",
+    "deploy-ropsten": "npm run _deploy ropsten",
+    "deploy-rinkeby": "npm run _deploy rinkeby",
+    "deploy-kovan": "npm run _deploy kovan",
+    "deploy-local": "npm run _deploy local",
+    "deploy-test": "npm run _deploy test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/uport-project/ethereum-did-registry"
+  },
+  "author": "Pelle Braendgaard <pelle.braendgaard@consensys.net>",
+  "license": "Apache-2.0"
+}
