@@ -59,10 +59,9 @@ contract('EthereumDIDRegistry', function(accounts) {
         })
         it('should create DIDDelegateChanged event', () => {
           const event = tx.logs[0]
-          assert.equal(event.event, 'DIDDelegateChanged')
+          assert.equal(event.event, 'DIDOwnerChanged')
           assert.equal(event.args.identity, identity)
-          assert.equal(event.args.keyType, '0x6f776e6572000000000000000000000000000000000000000000000000000000')
-          assert.equal(event.args.delegate, delegate)
+          assert.equal(event.args.owner, delegate)
           assert.equal(event.args.validTo.toString(16), 'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff')
           assert.equal(event.args.previousChange.toNumber(), 0)
         })
@@ -84,10 +83,9 @@ contract('EthereumDIDRegistry', function(accounts) {
         })
         it('should create DIDDelegateChanged event', () => {
           const event = tx.logs[0]
-          assert.equal(event.event, 'DIDDelegateChanged')
+          assert.equal(event.event, 'DIDOwnerChanged')
           assert.equal(event.args.identity, identity)
-          assert.equal(event.args.keyType, '0x6f776e6572000000000000000000000000000000000000000000000000000000')
-          assert.equal(event.args.delegate, delegate2)
+          assert.equal(event.args.owner, delegate2)
           assert.equal(event.args.validTo.toString(16), 'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff')
           assert.equal(event.args.previousChange.toNumber(), previousChange.toNumber())
         })
@@ -131,10 +129,6 @@ contract('EthereumDIDRegistry', function(accounts) {
           tx = await didReg.addDelegate(identity, 'attestor', delegate3, 86400, {from: owner})
           block = await getBlock(tx.receipt.blockNumber)
         })
-        it('should change delegates mapping', async () => {
-          const validity = await didReg.delegates(identity, 'attestor', delegate3)
-          assert.equal(validity, block.timestamp + 86400)
-        })
         it('validDelegate should be true', async () => {
           const valid = await didReg.validDelegate(identity, 'attestor', delegate3)
           assert.equal(valid, true, 'assigned delegate correctly')
@@ -147,7 +141,7 @@ contract('EthereumDIDRegistry', function(accounts) {
           const event = tx.logs[0]
           assert.equal(event.event, 'DIDDelegateChanged')
           assert.equal(event.args.identity, identity)
-          assert.equal(event.args.keyType, '0x6174746573746f72000000000000000000000000000000000000000000000000')
+          assert.equal(event.args.delegateType, 'attestor')
           assert.equal(event.args.delegate, delegate3)
           assert.equal(event.args.validTo.toNumber(), block.timestamp + 86400)
           assert.equal(event.args.previousChange.toNumber(), previousChange.toNumber())
