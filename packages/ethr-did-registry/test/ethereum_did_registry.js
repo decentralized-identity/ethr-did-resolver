@@ -1,4 +1,7 @@
+var ethutil =  require('ethereumjs-util')
+var sha3 =  require('js-sha3').keccak_256
 var EthereumDIDRegistry = artifacts.require("./EthereumDIDRegistry.sol");
+var BN = require('bn.js')
 
 contract('EthereumDIDRegistry', function(accounts) {
   let didReg
@@ -10,11 +13,17 @@ contract('EthereumDIDRegistry', function(accounts) {
   const delegate2 = accounts[3]
   const delegate3 = accounts[4]
   const badboy = accounts[9]
+
+  const privateKey = Buffer.from('a285ab66393c5fdda46d6fbad9e27fafd438254ab72ad5acb681a0e9f20f5d7b', 'hex')
+  const signerAddress = '0x2036c6cd85692f0fb2c26e6c6b2eced9e4478dfd'
+
+  const privateKey2 = Buffer.from('a285ab66393c5fdda46d6fbad9e27fafd438254ab72ad5acb681a0e9f20f5d7a', 'hex')
+  const signerAddress2 = '0xea91e58e9fa466786726f0a947e8583c7c5b3185'
+ 
   // console.log({identity,identity2, delegate, delegate2, badboy})
   before(async () => {
     didReg = await EthereumDIDRegistry.deployed()
   })
-
   function getBlock (blockNumber) {
     return new Promise((resolve, reject) => {
       web3.eth.getBlock(blockNumber, (error, block) => {
@@ -31,6 +40,37 @@ contract('EthereumDIDRegistry', function(accounts) {
         resolve(events)
       })
     })
+  }
+
+  function stripHexPrefix (str) {
+    if (str.startsWith('0x')) {
+      return str.slice(2)
+    }
+    return str
+  }
+  
+  function leftPad (data, size = 64) {
+    if (data.length === size) return data
+    return '0'.repeat(size - data.length) + data
+  }
+
+  async function signData (identity, key, data) {
+    const nonce = await didReg.nonce(identity)
+    const paddedNonce = leftPad(Buffer.from([nonce], 64).toString('hex'))
+    const dataToSign = '1900' + stripHexPrefix(didReg.address) + paddedNonce + stripHexPrefix(identity) + data
+    const hash = Buffer.from(sha3.buffer(Buffer.from(dataToSign, 'hex')))
+    const signature = ethutil.ecsign(hash, key)
+    const publicKey = ethutil.ecrecover(
+      hash,
+      signature.v,
+      signature.r, 
+      signature.s
+    )
+    return {
+      r: '0x'+signature.r.toString('hex'),
+      s: '0x'+signature.s.toString('hex'),
+      v: signature.v
+    }
   }
 
   describe('identityOwner()', () => {
@@ -123,6 +163,32 @@ contract('EthereumDIDRegistry', function(accounts) {
         })
       })
     })
+    describe('using signature', () => {
+      describe('as current owner', () => {
+        let tx
+        before(async () => {
+          const sig = await signData(signerAddress, privateKey, Buffer.from('changeOwner').toString('hex') + stripHexPrefix(signerAddress2))
+          tx = await didReg.changeOwnerSigned(signerAddress, sig.v, sig.r, sig.s, signerAddress2, {from: badboy})
+        })
+        it('should change owner mapping', async () => {
+          const owner2 = await didReg.owners(signerAddress)
+          assert.equal(owner2, signerAddress2)
+        })
+        it('should sets changed to transaction block', async () => {
+          const latest = await didReg.changed(signerAddress)
+          assert.equal(latest, tx.receipt.blockNumber)
+        })
+        it('should create DIDDelegateChanged event', () => {
+          const event = tx.logs[0]
+          // console.log(event.args)
+          assert.equal(event.event, 'DIDOwnerChanged')
+          assert.equal(event.args.identity, signerAddress)
+          assert.equal(event.args.owner, signerAddress2)
+          assert.equal(event.args.validTo.toString(16), 'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff')
+          assert.equal(event.args.previousChange.toNumber(), 0)
+        })
+      })
+    })
   })
 
   describe('addDelegate()', () => {
@@ -136,7 +202,7 @@ contract('EthereumDIDRegistry', function(accounts) {
         let block
         before(async () => {
           previousChange = await didReg.changed(identity)
-          tx = await didReg.addDelegate(identity, 'attestor', delegate3, 86400, {from: owner})
+          tx = await didReg.addDelegate(identity, 'attestor', delegate3, 86400, {from: delegate2})
           block = await getBlock(tx.receipt.blockNumber)
         })
         it('validDelegate should be true', async () => {
@@ -166,6 +232,34 @@ contract('EthereumDIDRegistry', function(accounts) {
           } catch (error) {
             assert.equal(error.message, 'VM Exception while processing transaction: revert')
           }
+        })
+      })
+    })
+    describe('using signature', () => {
+      describe('as current owner', () => {
+        let tx
+        before(async () => {
+          previousChange = await didReg.changed(signerAddress)
+          const sig = await signData(signerAddress, privateKey2, Buffer.from('addDelegateattestor').toString('hex') + stripHexPrefix(delegate) + leftPad(new BN(86400).toString(16)))
+          tx = await didReg.addDelegateSigned(signerAddress, sig.v, sig.r, sig.s, 'attestor', delegate, 86400, {from: badboy})
+          block = await getBlock(tx.receipt.blockNumber)
+        })
+        it('validDelegate should be true', async () => {
+          const valid = await didReg.validDelegate(signerAddress, 'attestor', delegate)
+          assert.equal(valid, true, 'assigned delegate correctly')
+        })
+        it('should sets changed to transaction block', async () => {
+          const latest = await didReg.changed(signerAddress)
+          assert.equal(latest, tx.receipt.blockNumber)
+        })
+        it('should create DIDDelegateChanged event', () => {
+          const event = tx.logs[0]
+          assert.equal(event.event, 'DIDDelegateChanged')
+          assert.equal(event.args.identity, signerAddress)
+          assert.equal(event.args.delegateType, 'attestor')
+          assert.equal(event.args.delegate, delegate)
+          assert.equal(event.args.validTo.toNumber(), block.timestamp + 86400)
+          assert.equal(event.args.previousChange.toNumber(), previousChange.toNumber())
         })
       })
     })
@@ -207,8 +301,33 @@ contract('EthereumDIDRegistry', function(accounts) {
         })
       })
     })
-  })
 
+    describe('using signature', () => {
+      describe('as current owner', () => {
+        let tx
+        before(async () => {
+          previousChange = await didReg.changed(signerAddress)
+          const sig = await signData(signerAddress, privateKey2, Buffer.from('setAttributeencryptionKeymykey').toString('hex') + leftPad(new BN(86400).toString(16)))
+          tx = await didReg.setAttributeSigned(signerAddress, sig.v, sig.r, sig.s, 'encryptionKey', 'mykey', 86400, {from: badboy})
+          block = await getBlock(tx.receipt.blockNumber)
+        })
+        it('should sets changed to transaction block', async () => {
+          const latest = await didReg.changed(signerAddress)
+          assert.equal(latest, tx.receipt.blockNumber)
+        })
+        it('should create DIDDelegateChanged event', () => {
+          const event = tx.logs[0]
+          assert.equal(event.event, 'DIDAttributeChanged')
+          assert.equal(event.args.identity, signerAddress)
+          assert.equal(event.args.name, 'encryptionKey')
+          assert.equal(event.args.value, '0x6d796b6579')
+          assert.equal(event.args.validTo.toNumber(), block.timestamp + 86400)
+          assert.equal(event.args.previousChange.toNumber(), previousChange.toNumber())
+        })
+      })
+    })
+
+  })
   describe('Events', () => {
     it('can create list', async () => {
       const history = []

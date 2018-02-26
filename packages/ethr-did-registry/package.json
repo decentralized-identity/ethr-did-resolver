@@ -6,7 +6,10 @@
   "directories": {
     "test": "test"
   },
-  "dependencies": {},
+  "dependencies": {
+    "ethereumjs-util": "^5.1.4",
+    "js-sha3": "^0.7.0"
+  },
   "devDependencies": {
     "ganache-cli": "^6.0.3",
     "solhint": "^1.1.10",
