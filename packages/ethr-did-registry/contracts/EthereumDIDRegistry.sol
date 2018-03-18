@@ -76,7 +76,7 @@ contract EthereumDIDRegistry {
   }
 
   function changeOwnerSigned(address identity, uint8 sigV, bytes32 sigR, bytes32 sigS, address newOwner) public {
-    bytes32 hash = keccak256(byte(0x19), byte(0), this, nonce[identity], identity, "changeOwner", newOwner); 
+    bytes32 hash = keccak256(byte(0x19), byte(0), this, nonce[identityOwner(identity)], identity, "changeOwner", newOwner); 
     changeOwner(identity, checkSignature(identity, sigV, sigR, sigS, hash), newOwner);
   }
 
@@ -91,7 +91,7 @@ contract EthereumDIDRegistry {
   }
 
   function addDelegateSigned(address identity, uint8 sigV, bytes32 sigR, bytes32 sigS, string delegateType, address delegate, uint validity) public {
-    bytes32 hash = keccak256(byte(0x19), byte(0), this, nonce[identity], identity, "addDelegate", delegateType, delegate, validity); 
+    bytes32 hash = keccak256(byte(0x19), byte(0), this, nonce[identityOwner(identity)], identity, "addDelegate", delegateType, delegate, validity); 
     addDelegate(identity, checkSignature(identity, sigV, sigR, sigS, hash), delegateType, delegate, validity);
   }
 
