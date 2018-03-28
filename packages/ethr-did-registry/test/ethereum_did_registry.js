@@ -54,8 +54,8 @@ contract('EthereumDIDRegistry', function(accounts) {
     return '0'.repeat(size - data.length) + data
   }
 
-  async function signData (identity, key, data) {
-    const nonce = await didReg.nonce(identity)
+  async function signData (identity, signer, key, data) {
+    const nonce = await didReg.nonce(signer)
     const paddedNonce = leftPad(Buffer.from([nonce], 64).toString('hex'))
     const dataToSign = '1900' + stripHexPrefix(didReg.address) + paddedNonce + stripHexPrefix(identity) + data
     const hash = Buffer.from(sha3.buffer(Buffer.from(dataToSign, 'hex')))
@@ -167,7 +167,7 @@ contract('EthereumDIDRegistry', function(accounts) {
       describe('as current owner', () => {
         let tx
         before(async () => {
-          const sig = await signData(signerAddress, privateKey, Buffer.from('changeOwner').toString('hex') + stripHexPrefix(signerAddress2))
+          const sig = await signData(signerAddress, signerAddress, privateKey, Buffer.from('changeOwner').toString('hex') + stripHexPrefix(signerAddress2))
           tx = await didReg.changeOwnerSigned(signerAddress, sig.v, sig.r, sig.s, signerAddress2, {from: badboy})
         })
         it('should change owner mapping', async () => {
@@ -240,7 +240,7 @@ contract('EthereumDIDRegistry', function(accounts) {
         let tx
         before(async () => {
           previousChange = await didReg.changed(signerAddress)
-          const sig = await signData(signerAddress, privateKey2, Buffer.from('addDelegateattestor').toString('hex') + stripHexPrefix(delegate) + leftPad(new BN(86400).toString(16)))
+          const sig = await signData(signerAddress, signerAddress2, privateKey2, Buffer.from('addDelegateattestor').toString('hex') + stripHexPrefix(delegate) + leftPad(new BN(86400).toString(16)))
           tx = await didReg.addDelegateSigned(signerAddress, sig.v, sig.r, sig.s, 'attestor', delegate, 86400, {from: badboy})
           block = await getBlock(tx.receipt.blockNumber)
         })
@@ -307,7 +307,7 @@ contract('EthereumDIDRegistry', function(accounts) {
         let tx
         before(async () => {
           previousChange = await didReg.changed(signerAddress)
-          const sig = await signData(signerAddress, privateKey2, Buffer.from('setAttributeencryptionKeymykey').toString('hex') + leftPad(new BN(86400).toString(16)))
+          const sig = await signData(signerAddress, signerAddress, privateKey2, Buffer.from('setAttributeencryptionKeymykey').toString('hex') + leftPad(new BN(86400).toString(16)))
           tx = await didReg.setAttributeSigned(signerAddress, sig.v, sig.r, sig.s, 'encryptionKey', 'mykey', 86400, {from: badboy})
           block = await getBlock(tx.receipt.blockNumber)
         })

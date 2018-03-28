@@ -7,14 +7,14 @@
     "test": "test"
   },
   "dependencies": {
-    "ethereumjs-util": "^5.1.4",
-    "js-sha3": "^0.7.0"
   },
   "devDependencies": {
     "ganache-cli": "^6.0.3",
     "solhint": "^1.1.10",
     "truffle": "^4.0.6",
-    "truffle-hdwallet-provider": "^0.0.3"
+    "truffle-hdwallet-provider": "^0.0.3",
+    "ethereumjs-util": "^5.1.4",
+    "js-sha3": "^0.7.0"
   },
   "scripts": {
     "test": "./node_modules/.bin/truffle test",
