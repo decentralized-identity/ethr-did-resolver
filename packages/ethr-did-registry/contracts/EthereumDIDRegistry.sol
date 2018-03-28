@@ -95,6 +95,21 @@ contract EthereumDIDRegistry {
     addDelegate(identity, checkSignature(identity, sigV, sigR, sigS, hash), delegateType, delegate, validity);
   }
 
+  function revokeDelegate(address identity, address actor, string delegateType, address delegate) internal onlyOwner(identity, actor) {
+    delegates[identity][keccak256(delegateType)][delegate] = 0;
+    DIDDelegateChanged(identity, delegateType, delegate, 0, changed[identity]);
+    changed[identity] = block.number;
+  }
+
+  function revokeDelegate(address identity, string delegateType, address delegate) public {
+    revokeDelegate(identity, msg.sender, delegateType, delegate);
+  }
+
+  function revokeDelegateSigned(address identity, uint8 sigV, bytes32 sigR, bytes32 sigS, string delegateType, address delegate) public {
+    bytes32 hash = keccak256(byte(0x19), byte(0), this, nonce[identityOwner(identity)], identity, "revokeDelegate", delegateType, delegate); 
+    revokeDelegate(identity, checkSignature(identity, sigV, sigR, sigS, hash), delegateType, delegate);
+  }
+
   function setAttribute(address identity, address actor, string name, bytes value, uint validity ) internal onlyOwner(identity, actor) {
     DIDAttributeChanged(identity, name, value, block.timestamp + validity, changed[identity]);
     changed[identity] = block.number;

@@ -71,6 +71,7 @@ This frees you from adding nonce and signature management code in your  own cont
 In your own code you will need to calculate the hash yourself.
 
 ### Adding a delegate
+
 An identity can assign multiple delegates to manage signing on their behalf for specific purposes.
 
 The  account owner can call the `addDelegate(address identity, string delegateType, address delegate, uint validity)` function.
@@ -83,8 +84,21 @@ The signature should be signed of the keccak256 hash of the following tightly pa
 
 `byte(0x19), byte(0), address of registry, nonce[currentOwner], identity, "addDelegate", delegateType, delegate, validity`
 
+### Revoking a delegate
+
+A delegate may be manually revoked by calling the `revokeDelegate(address identity, string delegateType, address delegate)` function.
+
+There is also a version of this function which can be called with an externally created signature, that can be passed to a transaction funding service.
+
+The externally signed version has the following signature `revokeDelegateSigned(address identity, uint8 sigV, bytes32 sigR, bytes32 sigS, string delegateType, address delegate)`.
+
+The signature should be signed of the keccak256 hash of the following tightly packed parameters:
+
+`byte(0x19), byte(0), address of registry, nonce[currentOwner], identity, "revokeDelegate", delegateType, delegate`
+
 ### Enumerating delegates off chain
-Attributes are stored as `DIDDelegateChanged ` events. 
+
+Attributes are stored as `DIDDelegateChanged` events. A `validTo` of 0 indicates a revoked delegate
 
 ```solidity
 event DIDDelegateChanged(
