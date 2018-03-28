@@ -98,7 +98,7 @@ The signature should be signed of the keccak256 hash of the following tightly pa
 
 ### Enumerating delegates off chain
 
-Attributes are stored as `DIDDelegateChanged` events. A `validTo` of 0 indicates a revoked delegate
+Attributes are stored as `DIDDelegateChanged` events. A `validTo` of 0 indicates a revoked delegate.
 
 ```solidity
 event DIDDelegateChanged(
@@ -114,10 +114,32 @@ event DIDDelegateChanged(
 An identity may need to publish some information that is only needed off-chain, but still requires the security benefits of using a blockchain.
 
 ### Setting attributes
+
 These attributes are set using the `setAttribute(address identity, string name, bytes value, uint validity)` function and published using events.
 
+There is also a version of this function which can be called with an externally created signature, that can be passed to a transaction funding service.
+
+The externally signed version has the following signature `setAttributeSigned(address identity, uint8 sigV, bytes32 sigR, bytes32 sigS, string name, bytes value, uint validity)`.
+
+The signature should be signed of the keccak256 hash of the following tightly packed parameters:
+
+`byte(0x19), byte(0), address of registry, nonce[currentOwner], identity, "setAttribute", name, value, validity`
+
+### Revoking attributes
+
+These attributes are revoked using the `revokeAttribute(address identity, string name, bytes value)` function and published using events.
+
+There is also a version of this function which can be called with an externally created signature, that can be passed to a transaction funding service.
+
+The externally signed version has the following signature `revokeAttributeSigned(address identity, uint8 sigV, bytes32 sigR, bytes32 sigS, string name, bytes value)`.
+
+The signature should be signed of the keccak256 hash of the following tightly packed parameters:
+
+`byte(0x19), byte(0), address of registry, nonce[currentOwner], identity, "revokeAttribute", name, value`
+
 ### Reading attributes
-Attributes are stored as `DIDAttributeChanged` events. 
+
+Attributes are stored as `DIDAttributeChanged` events. A `validTo` of 0 indicates a revoked attribute.
 
 ```solidity
 event DIDAttributeChanged(
@@ -130,6 +152,7 @@ event DIDAttributeChanged(
 ```
 
 ## Efficient lookup of events through linked identity events
+
 Contract Events are a useful feature for storing data from smart contracts exclusively for off-chain use.  Unfortunately current ethereum implementations provide a very inefficient lookup mechanism.
 
 By using linked events, that always link to the previous block with a change for the identity we can solve this problem with much improved performance.
@@ -158,6 +181,7 @@ while (previousChange) {
 ```
 
 ## Building a DID document for an identity
+
 The primary owner key should be looked up using `identityOwner(identity)`.  This should be the first of the publicKeys listed.
 
 Iterate thought the `DIDDelegateChanged` events to build a list of additional keys and authentication sections as needed. The list of delegateTypes to include is still to be determined.

@@ -400,8 +400,72 @@ contract('EthereumDIDRegistry', function(accounts) {
         })
       })
     })
-
   })
+
+  describe('revokeAttribute()', () => {
+    describe('using msg.sender', () => {
+      describe('as current owner', () => {
+        let tx
+        let block
+        before(async () => {
+          previousChange = await didReg.changed(identity)
+          tx = await didReg.revokeAttribute(identity, 'encryptionKey', 'mykey', {from: owner})
+          block = await getBlock(tx.receipt.blockNumber)
+        })
+        it('should sets changed to transaction block', async () => {
+          const latest = await didReg.changed(identity)
+          assert.equal(latest, tx.receipt.blockNumber)
+        })
+        it('should create DIDAttributeChanged event', () => {
+          const event = tx.logs[0]
+          assert.equal(event.event, 'DIDAttributeChanged')
+          assert.equal(event.args.identity, identity)
+          assert.equal(event.args.name, 'encryptionKey')
+          assert.equal(event.args.value, '0x6d796b6579')
+          assert.equal(event.args.validTo.toNumber(), 0)
+          assert.equal(event.args.previousChange.toNumber(), previousChange.toNumber())
+        })
+      })
+
+      describe('as attacker', () => {
+        it('should fail', async () => {
+          try {
+            const tx = await didReg.revokeAttribute(identity, 'encryptionKey', 'mykey', {from: badboy})
+            assert.equal(tx, undefined, 'this should not happen')
+          } catch (error) {
+            assert.equal(error.message, 'VM Exception while processing transaction: revert')
+          }
+        })
+      })
+    })
+
+    describe('using signature', () => {
+      describe('as current owner', () => {
+        let tx
+        before(async () => {
+          previousChange = await didReg.changed(signerAddress)
+          const sig = await signData(signerAddress, signerAddress, privateKey2, Buffer.from('revokeAttributeencryptionKeymykey').toString('hex'))
+          tx = await didReg.revokeAttributeSigned(signerAddress, sig.v, sig.r, sig.s, 'encryptionKey', 'mykey', {from: badboy})
+          block = await getBlock(tx.receipt.blockNumber)
+        })
+        it('should sets changed to transaction block', async () => {
+          const latest = await didReg.changed(signerAddress)
+          assert.equal(latest, tx.receipt.blockNumber)
+        })
+        it('should create DIDDelegateChanged event', () => {
+          const event = tx.logs[0]
+          assert.equal(event.event, 'DIDAttributeChanged')
+          assert.equal(event.args.identity, signerAddress)
+          assert.equal(event.args.name, 'encryptionKey')
+          assert.equal(event.args.value, '0x6d796b6579')
+          assert.equal(event.args.validTo.toNumber(), 0)
+          assert.equal(event.args.previousChange.toNumber(), previousChange.toNumber())
+        })
+      })
+    })
+  })
+
+
   describe('Events', () => {
     it('can create list', async () => {
       const history = []
@@ -420,6 +484,7 @@ contract('EthereumDIDRegistry', function(accounts) {
         'DIDOwnerChanged',
         'DIDDelegateChanged',
         'DIDDelegateChanged',
+        'DIDAttributeChanged',
         'DIDAttributeChanged'
       ])
     })
