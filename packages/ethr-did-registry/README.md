@@ -187,3 +187,10 @@ The primary owner key should be looked up using `identityOwner(identity)`.  This
 Iterate thought the `DIDDelegateChanged` events to build a list of additional keys and authentication sections as needed. The list of delegateTypes to include is still to be determined.
 
 Iterate through `DIDAttributeChanged` events for service entries, encryption public keys and other public names. The attribute names are still to be determined.
+
+## Deploy contract
+First run,
+```
+$ scripts/generateDeployTxs.js
+```
+you will get the data needed to deploy as an output from this command. Copy the `senderAddress` and send `cost` amount of ether to this address on the ethereum network you wish to deploy to. Once this tx is confirmed simply send the `rawTx` to the same network. `contractAddress` is the address of the deployed contract. This will be the same on all networks it is deployed to.
