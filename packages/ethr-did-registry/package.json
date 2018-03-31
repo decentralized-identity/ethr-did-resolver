@@ -1,6 +1,6 @@
 {
   "name": "ethr-did-registry",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "A repository storing keys and other data about Decentralized Identifiers (DIDs)",
   "main": "build/contracts/EthereumDIDRegistry.json",
   "directories": {

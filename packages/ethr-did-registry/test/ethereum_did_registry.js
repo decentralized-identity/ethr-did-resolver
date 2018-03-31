@@ -112,7 +112,6 @@ contract('EthereumDIDRegistry', function(accounts) {
           assert.equal(event.event, 'DIDOwnerChanged')
           assert.equal(event.args.identity, identity)
           assert.equal(event.args.owner, delegate)
-          assert.equal(event.args.validTo.toString(16), 'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff')
           assert.equal(event.args.previousChange.toNumber(), 0)
         })
       })
@@ -131,12 +130,11 @@ contract('EthereumDIDRegistry', function(accounts) {
           const latest = await didReg.changed(identity)
           assert.equal(latest, tx.receipt.blockNumber)
         })
-        it('should create DIDDelegateChanged event', () => {
+        it('should create DIDOwnerChanged event', () => {
           const event = tx.logs[0]
           assert.equal(event.event, 'DIDOwnerChanged')
           assert.equal(event.args.identity, identity)
           assert.equal(event.args.owner, delegate2)
-          assert.equal(event.args.validTo.toString(16), 'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff')
           assert.equal(event.args.previousChange.toNumber(), previousChange.toNumber())
         })
       })
@@ -178,13 +176,12 @@ contract('EthereumDIDRegistry', function(accounts) {
           const latest = await didReg.changed(signerAddress)
           assert.equal(latest, tx.receipt.blockNumber)
         })
-        it('should create DIDDelegateChanged event', () => {
+        it('should create DIDOwnerChanged event', () => {
           const event = tx.logs[0]
           // console.log(event.args)
           assert.equal(event.event, 'DIDOwnerChanged')
           assert.equal(event.args.identity, signerAddress)
           assert.equal(event.args.owner, signerAddress2)
-          assert.equal(event.args.validTo.toString(16), 'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff')
           assert.equal(event.args.previousChange.toNumber(), 0)
         })
       })

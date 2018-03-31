@@ -15,7 +15,6 @@ contract EthereumDIDRegistry {
   event DIDOwnerChanged(
     address indexed identity,
     address owner,
-    uint validTo,
     uint previousChange
   );
 
@@ -67,7 +66,7 @@ contract EthereumDIDRegistry {
 
   function changeOwner(address identity, address actor, address newOwner) internal onlyOwner(identity, actor) {
     owners[identity] = newOwner;
-    DIDOwnerChanged(identity, newOwner, 2**256 - 1, changed[identity]);
+    DIDOwnerChanged(identity, newOwner, changed[identity]);
     changed[identity] = block.number;
   }
 
