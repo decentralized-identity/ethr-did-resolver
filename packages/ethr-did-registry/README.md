@@ -40,10 +40,10 @@ let didReg = DidReg.at(DidRegistryContract.networks[networkId].address)
 ## Contract Deployments
 |Network|Address|
 | --|--|
-|Mainnet (id: 1)|[0x81e2adb2d6dd3e3413525852607a8b622783d843](https://etherscan.io/address/0x81e2adb2d6dd3e3413525852607a8b622783d843)|
-|Ropsten (id: 3)|[0x81e2adb2d6dd3e3413525852607a8b622783d843](https://ropsten.etherscan.io/address/0x81e2adb2d6dd3e3413525852607a8b622783d843)|
-|Rinkeby (id: 4)|[0x81e2adb2d6dd3e3413525852607a8b622783d843](https://rinkeby.etherscan.io/address/0x81e2adb2d6dd3e3413525852607a8b622783d843)|
-|Kovan (id: 42)|[0x81e2adb2d6dd3e3413525852607a8b622783d843](https://kovan.etherscan.io/address/0x81e2adb2d6dd3e3413525852607a8b622783d843)|
+|Mainnet (id: 1)|[0x160c5ce58e2cc4fe7cc45a9dd569a10083b2a275](https://etherscan.io/address/0x160c5ce58e2cc4fe7cc45a9dd569a10083b2a275)|
+|Ropsten (id: 3)|[0x160c5ce58e2cc4fe7cc45a9dd569a10083b2a275](https://ropsten.etherscan.io/address/0x160c5ce58e2cc4fe7cc45a9dd569a10083b2a275)|
+|Rinkeby (id: 4)|[0x160c5ce58e2cc4fe7cc45a9dd569a10083b2a275](https://rinkeby.etherscan.io/address/0x160c5ce58e2cc4fe7cc45a9dd569a10083b2a275)|
+|Kovan (id: 42)|[0x160c5ce58e2cc4fe7cc45a9dd569a10083b2a275](https://kovan.etherscan.io/address/0x160c5ce58e2cc4fe7cc45a9dd569a10083b2a275)|
 
 ## On-chain vs Off-chain
 For on-chain interactions Ethereum has a built in account abstraction that can be used regardless of wether the account is a smart contract or a key pair. Any transaction has a `msg.sender` as the verified send of the transaction.

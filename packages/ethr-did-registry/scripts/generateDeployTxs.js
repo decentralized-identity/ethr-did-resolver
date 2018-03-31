@@ -5,7 +5,7 @@ const EthUtils = require('ethereumjs-util')
 const ls = require('ls')
 
 const gasLimits = {
-  EthereumDIDRegistry: 1779962, // If this value needs to be recalculated, it can be done by deploying the rawTx once and looking at gasUsed in the receipt
+  EthereumDIDRegistry: 2811144, // If this value needs to be recalculated, it can be done by deploying the rawTx once and looking at gasUsed in the receipt
 }
 
 generateDeployTx = (code, name) => {
@@ -47,8 +47,8 @@ if (require.main === module) {
   const deployData = generateAll()
   for (const name in deployData) {
     console.log('\n\x1b[31m ======= Contract:', name, '=======\x1b[0m')
-    console.log('\x1b[34msenderAddress:\x1b[0m', deployData[name].senderAddress)
     console.log('\x1b[34mrawTx:\x1b[0m', deployData[name].rawTx)
+    console.log('\x1b[34msenderAddress:\x1b[0m', deployData[name].senderAddress)
     console.log('\x1b[34mcost (ether):\x1b[0m', deployData[name].costInEther)
     console.log('\x1b[34mcontractAddress:\x1b[0m', deployData[name].contractAddress)
   }
