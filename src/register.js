@@ -5,16 +5,49 @@ import Web3 from 'web3'
 
 export const REGISTRY = '0xc1b66dea11f8f321b7981e1666fdaf3637fe0f61'
 
-export function wrapDidDocument (did, address) {
+export function wrapDidDocument (did, owner, history) {
+  const now = Math.floor(new Date().getTime() / 1000)
+  // const expired = {}
+  // console.log(history)
+  const publicKey = [{
+    id: `${did}#owner`,
+    type: 'Secp256k1VerificationKey2018',
+    owner: did,
+    ethereumAddress: owner
+  }]
+
+  const authentication = [{
+    type: 'Secp256k1SignatureAuthentication2018',
+    publicKey: `${did}#owner`
+  }]
+
+  let delegateCount = 0
+  for (let {event, args} of history) {
+    if (event === 'DIDDelegateChanged') {
+      delegateCount++
+      switch (args.delegateType) {
+        case 'Secp256k1SignatureAuthentication2018':
+          authentication.push({
+            type: 'Secp256k1SignatureAuthentication2018',
+            publicKey: `${did}#delegate-${delegateCount}`
+          })
+        case 'Secp256k1VerificationKey2018':
+          publicKey.push({
+            id: `${did}#delegate-${delegateCount}`,
+            type: 'Secp256k1VerificationKey2018',
+            owner: did,
+            ethereumAddress: args.delegate
+          })
+          break
+      }
+    }
+  }
+
   return {
     '@context': 'https://w3id.org/did/v1',
     id: did,
-    publicKey: [{
-      id: `${did}#keys-1`,
-      type: 'Secp256k1VerificationKey2018',
-      owner: did,
-      ethereumAddress: address
-    }]
+    publicKey,
+    authentication
   }
 }
 
@@ -35,12 +68,37 @@ export function configureRegistry (conf = {}) {
   return DidReg.at(registryAddress)
 }
 
+function getLogs (filter) {
+  return new Promise((resolve, reject) => {
+    filter.get((error, events) => {
+      if (error) return reject(error)
+      resolve(events)
+    })
+  })
+}
+
 function register (conf = {}) {
   const didReg = configureRegistry(conf)
+
+  async function changeLog (identity) {
+    const history = []
+    let previousChange = await didReg.changed(identity)
+    while (previousChange) {
+      const filter = await didReg.allEvents({topics: [identity], fromBlock: previousChange, toBlock: previousChange})
+      const events = await getLogs(filter)
+      previousChange = undefined
+      for (let event of events) {
+        history.unshift(event)
+        previousChange = event.args.previousChange
+      }
+    }
+    return history
+  }
   async function resolve (did, parsed) {
     if (!parsed.id.match(/^0x[0-9a-fA-F]{40}$/)) throw new Error(`Not a valid ethr DID: ${did}`)
     const owner = await didReg.identityOwner(parsed.id)
-    return wrapDidDocument(did, owner)
+    const history = await changeLog(parsed.id)
+    return wrapDidDocument(did, owner, history)
   }
   registerMethod('ethr', resolve)
 }
