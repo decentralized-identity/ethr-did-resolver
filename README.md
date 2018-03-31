@@ -99,6 +99,8 @@ The only 2 delegateTypes that are currently published in the DID Document are:
 - `Secp256k1VerificationKey2018` which is added to the `publicKey` section of document
 - `Secp256k1SignatureAuthentication2018` which is also added to the `publicKey` section of document. An entry is also added to the `authentication` section of document
 
+Only events with a `validTo` in seconds greater or equal to current time should be included in the DID document.
+
 ### Non Ethereum Attributes
 
 ## Resolving a DID document

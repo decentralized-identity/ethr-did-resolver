@@ -6,6 +6,9 @@ import DidRegistryContract from 'ethr-did-registry'
 import Web3 from 'web3'
 import ganache from 'ganache-cli'
 
+function sleep (seconds) {
+  return new Promise((resolve, reject) => setTimeout(resolve, seconds * 1000))
+}
 describe('ethrResolver', () => {
   const provider = ganache.provider()
   // const provider = new Web3.providers.HttpProvider('http://127.0.0.1:7545')
@@ -77,7 +80,7 @@ describe('ethrResolver', () => {
 
   describe('add signing delegate', () => {
     beforeAll(async () => {
-      await registry.addDelegate(identity, 'Secp256k1VerificationKey2018', delegate1, Math.floor(new Date().getTime() / 1000), {from: owner})
+      await registry.addDelegate(identity, 'Secp256k1VerificationKey2018', delegate1, 2, {from: owner})
     })
 
     it('resolves document', () => {
@@ -105,7 +108,7 @@ describe('ethrResolver', () => {
 
   describe('add auth delegate', () => {
     beforeAll(async () => {
-      await registry.addDelegate(identity, 'Secp256k1SignatureAuthentication2018', delegate2, Math.floor(new Date().getTime() / 1000), {from: owner})
+      await registry.addDelegate(identity, 'Secp256k1SignatureAuthentication2018', delegate2, 10, {from: owner})
     })
 
     it('resolves document', () => {
@@ -134,6 +137,37 @@ describe('ethrResolver', () => {
         }, {
           type: 'Secp256k1SignatureAuthentication2018',
           publicKey: `${did}#delegate-2`
+        }]
+      })
+    })
+  })
+
+  describe('expire automatically', () => {
+    beforeAll(async () => {
+      await sleep(3)
+    })
+
+    it('resolves document', () => {
+      return expect(resolve(did)).resolves.toEqual({
+        '@context': 'https://w3id.org/did/v1',
+        id: did,
+        publicKey: [{
+          id: `${did}#owner`,
+          type: 'Secp256k1VerificationKey2018',
+          owner: did,
+          ethereumAddress: owner
+        }, {
+          id: `${did}#delegate-1`,
+          type: 'Secp256k1VerificationKey2018',
+          owner: did,
+          ethereumAddress: delegate2
+        }],
+        authentication: [{
+          type: 'Secp256k1SignatureAuthentication2018',
+          publicKey: `${did}#owner`
+        }, {
+          type: 'Secp256k1SignatureAuthentication2018',
+          publicKey: `${did}#delegate-1`
         }]
       })
     })

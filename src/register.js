@@ -23,23 +23,26 @@ export function wrapDidDocument (did, owner, history) {
 
   let delegateCount = 0
   for (let {event, args} of history) {
-    if (event === 'DIDDelegateChanged') {
-      delegateCount++
-      switch (args.delegateType) {
-        case 'Secp256k1SignatureAuthentication2018':
-          authentication.push({
-            type: 'Secp256k1SignatureAuthentication2018',
-            publicKey: `${did}#delegate-${delegateCount}`
-          })
-        case 'Secp256k1VerificationKey2018':
-          publicKey.push({
-            id: `${did}#delegate-${delegateCount}`,
-            type: 'Secp256k1VerificationKey2018',
-            owner: did,
-            ethereumAddress: args.delegate
-          })
-          break
-      }
+    // console.log(`validTo: ${args.validTo.toNumber()} and now: ${now}`)
+    if (args.validTo.toNumber() >= now) {
+      if (event === 'DIDDelegateChanged') {
+        delegateCount++
+        switch (args.delegateType) {
+          case 'Secp256k1SignatureAuthentication2018':
+            authentication.push({
+              type: 'Secp256k1SignatureAuthentication2018',
+              publicKey: `${did}#delegate-${delegateCount}`
+            })
+          case 'Secp256k1VerificationKey2018':
+            publicKey.push({
+              id: `${did}#delegate-${delegateCount}`,
+              type: 'Secp256k1VerificationKey2018',
+              owner: did,
+              ethereumAddress: args.delegate
+            })
+            break
+        }
+      }        
     }
   }
 
