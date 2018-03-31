@@ -8,6 +8,43 @@ It was designed as a way of resolving public keys for off chain authentication, 
 
 This contract allows ethereum addresses to present signing information about themselves with no prior registration. It allows them to perform key rotation and specify different keys and services that can be used on it's behalf for both on and off-chain usage.
 
+## Using the registry
+
+The DID Registry can be used from javascript as well as directly from other contracts.
+
+### From javascript
+
+To use the contract we provide truffle artifacts. Once you require the `ethr-did-registry` module you will get an object containing the json.
+
+```javascript
+const DidRegistryContract = require('ethr-did-registry')
+```
+
+ You can use `truffle-contract` to utilize these artifacts.
+
+```javascript
+const Contract = require('truffle-contract')
+let DidReg = Contract(DidRegistryContract)
+DidReg.setProvider(web3.currentProvider)
+let didReg = DidReg.deployed()
+```
+
+You can also use web3.
+
+```javascript
+let networkId = 1 // Mainnet
+let DidReg = web3.eth.contract(DidRegistryContract.abi)
+let didReg = DidReg.at(DidRegistryContract.networks[networkId].address)
+```
+
+## Contract Deployments
+|Network|Address|
+| --|--|
+|Mainnet (id: 1)|[0xc1b66dea11f8f321b7981e1666fdaf3637fe0f61](https://etherscan.io/address/0xc1b66dea11f8f321b7981e1666fdaf3637fe0f61)|
+|Ropsten (id: 3)|[0xc1b66dea11f8f321b7981e1666fdaf3637fe0f61](https://ropsten.etherscan.io/address/0xc1b66dea11f8f321b7981e1666fdaf3637fe0f61)|
+|Rinkeby (id: 4)|[0xc1b66dea11f8f321b7981e1666fdaf3637fe0f61](https://rinkeby.etherscan.io/address/0xc1b66dea11f8f321b7981e1666fdaf3637fe0f61)|
+|Kovan (id: 42)|[0xc1b66dea11f8f321b7981e1666fdaf3637fe0f61](https://kovan.etherscan.io/address/0xc1b66dea11f8f321b7981e1666fdaf3637fe0f61)|
+
 ## On-chain vs Off-chain
 For on-chain interactions Ethereum has a built in account abstraction that can be used regardless of wether the account is a smart contract or a key pair. Any transaction has a `msg.sender` as the verified send of the transaction.
 
@@ -194,3 +231,10 @@ First run,
 $ scripts/generateDeployTxs.js
 ```
 you will get the data needed to deploy as an output from this command. Copy the `senderAddress` and send `cost` amount of ether to this address on the ethereum network you wish to deploy to. Once this tx is confirmed simply send the `rawTx` to the same network. `contractAddress` is the address of the deployed contract. This will be the same on all networks it is deployed to.
+
+## Testing the contracts
+
+Make sure you have truffle installed then simply run:
+```
+$ truffle test
+```
