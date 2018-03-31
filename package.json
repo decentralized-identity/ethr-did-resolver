@@ -39,7 +39,7 @@
   "dependencies": {
     "babel-runtime": "^6.26.0",
     "did-resolver": "^0.0.4",
-    "ethr-did-registry": "^0.0.1",
+    "ethr-did-registry": "^0.0.2",
     "truffle-contract": "^3.0.4"
   },
   "standard": {

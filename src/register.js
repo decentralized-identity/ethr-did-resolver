@@ -22,35 +22,42 @@ export function wrapDidDocument (did, owner, history) {
   }]
 
   let delegateCount = 0
+  const auth = {}
+  const pks = {}
   for (let {event, args} of history) {
     // console.log(`validTo: ${args.validTo.toNumber()} and now: ${now}`)
-    if (args.validTo.toNumber() >= now) {
-      if (event === 'DIDDelegateChanged') {
+    const key = `${event}-${args.delegateType||args.name}-${args.delegate||args.value}`
+    if (event === 'DIDDelegateChanged') {
+      if (args.validTo.toNumber() >= now) {
         delegateCount++
         switch (args.delegateType) {
           case 'Secp256k1SignatureAuthentication2018':
-            authentication.push({
+            auth[key] = {
               type: 'Secp256k1SignatureAuthentication2018',
               publicKey: `${did}#delegate-${delegateCount}`
-            })
+            }
           case 'Secp256k1VerificationKey2018':
-            publicKey.push({
+            pks[key] = {
               id: `${did}#delegate-${delegateCount}`,
               type: 'Secp256k1VerificationKey2018',
               owner: did,
               ethereumAddress: args.delegate
-            })
+            }
             break
         }
-      }        
-    }
+      } else {
+        if (args.validTo.toNumber() === 0) delegateCount--
+        delete auth[key]
+        delete pks[key]
+      }
+    }      
   }
 
   return {
     '@context': 'https://w3id.org/did/v1',
     id: did,
-    publicKey,
-    authentication
+    publicKey: publicKey.concat(Object.values(pks)),
+    authentication: authentication.concat(Object.values(auth))
   }
 }
 

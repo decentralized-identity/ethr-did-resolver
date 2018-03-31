@@ -173,6 +173,60 @@ describe('ethrResolver', () => {
     })
   })
 
+  describe('revokes delegate', () => {
+    beforeAll(async () => {
+      await registry.revokeDelegate(identity, 'Secp256k1SignatureAuthentication2018', delegate2, {from: owner})
+    })
+
+    it('resolves document', () => {
+      return expect(resolve(did)).resolves.toEqual({
+        '@context': 'https://w3id.org/did/v1',
+        id: did,
+        publicKey: [{
+          id: `${did}#owner`,
+          type: 'Secp256k1VerificationKey2018',
+          owner: did,
+          ethereumAddress: owner
+        }],
+        authentication: [{
+          type: 'Secp256k1SignatureAuthentication2018',
+          publicKey: `${did}#owner`
+        }]
+      })
+    })
+  })
+
+  describe('re-add auth delegate', () => {
+    beforeAll(async () => {
+      await registry.addDelegate(identity, 'Secp256k1SignatureAuthentication2018', delegate2, 10, {from: owner})
+    })
+
+    it('resolves document', () => {
+      return expect(resolve(did)).resolves.toEqual({
+        '@context': 'https://w3id.org/did/v1',
+        id: did,
+        publicKey: [{
+          id: `${did}#owner`,
+          type: 'Secp256k1VerificationKey2018',
+          owner: did,
+          ethereumAddress: owner
+        }, {
+          id: `${did}#delegate-1`,
+          type: 'Secp256k1VerificationKey2018',
+          owner: did,
+          ethereumAddress: delegate2
+        }],
+        authentication: [{
+          type: 'Secp256k1SignatureAuthentication2018',
+          publicKey: `${did}#owner`
+        }, {
+          type: 'Secp256k1SignatureAuthentication2018',
+          publicKey: `${did}#delegate-1`
+        }]
+      })
+    })
+  })
+
   describe('error handling', () => {
     it('rejects promise', () => {
       return expect(resolve('did:ethr:2nQtiQG6Cgm1GYTBaaKAgr76uY7iSexUkqX')).rejects.toEqual(new Error('Not a valid ethr DID: did:ethr:2nQtiQG6Cgm1GYTBaaKAgr76uY7iSexUkqX'))

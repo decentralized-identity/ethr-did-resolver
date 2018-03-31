@@ -1781,9 +1781,9 @@ ethjs-abi@0.1.8:
     js-sha3 "0.5.5"
     number-to-bn "1.7.0"
 
-ethr-did-registry@^0.0.1:
-  version "0.0.1"
-  resolved "https://registry.yarnpkg.com/ethr-did-registry/-/ethr-did-registry-0.0.1.tgz#e1e164ae23549f4686e64c3b4440d9aaf16d4b62"
+ethr-did-registry@^0.0.2:
+  version "0.0.2"
+  resolved "https://registry.yarnpkg.com/ethr-did-registry/-/ethr-did-registry-0.0.2.tgz#61746bb70c1ad64e86e424fb32ade4a620f7a180"
 
 exec-sh@^0.2.0:
   version "0.2.1"
