@@ -24,11 +24,12 @@ export function wrapDidDocument (did, owner, history) {
   let delegateCount = 0
   const auth = {}
   const pks = {}
+  const services = {}
   for (let {event, args} of history) {
     // console.log(`validTo: ${args.validTo.toNumber()} and now: ${now}`)
     const key = `${event}-${args.delegateType||args.name}-${args.delegate||args.value}`
-    if (event === 'DIDDelegateChanged') {
-      if (args.validTo.toNumber() >= now) {
+    if (args.validTo && args.validTo.toNumber() >= now) {
+      if (event === 'DIDDelegateChanged') {      
         delegateCount++
         switch (args.delegateType) {
           case 'Secp256k1SignatureAuthentication2018':
@@ -45,20 +46,62 @@ export function wrapDidDocument (did, owner, history) {
             }
             break
         }
-      } else {
-        if (args.validTo.toNumber() === 0) delegateCount--
-        delete auth[key]
-        delete pks[key]
+      } else if (event === 'DIDAttributeChanged') {
+        const match = args.name.match(/^did\/(publicKey|authentication|service)\/(\w+)(\/(\w+))?$/)
+        if (match) {
+          const section = match[1]
+          const type = match[2]
+          const encoding = match[4]
+          switch (section) {
+            case 'publicKey':
+              delegateCount++
+              const pk = {
+                id: `${did}#delegate-${delegateCount}`,
+                type,
+                owner: did
+              }
+              switch (encoding) {
+                case null:
+                case undefined:
+                case 'publicKeyHex':
+                  pk.publicKeyHex = args.value.slice(2)
+                  break
+                case 'publicKeyBase64':
+                  pk.publicKeyBase64 = Buffer.from(args.value.slice(2), 'hex').toString('base64')
+                  break
+                case 'publicKeyBase58':
+                  pk.publicKeyBase58 = Buffer.from(args.value.slice(2), 'hex').toString('base58')
+                  break
+                default:
+                  pk.value = args.value
+              }
+              pks[key] = pk
+              break
+            case 'service':
+              services[key] = {type, serviceEndpoint: Buffer.from(args.value.slice(2), 'hex').toString()}
+              break
+          }
+        }
       }
-    }      
+    } else {
+      if ((event === 'DIDDelegateChanged' || (event === 'DIDAttributeChanged' && args.name.match(/^did\/publicKey\//))) && args.validTo.toNumber() === 0) delegateCount--
+      delete auth[key]
+      delete pks[key]
+      delete services[key]
+    }
   }
 
-  return {
+  const doc = {
     '@context': 'https://w3id.org/did/v1',
     id: did,
     publicKey: publicKey.concat(Object.values(pks)),
     authentication: authentication.concat(Object.values(auth))
   }
+  if (Object.values(services).length > 0) {
+    doc.service = Object.values(services)
+  }
+
+  return doc
 }
 
 function configureProvider (conf = {}) {

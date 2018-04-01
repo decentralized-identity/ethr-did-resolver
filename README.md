@@ -103,6 +103,34 @@ Only events with a `validTo` in seconds greater or equal to current time should 
 
 ### Non Ethereum Attributes
 
+Non ethereum keys, service elements etc can be added using attributes. Attributes only exist on the blockchain as contract events of type `DIDAttributeChanged` and can thus not be queried from within solidity code.
+
+```solidity
+event DIDAttributeChanged(
+    address indexed identity,
+    string name,
+    bytes value,
+    uint validTo,
+    uint previousChange
+  );
+```
+
+While any attribute can be stored. For the DID document we currently support adding to each of these sections of the DID document:
+
+- [`Public Keys`](https://w3c-ccg.github.io/did-spec/#public-keys)
+- [`Service Endpoints`](https://w3c-ccg.github.io/did-spec/#service-endpoints)
+
+The name of the attribute should follow this format:
+
+`did/[section]/[type]/[encoding]` with encoding being optional.
+
+|section|type|encoding|
+|-------|----|--------|
+|`publicKey`| Any valid Public Key type eg. `Secp256k1VerificationKey2018`, `Ed25519VerificationKey2018`, `RsaVerificationKey2018` | `publicKeyHex` (default), `publicKeyBase64` (please submit PRs for `publicKeyPem`, `publicKeyJwk`, `publicKeyBase58`)|
+|`service`| Any valid service type eg `HubService`, `AgentService` | n/a |
+
+Values should be encoded in binary bytes for efficiency reasons. Encoding in the DID document will be converted according to method. Any unsupported attributes and unknown encodings will be ignored.
+
 ## Resolving a DID document
 
 The resolver presents a simple `resolver()` function that returns a ES6 Promise returning the DID document.

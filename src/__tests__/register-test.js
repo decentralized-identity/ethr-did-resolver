@@ -78,152 +78,282 @@ describe('ethrResolver', () => {
     })
   })
 
-  describe('add signing delegate', () => {
-    beforeAll(async () => {
-      await registry.addDelegate(identity, 'Secp256k1VerificationKey2018', delegate1, 2, {from: owner})
+  describe('delegates', () => {
+    describe('add signing delegate', () => {
+      beforeAll(async () => {
+        await registry.addDelegate(identity, 'Secp256k1VerificationKey2018', delegate1, 2, {from: owner})
+      })
+
+      it('resolves document', () => {
+        return expect(resolve(did)).resolves.toEqual({
+          '@context': 'https://w3id.org/did/v1',
+          id: did,
+          publicKey: [{
+            id: `${did}#owner`,
+            type: 'Secp256k1VerificationKey2018',
+            owner: did,
+            ethereumAddress: owner
+          }, {
+            id: `${did}#delegate-1`,
+            type: 'Secp256k1VerificationKey2018',
+            owner: did,
+            ethereumAddress: delegate1
+          }],
+          authentication: [{
+            type: 'Secp256k1SignatureAuthentication2018',
+            publicKey: `${did}#owner`
+          }]
+        })
+      })
     })
 
-    it('resolves document', () => {
-      return expect(resolve(did)).resolves.toEqual({
-        '@context': 'https://w3id.org/did/v1',
-        id: did,
-        publicKey: [{
-          id: `${did}#owner`,
-          type: 'Secp256k1VerificationKey2018',
-          owner: did,
-          ethereumAddress: owner
-        }, {
-          id: `${did}#delegate-1`,
-          type: 'Secp256k1VerificationKey2018',
-          owner: did,
-          ethereumAddress: delegate1
-        }],
-        authentication: [{
-          type: 'Secp256k1SignatureAuthentication2018',
-          publicKey: `${did}#owner`
-        }]
+    describe('add auth delegate', () => {
+      beforeAll(async () => {
+        await registry.addDelegate(identity, 'Secp256k1SignatureAuthentication2018', delegate2, 10, {from: owner})
+      })
+
+      it('resolves document', () => {
+        return expect(resolve(did)).resolves.toEqual({
+          '@context': 'https://w3id.org/did/v1',
+          id: did,
+          publicKey: [{
+            id: `${did}#owner`,
+            type: 'Secp256k1VerificationKey2018',
+            owner: did,
+            ethereumAddress: owner
+          }, {
+            id: `${did}#delegate-1`,
+            type: 'Secp256k1VerificationKey2018',
+            owner: did,
+            ethereumAddress: delegate1
+          }, {
+            id: `${did}#delegate-2`,
+            type: 'Secp256k1VerificationKey2018',
+            owner: did,
+            ethereumAddress: delegate2
+          }],
+          authentication: [{
+            type: 'Secp256k1SignatureAuthentication2018',
+            publicKey: `${did}#owner`
+          }, {
+            type: 'Secp256k1SignatureAuthentication2018',
+            publicKey: `${did}#delegate-2`
+          }]
+        })
+      })
+    })
+
+    describe('expire automatically', () => {
+      beforeAll(async () => {
+        await sleep(3)
+      })
+
+      it('resolves document', () => {
+        return expect(resolve(did)).resolves.toEqual({
+          '@context': 'https://w3id.org/did/v1',
+          id: did,
+          publicKey: [{
+            id: `${did}#owner`,
+            type: 'Secp256k1VerificationKey2018',
+            owner: did,
+            ethereumAddress: owner
+          }, {
+            id: `${did}#delegate-1`,
+            type: 'Secp256k1VerificationKey2018',
+            owner: did,
+            ethereumAddress: delegate2
+          }],
+          authentication: [{
+            type: 'Secp256k1SignatureAuthentication2018',
+            publicKey: `${did}#owner`
+          }, {
+            type: 'Secp256k1SignatureAuthentication2018',
+            publicKey: `${did}#delegate-1`
+          }]
+        })
+      })
+    })
+
+    describe('revokes delegate', () => {
+      beforeAll(async () => {
+        await registry.revokeDelegate(identity, 'Secp256k1SignatureAuthentication2018', delegate2, {from: owner})
+      })
+
+      it('resolves document', () => {
+        return expect(resolve(did)).resolves.toEqual({
+          '@context': 'https://w3id.org/did/v1',
+          id: did,
+          publicKey: [{
+            id: `${did}#owner`,
+            type: 'Secp256k1VerificationKey2018',
+            owner: did,
+            ethereumAddress: owner
+          }],
+          authentication: [{
+            type: 'Secp256k1SignatureAuthentication2018',
+            publicKey: `${did}#owner`
+          }]
+        })
+      })
+    })
+
+    describe('re-add auth delegate', () => {
+      beforeAll(async () => {
+        await registry.addDelegate(identity, 'Secp256k1SignatureAuthentication2018', delegate2, 86400, {from: owner})
+      })
+
+      it('resolves document', () => {
+        return expect(resolve(did)).resolves.toEqual({
+          '@context': 'https://w3id.org/did/v1',
+          id: did,
+          publicKey: [{
+            id: `${did}#owner`,
+            type: 'Secp256k1VerificationKey2018',
+            owner: did,
+            ethereumAddress: owner
+          }, {
+            id: `${did}#delegate-1`,
+            type: 'Secp256k1VerificationKey2018',
+            owner: did,
+            ethereumAddress: delegate2
+          }],
+          authentication: [{
+            type: 'Secp256k1SignatureAuthentication2018',
+            publicKey: `${did}#owner`
+          }, {
+            type: 'Secp256k1SignatureAuthentication2018',
+            publicKey: `${did}#delegate-1`
+          }]
+        })
       })
     })
   })
 
-  describe('add auth delegate', () => {
-    beforeAll(async () => {
-      await registry.addDelegate(identity, 'Secp256k1SignatureAuthentication2018', delegate2, 10, {from: owner})
-    })
+  describe('attributes', () => {
+    describe('publicKey', () => {
+      describe('Secp256k1VerificationKey2018', () => {
+        beforeAll(async () => {
+          await registry.setAttribute(identity, 'did/publicKey/Secp256k1VerificationKey2018', '0x02b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71', 10, {from: owner})
+        })
+  
+        it('resolves document', () => {
+          return expect(resolve(did)).resolves.toEqual({
+            '@context': 'https://w3id.org/did/v1',
+            id: did,
+            publicKey: [{
+              id: `${did}#owner`,
+              type: 'Secp256k1VerificationKey2018',
+              owner: did,
+              ethereumAddress: owner
+            }, {
+              id: `${did}#delegate-1`,
+              type: 'Secp256k1VerificationKey2018',
+              owner: did,
+              ethereumAddress: delegate2
+            }, {
+              id: `${did}#delegate-2`,
+              type: 'Secp256k1VerificationKey2018',
+              owner: did,
+              publicKeyHex: '02b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71'
+            }],
+            authentication: [{
+              type: 'Secp256k1SignatureAuthentication2018',
+              publicKey: `${did}#owner`
+            }, {
+              type: 'Secp256k1SignatureAuthentication2018',
+              publicKey: `${did}#delegate-1`
+            }]
+          })
+        })
+      })
 
-    it('resolves document', () => {
-      return expect(resolve(did)).resolves.toEqual({
-        '@context': 'https://w3id.org/did/v1',
-        id: did,
-        publicKey: [{
-          id: `${did}#owner`,
-          type: 'Secp256k1VerificationKey2018',
-          owner: did,
-          ethereumAddress: owner
-        }, {
-          id: `${did}#delegate-1`,
-          type: 'Secp256k1VerificationKey2018',
-          owner: did,
-          ethereumAddress: delegate1
-        }, {
-          id: `${did}#delegate-2`,
-          type: 'Secp256k1VerificationKey2018',
-          owner: did,
-          ethereumAddress: delegate2
-        }],
-        authentication: [{
-          type: 'Secp256k1SignatureAuthentication2018',
-          publicKey: `${did}#owner`
-        }, {
-          type: 'Secp256k1SignatureAuthentication2018',
-          publicKey: `${did}#delegate-2`
-        }]
+      describe('Ed25519VerificationKey2018', () => {
+        beforeAll(async () => {
+          await registry.setAttribute(identity, 'did/publicKey/Ed25519VerificationKey2018/publicKeyBase64', '0x02b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71', 10, {from: owner})
+        })
+  
+        it('resolves document', () => {
+          return expect(resolve(did)).resolves.toEqual({
+            '@context': 'https://w3id.org/did/v1',
+            id: did,
+            publicKey: [{
+              id: `${did}#owner`,
+              type: 'Secp256k1VerificationKey2018',
+              owner: did,
+              ethereumAddress: owner
+            }, {
+              id: `${did}#delegate-1`,
+              type: 'Secp256k1VerificationKey2018',
+              owner: did,
+              ethereumAddress: delegate2
+            }, {
+              id: `${did}#delegate-2`,
+              type: 'Secp256k1VerificationKey2018',
+              owner: did,
+              publicKeyHex: '02b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71'
+            }, {
+              id: `${did}#delegate-3`,
+              type: 'Ed25519VerificationKey2018',
+              owner: did,
+              publicKeyBase64: Buffer.from('02b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71', 'hex').toString('base64')
+            }],
+            authentication: [{
+              type: 'Secp256k1SignatureAuthentication2018',
+              publicKey: `${did}#owner`
+            }, {
+              type: 'Secp256k1SignatureAuthentication2018',
+              publicKey: `${did}#delegate-1`
+            }]
+          })
+        })
       })
     })
-  })
 
-  describe('expire automatically', () => {
-    beforeAll(async () => {
-      await sleep(3)
-    })
-
-    it('resolves document', () => {
-      return expect(resolve(did)).resolves.toEqual({
-        '@context': 'https://w3id.org/did/v1',
-        id: did,
-        publicKey: [{
-          id: `${did}#owner`,
-          type: 'Secp256k1VerificationKey2018',
-          owner: did,
-          ethereumAddress: owner
-        }, {
-          id: `${did}#delegate-1`,
-          type: 'Secp256k1VerificationKey2018',
-          owner: did,
-          ethereumAddress: delegate2
-        }],
-        authentication: [{
-          type: 'Secp256k1SignatureAuthentication2018',
-          publicKey: `${did}#owner`
-        }, {
-          type: 'Secp256k1SignatureAuthentication2018',
-          publicKey: `${did}#delegate-1`
-        }]
+    describe('service endpoints', () => {
+      describe('HubService', () => {
+        beforeAll(async () => {
+          await registry.setAttribute(identity, 'did/service/HubService', 'https://hubs.uport.me', 10, {from: owner})
+        })
+        it('resolves document', () => {
+          return expect(resolve(did)).resolves.toEqual({
+            '@context': 'https://w3id.org/did/v1',
+            id: did,
+            publicKey: [{
+              id: `${did}#owner`,
+              type: 'Secp256k1VerificationKey2018',
+              owner: did,
+              ethereumAddress: owner
+            }, {
+              id: `${did}#delegate-1`,
+              type: 'Secp256k1VerificationKey2018',
+              owner: did,
+              ethereumAddress: delegate2
+            }, {
+              id: `${did}#delegate-2`,
+              type: 'Secp256k1VerificationKey2018',
+              owner: did,
+              publicKeyHex: '02b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71'
+            }, {
+              id: `${did}#delegate-3`,
+              type: 'Ed25519VerificationKey2018',
+              owner: did,
+              publicKeyBase64: Buffer.from('02b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71', 'hex').toString('base64')
+            }],
+            authentication: [{
+              type: 'Secp256k1SignatureAuthentication2018',
+              publicKey: `${did}#owner`
+            }, {
+              type: 'Secp256k1SignatureAuthentication2018',
+              publicKey: `${did}#delegate-1`
+            }],
+            service: [{
+              type: 'HubService',
+              serviceEndpoint: 'https://hubs.uport.me'
+            }]
+          })
+        })
       })
-    })
-  })
 
-  describe('revokes delegate', () => {
-    beforeAll(async () => {
-      await registry.revokeDelegate(identity, 'Secp256k1SignatureAuthentication2018', delegate2, {from: owner})
-    })
-
-    it('resolves document', () => {
-      return expect(resolve(did)).resolves.toEqual({
-        '@context': 'https://w3id.org/did/v1',
-        id: did,
-        publicKey: [{
-          id: `${did}#owner`,
-          type: 'Secp256k1VerificationKey2018',
-          owner: did,
-          ethereumAddress: owner
-        }],
-        authentication: [{
-          type: 'Secp256k1SignatureAuthentication2018',
-          publicKey: `${did}#owner`
-        }]
-      })
-    })
-  })
-
-  describe('re-add auth delegate', () => {
-    beforeAll(async () => {
-      await registry.addDelegate(identity, 'Secp256k1SignatureAuthentication2018', delegate2, 10, {from: owner})
-    })
-
-    it('resolves document', () => {
-      return expect(resolve(did)).resolves.toEqual({
-        '@context': 'https://w3id.org/did/v1',
-        id: did,
-        publicKey: [{
-          id: `${did}#owner`,
-          type: 'Secp256k1VerificationKey2018',
-          owner: did,
-          ethereumAddress: owner
-        }, {
-          id: `${did}#delegate-1`,
-          type: 'Secp256k1VerificationKey2018',
-          owner: did,
-          ethereumAddress: delegate2
-        }],
-        authentication: [{
-          type: 'Secp256k1SignatureAuthentication2018',
-          publicKey: `${did}#owner`
-        }, {
-          type: 'Secp256k1SignatureAuthentication2018',
-          publicKey: `${did}#delegate-1`
-        }]
-      })
     })
   })
 
