@@ -1,6 +1,6 @@
 {
   "name": "ethr-did-resolver",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Resolve DID documents around ethereum addresses",
   "main": "lib/register.js",
   "repository": {
