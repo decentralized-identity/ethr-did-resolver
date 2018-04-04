@@ -40,7 +40,8 @@
     "babel-runtime": "^6.26.0",
     "did-resolver": "^0.0.4",
     "ethr-did-registry": "^0.0.2",
-    "truffle-contract": "^3.0.4"
+    "truffle-contract": "^3.0.4",
+    "crypto-browserify": "^3.12.0",
   },
   "standard": {
     "ignore": [
