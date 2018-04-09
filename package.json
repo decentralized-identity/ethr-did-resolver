@@ -1,6 +1,6 @@
 {
   "name": "ethr-did-resolver",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Resolve DID documents around ethereum addresses",
   "main": "lib/register.js",
   "repository": {
@@ -10,7 +10,10 @@
   "files": [
     "dist",
     "lib",
-    "src"
+    "src",
+    "LICENSE",
+    "babel-preset.js",
+    ".babelrc"
   ],
   "author": "Pelle Braendgaard <pelle.braendgaard@consensys.net>",
   "license": "Apache-2.0",
