@@ -36,7 +36,6 @@
     "ganache-cli": "^6.1.0",
     "jest": "^22.4.3",
     "regenerator-runtime": "^0.11.1",
-    "sinon": "^4.0.1",
     "standard": "^11.0.0"
   },
   "dependencies": {
@@ -44,8 +43,7 @@
     "babel-runtime": "^6.26.0",
     "did-resolver": "^0.0.4",
     "ethr-did-registry": "^0.0.2",
-    "truffle-contract": "^3.0.4",
-    "crypto-browserify": "^3.12.0"
+    "truffle-contract": "^3.0.4"
   },
   "standard": {
     "ignore": [
