@@ -10,6 +10,7 @@
   "files": [
     "dist",
     "lib",
+    "contracts",
     "src",
     "LICENSE",
     "babel-preset.js",

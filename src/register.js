@@ -3,7 +3,7 @@ import HttpProvider from 'ethjs-provider-http'
 import Eth from 'ethjs-query'
 import abi from 'ethjs-abi'
 import EthContract from 'ethjs-contract'
-import DidRegistryContract from 'ethr-did-registry'
+import DidRegistryContract from '../contracts/ethr-did-registry.json'
 
 export const REGISTRY = '0xc1b66dea11f8f321b7981e1666fdaf3637fe0f61'
 
@@ -119,9 +119,9 @@ function register (conf = {}) {
   const provider = configureProvider(conf)
   const eth = new Eth(provider)
   const registryAddress = conf.registry || REGISTRY
-  const DidReg = new EthContract(eth)(DidRegistryContract.abi)
+  const DidReg = new EthContract(eth)(DidRegistryContract)
   const didReg = DidReg.at(registryAddress)
-  const logDecoder = abi.logDecoder(DidRegistryContract.abi, false)
+  const logDecoder = abi.logDecoder(DidRegistryContract, false)
 
   const lastChanged = async (identity) => {
     const result = await didReg.changed(identity)
