@@ -133,7 +133,7 @@ function register (conf = {}) {
     const history = []
     let previousChange = await lastChanged(identity)
     while (previousChange) {
-      const logs = await eth.getLogs({address: registryAddress, fromBlock: previousChange, toBlock: previousChange})
+      const logs = await eth.getLogs({address: registryAddress, topics: [null, `0x000000000000000000000000${identity.slice(2)}`], fromBlock: previousChange, toBlock: previousChange})
       const events = logDecoder(logs)
       previousChange = undefined
       for (let event of events) {
