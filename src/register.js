@@ -4,7 +4,7 @@ import Eth from 'ethjs-query'
 import abi from 'ethjs-abi'
 import EthContract from 'ethjs-contract'
 import DidRegistryContract from '../contracts/ethr-did-registry.json'
-
+import { Buffer } from 'buffer'
 export const REGISTRY = '0xc1b66dea11f8f321b7981e1666fdaf3637fe0f61'
 
 export function wrapDidDocument (did, owner, history) {
