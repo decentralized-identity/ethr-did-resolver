@@ -19,7 +19,7 @@ contract('EthereumDIDRegistry', function(accounts) {
 
   const privateKey2 = Buffer.from('a285ab66393c5fdda46d6fbad9e27fafd438254ab72ad5acb681a0e9f20f5d7a', 'hex')
   const signerAddress2 = '0xea91e58e9fa466786726f0a947e8583c7c5b3185'
- 
+
   // console.log({identity,identity2, delegate, delegate2, badboy})
   before(async () => {
     didReg = await EthereumDIDRegistry.deployed()
@@ -48,7 +48,16 @@ contract('EthereumDIDRegistry', function(accounts) {
     }
     return str
   }
-  
+
+  function bytes32ToString (bytes) {
+    return Buffer.from(bytes.slice(2).split('00')[0], 'hex').toString()
+  }
+
+  function stringToBytes32 (str) {
+    const buffstr = Buffer.from(str).toString('hex')
+    return buffstr + '0'.repeat(64 - buffstr.length)
+  }
+
   function leftPad (data, size = 64) {
     if (data.length === size) return data
     return '0'.repeat(size - data.length) + data
@@ -63,7 +72,7 @@ contract('EthereumDIDRegistry', function(accounts) {
     const publicKey = ethutil.ecrecover(
       hash,
       signature.v,
-      signature.r, 
+      signature.r,
       signature.s
     )
     return {
@@ -117,7 +126,7 @@ contract('EthereumDIDRegistry', function(accounts) {
       })
 
       describe('as new owner', () => {
-        let tx        
+        let tx
         before(async () => {
           previousChange = await didReg.changed(identity)
           tx = await didReg.changeOwner(identity, delegate2, {from: delegate})
@@ -214,7 +223,7 @@ contract('EthereumDIDRegistry', function(accounts) {
           const event = tx.logs[0]
           assert.equal(event.event, 'DIDDelegateChanged')
           assert.equal(event.args.identity, identity)
-          assert.equal(event.args.delegateType, 'attestor')
+          assert.equal(bytes32ToString(event.args.delegateType), 'attestor')
           assert.equal(event.args.delegate, delegate3)
           assert.equal(event.args.validTo.toNumber(), block.timestamp + 86400)
           assert.equal(event.args.previousChange.toNumber(), previousChange.toNumber())
@@ -237,7 +246,7 @@ contract('EthereumDIDRegistry', function(accounts) {
         let tx
         before(async () => {
           previousChange = await didReg.changed(signerAddress)
-          const sig = await signData(signerAddress, signerAddress2, privateKey2, Buffer.from('addDelegateattestor').toString('hex') + stripHexPrefix(delegate) + leftPad(new BN(86400).toString(16)))
+          const sig = await signData(signerAddress, signerAddress2, privateKey2, Buffer.from('addDelegate').toString('hex') + stringToBytes32('attestor') + stripHexPrefix(delegate) + leftPad(new BN(86400).toString(16)))
           tx = await didReg.addDelegateSigned(signerAddress, sig.v, sig.r, sig.s, 'attestor', delegate, 86400, {from: badboy})
           block = await getBlock(tx.receipt.blockNumber)
         })
@@ -253,7 +262,7 @@ contract('EthereumDIDRegistry', function(accounts) {
           const event = tx.logs[0]
           assert.equal(event.event, 'DIDDelegateChanged')
           assert.equal(event.args.identity, signerAddress)
-          assert.equal(event.args.delegateType, 'attestor')
+          assert.equal(bytes32ToString(event.args.delegateType), 'attestor')
           assert.equal(event.args.delegate, delegate)
           assert.equal(event.args.validTo.toNumber(), block.timestamp + 86400)
           assert.equal(event.args.previousChange.toNumber(), previousChange.toNumber())
@@ -288,7 +297,7 @@ contract('EthereumDIDRegistry', function(accounts) {
           const event = tx.logs[0]
           assert.equal(event.event, 'DIDDelegateChanged')
           assert.equal(event.args.identity, identity)
-          assert.equal(event.args.delegateType, 'attestor')
+          assert.equal(bytes32ToString(event.args.delegateType), 'attestor')
           assert.equal(event.args.delegate, delegate3)
           assert.equal(event.args.validTo.toNumber(), 0)
           assert.equal(event.args.previousChange.toNumber(), previousChange.toNumber())
@@ -311,7 +320,7 @@ contract('EthereumDIDRegistry', function(accounts) {
         let tx
         before(async () => {
           previousChange = await didReg.changed(signerAddress)
-          const sig = await signData(signerAddress, signerAddress2, privateKey2, Buffer.from('revokeDelegateattestor').toString('hex') + stripHexPrefix(delegate))
+          const sig = await signData(signerAddress, signerAddress2, privateKey2, Buffer.from('revokeDelegate').toString('hex') + stringToBytes32('attestor') + stripHexPrefix(delegate))
           tx = await didReg.revokeDelegateSigned(signerAddress, sig.v, sig.r, sig.s, 'attestor', delegate, {from: badboy})
           block = await getBlock(tx.receipt.blockNumber)
         })
@@ -327,7 +336,7 @@ contract('EthereumDIDRegistry', function(accounts) {
           const event = tx.logs[0]
           assert.equal(event.event, 'DIDDelegateChanged')
           assert.equal(event.args.identity, signerAddress)
-          assert.equal(event.args.delegateType, 'attestor')
+          assert.equal(bytes32ToString(event.args.delegateType), 'attestor')
           assert.equal(event.args.delegate, delegate)
           assert.equal(event.args.validTo.toNumber(), 0)
           assert.equal(event.args.previousChange.toNumber(), previousChange.toNumber())
@@ -354,7 +363,7 @@ contract('EthereumDIDRegistry', function(accounts) {
           const event = tx.logs[0]
           assert.equal(event.event, 'DIDAttributeChanged')
           assert.equal(event.args.identity, identity)
-          assert.equal(event.args.name, 'encryptionKey')
+          assert.equal(bytes32ToString(event.args.name), 'encryptionKey')
           assert.equal(event.args.value, '0x6d796b6579')
           assert.equal(event.args.validTo.toNumber(), block.timestamp + 86400)
           assert.equal(event.args.previousChange.toNumber(), previousChange.toNumber())
@@ -378,7 +387,7 @@ contract('EthereumDIDRegistry', function(accounts) {
         let tx
         before(async () => {
           previousChange = await didReg.changed(signerAddress)
-          const sig = await signData(signerAddress, signerAddress, privateKey2, Buffer.from('setAttributeencryptionKeymykey').toString('hex') + leftPad(new BN(86400).toString(16)))
+          const sig = await signData(signerAddress, signerAddress, privateKey2, Buffer.from("setAttribute").toString('hex') + stringToBytes32("encryptionKey") + Buffer.from('mykey').toString('hex') + leftPad(new BN(86400).toString(16)))
           tx = await didReg.setAttributeSigned(signerAddress, sig.v, sig.r, sig.s, 'encryptionKey', 'mykey', 86400, {from: badboy})
           block = await getBlock(tx.receipt.blockNumber)
         })
@@ -390,7 +399,7 @@ contract('EthereumDIDRegistry', function(accounts) {
           const event = tx.logs[0]
           assert.equal(event.event, 'DIDAttributeChanged')
           assert.equal(event.args.identity, signerAddress)
-          assert.equal(event.args.name, 'encryptionKey')
+          assert.equal(bytes32ToString(event.args.name), 'encryptionKey')
           assert.equal(event.args.value, '0x6d796b6579')
           assert.equal(event.args.validTo.toNumber(), block.timestamp + 86400)
           assert.equal(event.args.previousChange.toNumber(), previousChange.toNumber())
@@ -417,7 +426,7 @@ contract('EthereumDIDRegistry', function(accounts) {
           const event = tx.logs[0]
           assert.equal(event.event, 'DIDAttributeChanged')
           assert.equal(event.args.identity, identity)
-          assert.equal(event.args.name, 'encryptionKey')
+          assert.equal(bytes32ToString(event.args.name), 'encryptionKey')
           assert.equal(event.args.value, '0x6d796b6579')
           assert.equal(event.args.validTo.toNumber(), 0)
           assert.equal(event.args.previousChange.toNumber(), previousChange.toNumber())
@@ -441,7 +450,7 @@ contract('EthereumDIDRegistry', function(accounts) {
         let tx
         before(async () => {
           previousChange = await didReg.changed(signerAddress)
-          const sig = await signData(signerAddress, signerAddress, privateKey2, Buffer.from('revokeAttributeencryptionKeymykey').toString('hex'))
+          const sig = await signData(signerAddress, signerAddress, privateKey2, Buffer.from('revokeAttribute').toString('hex') + stringToBytes32('encryptionKey') + Buffer.from('mykey').toString('hex'))
           tx = await didReg.revokeAttributeSigned(signerAddress, sig.v, sig.r, sig.s, 'encryptionKey', 'mykey', {from: badboy})
           block = await getBlock(tx.receipt.blockNumber)
         })
@@ -453,7 +462,7 @@ contract('EthereumDIDRegistry', function(accounts) {
           const event = tx.logs[0]
           assert.equal(event.event, 'DIDAttributeChanged')
           assert.equal(event.args.identity, signerAddress)
-          assert.equal(event.args.name, 'encryptionKey')
+          assert.equal(bytes32ToString(event.args.name), 'encryptionKey')
           assert.equal(event.args.value, '0x6d796b6579')
           assert.equal(event.args.validTo.toNumber(), 0)
           assert.equal(event.args.previousChange.toNumber(), previousChange.toNumber())
