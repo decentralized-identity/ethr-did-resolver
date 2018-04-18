@@ -63,7 +63,7 @@ contract EthereumDIDRegistry {
 
   function changeOwner(address identity, address actor, address newOwner) internal onlyOwner(identity, actor) {
     owners[identity] = newOwner;
-    DIDOwnerChanged(identity, newOwner, changed[identity]);
+    emit DIDOwnerChanged(identity, newOwner, changed[identity]);
     changed[identity] = block.number;
   }
 
@@ -78,7 +78,7 @@ contract EthereumDIDRegistry {
 
   function addDelegate(address identity, address actor, bytes32 delegateType, address delegate, uint validity ) internal onlyOwner(identity, actor) {
     delegates[identity][keccak256(delegateType)][delegate] = block.timestamp + validity;
-    DIDDelegateChanged(identity, delegateType, delegate, block.timestamp + validity, changed[identity]);
+    emit DIDDelegateChanged(identity, delegateType, delegate, block.timestamp + validity, changed[identity]);
     changed[identity] = block.number;
   }
 
@@ -93,7 +93,7 @@ contract EthereumDIDRegistry {
 
   function revokeDelegate(address identity, address actor, bytes32 delegateType, address delegate) internal onlyOwner(identity, actor) {
     delegates[identity][keccak256(delegateType)][delegate] = 0;
-    DIDDelegateChanged(identity, delegateType, delegate, 0, changed[identity]);
+    emit DIDDelegateChanged(identity, delegateType, delegate, 0, changed[identity]);
     changed[identity] = block.number;
   }
 
@@ -107,7 +107,7 @@ contract EthereumDIDRegistry {
   }
 
   function setAttribute(address identity, address actor, bytes32 name, bytes value, uint validity ) internal onlyOwner(identity, actor) {
-    DIDAttributeChanged(identity, name, value, block.timestamp + validity, changed[identity]);
+    emit DIDAttributeChanged(identity, name, value, block.timestamp + validity, changed[identity]);
     changed[identity] = block.number;
   }
 
@@ -121,7 +121,7 @@ contract EthereumDIDRegistry {
   }
 
   function revokeAttribute(address identity, address actor, bytes32 name, bytes value ) internal onlyOwner(identity, actor) {
-    DIDAttributeChanged(identity, name, value, 0, changed[identity]);
+    emit DIDAttributeChanged(identity, name, value, 0, changed[identity]);
     changed[identity] = block.number;
   }
 
