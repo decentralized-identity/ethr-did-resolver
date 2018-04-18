@@ -54,13 +54,6 @@ contract EthereumDIDRegistry {
     return (validity >= block.timestamp);
   }
 
-  function validDelegateSignature(address identity, bytes32 delegateType, uint8 sigV, bytes32 sigR, bytes32 sigS, bytes32 hash) public returns(address) {
-    address signer = ecrecover(hash, sigV, sigR, sigS);
-    require(validDelegate(identity, delegateType, signer));
-    nonce[signer]++;
-    return signer;
-  }
-
   function changeOwner(address identity, address actor, address newOwner) internal onlyOwner(identity, actor) {
     owners[identity] = newOwner;
     emit DIDOwnerChanged(identity, newOwner, changed[identity]);
