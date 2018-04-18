@@ -34,9 +34,6 @@ contract EthereumDIDRegistry {
     uint previousChange
   );
 
-  function EthereumDIDRegistry() public {
-  }
-
   function identityOwner(address identity) public view returns(address) {
      address owner = owners[identity];
      if (owner != 0x0) {
