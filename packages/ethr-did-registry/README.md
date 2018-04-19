@@ -46,7 +46,7 @@ let didReg = DidReg.at(DidRegistryContract.networks[networkId].address)
 |Kovan (id: 42)|[0x160c5ce58e2cc4fe7cc45a9dd569a10083b2a275](https://kovan.etherscan.io/address/0x160c5ce58e2cc4fe7cc45a9dd569a10083b2a275)|
 
 ## On-chain vs Off-chain
-For on-chain interactions Ethereum has a built in account abstraction that can be used regardless of wether the account is a smart contract or a key pair. Any transaction has a `msg.sender` as the verified send of the transaction.
+For on-chain interactions Ethereum has a built in account abstraction that can be used regardless of whether the account is a smart contract or a key pair. Any transaction has a `msg.sender` as the verified send of the transaction.
 
 Since each Ethereum transaction has to be funded, there is a growing trend of on-chain transactions that are authenticated via an externally created signature and not by the actual transaction originator. This allows 3rd party funding services or receiver pays without any fundamental changes to the underlying Ethereum architecture.
 
