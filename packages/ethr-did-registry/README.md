@@ -221,7 +221,7 @@ while (previousChange) {
 
 The primary owner key should be looked up using `identityOwner(identity)`.  This should be the first of the publicKeys listed.
 
-Iterate thought the `DIDDelegateChanged` events to build a list of additional keys and authentication sections as needed. The list of delegateTypes to include is still to be determined.
+Iterate through the `DIDDelegateChanged` events to build a list of additional keys and authentication sections as needed. The list of delegateTypes to include is still to be determined.
 
 Iterate through `DIDAttributeChanged` events for service entries, encryption public keys and other public names. The attribute names are still to be determined.
 
