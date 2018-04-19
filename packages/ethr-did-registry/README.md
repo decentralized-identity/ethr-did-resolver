@@ -98,15 +98,6 @@ Validity is set using amount of seconds from the time that adding the delegate i
 ### Looking up a delegate
 You can check if an address is a delegate for an identity using the`validDelegate(address identity, string delegateType, address delegate) returns(bool)` function. This returns true if the address is a valid delegate of the given delegateType.
 
-### Checking a delegate signature
-The registry provides a handy function for checking an externally signed signature in your own contracts and validating it is a particular kind of delegate. 
-
-This frees you from adding nonce and signature management code in your  own contracts.
-
-`validDelegateSignature(address identity, string delegateType, uint8 sigV, bytes32 sigR, bytes32 sigS, bytes32 hash) public returns(address)`
-
-In your own code you will need to calculate the hash yourself.
-
 ### Adding a delegate
 
 An identity can assign multiple delegates to manage signing on their behalf for specific purposes.
