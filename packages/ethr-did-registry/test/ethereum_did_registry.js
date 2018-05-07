@@ -3,6 +3,9 @@ var sha3 =  require('js-sha3').keccak_256
 var EthereumDIDRegistry = artifacts.require("./EthereumDIDRegistry.sol");
 var BN = require('bn.js')
 
+const True = '01'
+const False = '00'
+
 contract('EthereumDIDRegistry', function(accounts) {
   let didReg
   const identity = accounts[0]
@@ -12,6 +15,7 @@ contract('EthereumDIDRegistry', function(accounts) {
   const delegate = accounts[2]
   const delegate2 = accounts[3]
   const delegate3 = accounts[4]
+  const delegate4 = accounts[5]
   const badboy = accounts[9]
 
   const privateKey = Buffer.from('a285ab66393c5fdda46d6fbad9e27fafd438254ab72ad5acb681a0e9f20f5d7b', 'hex')
@@ -208,7 +212,7 @@ contract('EthereumDIDRegistry', function(accounts) {
         let block
         before(async () => {
           previousChange = await didReg.changed(identity)
-          tx = await didReg.addDelegate(identity, 'attestor', delegate3, 86400, {from: delegate2})
+          tx = await didReg.addDelegate(identity, 'attestor', delegate3, 86400, false, {from: delegate2})
           block = await getBlock(tx.receipt.blockNumber)
         })
         it('validDelegate should be true', async () => {
@@ -233,7 +237,7 @@ contract('EthereumDIDRegistry', function(accounts) {
       describe('as attacker', () => {
         it('should fail', async () => {
           try {
-            const tx = await didReg.addDelegate(identity, 'attestor', badboy, 86400, {from: badboy})
+            const tx = await didReg.addDelegate(identity, 'attestor', badboy, 86400, false, {from: badboy})
             assert.equal(tx, undefined, 'this should not happen')
           } catch (error) {
             assert.equal(error.message, 'VM Exception while processing transaction: revert')
@@ -243,29 +247,55 @@ contract('EthereumDIDRegistry', function(accounts) {
     })
     describe('using signature', () => {
       describe('as current owner', () => {
-        let tx
+        let tx1
+        let block1
+        let previousChange1
+        let tx2
+        let block2
+        let previousChange2
         before(async () => {
-          previousChange = await didReg.changed(signerAddress)
-          const sig = await signData(signerAddress, signerAddress2, privateKey2, Buffer.from('addDelegate').toString('hex') + stringToBytes32('attestor') + stripHexPrefix(delegate) + leftPad(new BN(86400).toString(16)))
-          tx = await didReg.addDelegateSigned(signerAddress, sig.v, sig.r, sig.s, 'attestor', delegate, 86400, {from: badboy})
-          block = await getBlock(tx.receipt.blockNumber)
+          // revokable delegate
+          previousChange1 = await didReg.changed(signerAddress)
+          let sig = await signData(signerAddress, signerAddress2, privateKey2, Buffer.from('addDelegate').toString('hex') + stringToBytes32('attestor') + stripHexPrefix(delegate) + leftPad(new BN(86400).toString(16)) + False)
+          tx1 = await didReg.addDelegateSigned(signerAddress, sig.v, sig.r, sig.s, 'attestor', delegate, 86400, false, {from: badboy})
+          block1 = await getBlock(tx1.receipt.blockNumber)
+          // unrevokable delegate4
+          previousChange2 = await didReg.changed(signerAddress)
+          sig = await signData(signerAddress, signerAddress2, privateKey2, Buffer.from('addDelegate').toString('hex') + stringToBytes32('attestor') + stripHexPrefix(delegate4) + leftPad(new BN(86400).toString(16)) + True)
+          tx2 = await didReg.addDelegateSigned(signerAddress, sig.v, sig.r, sig.s, 'attestor', delegate4, 86400, true, {from: badboy})
+          block2 = await getBlock(tx2.receipt.blockNumber)
         })
         it('validDelegate should be true', async () => {
-          const valid = await didReg.validDelegate(signerAddress, 'attestor', delegate)
+          let valid = await didReg.validDelegate(signerAddress, 'attestor', delegate)
           assert.equal(valid, true, 'assigned delegate correctly')
+          let unrevokable = await didReg.unrevokable.call(signerAddress, 'attestor', delegate)
+          assert.equal(unrevokable, false, 'delegate should be not unrevokable')
+          // unrevokable delegate4
+          valid = await didReg.validDelegate(signerAddress, 'attestor', delegate4)
+          assert.equal(valid, true, 'assigned delegate correctly')
+          unrevokable = await didReg.isDelegateUnrevokable(signerAddress, 'attestor', delegate4)
+          assert.equal(unrevokable, true, 'delegate4 should be unrevokable')
         })
         it('should sets changed to transaction block', async () => {
           const latest = await didReg.changed(signerAddress)
-          assert.equal(latest, tx.receipt.blockNumber)
+          assert.equal(latest.toNumber(), tx2.receipt.blockNumber)
         })
         it('should create DIDDelegateChanged event', () => {
-          const event = tx.logs[0]
+          let event = tx1.logs[0]
           assert.equal(event.event, 'DIDDelegateChanged')
           assert.equal(event.args.identity, signerAddress)
           assert.equal(bytes32ToString(event.args.delegateType), 'attestor')
           assert.equal(event.args.delegate, delegate)
-          assert.equal(event.args.validTo.toNumber(), block.timestamp + 86400)
-          assert.equal(event.args.previousChange.toNumber(), previousChange.toNumber())
+          assert.equal(event.args.validTo.toNumber(), block1.timestamp + 86400)
+          assert.equal(event.args.previousChange.toNumber(), previousChange1.toNumber())
+          // unrevokable delegate4
+          event = tx2.logs[0]
+          assert.equal(event.event, 'DIDDelegateChanged')
+          assert.equal(event.args.identity, signerAddress)
+          assert.equal(bytes32ToString(event.args.delegateType), 'attestor')
+          assert.equal(event.args.delegate, delegate4)
+          assert.equal(event.args.validTo.toNumber(), block1.timestamp + 86400)
+          assert.equal(event.args.previousChange.toNumber(), previousChange2.toNumber())
         })
       })
     })
@@ -303,7 +333,6 @@ contract('EthereumDIDRegistry', function(accounts) {
           assert.equal(event.args.previousChange.toNumber(), previousChange.toNumber())
         })
       })
-
       describe('as attacker', () => {
         it('should fail', async () => {
           try {
@@ -342,6 +371,19 @@ contract('EthereumDIDRegistry', function(accounts) {
           assert.equal(event.args.previousChange.toNumber(), previousChange.toNumber())
         })
       })
+      describe('unrevokable delegate should not be revokable', async () => {
+        it('should throw if trying to revoke delegate4', async () => {
+          let didThrow = false
+          const sig = await signData(signerAddress, signerAddress2, privateKey2, Buffer.from('revokeDelegate').toString('hex') + stringToBytes32('attestor') + stripHexPrefix(delegate4))
+          try {
+            await didReg.revokeDelegateSigned(signerAddress, sig.v, sig.r, sig.s, 'attestor', delegate4, {from: badboy})
+          } catch (e) {
+            didThrow = true
+          }
+          assert.isTrue(didThrow, 'should have thrown')
+        })
+      })
+
     })
   })
 
