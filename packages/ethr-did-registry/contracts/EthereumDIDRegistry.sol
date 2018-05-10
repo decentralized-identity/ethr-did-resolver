@@ -4,7 +4,7 @@ contract EthereumDIDRegistry {
 
   mapping(address => address) public owners;
   mapping(address => mapping(bytes32 => mapping(address => uint))) public delegates;
-  mapping(address => mapping(bytes32 => mapping(address => bool))) public unrevokable;
+  mapping(address => mapping(bytes32 => mapping(address => uint))) public unrevokableUntil;
   mapping(address => uint) public changed;
   mapping(address => uint) public nonce;
 
@@ -55,8 +55,8 @@ contract EthereumDIDRegistry {
     return (validity >= block.timestamp);
   }
 
-  function isDelegateUnrevokable(address identity, bytes32 delegateType, address delegate) public view returns(bool) {
-      return unrevokable[identity][keccak256(delegateType)][delegate];
+  function isDelegateRevokable(address identity, bytes32 delegateType, address delegate) public view returns(bool) {
+      return unrevokableUntil[identity][keccak256(delegateType)][delegate] < block.timestamp;
   }
 
   function changeOwner(address identity, address actor, address newOwner) internal onlyOwner(identity, actor) {
@@ -74,26 +74,26 @@ contract EthereumDIDRegistry {
     changeOwner(identity, checkSignature(identity, sigV, sigR, sigS, hash), newOwner);
   }
 
-  function addDelegate(address identity, address actor, bytes32 delegateType, address delegate, uint validity, bool _unrevokable) internal onlyOwner(identity, actor) {
+  function addDelegate(address identity, address actor, bytes32 delegateType, address delegate, uint validity, bool revokable) internal onlyOwner(identity, actor) {
     delegates[identity][keccak256(delegateType)][delegate] = block.timestamp + validity;
-    if (_unrevokable) {
-        unrevokable[identity][keccak256(delegateType)][delegate] = true;
+    if (!revokable) {
+        unrevokableUntil[identity][keccak256(delegateType)][delegate] = block.timestamp + validity;
     }
     emit DIDDelegateChanged(identity, delegateType, delegate, block.timestamp + validity, changed[identity]);
     changed[identity] = block.number;
   }
 
-  function addDelegate(address identity, bytes32 delegateType, address delegate, uint validity, bool _unrevokable) public {
-    addDelegate(identity, msg.sender, delegateType, delegate, validity, _unrevokable);
+  function addDelegate(address identity, bytes32 delegateType, address delegate, uint validity, bool revokable) public {
+    addDelegate(identity, msg.sender, delegateType, delegate, validity, revokable);
   }
 
-  function addDelegateSigned(address identity, uint8 sigV, bytes32 sigR, bytes32 sigS, bytes32 delegateType, address delegate, uint validity, bool _unrevokable) public {
-    bytes32 hash = keccak256(byte(0x19), byte(0), this, nonce[identityOwner(identity)], identity, "addDelegate", delegateType, delegate, validity, _unrevokable);
-    addDelegate(identity, checkSignature(identity, sigV, sigR, sigS, hash), delegateType, delegate, validity, _unrevokable);
+  function addDelegateSigned(address identity, uint8 sigV, bytes32 sigR, bytes32 sigS, bytes32 delegateType, address delegate, uint validity, bool revokable) public {
+    bytes32 hash = keccak256(byte(0x19), byte(0), this, nonce[identityOwner(identity)], identity, "addDelegate", delegateType, delegate, validity, revokable);
+    addDelegate(identity, checkSignature(identity, sigV, sigR, sigS, hash), delegateType, delegate, validity, revokable);
   }
 
   function revokeDelegate(address identity, address actor, bytes32 delegateType, address delegate) internal onlyOwner(identity, actor) {
-    require(!unrevokable[identity][keccak256(delegateType)][delegate]);
+    require(unrevokableUntil[identity][keccak256(delegateType)][delegate] < block.timestamp);
     delegates[identity][keccak256(delegateType)][delegate] = 0;
     emit DIDDelegateChanged(identity, delegateType, delegate, 0, changed[identity]);
     changed[identity] = block.number;

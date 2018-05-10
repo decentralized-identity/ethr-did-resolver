@@ -212,7 +212,7 @@ contract('EthereumDIDRegistry', function(accounts) {
         let block
         before(async () => {
           previousChange = await didReg.changed(identity)
-          tx = await didReg.addDelegate(identity, 'attestor', delegate3, 86400, false, {from: delegate2})
+          tx = await didReg.addDelegate(identity, 'attestor', delegate3, 86400, true, {from: delegate2})
           block = await getBlock(tx.receipt.blockNumber)
         })
         it('validDelegate should be true', async () => {
@@ -237,7 +237,7 @@ contract('EthereumDIDRegistry', function(accounts) {
       describe('as attacker', () => {
         it('should fail', async () => {
           try {
-            const tx = await didReg.addDelegate(identity, 'attestor', badboy, 86400, false, {from: badboy})
+            const tx = await didReg.addDelegate(identity, 'attestor', badboy, 86400, true, {from: badboy})
             assert.equal(tx, undefined, 'this should not happen')
           } catch (error) {
             assert.equal(error.message, 'VM Exception while processing transaction: revert')
@@ -256,25 +256,25 @@ contract('EthereumDIDRegistry', function(accounts) {
         before(async () => {
           // revokable delegate
           previousChange1 = await didReg.changed(signerAddress)
-          let sig = await signData(signerAddress, signerAddress2, privateKey2, Buffer.from('addDelegate').toString('hex') + stringToBytes32('attestor') + stripHexPrefix(delegate) + leftPad(new BN(86400).toString(16)) + False)
-          tx1 = await didReg.addDelegateSigned(signerAddress, sig.v, sig.r, sig.s, 'attestor', delegate, 86400, false, {from: badboy})
+          let sig = await signData(signerAddress, signerAddress2, privateKey2, Buffer.from('addDelegate').toString('hex') + stringToBytes32('attestor') + stripHexPrefix(delegate) + leftPad(new BN(86400).toString(16)) + True)
+          tx1 = await didReg.addDelegateSigned(signerAddress, sig.v, sig.r, sig.s, 'attestor', delegate, 86400, true, {from: badboy})
           block1 = await getBlock(tx1.receipt.blockNumber)
           // unrevokable delegate4
           previousChange2 = await didReg.changed(signerAddress)
-          sig = await signData(signerAddress, signerAddress2, privateKey2, Buffer.from('addDelegate').toString('hex') + stringToBytes32('attestor') + stripHexPrefix(delegate4) + leftPad(new BN(86400).toString(16)) + True)
-          tx2 = await didReg.addDelegateSigned(signerAddress, sig.v, sig.r, sig.s, 'attestor', delegate4, 86400, true, {from: badboy})
+          sig = await signData(signerAddress, signerAddress2, privateKey2, Buffer.from('addDelegate').toString('hex') + stringToBytes32('attestor') + stripHexPrefix(delegate4) + leftPad(new BN(86400).toString(16)) + False)
+          tx2 = await didReg.addDelegateSigned(signerAddress, sig.v, sig.r, sig.s, 'attestor', delegate4, 86400, false, {from: badboy})
           block2 = await getBlock(tx2.receipt.blockNumber)
         })
         it('validDelegate should be true', async () => {
           let valid = await didReg.validDelegate(signerAddress, 'attestor', delegate)
           assert.equal(valid, true, 'assigned delegate correctly')
-          let unrevokable = await didReg.unrevokable.call(signerAddress, 'attestor', delegate)
-          assert.equal(unrevokable, false, 'delegate should be not unrevokable')
+          let revokable = await didReg.isDelegateRevokable(signerAddress, 'attestor', delegate)
+          assert.equal(revokable, true, 'delegate should be revokable')
           // unrevokable delegate4
           valid = await didReg.validDelegate(signerAddress, 'attestor', delegate4)
           assert.equal(valid, true, 'assigned delegate correctly')
-          unrevokable = await didReg.isDelegateUnrevokable(signerAddress, 'attestor', delegate4)
-          assert.equal(unrevokable, true, 'delegate4 should be unrevokable')
+          revokable = await didReg.isDelegateRevokable(signerAddress, 'attestor', delegate4)
+          assert.equal(revokable, false, 'delegate4 should be unrevokable')
         })
         it('should sets changed to transaction block', async () => {
           const latest = await didReg.changed(signerAddress)
