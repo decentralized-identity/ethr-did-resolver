@@ -4,7 +4,6 @@ contract EthereumDIDRegistry {
 
   mapping(address => address) public owners;
   mapping(address => mapping(bytes32 => mapping(address => uint))) public delegates;
-  mapping(address => mapping(bytes32 => mapping(address => uint))) public unrevokableUntil;
   mapping(address => uint) public changed;
   mapping(address => uint) public nonce;
 
@@ -52,11 +51,7 @@ contract EthereumDIDRegistry {
 
   function validDelegate(address identity, bytes32 delegateType, address delegate) public view returns(bool) {
     uint validity = delegates[identity][keccak256(delegateType)][delegate];
-    return (validity >= block.timestamp);
-  }
-
-  function isDelegateRevokable(address identity, bytes32 delegateType, address delegate) public view returns(bool) {
-      return unrevokableUntil[identity][keccak256(delegateType)][delegate] < block.timestamp;
+    return (validity > now);
   }
 
   function changeOwner(address identity, address actor, address newOwner) internal onlyOwner(identity, actor) {
@@ -74,28 +69,24 @@ contract EthereumDIDRegistry {
     changeOwner(identity, checkSignature(identity, sigV, sigR, sigS, hash), newOwner);
   }
 
-  function addDelegate(address identity, address actor, bytes32 delegateType, address delegate, uint validity, bool revokable) internal onlyOwner(identity, actor) {
-    delegates[identity][keccak256(delegateType)][delegate] = block.timestamp + validity;
-    if (!revokable) {
-        unrevokableUntil[identity][keccak256(delegateType)][delegate] = block.timestamp + validity;
-    }
-    emit DIDDelegateChanged(identity, delegateType, delegate, block.timestamp + validity, changed[identity]);
+  function addDelegate(address identity, address actor, bytes32 delegateType, address delegate, uint validity) internal onlyOwner(identity, actor) {
+    delegates[identity][keccak256(delegateType)][delegate] = now + validity;
+    emit DIDDelegateChanged(identity, delegateType, delegate, now + validity, changed[identity]);
     changed[identity] = block.number;
   }
 
-  function addDelegate(address identity, bytes32 delegateType, address delegate, uint validity, bool revokable) public {
-    addDelegate(identity, msg.sender, delegateType, delegate, validity, revokable);
+  function addDelegate(address identity, bytes32 delegateType, address delegate, uint validity) public {
+    addDelegate(identity, msg.sender, delegateType, delegate, validity);
   }
 
-  function addDelegateSigned(address identity, uint8 sigV, bytes32 sigR, bytes32 sigS, bytes32 delegateType, address delegate, uint validity, bool revokable) public {
-    bytes32 hash = keccak256(byte(0x19), byte(0), this, nonce[identityOwner(identity)], identity, "addDelegate", delegateType, delegate, validity, revokable);
-    addDelegate(identity, checkSignature(identity, sigV, sigR, sigS, hash), delegateType, delegate, validity, revokable);
+  function addDelegateSigned(address identity, uint8 sigV, bytes32 sigR, bytes32 sigS, bytes32 delegateType, address delegate, uint validity) public {
+    bytes32 hash = keccak256(byte(0x19), byte(0), this, nonce[identityOwner(identity)], identity, "addDelegate", delegateType, delegate, validity);
+    addDelegate(identity, checkSignature(identity, sigV, sigR, sigS, hash), delegateType, delegate, validity);
   }
 
   function revokeDelegate(address identity, address actor, bytes32 delegateType, address delegate) internal onlyOwner(identity, actor) {
-    require(unrevokableUntil[identity][keccak256(delegateType)][delegate] < block.timestamp);
-    delegates[identity][keccak256(delegateType)][delegate] = 0;
-    emit DIDDelegateChanged(identity, delegateType, delegate, 0, changed[identity]);
+    delegates[identity][keccak256(delegateType)][delegate] = now;
+    emit DIDDelegateChanged(identity, delegateType, delegate, now, changed[identity]);
     changed[identity] = block.number;
   }
 
@@ -109,7 +100,7 @@ contract EthereumDIDRegistry {
   }
 
   function setAttribute(address identity, address actor, bytes32 name, bytes value, uint validity ) internal onlyOwner(identity, actor) {
-    emit DIDAttributeChanged(identity, name, value, block.timestamp + validity, changed[identity]);
+    emit DIDAttributeChanged(identity, name, value, now + validity, changed[identity]);
     changed[identity] = block.number;
   }
 
