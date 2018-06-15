@@ -51,7 +51,7 @@ contract EthereumDIDRegistry {
 
   function validDelegate(address identity, bytes32 delegateType, address delegate) public view returns(bool) {
     uint validity = delegates[identity][keccak256(delegateType)][delegate];
-    return (validity >= block.timestamp);
+    return (validity > now);
   }
 
   function changeOwner(address identity, address actor, address newOwner) internal onlyOwner(identity, actor) {
@@ -65,13 +65,13 @@ contract EthereumDIDRegistry {
   }
 
   function changeOwnerSigned(address identity, uint8 sigV, bytes32 sigR, bytes32 sigS, address newOwner) public {
-    bytes32 hash = keccak256(byte(0x19), byte(0), this, nonce[identityOwner(identity)], identity, "changeOwner", newOwner); 
+    bytes32 hash = keccak256(byte(0x19), byte(0), this, nonce[identityOwner(identity)], identity, "changeOwner", newOwner);
     changeOwner(identity, checkSignature(identity, sigV, sigR, sigS, hash), newOwner);
   }
 
-  function addDelegate(address identity, address actor, bytes32 delegateType, address delegate, uint validity ) internal onlyOwner(identity, actor) {
-    delegates[identity][keccak256(delegateType)][delegate] = block.timestamp + validity;
-    emit DIDDelegateChanged(identity, delegateType, delegate, block.timestamp + validity, changed[identity]);
+  function addDelegate(address identity, address actor, bytes32 delegateType, address delegate, uint validity) internal onlyOwner(identity, actor) {
+    delegates[identity][keccak256(delegateType)][delegate] = now + validity;
+    emit DIDDelegateChanged(identity, delegateType, delegate, now + validity, changed[identity]);
     changed[identity] = block.number;
   }
 
@@ -85,8 +85,8 @@ contract EthereumDIDRegistry {
   }
 
   function revokeDelegate(address identity, address actor, bytes32 delegateType, address delegate) internal onlyOwner(identity, actor) {
-    delegates[identity][keccak256(delegateType)][delegate] = 0;
-    emit DIDDelegateChanged(identity, delegateType, delegate, 0, changed[identity]);
+    delegates[identity][keccak256(delegateType)][delegate] = now;
+    emit DIDDelegateChanged(identity, delegateType, delegate, now, changed[identity]);
     changed[identity] = block.number;
   }
 
@@ -100,7 +100,7 @@ contract EthereumDIDRegistry {
   }
 
   function setAttribute(address identity, address actor, bytes32 name, bytes value, uint validity ) internal onlyOwner(identity, actor) {
-    emit DIDAttributeChanged(identity, name, value, block.timestamp + validity, changed[identity]);
+    emit DIDAttributeChanged(identity, name, value, now + validity, changed[identity]);
     changed[identity] = block.number;
   }
 

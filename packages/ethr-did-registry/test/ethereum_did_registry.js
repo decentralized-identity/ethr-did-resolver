@@ -3,6 +3,7 @@ var sha3 =  require('js-sha3').keccak_256
 var EthereumDIDRegistry = artifacts.require("./EthereumDIDRegistry.sol");
 var BN = require('bn.js')
 
+
 contract('EthereumDIDRegistry', function(accounts) {
   let didReg
   const identity = accounts[0]
@@ -12,6 +13,7 @@ contract('EthereumDIDRegistry', function(accounts) {
   const delegate = accounts[2]
   const delegate2 = accounts[3]
   const delegate3 = accounts[4]
+  const delegate4 = accounts[5]
   const badboy = accounts[9]
 
   const privateKey = Buffer.from('a285ab66393c5fdda46d6fbad9e27fafd438254ab72ad5acb681a0e9f20f5d7b', 'hex')
@@ -243,29 +245,34 @@ contract('EthereumDIDRegistry', function(accounts) {
     })
     describe('using signature', () => {
       describe('as current owner', () => {
-        let tx
+        let tx1
+        let block1
+        let previousChange1
+        let tx2
+        let block2
+        let previousChange2
         before(async () => {
-          previousChange = await didReg.changed(signerAddress)
-          const sig = await signData(signerAddress, signerAddress2, privateKey2, Buffer.from('addDelegate').toString('hex') + stringToBytes32('attestor') + stripHexPrefix(delegate) + leftPad(new BN(86400).toString(16)))
-          tx = await didReg.addDelegateSigned(signerAddress, sig.v, sig.r, sig.s, 'attestor', delegate, 86400, {from: badboy})
-          block = await getBlock(tx.receipt.blockNumber)
+          previousChange1 = await didReg.changed(signerAddress)
+          let sig = await signData(signerAddress, signerAddress2, privateKey2, Buffer.from('addDelegate').toString('hex') + stringToBytes32('attestor') + stripHexPrefix(delegate) + leftPad(new BN(86400).toString(16)))
+          tx1 = await didReg.addDelegateSigned(signerAddress, sig.v, sig.r, sig.s, 'attestor', delegate, 86400, {from: badboy})
+          block1 = await getBlock(tx1.receipt.blockNumber)
         })
         it('validDelegate should be true', async () => {
-          const valid = await didReg.validDelegate(signerAddress, 'attestor', delegate)
+          let valid = await didReg.validDelegate(signerAddress, 'attestor', delegate)
           assert.equal(valid, true, 'assigned delegate correctly')
         })
         it('should sets changed to transaction block', async () => {
           const latest = await didReg.changed(signerAddress)
-          assert.equal(latest, tx.receipt.blockNumber)
+          assert.equal(latest.toNumber(), tx1.receipt.blockNumber)
         })
         it('should create DIDDelegateChanged event', () => {
-          const event = tx.logs[0]
+          let event = tx1.logs[0]
           assert.equal(event.event, 'DIDDelegateChanged')
           assert.equal(event.args.identity, signerAddress)
           assert.equal(bytes32ToString(event.args.delegateType), 'attestor')
           assert.equal(event.args.delegate, delegate)
-          assert.equal(event.args.validTo.toNumber(), block.timestamp + 86400)
-          assert.equal(event.args.previousChange.toNumber(), previousChange.toNumber())
+          assert.equal(event.args.validTo.toNumber(), block1.timestamp + 86400)
+          assert.equal(event.args.previousChange.toNumber(), previousChange1.toNumber())
         })
       })
     })
@@ -299,11 +306,10 @@ contract('EthereumDIDRegistry', function(accounts) {
           assert.equal(event.args.identity, identity)
           assert.equal(bytes32ToString(event.args.delegateType), 'attestor')
           assert.equal(event.args.delegate, delegate3)
-          assert.equal(event.args.validTo.toNumber(), 0)
+          assert.isBelow(event.args.validTo.toNumber(), Math.floor(Date.now()/1000) + 1)
           assert.equal(event.args.previousChange.toNumber(), previousChange.toNumber())
         })
       })
-
       describe('as attacker', () => {
         it('should fail', async () => {
           try {
@@ -324,7 +330,7 @@ contract('EthereumDIDRegistry', function(accounts) {
           tx = await didReg.revokeDelegateSigned(signerAddress, sig.v, sig.r, sig.s, 'attestor', delegate, {from: badboy})
           block = await getBlock(tx.receipt.blockNumber)
         })
-        it('validDelegate should be true', async () => {
+        it('validDelegate should be false', async () => {
           const valid = await didReg.validDelegate(signerAddress, 'attestor', delegate)
           assert.equal(valid, false, 'revoked delegate correctly')
         })
@@ -338,7 +344,7 @@ contract('EthereumDIDRegistry', function(accounts) {
           assert.equal(event.args.identity, signerAddress)
           assert.equal(bytes32ToString(event.args.delegateType), 'attestor')
           assert.equal(event.args.delegate, delegate)
-          assert.equal(event.args.validTo.toNumber(), 0)
+          assert.isBelow(event.args.validTo.toNumber(), Math.floor(Date.now()/1000) + 1)
           assert.equal(event.args.previousChange.toNumber(), previousChange.toNumber())
         })
       })
