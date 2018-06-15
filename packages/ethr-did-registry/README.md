@@ -40,10 +40,10 @@ let didReg = DidReg.at(DidRegistryContract.networks[networkId].address)
 ## Contract Deployments
 |Network|Address|
 | --|--|
-|Mainnet (id: 1)|[0x160c5ce58e2cc4fe7cc45a9dd569a10083b2a275](https://etherscan.io/address/0x160c5ce58e2cc4fe7cc45a9dd569a10083b2a275)|
-|Ropsten (id: 3)|[0x160c5ce58e2cc4fe7cc45a9dd569a10083b2a275](https://ropsten.etherscan.io/address/0x160c5ce58e2cc4fe7cc45a9dd569a10083b2a275)|
-|Rinkeby (id: 4)|[0x160c5ce58e2cc4fe7cc45a9dd569a10083b2a275](https://rinkeby.etherscan.io/address/0x160c5ce58e2cc4fe7cc45a9dd569a10083b2a275)|
-|Kovan (id: 42)|[0x160c5ce58e2cc4fe7cc45a9dd569a10083b2a275](https://kovan.etherscan.io/address/0x160c5ce58e2cc4fe7cc45a9dd569a10083b2a275)|
+|Mainnet (id: 1)|[0xdca7ef03e98e0dc2b855be647c39abe984fcf21b](https://etherscan.io/address/0xdca7ef03e98e0dc2b855be647c39abe984fcf21b)|
+|Ropsten (id: 3)|[0xdca7ef03e98e0dc2b855be647c39abe984fcf21b](https://ropsten.etherscan.io/address/0xdca7ef03e98e0dc2b855be647c39abe984fcf21b)|
+|Rinkeby (id: 4)|[0xdca7ef03e98e0dc2b855be647c39abe984fcf21b](https://rinkeby.etherscan.io/address/0xdca7ef03e98e0dc2b855be647c39abe984fcf21b)|
+|Kovan (id: 42)|[0xdca7ef03e98e0dc2b855be647c39abe984fcf21b](https://kovan.etherscan.io/address/0xdca7ef03e98e0dc2b855be647c39abe984fcf21b)|
 
 ## On-chain vs Off-chain
 For on-chain interactions Ethereum has a built in account abstraction that can be used regardless of whether the account is a smart contract or a key pair. Any transaction has a `msg.sender` as the verified send of the transaction.
@@ -97,15 +97,6 @@ Validity is set using amount of seconds from the time that adding the delegate i
 
 ### Looking up a delegate
 You can check if an address is a delegate for an identity using the`validDelegate(address identity, string delegateType, address delegate) returns(bool)` function. This returns true if the address is a valid delegate of the given delegateType.
-
-### Checking a delegate signature
-The registry provides a handy function for checking an externally signed signature in your own contracts and validating it is a particular kind of delegate. 
-
-This frees you from adding nonce and signature management code in your  own contracts.
-
-`validDelegateSignature(address identity, string delegateType, uint8 sigV, bytes32 sigR, bytes32 sigS, bytes32 hash) public returns(address)`
-
-In your own code you will need to calculate the hash yourself.
 
 ### Adding a delegate
 
