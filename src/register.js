@@ -8,11 +8,24 @@ import DidRegistryContract from '../contracts/ethr-did-registry.json'
 import { Buffer } from 'buffer'
 export const REGISTRY = '0xdca7ef03e98e0dc2b855be647c39abe984fcf21b'
 
-function bytes32toString (bytes32) {
+export function bytes32toString (bytes32) {
   return Buffer.from(bytes32.slice(2), 'hex').toString('utf8').replace(/\0+$/, '')
 }
-const Secp256k1SignatureAuthentication2018 = 'Secp256k1SignatureAuthentication2018'.slice(0, 32)
-const Secp256k1VerificationKey2018 = 'Secp256k1VerificationKey2018'.slice(0, 32)
+
+export function stringToBytes32 (str) {
+  const buffstr = '0x' + Buffer.from(str).slice(0, 32).toString('hex')
+  return buffstr + '0'.repeat(66 - buffstr.length)
+}
+
+export const delegateTypes = {
+  Secp256k1SignatureAuthentication2018: stringToBytes32('sigAuth'),
+  Secp256k1VerificationKey2018: stringToBytes32('veriKey')
+}
+
+export const attrTypes = {
+  sigAuth: 'SignatureAuthentication2018',
+  veriKey: 'VerificationKey2018'
+}
 
 export function wrapDidDocument (did, owner, history) {
   const now = new BN(Math.floor(new Date().getTime() / 1000))
@@ -35,25 +48,18 @@ export function wrapDidDocument (did, owner, history) {
   const services = {}
   for (let event of history) {
     let validTo = event.validTo
-    console.log(`validTo: ${validTo && validTo.toString(10)} and now: ${now.toString(10)}`)
-    let delegateType = event.delegateType || event.name
-    if (delegateType) {
-      console.log(`orig delegateType ${delegateType}`)
-      delegateType = bytes32toString(delegateType)
-      console.log(`new delegateType ${delegateType}`)
-    }
-    console.log(Object.assign(event, {delegateType}))
-    const key = `${event._eventName}-${delegateType}-${event.delegate || event.value}`
+    const key = `${event._eventName}-${event.delegateType || event.name}-${event.delegate || event.value}`
     if (validTo && validTo.gte(now)) {
       if (event._eventName === 'DIDDelegateChanged') {
         delegateCount++
+        const delegateType = bytes32toString(event.delegateType)
         switch (delegateType) {
-          case Secp256k1SignatureAuthentication2018:
+          case 'sigAuth':
             auth[key] = {
               type: 'Secp256k1SignatureAuthentication2018',
               publicKey: `${did}#delegate-${delegateCount}`
             }
-          case Secp256k1VerificationKey2018:
+          case 'veriKey':
             pks[key] = {
               id: `${did}#delegate-${delegateCount}`,
               type: 'Secp256k1VerificationKey2018',
@@ -63,29 +69,31 @@ export function wrapDidDocument (did, owner, history) {
             break
         }
       } else if (event._eventName === 'DIDAttributeChanged') {
-        const match = delegateType.match(/^did\/(publicKey|authentication|service)\/(\w+)(\/(\w+))?$/)
+        const name = bytes32toString(event.name)
+        const match = name.match(/^did\/(pub|auth|svc)\/(\w+)(\/(\w+))?(\/(\w+))?$/)
         if (match) {
           const section = match[1]
-          const type = match[2]
-          const encoding = match[4]
+          const algo = match[2]
+          const type = attrTypes[match[4]] || match[4]
+          const encoding = match[6]
           switch (section) {
-            case 'publicKey':
+            case 'pub':
               delegateCount++
               const pk = {
                 id: `${did}#delegate-${delegateCount}`,
-                type,
+                type: `${algo}${type}`,
                 owner: did
               }
               switch (encoding) {
                 case null:
                 case undefined:
-                case 'publicKeyHex':
+                case 'hex':
                   pk.publicKeyHex = event.value.slice(2)
                   break
-                case 'publicKeyBase64':
+                case 'base64':
                   pk.publicKeyBase64 = Buffer.from(event.value.slice(2), 'hex').toString('base64')
                   break
-                case 'publicKeyBase58':
+                case 'base58':
                   pk.publicKeyBase58 = Buffer.from(event.value.slice(2), 'hex').toString('base58')
                   break
                 default:
@@ -93,8 +101,8 @@ export function wrapDidDocument (did, owner, history) {
               }
               pks[key] = pk
               break
-            case 'service':
-              services[key] = {type, serviceEndpoint: Buffer.from(event.value.slice(2), 'hex').toString()}
+            case 'svc':
+              services[key] = {type: algo, serviceEndpoint: Buffer.from(event.value.slice(2), 'hex').toString()}
               break
           }
         }
@@ -130,7 +138,7 @@ function configureProvider (conf = {}) {
   }
 }
 
-function register (conf = {}) {
+export default function register (conf = {}) {
   const provider = configureProvider(conf)
   const eth = new Eth(provider)
   const registryAddress = conf.registry || REGISTRY
@@ -167,4 +175,4 @@ function register (conf = {}) {
   registerMethod('ethr', resolve)
 }
 
-module.exports = register
+// module.exports = register

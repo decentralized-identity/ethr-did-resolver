@@ -1,18 +1,14 @@
 import resolve from 'did-resolver'
-import register from '../register'
-
+import register, { stringToBytes32, delegateTypes } from '../register'
 import Contract from 'truffle-contract'
 import DidRegistryContract from 'ethr-did-registry'
 import Web3 from 'web3'
 import ganache from 'ganache-cli'
 
+const { Secp256k1SignatureAuthentication2018, Secp256k1VerificationKey2018 } = delegateTypes
+
 function sleep (seconds) {
   return new Promise((resolve, reject) => setTimeout(resolve, seconds * 1000))
-}
-
-function stringToBytes32 (str) {
-  const buffstr = '0x' + Buffer.from(str).slice(0, 32).toString('hex')
-  return buffstr + '0'.repeat(66 - buffstr.length)
 }
 
 describe('ethrResolver', () => {
@@ -87,7 +83,7 @@ describe('ethrResolver', () => {
   describe('delegates', () => {
     describe('add signing delegate', () => {
       beforeAll(async () => {
-        await registry.addDelegate(identity, stringToBytes32('Secp256k1VerificationKey2018'), delegate1, 2, {from: owner})
+        await registry.addDelegate(identity, Secp256k1VerificationKey2018, delegate1, 2, {from: owner})
       })
 
       it('resolves document', () => {
@@ -115,7 +111,7 @@ describe('ethrResolver', () => {
 
     describe('add auth delegate', () => {
       beforeAll(async () => {
-        await registry.addDelegate(identity, stringToBytes32('Secp256k1SignatureAuthentication2018'), delegate2, 10, {from: owner})
+        await registry.addDelegate(identity, Secp256k1SignatureAuthentication2018, delegate2, 10, {from: owner})
       })
 
       it('resolves document', () => {
@@ -182,8 +178,8 @@ describe('ethrResolver', () => {
 
     describe('revokes delegate', () => {
       beforeAll(async () => {
-        await sleep(3)
-        await registry.revokeDelegate(identity, stringToBytes32('Secp256k1SignatureAuthentication2018'), delegate2, {from: owner})
+        await registry.revokeDelegate(identity, Secp256k1SignatureAuthentication2018, delegate2, {from: owner})
+        await sleep(1)
       })
 
       it('resolves document', () => {
@@ -207,7 +203,7 @@ describe('ethrResolver', () => {
     describe('re-add auth delegate', () => {
       beforeAll(async () => {
         await sleep(3)
-        await registry.addDelegate(identity, stringToBytes32('Secp256k1SignatureAuthentication2018'), delegate2, 86400, {from: owner})
+        await registry.addDelegate(identity, Secp256k1SignatureAuthentication2018, delegate2, 86400, {from: owner})
       })
 
       it('resolves document', () => {
@@ -241,7 +237,7 @@ describe('ethrResolver', () => {
     describe('publicKey', () => {
       describe('Secp256k1VerificationKey2018', () => {
         beforeAll(async () => {
-          await registry.setAttribute(identity, stringToBytes32('did/publicKey/Secp256k1VerificationKey2018'), '0x02b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71', 10, {from: owner})
+          await registry.setAttribute(identity, stringToBytes32('did/pub/Secp256k1/veriKey'), '0x02b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71', 10, {from: owner})
         })
         it('resolves document', () => {
           return expect(resolve(did)).resolves.toEqual({
@@ -276,7 +272,7 @@ describe('ethrResolver', () => {
 
       describe('Ed25519VerificationKey2018', () => {
         beforeAll(async () => {
-          await registry.setAttribute(identity, stringToBytes32('did/publicKey/Ed25519VerificationKey2018/publicKeyBase64'), '0x02b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71', 10, {from: owner})
+          await registry.setAttribute(identity, stringToBytes32('did/pub/Ed25519/veriKey/base64'), '0x02b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71', 10, {from: owner})
         })
   
         it('resolves document', () => {
@@ -319,7 +315,7 @@ describe('ethrResolver', () => {
     describe('service endpoints', () => {
       describe('HubService', () => {
         beforeAll(async () => {
-          await registry.setAttribute(identity, stringToBytes32('did/service/HubService'), 'https://hubs.uport.me', 10, {from: owner})
+          await registry.setAttribute(identity, stringToBytes32('did/svc/HubService'), 'https://hubs.uport.me', 10, {from: owner})
         })
         it('resolves document', () => {
           return expect(resolve(did)).resolves.toEqual({
