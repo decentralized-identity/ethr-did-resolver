@@ -2,13 +2,20 @@ import { registerMethod } from 'did-resolver'
 import HttpProvider from 'ethjs-provider-http'
 import Eth from 'ethjs-query'
 import abi from 'ethjs-abi'
+import BN from 'bn.js'
 import EthContract from 'ethjs-contract'
 import DidRegistryContract from '../contracts/ethr-did-registry.json'
 import { Buffer } from 'buffer'
-export const REGISTRY = '0xc1b66dea11f8f321b7981e1666fdaf3637fe0f61'
+export const REGISTRY = '0xdca7ef03e98e0dc2b855be647c39abe984fcf21b'
+
+function bytes32toString (bytes32) {
+  return Buffer.from(bytes32.slice(2), 'hex').toString('utf8').replace(/\0+$/, '')
+}
+const Secp256k1SignatureAuthentication2018 = 'Secp256k1SignatureAuthentication2018'.slice(0, 32)
+const Secp256k1VerificationKey2018 = 'Secp256k1VerificationKey2018'.slice(0, 32)
 
 export function wrapDidDocument (did, owner, history) {
-  const now = Math.floor(new Date().getTime() / 1000)
+  const now = new BN(Math.floor(new Date().getTime() / 1000))
   // const expired = {}
   const publicKey = [{
     id: `${did}#owner`,
@@ -27,18 +34,26 @@ export function wrapDidDocument (did, owner, history) {
   const pks = {}
   const services = {}
   for (let event of history) {
-    // console.log(`validTo: ${event.validTo.toNumber()} and now: ${now}`)
-    const key = `${event._eventName}-${event.delegateType||event.name}-${event.delegate||event.value}`
-    if (event.validTo && event.validTo.toNumber() >= now) {
-      if (event._eventName === 'DIDDelegateChanged') {      
+    let validTo = event.validTo
+    console.log(`validTo: ${validTo && validTo.toString(10)} and now: ${now.toString(10)}`)
+    let delegateType = event.delegateType || event.name
+    if (delegateType) {
+      console.log(`orig delegateType ${delegateType}`)
+      delegateType = bytes32toString(delegateType)
+      console.log(`new delegateType ${delegateType}`)
+    }
+    console.log(Object.assign(event, {delegateType}))
+    const key = `${event._eventName}-${delegateType}-${event.delegate || event.value}`
+    if (validTo && validTo.gte(now)) {
+      if (event._eventName === 'DIDDelegateChanged') {
         delegateCount++
-        switch (event.delegateType) {
-          case 'Secp256k1SignatureAuthentication2018':
+        switch (delegateType) {
+          case Secp256k1SignatureAuthentication2018:
             auth[key] = {
               type: 'Secp256k1SignatureAuthentication2018',
               publicKey: `${did}#delegate-${delegateCount}`
             }
-          case 'Secp256k1VerificationKey2018':
+          case Secp256k1VerificationKey2018:
             pks[key] = {
               id: `${did}#delegate-${delegateCount}`,
               type: 'Secp256k1VerificationKey2018',
@@ -48,7 +63,7 @@ export function wrapDidDocument (did, owner, history) {
             break
         }
       } else if (event._eventName === 'DIDAttributeChanged') {
-        const match = event.name.match(/^did\/(publicKey|authentication|service)\/(\w+)(\/(\w+))?$/)
+        const match = delegateType.match(/^did\/(publicKey|authentication|service)\/(\w+)(\/(\w+))?$/)
         if (match) {
           const section = match[1]
           const type = match[2]
@@ -85,7 +100,7 @@ export function wrapDidDocument (did, owner, history) {
         }
       }
     } else {
-      if ((event._eventName === 'DIDDelegateChanged' || (event._eventName === 'DIDAttributeChanged' && event.name.match(/^did\/publicKey\//))) && event.validTo.toNumber() === 0) delegateCount--
+      if (delegateCount > 0 && (event._eventName === 'DIDDelegateChanged' || (event._eventName === 'DIDAttributeChanged' && delegateType.match(/^did\/publicKey\//))) && validTo.lt(now)) delegateCount--
       delete auth[key]
       delete pks[key]
       delete services[key]

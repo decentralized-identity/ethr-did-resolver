@@ -9,6 +9,12 @@ import ganache from 'ganache-cli'
 function sleep (seconds) {
   return new Promise((resolve, reject) => setTimeout(resolve, seconds * 1000))
 }
+
+function stringToBytes32 (str) {
+  const buffstr = '0x' + Buffer.from(str).slice(0, 32).toString('hex')
+  return buffstr + '0'.repeat(66 - buffstr.length)
+}
+
 describe('ethrResolver', () => {
   const provider = ganache.provider()
   // const provider = new Web3.providers.HttpProvider('http://127.0.0.1:7545')
@@ -81,7 +87,7 @@ describe('ethrResolver', () => {
   describe('delegates', () => {
     describe('add signing delegate', () => {
       beforeAll(async () => {
-        await registry.addDelegate(identity, 'Secp256k1VerificationKey2018', delegate1, 2, {from: owner})
+        await registry.addDelegate(identity, stringToBytes32('Secp256k1VerificationKey2018'), delegate1, 2, {from: owner})
       })
 
       it('resolves document', () => {
@@ -109,7 +115,7 @@ describe('ethrResolver', () => {
 
     describe('add auth delegate', () => {
       beforeAll(async () => {
-        await registry.addDelegate(identity, 'Secp256k1SignatureAuthentication2018', delegate2, 10, {from: owner})
+        await registry.addDelegate(identity, stringToBytes32('Secp256k1SignatureAuthentication2018'), delegate2, 10, {from: owner})
       })
 
       it('resolves document', () => {
@@ -176,7 +182,8 @@ describe('ethrResolver', () => {
 
     describe('revokes delegate', () => {
       beforeAll(async () => {
-        await registry.revokeDelegate(identity, 'Secp256k1SignatureAuthentication2018', delegate2, {from: owner})
+        await sleep(3)
+        await registry.revokeDelegate(identity, stringToBytes32('Secp256k1SignatureAuthentication2018'), delegate2, {from: owner})
       })
 
       it('resolves document', () => {
@@ -199,7 +206,8 @@ describe('ethrResolver', () => {
 
     describe('re-add auth delegate', () => {
       beforeAll(async () => {
-        await registry.addDelegate(identity, 'Secp256k1SignatureAuthentication2018', delegate2, 86400, {from: owner})
+        await sleep(3)
+        await registry.addDelegate(identity, stringToBytes32('Secp256k1SignatureAuthentication2018'), delegate2, 86400, {from: owner})
       })
 
       it('resolves document', () => {
@@ -233,9 +241,8 @@ describe('ethrResolver', () => {
     describe('publicKey', () => {
       describe('Secp256k1VerificationKey2018', () => {
         beforeAll(async () => {
-          await registry.setAttribute(identity, 'did/publicKey/Secp256k1VerificationKey2018', '0x02b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71', 10, {from: owner})
+          await registry.setAttribute(identity, stringToBytes32('did/publicKey/Secp256k1VerificationKey2018'), '0x02b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71', 10, {from: owner})
         })
-  
         it('resolves document', () => {
           return expect(resolve(did)).resolves.toEqual({
             '@context': 'https://w3id.org/did/v1',
@@ -269,7 +276,7 @@ describe('ethrResolver', () => {
 
       describe('Ed25519VerificationKey2018', () => {
         beforeAll(async () => {
-          await registry.setAttribute(identity, 'did/publicKey/Ed25519VerificationKey2018/publicKeyBase64', '0x02b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71', 10, {from: owner})
+          await registry.setAttribute(identity, stringToBytes32('did/publicKey/Ed25519VerificationKey2018/publicKeyBase64'), '0x02b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71', 10, {from: owner})
         })
   
         it('resolves document', () => {
@@ -312,7 +319,7 @@ describe('ethrResolver', () => {
     describe('service endpoints', () => {
       describe('HubService', () => {
         beforeAll(async () => {
-          await registry.setAttribute(identity, 'did/service/HubService', 'https://hubs.uport.me', 10, {from: owner})
+          await registry.setAttribute(identity, stringToBytes32('did/service/HubService'), 'https://hubs.uport.me', 10, {from: owner})
         })
         it('resolves document', () => {
           return expect(resolve(did)).resolves.toEqual({
