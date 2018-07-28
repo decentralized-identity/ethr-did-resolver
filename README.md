@@ -1,6 +1,6 @@
 ---
 title: "Ethr DID Resolver"
-index: 2
+index: 7
 category: "reference"
 type: "content"
 source: "https://github.com/uport-project/ethr-did-resolver/blob/develop/README.md"
@@ -90,7 +90,7 @@ Delegate Keys are ethereum addresses that can either be general signing keys or 
 
 They are also verifiable from solidity (see [ethr-did-registry](https://github.com/uport-project/ethr-did-registry) for more info).
 
-A `DIDDelegateChanged` event is published that is used to build a DID. 
+A `DIDDelegateChanged` event is published that is used to build a DID.
 
 ```solidity
 event DIDDelegateChanged(
