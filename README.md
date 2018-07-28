@@ -1,3 +1,11 @@
+---
+title: "Ethr DID Resolver"
+index: 2
+category: "reference"
+type: "content"
+source: "https://github.com/uport-project/ethr-did-resolver/blob/develop/README.md"
+---
+
 # ethr DID Resolver
 
 This library is intended to use ethereum addresses as fully self managed [Decentralized Identifiers](https://w3c-ccg.github.io/did-spec/#decentralized-identifiers-dids) and wrap them in a [DID Document](https://w3c-ccg.github.io/did-spec/#did-documents)
