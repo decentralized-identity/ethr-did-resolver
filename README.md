@@ -1,3 +1,11 @@
+---
+title: "Ethr DID Resolver"
+index: 7
+category: "reference"
+type: "content"
+source: "https://github.com/uport-project/ethr-did-resolver/blob/develop/README.md"
+---
+
 # ethr DID Resolver
 
 This library is intended to use ethereum addresses as fully self managed [Decentralized Identifiers](https://w3c-ccg.github.io/did-spec/#decentralized-identifiers-dids) and wrap them in a [DID Document](https://w3c-ccg.github.io/did-spec/#did-documents)
@@ -82,7 +90,7 @@ Delegate Keys are ethereum addresses that can either be general signing keys or 
 
 They are also verifiable from solidity (see [ethr-did-registry](https://github.com/uport-project/ethr-did-registry) for more info).
 
-A `DIDDelegateChanged` event is published that is used to build a DID. 
+A `DIDDelegateChanged` event is published that is used to build a DID.
 
 ```solidity
 event DIDDelegateChanged(
