@@ -1,4 +1,12 @@
-## Ethereum DID Registry
+---
+title: "Ethereum DID Registry"
+index: 6
+category: "reference"
+type: "content"
+source: "https://github.com/uport-project/ethr-did-registry/blob/develop/README.md"
+---
+
+# Ethereum DID Registry
 
 This contract allows on and off-chain resolving and management for [DIDs (Decentralized IDentifiers)](https://w3c-ccg.github.io/did-spec/).
 
@@ -8,11 +16,18 @@ It was designed as a way of resolving public keys for off chain authentication, 
 
 This contract allows ethereum addresses to present signing information about themselves with no prior registration. It allows them to perform key rotation and specify different keys and services that can be used on it's behalf for both on and off-chain usage.
 
+## Contract Deployments
+|Network|Address|
+| --|--|
+|Mainnet (id: 1)|[0xdca7ef03e98e0dc2b855be647c39abe984fcf21b](https://etherscan.io/address/0xdca7ef03e98e0dc2b855be647c39abe984fcf21b)|
+|Ropsten (id: 3)|[0xdca7ef03e98e0dc2b855be647c39abe984fcf21b](https://ropsten.etherscan.io/address/0xdca7ef03e98e0dc2b855be647c39abe984fcf21b)|
+|Rinkeby (id: 4)|[0xdca7ef03e98e0dc2b855be647c39abe984fcf21b](https://rinkeby.etherscan.io/address/0xdca7ef03e98e0dc2b855be647c39abe984fcf21b)|
+|Kovan (id: 42)|[0xdca7ef03e98e0dc2b855be647c39abe984fcf21b](https://kovan.etherscan.io/address/0xdca7ef03e98e0dc2b855be647c39abe984fcf21b)|
+
+
 ## Using the registry
 
 The DID Registry can be used from javascript as well as directly from other contracts.
-
-### From javascript
 
 To use the contract we provide truffle artifacts. Once you require the `ethr-did-registry` module you will get an object containing the json.
 
@@ -36,15 +51,6 @@ let networkId = 1 // Mainnet
 let DidReg = web3.eth.contract(DidRegistryContract.abi)
 let didReg = DidReg.at(DidRegistryContract.networks[networkId].address)
 ```
-
-## Contract Deployments
-|Network|Address|
-| --|--|
-|Mainnet (id: 1)|[0xdca7ef03e98e0dc2b855be647c39abe984fcf21b](https://etherscan.io/address/0xdca7ef03e98e0dc2b855be647c39abe984fcf21b)|
-|Ropsten (id: 3)|[0xdca7ef03e98e0dc2b855be647c39abe984fcf21b](https://ropsten.etherscan.io/address/0xdca7ef03e98e0dc2b855be647c39abe984fcf21b)|
-|Rinkeby (id: 4)|[0xdca7ef03e98e0dc2b855be647c39abe984fcf21b](https://rinkeby.etherscan.io/address/0xdca7ef03e98e0dc2b855be647c39abe984fcf21b)|
-|Kovan (id: 42)|[0xdca7ef03e98e0dc2b855be647c39abe984fcf21b](https://kovan.etherscan.io/address/0xdca7ef03e98e0dc2b855be647c39abe984fcf21b)|
-
 ## On-chain vs Off-chain
 For on-chain interactions Ethereum has a built in account abstraction that can be used regardless of whether the account is a smart contract or a key pair. Any transaction has a `msg.sender` as the verified send of the transaction.
 
@@ -179,7 +185,7 @@ event DIDAttributeChanged(
   );
 ```
 
-## Efficient lookup of events through linked identity events
+## Enumerating linked identity events
 
 Contract Events are a useful feature for storing data from smart contracts exclusively for off-chain use.  Unfortunately current ethereum implementations provide a very inefficient lookup mechanism.
 
@@ -205,10 +211,10 @@ while (previousChange) {
     history.unshift(event)
     previousChange = event.args.previousChange
   }
-}     
+}
 ```
 
-## Building a DID document for an identity
+## Assemble a DID document
 
 The primary owner key should be looked up using `identityOwner(identity)`.  This should be the first of the publicKeys listed.
 
