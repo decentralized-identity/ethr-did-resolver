@@ -37,6 +37,7 @@
     "babel-preset-env": "^1.6.1",
     "ganache-cli": "^6.1.0",
     "jest": "^22.4.3",
+    "jsdom": "11.11.0",
     "regenerator-runtime": "^0.11.1",
     "standard": "^11.0.0",
     "truffle-contract": "^3.0.4",
