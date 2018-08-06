@@ -134,27 +134,27 @@ The name of the attribute should follow this format:
 
 A `DIDAttributeChanged` event for the identity `0xf3beac30c498d9e26865f34fcaa57dbb935b0d74` with the name `did/pub/Secp256k1/veriKey/hex` and the value of `0x02b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71` generates a `PublicKey` entry like this:
 
-'''js
+```js
 {
   id: "did:ethr:0xf3beac30c498d9e26865f34fcaa57dbb935b0d74#delegate-1",
   type: "Secp256k1VerificationKey2018",
   owner: "did:ethr:0xf3beac30c498d9e26865f34fcaa57dbb935b0d74",
   publicKeyHex: '02b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71'
 }
-'''
+```
 
 #### Base64 encoded Ed25519 Verification Key
 
 A `DIDAttributeChanged` event for the identity `0xf3beac30c498d9e26865f34fcaa57dbb935b0d74` with the name `did/pub/Ed25519/veriKey/base64` and the value of `0xb97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71` generates a `PublicKey` entry like this:
 
-'''js
+```js
 {
   id: "did:ethr:0xf3beac30c498d9e26865f34fcaa57dbb935b0d74#delegate-1",
   type: "Secp256k1VerificationKey2018",
   owner: "did:ethr:0xf3beac30c498d9e26865f34fcaa57dbb935b0d74",
   publicKeyBase64: "uXww3nZ/CEzjCAFo7ikwU7ozsjXXEWoyY9KfFFCTa3E="
 }
-'''
+```
 
 We are looking for people to submit support for `pem`, `base58` and `jwk` key formats as well.
 
@@ -168,12 +168,12 @@ The name of the attribute should follow this format:
 
 A `DIDAttributeChanged` event for the identity `0xf3beac30c498d9e26865f34fcaa57dbb935b0d74` with the name `did/svc/HubService` and value of the url `https://hubs.uport.me` hex encoded as `0x68747470733a2f2f687562732e75706f72742e6d65` generates a `Service` entry like this:
 
-'''js
+```js
 {
   type: "HubService",
   serviceEndpoint: "https://hubs.uport.me"
 }
-'''
+```
 
 ## Resolving a DID document
 
