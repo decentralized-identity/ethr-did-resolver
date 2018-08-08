@@ -1,6 +1,6 @@
 {
   "name": "ethr-did-resolver",
-  "version": "0.0.8",
+  "version": "0.1.0",
   "description": "Resolve DID documents around ethereum addresses",
   "main": "lib/register.js",
   "repository": {
@@ -37,6 +37,7 @@
     "babel-preset-env": "^1.6.1",
     "ganache-cli": "^6.1.0",
     "jest": "^22.4.3",
+    "jsdom": "11.11.0",
     "regenerator-runtime": "^0.11.1",
     "standard": "^11.0.0",
     "truffle-contract": "^3.0.4",
@@ -52,7 +53,7 @@
     "ethjs-contract": "^0.1.9",
     "ethjs-provider-http": "^0.1.6",
     "ethjs-query": "^0.3.5",
-    "ethr-did-registry": "^0.0.2"
+    "ethr-did-registry": "^0.0.3"
   },
   "standard": {
     "ignore": [

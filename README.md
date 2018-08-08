@@ -1,3 +1,11 @@
+---
+title: "Ethr DID Resolver"
+index: 7
+category: "reference"
+type: "content"
+source: "https://github.com/uport-project/ethr-did-resolver/blob/develop/README.md"
+---
+
 # ethr DID Resolver
 
 This library is intended to use ethereum addresses as fully self managed [Decentralized Identifiers](https://w3c-ccg.github.io/did-spec/#decentralized-identifiers-dids) and wrap them in a [DID Document](https://w3c-ccg.github.io/did-spec/#did-documents)
@@ -25,17 +33,15 @@ The minimal DID document for a an ethereum address `0xf3beac30c498d9e26865f34fca
 ```js
 {
   '@context': 'https://w3id.org/did/v1',
-  id:'did:eth:0xf3beac30c498d9e26865f34fcaa57dbb935b0d74',
+  id: 'did:ethr:0xb9c5714089478a327f09197987f16f9e5d936e8a',
   publicKey: [{
-    id: 'did:eth:0xf3beac30c498d9e26865f34fcaa57dbb935b0d74#owner',
-    type: 'Secp256k1VerificationKey2018',
-    owner: 'did:eth:0xf3beac30c498d9e26865f34fcaa57dbb935b0d74',
-    ethereumAddress: '0xf3beac30c498d9e26865f34fcaa57dbb935b0d74'
-  }],
+       id: 'did:ethr:0xb9c5714089478a327f09197987f16f9e5d936e8a#owner',
+       type: 'Secp256k1VerificationKey2018',
+       owner: 'did:ethr:0xb9c5714089478a327f09197987f16f9e5d936e8a',
+       ethereumAddress: '0xb9c5714089478a327f09197987f16f9e5d936e8a'}],
   authentication: [{
-    type: 'Secp256k1SignatureAuthentication2018',
-    publicKey: 'did:eth:0xf3beac30c498d9e26865f34fcaa57dbb935b0d74#owner'
-  }]
+       type: 'Secp256k1SignatureAuthentication2018',
+       publicKey: 'did:ethr:0xb9c5714089478a327f09197987f16f9e5d936e8a#owner'}]
 }
 ```
 
@@ -82,12 +88,12 @@ Delegate Keys are ethereum addresses that can either be general signing keys or 
 
 They are also verifiable from solidity (see [ethr-did-registry](https://github.com/uport-project/ethr-did-registry) for more info).
 
-A `DIDDelegateChanged` event is published that is used to build a DID. 
+A `DIDDelegateChanged` event is published that is used to build a DID.
 
 ```solidity
 event DIDDelegateChanged(
     address indexed identity,
-    string delegateType,
+    bytes32 delegateType,
     address delegate,
     uint validTo,
     uint previousChange
@@ -96,8 +102,10 @@ event DIDDelegateChanged(
 
 The only 2 delegateTypes that are currently published in the DID Document are:
 
-- `Secp256k1VerificationKey2018` which is added to the `publicKey` section of document
-- `Secp256k1SignatureAuthentication2018` which is also added to the `publicKey` section of document. An entry is also added to the `authentication` section of document
+- `veriKey` Which adds a `Secp256k1VerificationKey2018` to the `publicKey` section of document
+- `sigAuth` Which adds a `Secp256k1SignatureAuthentication2018` to the `publicKey` section of document. An entry is also added to the `authentication` section of document.
+
+**Note** The `delegateType` is a `bytes32` type for Ethereum gas efficiency reasons and not a string. This restricts us to 32 bytes, which is why we use the short hand versions above.
 
 Only events with a `validTo` in seconds greater or equal to current time should be included in the DID document.
 
@@ -108,28 +116,70 @@ Non ethereum keys, service elements etc can be added using attributes. Attribute
 ```solidity
 event DIDAttributeChanged(
     address indexed identity,
-    string name,
+    bytes32 name,
     bytes value,
     uint validTo,
     uint previousChange
   );
 ```
 
+**Note** The `name` is a `bytes32` type for Ethereum gas efficiency reasons and not a string. This restricts us to 32 bytes, which is why we use the short hand attribute versions below.
+
 While any attribute can be stored. For the DID document we currently support adding to each of these sections of the DID document:
 
 - [`Public Keys`](https://w3c-ccg.github.io/did-spec/#public-keys)
 - [`Service Endpoints`](https://w3c-ccg.github.io/did-spec/#service-endpoints)
 
+### Public Keys
+
 The name of the attribute should follow this format:
 
-`did/[section]/[type]/[encoding]` with encoding being optional.
+`did/pub/(Secp256k1|Rsa|Ed25519)/(veriKey|sigAuth)/(hex|base64)`
 
-|section|type|encoding|
-|-------|----|--------|
-|`publicKey`| Any valid Public Key type eg. `Secp256k1VerificationKey2018`, `Ed25519VerificationKey2018`, `RsaVerificationKey2018` | `publicKeyHex` (default), `publicKeyBase64` (please submit PRs for `publicKeyPem`, `publicKeyJwk`, `publicKeyBase58`)|
-|`service`| Any valid service type eg `HubService`, `AgentService` | n/a |
+#### Hex encoded Secp256k1 Verification Key
 
-Values should be encoded in binary bytes for efficiency reasons. Encoding in the DID document will be converted according to method. Any unsupported attributes and unknown encodings will be ignored.
+A `DIDAttributeChanged` event for the identity `0xf3beac30c498d9e26865f34fcaa57dbb935b0d74` with the name `did/pub/Secp256k1/veriKey/hex` and the value of `0x02b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71` generates a `PublicKey` entry like this:
+
+```js
+{
+  id: "did:ethr:0xf3beac30c498d9e26865f34fcaa57dbb935b0d74#delegate-1",
+  type: "Secp256k1VerificationKey2018",
+  owner: "did:ethr:0xf3beac30c498d9e26865f34fcaa57dbb935b0d74",
+  publicKeyHex: '02b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71'
+}
+```
+
+#### Base64 encoded Ed25519 Verification Key
+
+A `DIDAttributeChanged` event for the identity `0xf3beac30c498d9e26865f34fcaa57dbb935b0d74` with the name `did/pub/Ed25519/veriKey/base64` and the value of `0xb97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71` generates a `PublicKey` entry like this:
+
+```js
+{
+  id: "did:ethr:0xf3beac30c498d9e26865f34fcaa57dbb935b0d74#delegate-1",
+  type: "Secp256k1VerificationKey2018",
+  owner: "did:ethr:0xf3beac30c498d9e26865f34fcaa57dbb935b0d74",
+  publicKeyBase64: "uXww3nZ/CEzjCAFo7ikwU7ozsjXXEWoyY9KfFFCTa3E="
+}
+```
+
+We are looking for people to submit support for `pem`, `base58` and `jwk` key formats as well.
+
+### Service Endpoints
+
+The name of the attribute should follow this format:
+
+`did/svc/[ServiceName]`
+
+#### Hex encoded Secp256k1 Verification Key
+
+A `DIDAttributeChanged` event for the identity `0xf3beac30c498d9e26865f34fcaa57dbb935b0d74` with the name `did/svc/HubService` and value of the url `https://hubs.uport.me` hex encoded as `0x68747470733a2f2f687562732e75706f72742e6d65` generates a `Service` entry like this:
+
+```js
+{
+  type: "HubService",
+  serviceEndpoint: "https://hubs.uport.me"
+}
+```
 
 ## Resolving a DID document
 
