@@ -156,7 +156,7 @@ A `DIDAttributeChanged` event for the identity `0xf3beac30c498d9e26865f34fcaa57d
 ```js
 {
   id: "did:ethr:0xf3beac30c498d9e26865f34fcaa57dbb935b0d74#delegate-1",
-  type: "Secp256k1VerificationKey2018",
+  type: "Ed25519VerificationKey2018",
   owner: "did:ethr:0xf3beac30c498d9e26865f34fcaa57dbb935b0d74",
   publicKeyBase64: "uXww3nZ/CEzjCAFo7ikwU7ozsjXXEWoyY9KfFFCTa3E="
 }
