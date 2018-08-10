@@ -22,7 +22,8 @@
     "test": "jest",
     "build:es5": "./node_modules/.bin/babel src -d lib",
     "build:webpack": "./node_modules/.bin/webpack lib/register.js",
-    "build": "yarn build:es5 && yarn test && yarn build:webpack"
+    "build": "yarn build:es5 && yarn test && yarn build:webpack",
+    "prepublishOnly": "yarn build"
   },
   "jest": {
     "coverageDirectory": "./coverage/",
