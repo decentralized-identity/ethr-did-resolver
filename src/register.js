@@ -108,7 +108,11 @@ export function wrapDidDocument (did, owner, history) {
         }
       }
     } else {
-      if (delegateCount > 0 && (event._eventName === 'DIDDelegateChanged' || (event._eventName === 'DIDAttributeChanged' && delegateType.match(/^did\/publicKey\//))) && validTo.lt(now)) delegateCount--
+      if (delegateCount > 0 &&
+        (event._eventName === 'DIDDelegateChanged' ||
+        (event._eventName === 'DIDAttributeChanged' &&
+        bytes32toString(event.name).match(/^did\/pub\//))) &&
+        validTo.lt(now)) delegateCount--
       delete auth[key]
       delete pks[key]
       delete services[key]
