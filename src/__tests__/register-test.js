@@ -234,7 +234,7 @@ describe('ethrResolver', () => {
   })
 
   describe('attributes', () => {
-    describe('publicKey', () => {
+    describe('add publicKey', () => {
       describe('Secp256k1VerificationKey2018', () => {
         beforeAll(async () => {
           await registry.setAttribute(identity, stringToBytes32('did/pub/Secp256k1/veriKey'), '0x02b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71', 10, {from: owner})
@@ -312,7 +312,7 @@ describe('ethrResolver', () => {
       })
     })
 
-    describe('service endpoints', () => {
+    describe('add service endpoints', () => {
       describe('HubService', () => {
         beforeAll(async () => {
           await registry.setAttribute(identity, stringToBytes32('did/svc/HubService'), 'https://hubs.uport.me', 10, {from: owner})
@@ -357,6 +357,132 @@ describe('ethrResolver', () => {
         })
       })
 
+    })
+
+    describe('revoke publicKey', () => {
+      describe('Secp256k1VerificationKey2018', () => {
+        beforeAll(async () => {
+          await registry.revokeAttribute(
+            identity,
+            stringToBytes32('did/pub/Secp256k1/veriKey'),
+            '0x02b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71',
+            { from: owner }
+          )
+          sleep(1)
+        })
+        it('resolves document', () => {
+          return expect(resolve(did)).resolves.toEqual({
+            '@context': 'https://w3id.org/did/v1',
+            id: did,
+            publicKey: [{
+              id: `${did}#owner`,
+              type: 'Secp256k1VerificationKey2018',
+              owner: did,
+              ethereumAddress: owner
+            }, {
+              id: `${did}#delegate-1`,
+              type: 'Secp256k1VerificationKey2018',
+              owner: did,
+              ethereumAddress: delegate2
+            }, {
+              id: `${did}#delegate-3`,
+              type: 'Ed25519VerificationKey2018',
+              owner: did,
+              publicKeyBase64: Buffer.from('02b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71', 'hex').toString('base64')
+            }],
+            authentication: [{
+              type: 'Secp256k1SignatureAuthentication2018',
+              publicKey: `${did}#owner`
+            }, {
+              type: 'Secp256k1SignatureAuthentication2018',
+              publicKey: `${did}#delegate-1`
+            }],
+            service: [{
+              type: 'HubService',
+              serviceEndpoint: 'https://hubs.uport.me'
+            }]
+          })
+        })
+      })
+
+      describe('Ed25519VerificationKey2018', () => {
+        beforeAll(async () => {
+          await registry.revokeAttribute(
+            identity,
+            stringToBytes32('did/pub/Ed25519/veriKey/base64'),
+            '0x02b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71',
+            { from: owner }
+          )
+          sleep(1)
+        })
+        it('resolves document', () => {
+          return expect(resolve(did)).resolves.toEqual({
+            '@context': 'https://w3id.org/did/v1',
+            id: did,
+            publicKey: [{
+              id: `${did}#owner`,
+              type: 'Secp256k1VerificationKey2018',
+              owner: did,
+              ethereumAddress: owner
+            }, {
+              id: `${did}#delegate-1`,
+              type: 'Secp256k1VerificationKey2018',
+              owner: did,
+              ethereumAddress: delegate2
+            }],
+            authentication: [{
+              type: 'Secp256k1SignatureAuthentication2018',
+              publicKey: `${did}#owner`
+            }, {
+              type: 'Secp256k1SignatureAuthentication2018',
+              publicKey: `${did}#delegate-1`
+            }],
+            service: [{
+              type: 'HubService',
+              serviceEndpoint: 'https://hubs.uport.me'
+            }]
+          })
+        })
+      })
+    })
+
+    describe('revoke service endpoints', () => {
+      describe('HubService', () => {
+        beforeAll(async () => {
+          await registry.revokeAttribute(
+            identity,
+            stringToBytes32('did/svc/HubService'),
+            'https://hubs.uport.me',
+            { from: owner }
+          )
+          sleep(1)
+        })
+
+        it('resolves document', () => {
+          return expect(resolve(did)).resolves.toEqual({
+            '@context': 'https://w3id.org/did/v1',
+            id: did,
+            publicKey: [{
+              id: `${did}#owner`,
+              type: 'Secp256k1VerificationKey2018',
+              owner: did,
+              ethereumAddress: owner
+            }, {
+              id: `${did}#delegate-1`,
+              type: 'Secp256k1VerificationKey2018',
+              owner: did,
+              ethereumAddress: delegate2
+            }],
+            authentication: [{
+              type: 'Secp256k1SignatureAuthentication2018',
+              publicKey: `${did}#owner`
+            }, {
+              type: 'Secp256k1SignatureAuthentication2018',
+              publicKey: `${did}#delegate-1`
+            }]
+          })
+        })
+      })
     })
   })
 
