@@ -1,8 +1,8 @@
 ---
 title: "Ethr DID Resolver"
 index: 7
-category: "reference"
-type: "content"
+category: "ethr-did-resolver"
+type: "reference"
 source: "https://github.com/uport-project/ethr-did-resolver/blob/develop/README.md"
 ---
 
