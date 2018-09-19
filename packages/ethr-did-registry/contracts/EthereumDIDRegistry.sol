@@ -45,7 +45,7 @@ contract EthereumDIDRegistry {
   function checkSignature(address identity, uint8 sigV, bytes32 sigR, bytes32 sigS, bytes32 hash) internal returns(address) {
     address signer = ecrecover(hash, sigV, sigR, sigS);
     require(signer == identityOwner(identity));
-    nonce[identity]++;
+    nonce[signer]++;
     return signer;
   }
 
