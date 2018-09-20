@@ -109,7 +109,7 @@ contract EthereumDIDRegistry {
   }
 
   function setAttributeSigned(address identity, uint8 sigV, bytes32 sigR, bytes32 sigS, bytes32 name, bytes value, uint validity) public {
-    bytes32 hash = keccak256(byte(0x19), byte(0), this, nonce[identity], identity, "setAttribute", name, value, validity);
+    bytes32 hash = keccak256(byte(0x19), byte(0), this, nonce[identityOwner(identity)], identity, "setAttribute", name, value, validity);
     setAttribute(identity, checkSignature(identity, sigV, sigR, sigS, hash), name, value, validity);
   }
 
@@ -123,7 +123,7 @@ contract EthereumDIDRegistry {
   }
 
  function revokeAttributeSigned(address identity, uint8 sigV, bytes32 sigR, bytes32 sigS, bytes32 name, bytes value) public {
-    bytes32 hash = keccak256(byte(0x19), byte(0), this, nonce[identity], identity, "revokeAttribute", name, value); 
+    bytes32 hash = keccak256(byte(0x19), byte(0), this, nonce[identityOwner(identity)], identity, "revokeAttribute", name, value); 
     revokeAttribute(identity, checkSignature(identity, sigV, sigR, sigS, hash), name, value);
   }
 
