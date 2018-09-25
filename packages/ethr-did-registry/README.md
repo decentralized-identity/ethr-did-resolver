@@ -8,11 +8,11 @@ source: "https://github.com/uport-project/ethr-did-registry/blob/develop/README.
 
 # Ethereum DID Registry
 
-This contract allows on and off-chain resolving and management for [DIDs (Decentralized Identifiers)](https://w3c-ccg.github.io/did-spec/).
+This contract allows on-chain and off-chain resolving and management for [DIDs (Decentralized Identifiers)](https://w3c-ccg.github.io/did-spec/).
 
 A DID is an [Identifier](https://w3c-ccg.github.io/did-spec/#decentralized-identifiers-dids) that allows you to lookup a [DID document](https://w3c-ccg.github.io/did-spec/#did-documents) that can be used to authenticate you and messages created by you.
 
-It was designed for resolving public keys for off-chain authentication&mdash;where the public key resolution is handled by using decentralized technology.
+It's designed for resolving public keys for off-chain authentication&mdash;where the public key resolution is handled by using decentralized technology.
 
 This contract allows Ethereum addresses to present signing information about themselves with no prior registration. It allows them to perform key rotation and specify different keys and services that are used on its behalf for both on and off-chain usage.
 
@@ -29,7 +29,7 @@ This contract allows Ethereum addresses to present signing information about the
 
 The DID Registry can be used from JavaScript as well as directly from other contracts.
 
-To use the contract we provide truffle artifacts. Once you require the `Ethr-DID-Registry` module you will get an object containing the JSON.
+To use the contract, we provide truffle artifacts. Once you require the `Ethr-DID-Registry` module, you will get an object containing the JSON.
 
 ```javascript
 const DidRegistryContract = require('ethr-did-registry')
@@ -58,7 +58,7 @@ Since each Ethereum transaction must be funded, there is a growing trend of on-c
 
 These kinds of transactions have to be signed by an actual key pair and thus cannot be used to represent smart contract based Ethereum accounts.
 
-We propose a way of a smart contract or regular key pair delegating signing for various purposes to externally managed key pairs. This allows a smart contract to be represented both on-chain as well as off-chain or in payment channels through temporary or permanent delegates.
+We propose a way of a smart contract or regular key pair delegating signing for various purposes to externally managed key pairs. This allows a smart contract to be represented, both on-chain as well as off-chain or in payment channels through temporary or permanent delegates.
 
 ## Identity Identifier
 Any Ethereum account regardless of whether it's a key pair or smart contract based is considered to be an account identifier.
@@ -68,7 +68,7 @@ An identity needs no registration.
 ## Identity Ownership
 Each identity has a single address which maintains ultimate control over it. By default, each identity is controlled by itself. As ongoing technological and security improvements occur, an owner can replace themselves with any other Ethereum address, such as an advanced multi-signature contract.
 
-There is only ever a single identity owner. More advanced ownership models can be managed through a multi-signature contract.
+There is only ever a single identity owner. More advanced ownership models are managed through a multi-signature contract.
 
 ### Looking up Identity Ownership
 Ownership of identity is verified by calling the `identityOwner(address identity) public view returns(address)` function. This returns the address of the current Identity Owner.
@@ -167,7 +167,7 @@ There is also a version of this function that is called with an externally creat
 
 The externally signed version has the following signature `revokeAttributeSigned(address identity, uint8 sigV, bytes32 sigR, bytes32 sigS, string name, bytes value)`.
 
-The signature should be signed of the keccak256 hash of the following tightly packed parameters:
+The signature should be signed off the keccak256 hash of the following tightly packed parameters:
 
 `byte(0x19), byte(0), address of registry, nonce[currentOwner], identity, "revokeAttribute", name, value`
 
@@ -195,7 +195,7 @@ Each identity has its previously changed block stored in the `changed` mapping.
 
 1. Lookup `previousChange` block for identity
 2. Lookup all events for a given identity address using web3, but only for the `previousChange` block
-3. Do something with event
+3. Do something with the event
 4. Find `previousChange` from the event and repeat
 
 Example code
@@ -220,14 +220,14 @@ The primary owner key should be looked up using `identityOwner(identity)`. This 
 
 Iterate through the `DIDDelegateChanged` events to build a list of additional keys and authentication sections as needed. The list of delegateTypes to include is still to be determined.
 
-Iterate through `DIDAttributeChanged` events for service entries, encryption public keys and other public names. The attribute names are still to be determined.
+Iterate through `DIDAttributeChanged` events for service entries, encrypted public keys, and other public names. The attribute names are still to be determined.
 
 ## Deploy contract
 First run,
 ```
 $ scripts/generateDeployTxs.js
 ```
-You will get the data needed to deploy as an output from this command. Copy the `senderAddress` and send `cost` amount of ether to that address on the Ethereum network you wish to deploy to. Once this tx is confirmed, simply send the `rawTx` to the same network. `contractAddress` is the address of the deployed contract. This will be the same on all networks it is deployed to.
+You will get the data needed to deploy as an output from this command. Copy the `senderAddress` and send `cost` amount of ether to that address on the Ethereum network you wish to deploy to. Once this tx is confirmed, simply send the `rawTx` to the same network. `contractAddress` is the address of the deployed contract. This will be the same on all networks it's deployed to.
 
 ## Testing the Contracts
 
