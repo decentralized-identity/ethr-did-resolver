@@ -1,6 +1,6 @@
 ---
 title: "Ethereum DID Registry"
-index: 6
+index: 0
 category: "ethr-did-registry"
 type: "reference"
 source: "https://github.com/uport-project/ethr-did-registry/blob/develop/README.md"
