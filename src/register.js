@@ -170,30 +170,6 @@ function configureProvider(conf = {}) {
   }
 }
 
-// TODO: remove this function
-const printEvent = e => {
-  let str = null
-  switch (e._eventName) {
-    case 'DIDDelegateChanged':
-      str = `${bytes32toString(e.delegateType)}: ${e.delegate}`
-      break
-    case 'DIDAttributeChanged':
-      const name = bytes32toString(e.name)
-      const value = name.startsWith('did/svc/')
-        ? Buffer.from(e.value.slice(2), 'hex')
-        : e.value
-      str = `${bytes32toString(e.name)}: ${value}`
-      break
-    case 'DIDOwnerChanged':
-      str = `${e.owner}`
-      break
-    default:
-      console.log(e)
-      str = `???`
-  }
-  console.log(`[${e._eventName}] ${str} -> ${e.previousChange.toString(10)}`)
-}
-
 export default function register(conf = {}) {
   const provider = configureProvider(conf)
   const eth = new Eth(provider)
@@ -220,12 +196,8 @@ export default function register(conf = {}) {
         toBlock: previousChange,
       })
       const events = logDecoder(logs)
-      // TODO: remove line below
-      console.log(`${events.length} events for block ${blockNumber}`)
       previousChange = undefined
       for (let event of events) {
-        // TODO: remove line below
-        printEvent(event)
         history.unshift(event)
         if (event.previousChange.lt(blockNumber)) {
           previousChange = event.previousChange

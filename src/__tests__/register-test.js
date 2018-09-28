@@ -685,7 +685,6 @@ describe('ethrResolver', () => {
     })
 
     it('resolves document', async () => {
-      // expect(resolve(did)).resolves.toEqual({
       expect(await resolve(did)).toEqual({
         '@context': 'https://w3id.org/did/v1',
         id: did,
