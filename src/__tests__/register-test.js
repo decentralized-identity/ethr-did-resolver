@@ -5,10 +5,7 @@ import DidRegistryContract from 'ethr-did-registry'
 import Web3 from 'web3'
 import ganache from 'ganache-cli'
 
-const {
-  Secp256k1SignatureAuthentication2018,
-  Secp256k1VerificationKey2018,
-} = delegateTypes
+const { Secp256k1SignatureAuthentication2018, Secp256k1VerificationKey2018 } = delegateTypes
 
 function sleep(seconds) {
   return new Promise((resolve, reject) => setTimeout(resolve, seconds * 1000))
@@ -22,9 +19,7 @@ describe('ethrResolver', () => {
   web3.setProvider(provider)
   const getAccounts = () =>
     new Promise((resolve, reject) =>
-      web3.eth.getAccounts(
-        (error, accounts) => (error ? reject(error) : resolve(accounts))
-      )
+      web3.eth.getAccounts((error, accounts) => (error ? reject(error) : resolve(accounts))),
     )
   DidReg.setProvider(provider)
 
@@ -39,11 +34,11 @@ describe('ethrResolver', () => {
         (e, val) => {
           if (e) reject(e)
           return resolve(val)
-        }
-      )
+        },
+      ),
     )
 
-  const startMining = () => {
+  const startMining = () =>
     new Promise(async (resolve, reject) => {
       web3.currentProvider.send(
         {
@@ -55,10 +50,9 @@ describe('ethrResolver', () => {
         (e, val) => {
           if (e) reject(e)
           return resolve(val)
-        }
+        },
       )
     })
-  }
 
   let registry, accounts, did, identity, owner, delegate1, delegate2
 
@@ -73,7 +67,7 @@ describe('ethrResolver', () => {
     registry = await DidReg.new({
       from: accounts[0],
       gasPrice: 100000000000,
-      gas: 4712388, //1779962
+      gas: 4712388, // 1779962
     })
     register({ provider, registry: registry.address })
   })
@@ -131,13 +125,7 @@ describe('ethrResolver', () => {
   describe('delegates', () => {
     describe('add signing delegate', () => {
       beforeAll(async () => {
-        await registry.addDelegate(
-          identity,
-          Secp256k1VerificationKey2018,
-          delegate1,
-          2,
-          { from: owner }
-        )
+        await registry.addDelegate(identity, Secp256k1VerificationKey2018, delegate1, 2, { from: owner })
       })
 
       it('resolves document', () => {
@@ -170,13 +158,7 @@ describe('ethrResolver', () => {
 
     describe('add auth delegate', () => {
       beforeAll(async () => {
-        await registry.addDelegate(
-          identity,
-          Secp256k1SignatureAuthentication2018,
-          delegate2,
-          10,
-          { from: owner }
-        )
+        await registry.addDelegate(identity, Secp256k1SignatureAuthentication2018, delegate2, 10, { from: owner })
       })
 
       it('resolves document', () => {
@@ -256,12 +238,7 @@ describe('ethrResolver', () => {
 
     describe('revokes delegate', () => {
       beforeAll(async () => {
-        await registry.revokeDelegate(
-          identity,
-          Secp256k1SignatureAuthentication2018,
-          delegate2,
-          { from: owner }
-        )
+        await registry.revokeDelegate(identity, Secp256k1SignatureAuthentication2018, delegate2, { from: owner })
         await sleep(1)
       })
 
@@ -290,13 +267,7 @@ describe('ethrResolver', () => {
     describe('re-add auth delegate', () => {
       beforeAll(async () => {
         await sleep(3)
-        await registry.addDelegate(
-          identity,
-          Secp256k1SignatureAuthentication2018,
-          delegate2,
-          86400,
-          { from: owner }
-        )
+        await registry.addDelegate(identity, Secp256k1SignatureAuthentication2018, delegate2, 86400, { from: owner })
       })
 
       it('resolves document', () => {
@@ -341,7 +312,7 @@ describe('ethrResolver', () => {
             stringToBytes32('did/pub/Secp256k1/veriKey'),
             '0x02b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71',
             10,
-            { from: owner }
+            { from: owner },
           )
         })
         it('resolves document', () => {
@@ -365,8 +336,7 @@ describe('ethrResolver', () => {
                 id: `${did}#delegate-2`,
                 type: 'Secp256k1VerificationKey2018',
                 owner: did,
-                publicKeyHex:
-                  '02b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71',
+                publicKeyHex: '02b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71',
               },
             ],
             authentication: [
@@ -390,7 +360,7 @@ describe('ethrResolver', () => {
             stringToBytes32('did/pub/Ed25519/veriKey/base64'),
             '0x02b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71',
             10,
-            { from: owner }
+            { from: owner },
           )
         })
 
@@ -415,8 +385,7 @@ describe('ethrResolver', () => {
                 id: `${did}#delegate-2`,
                 type: 'Secp256k1VerificationKey2018',
                 owner: did,
-                publicKeyHex:
-                  '02b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71',
+                publicKeyHex: '02b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71',
               },
               {
                 id: `${did}#delegate-3`,
@@ -424,7 +393,7 @@ describe('ethrResolver', () => {
                 owner: did,
                 publicKeyBase64: Buffer.from(
                   '02b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71',
-                  'hex'
+                  'hex',
                 ).toString('base64'),
               },
             ],
@@ -446,13 +415,9 @@ describe('ethrResolver', () => {
     describe('add service endpoints', () => {
       describe('HubService', () => {
         beforeAll(async () => {
-          await registry.setAttribute(
-            identity,
-            stringToBytes32('did/svc/HubService'),
-            'https://hubs.uport.me',
-            10,
-            { from: owner }
-          )
+          await registry.setAttribute(identity, stringToBytes32('did/svc/HubService'), 'https://hubs.uport.me', 10, {
+            from: owner,
+          })
         })
         it('resolves document', () => {
           return expect(resolve(did)).resolves.toEqual({
@@ -475,8 +440,7 @@ describe('ethrResolver', () => {
                 id: `${did}#delegate-2`,
                 type: 'Secp256k1VerificationKey2018',
                 owner: did,
-                publicKeyHex:
-                  '02b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71',
+                publicKeyHex: '02b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71',
               },
               {
                 id: `${did}#delegate-3`,
@@ -484,7 +448,7 @@ describe('ethrResolver', () => {
                 owner: did,
                 publicKeyBase64: Buffer.from(
                   '02b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71',
-                  'hex'
+                  'hex',
                 ).toString('base64'),
               },
             ],
@@ -516,7 +480,7 @@ describe('ethrResolver', () => {
             identity,
             stringToBytes32('did/pub/Secp256k1/veriKey'),
             '0x02b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71',
-            { from: owner }
+            { from: owner },
           )
           sleep(1)
         })
@@ -543,7 +507,7 @@ describe('ethrResolver', () => {
                 owner: did,
                 publicKeyBase64: Buffer.from(
                   '02b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71',
-                  'hex'
+                  'hex',
                 ).toString('base64'),
               },
             ],
@@ -573,7 +537,7 @@ describe('ethrResolver', () => {
             identity,
             stringToBytes32('did/pub/Ed25519/veriKey/base64'),
             '0x02b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71',
-            { from: owner }
+            { from: owner },
           )
           sleep(1)
         })
@@ -619,12 +583,9 @@ describe('ethrResolver', () => {
     describe('revoke service endpoints', () => {
       describe('HubService', () => {
         beforeAll(async () => {
-          await registry.revokeAttribute(
-            identity,
-            stringToBytes32('did/svc/HubService'),
-            'https://hubs.uport.me',
-            { from: owner }
-          )
+          await registry.revokeAttribute(identity, stringToBytes32('did/svc/HubService'), 'https://hubs.uport.me', {
+            from: owner,
+          })
           sleep(1)
         })
 
@@ -666,20 +627,12 @@ describe('ethrResolver', () => {
     beforeAll(async () => {
       await stopMining()
       await Promise.all([
-        registry.setAttribute(
-          identity,
-          stringToBytes32('did/svc/TestService'),
-          'https://test.uport.me',
-          10,
-          { from: owner }
-        ),
-        registry.setAttribute(
-          identity,
-          stringToBytes32('did/svc/TestService'),
-          'https://test.uport.me',
-          10,
-          { from: owner }
-        ),
+        registry.setAttribute(identity, stringToBytes32('did/svc/TestService'), 'https://test.uport.me', 10, {
+          from: owner,
+        }),
+        registry.setAttribute(identity, stringToBytes32('did/svc/TestService'), 'https://test.uport.me', 10, {
+          from: owner,
+        }),
         sleep(1).then(() => startMining()),
       ])
     })
@@ -724,12 +677,8 @@ describe('ethrResolver', () => {
 
   describe('error handling', () => {
     it('rejects promise', () => {
-      return expect(
-        resolve('did:ethr:2nQtiQG6Cgm1GYTBaaKAgr76uY7iSexUkqX')
-      ).rejects.toEqual(
-        new Error(
-          'Not a valid ethr DID: did:ethr:2nQtiQG6Cgm1GYTBaaKAgr76uY7iSexUkqX'
-        )
+      return expect(resolve('did:ethr:2nQtiQG6Cgm1GYTBaaKAgr76uY7iSexUkqX')).rejects.toEqual(
+        new Error('Not a valid ethr DID: did:ethr:2nQtiQG6Cgm1GYTBaaKAgr76uY7iSexUkqX'),
       )
     })
   })

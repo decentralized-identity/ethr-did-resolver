@@ -58,8 +58,7 @@ export function wrapDidDocument(did, owner, history) {
   const services = {}
   for (let event of history) {
     let validTo = event.validTo
-    const key = `${event._eventName}-${event.delegateType ||
-      event.name}-${event.delegate || event.value}`
+    const key = `${event._eventName}-${event.delegateType || event.name}-${event.delegate || event.value}`
     if (validTo && validTo.gte(now)) {
       if (event._eventName === 'DIDDelegateChanged') {
         delegateCount++
@@ -70,6 +69,7 @@ export function wrapDidDocument(did, owner, history) {
               type: 'Secp256k1SignatureAuthentication2018',
               publicKey: `${did}#delegate-${delegateCount}`,
             }
+            break
           case 'veriKey':
             pks[key] = {
               id: `${did}#delegate-${delegateCount}`,
@@ -81,9 +81,7 @@ export function wrapDidDocument(did, owner, history) {
         }
       } else if (event._eventName === 'DIDAttributeChanged') {
         const name = bytes32toString(event.name)
-        const match = name.match(
-          /^did\/(pub|auth|svc)\/(\w+)(\/(\w+))?(\/(\w+))?$/
-        )
+        const match = name.match(/^did\/(pub|auth|svc)\/(\w+)(\/(\w+))?(\/(\w+))?$/)
         if (match) {
           const section = match[1]
           const algo = match[2]
@@ -104,16 +102,10 @@ export function wrapDidDocument(did, owner, history) {
                   pk.publicKeyHex = event.value.slice(2)
                   break
                 case 'base64':
-                  pk.publicKeyBase64 = Buffer.from(
-                    event.value.slice(2),
-                    'hex'
-                  ).toString('base64')
+                  pk.publicKeyBase64 = Buffer.from(event.value.slice(2), 'hex').toString('base64')
                   break
                 case 'base58':
-                  pk.publicKeyBase58 = Buffer.from(
-                    event.value.slice(2),
-                    'hex'
-                  ).toString('base58')
+                  pk.publicKeyBase58 = Buffer.from(event.value.slice(2), 'hex').toString('base58')
                   break
                 default:
                   pk.value = event.value
@@ -123,10 +115,7 @@ export function wrapDidDocument(did, owner, history) {
             case 'svc':
               services[key] = {
                 type: algo,
-                serviceEndpoint: Buffer.from(
-                  event.value.slice(2),
-                  'hex'
-                ).toString(),
+                serviceEndpoint: Buffer.from(event.value.slice(2), 'hex').toString(),
               }
               break
           }
@@ -136,8 +125,7 @@ export function wrapDidDocument(did, owner, history) {
       if (
         delegateCount > 0 &&
         (event._eventName === 'DIDDelegateChanged' ||
-          (event._eventName === 'DIDAttributeChanged' &&
-            bytes32toString(event.name).match(/^did\/pub\//))) &&
+          (event._eventName === 'DIDAttributeChanged' && bytes32toString(event.name).match(/^did\/pub\//))) &&
         validTo.lt(now)
       )
         delegateCount--
@@ -207,8 +195,7 @@ export default function register(conf = {}) {
     return history
   }
   async function resolve(did, parsed) {
-    if (!parsed.id.match(/^0x[0-9a-fA-F]{40}$/))
-      throw new Error(`Not a valid ethr DID: ${did}`)
+    if (!parsed.id.match(/^0x[0-9a-fA-F]{40}$/)) throw new Error(`Not a valid ethr DID: ${did}`)
     const owner = await didReg.identityOwner(parsed.id)
     const history = await changeLog(parsed.id)
     return wrapDidDocument(did, owner['0'], history)
