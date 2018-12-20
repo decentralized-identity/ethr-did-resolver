@@ -697,6 +697,55 @@ describe('ethrResolver', () => {
           })
         })
       })
+
+      describe('RSAVerificationKey2018', () => {
+        beforeAll(async () => {
+          await registry.revokeAttribute(
+            identity,
+            stringToBytes32('did/pub/RSA/veriKey/pem'),
+             '-----BEGIN PUBLIC KEY...END PUBLIC KEY-----\r\n',
+            { from: owner }
+          )
+          sleep(1)
+        })
+
+        it('resolves document', () => {
+          return expect(resolve(did)).resolves.toEqual({
+            '@context': 'https://w3id.org/did/v1',
+            id: did,
+            publicKey: [
+              {
+                id: `${did}#owner`,
+                type: 'Secp256k1VerificationKey2018',
+                owner: did,
+                ethereumAddress: owner,
+              },
+              {
+                id: `${did}#delegate-1`,
+                type: 'Secp256k1VerificationKey2018',
+                owner: did,
+                ethereumAddress: delegate2,
+              },
+            ],
+            authentication: [
+              {
+                type: 'Secp256k1SignatureAuthentication2018',
+                publicKey: `${did}#owner`,
+              },
+              {
+                type: 'Secp256k1SignatureAuthentication2018',
+                publicKey: `${did}#delegate-1`,
+              },
+            ],
+            service: [
+              {
+                type: 'HubService',
+                serviceEndpoint: 'https://hubs.uport.me',
+              },
+            ],
+          })
+        })
+      })
     })
 
     describe('revoke service endpoints', () => {
@@ -727,12 +776,6 @@ describe('ethrResolver', () => {
                 type: 'Secp256k1VerificationKey2018',
                 owner: did,
                 ethereumAddress: delegate2,
-              },
-              {
-                id: `${did}#delegate-4`,
-                type: 'RSAVerificationKey2018',
-                owner: did,
-                publicKeyPem: '-----BEGIN PUBLIC KEY...END PUBLIC KEY-----\r\n',
               },
             ],
             authentication: [
@@ -789,12 +832,6 @@ describe('ethrResolver', () => {
             type: 'Secp256k1VerificationKey2018',
             owner: did,
             ethereumAddress: delegate2,
-          },
-          {
-            id: `${did}#delegate-4`,
-            type: 'RSAVerificationKey2018',
-            owner: did,
-            publicKeyPem: '-----BEGIN PUBLIC KEY...END PUBLIC KEY-----\r\n',
           },
         ],
         authentication: [
