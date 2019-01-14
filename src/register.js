@@ -115,6 +115,12 @@ export function wrapDidDocument(did, owner, history) {
                     'hex'
                   ).toString('base58')
                   break
+                case 'pem':
+                  pk.publicKeyPem = Buffer.from(
+                    event.value.slice(2),
+                    'hex'
+                  ).toString()
+                  break
                 default:
                   pk.value = event.value
               }
