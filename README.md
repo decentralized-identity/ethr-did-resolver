@@ -134,7 +134,7 @@ While any attribute can be stored. For the DID document we currently support add
 
 The name of the attribute should follow this format:
 
-`did/pub/(Secp256k1|Rsa|Ed25519)/(veriKey|sigAuth)/(hex|base64)`
+`did/pub/(Secp256k1|RSA|Ed25519)/(veriKey|sigAuth)/(hex|base64)`
 
 #### Hex encoded Secp256k1 Verification Key
 
