@@ -441,6 +441,71 @@ describe('ethrResolver', () => {
           })
         })
       })
+
+      describe('RSAVerificationKey2018', () => {
+        beforeAll(async () => {
+           await registry.setAttribute(
+            identity,
+            stringToBytes32('did/pub/RSA/veriKey/pem'),
+             '-----BEGIN PUBLIC KEY...END PUBLIC KEY-----\r\n',
+             10,
+            { from: owner }
+          )
+        })
+
+        it('resolves document', () => {
+          return expect(resolve(did)).resolves.toEqual({
+            '@context': 'https://w3id.org/did/v1',
+            id: did,
+            publicKey: [
+              {
+                id: `${did}#owner`,
+                type: 'Secp256k1VerificationKey2018',
+                owner: did,
+                ethereumAddress: owner,
+              },
+              {
+                id: `${did}#delegate-1`,
+                type: 'Secp256k1VerificationKey2018',
+                owner: did,
+                ethereumAddress: delegate2,
+              },
+              {
+                id: `${did}#delegate-2`,
+                type: 'Secp256k1VerificationKey2018',
+                owner: did,
+                publicKeyHex:
+                  '02b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71',
+              },
+              {
+                id: `${did}#delegate-3`,
+                type: 'Ed25519VerificationKey2018',
+                owner: did,
+                publicKeyBase64: Buffer.from(
+                  '02b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71',
+                  'hex'
+                ).toString('base64'),
+              },
+              {
+                id: `${did}#delegate-4`,
+                type: 'RSAVerificationKey2018',
+                owner: did,
+                publicKeyPem: '-----BEGIN PUBLIC KEY...END PUBLIC KEY-----\r\n',
+              },
+            ],
+            authentication: [
+              {
+                type: 'Secp256k1SignatureAuthentication2018',
+                publicKey: `${did}#owner`,
+              },
+              {
+                type: 'Secp256k1SignatureAuthentication2018',
+                publicKey: `${did}#delegate-1`,
+              },
+            ],
+          })
+        })
+      })
     })
 
     describe('add service endpoints', () => {
@@ -486,6 +551,12 @@ describe('ethrResolver', () => {
                   '02b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71',
                   'hex'
                 ).toString('base64'),
+              },
+              {
+                id: `${did}#delegate-4`,
+                type: 'RSAVerificationKey2018',
+                owner: did,
+                publicKeyPem: '-----BEGIN PUBLIC KEY...END PUBLIC KEY-----\r\n',
               },
             ],
             authentication: [
@@ -546,6 +617,12 @@ describe('ethrResolver', () => {
                   'hex'
                 ).toString('base64'),
               },
+              {
+                id: `${did}#delegate-4`,
+                type: 'RSAVerificationKey2018',
+                owner: did,
+                publicKeyPem: '-----BEGIN PUBLIC KEY...END PUBLIC KEY-----\r\n',
+              },
             ],
             authentication: [
               {
@@ -577,6 +654,61 @@ describe('ethrResolver', () => {
           )
           sleep(1)
         })
+        it('resolves document', () => {
+          return expect(resolve(did)).resolves.toEqual({
+            '@context': 'https://w3id.org/did/v1',
+            id: did,
+            publicKey: [
+              {
+                id: `${did}#owner`,
+                type: 'Secp256k1VerificationKey2018',
+                owner: did,
+                ethereumAddress: owner,
+              },
+              {
+                id: `${did}#delegate-1`,
+                type: 'Secp256k1VerificationKey2018',
+                owner: did,
+                ethereumAddress: delegate2,
+              },
+              {
+                id: `${did}#delegate-4`,
+                type: 'RSAVerificationKey2018',
+                owner: did,
+                publicKeyPem: '-----BEGIN PUBLIC KEY...END PUBLIC KEY-----\r\n',
+              },
+            ],
+            authentication: [
+              {
+                type: 'Secp256k1SignatureAuthentication2018',
+                publicKey: `${did}#owner`,
+              },
+              {
+                type: 'Secp256k1SignatureAuthentication2018',
+                publicKey: `${did}#delegate-1`,
+              },
+            ],
+            service: [
+              {
+                type: 'HubService',
+                serviceEndpoint: 'https://hubs.uport.me',
+              },
+            ],
+          })
+        })
+      })
+
+      describe('RSAVerificationKey2018', () => {
+        beforeAll(async () => {
+          await registry.revokeAttribute(
+            identity,
+            stringToBytes32('did/pub/RSA/veriKey/pem'),
+             '-----BEGIN PUBLIC KEY...END PUBLIC KEY-----\r\n',
+            { from: owner }
+          )
+          sleep(1)
+        })
+
         it('resolves document', () => {
           return expect(resolve(did)).resolves.toEqual({
             '@context': 'https://w3id.org/did/v1',
