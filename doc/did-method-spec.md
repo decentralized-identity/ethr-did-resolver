@@ -1,4 +1,4 @@
-ETHR Method Specification
+ETHR DID Method Specification
 =================
 
 ## Author
