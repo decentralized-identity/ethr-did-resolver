@@ -56,8 +56,7 @@ MUST be in lowercase. The remainder of the DID, after the prefix, is specified b
 
 ## Method Specific Identifier
 
-The method specific identifier is composed of the Ethereum network on the target network represented 
-by a Hex-encoded Ethereum address.
+The method specific identifier is represented as the Hex-encoded Ethereum address on the target network.
 
 	ethr-did = "did:ethr:" ethr-address
 	ethr-address = "0x" 40*HEXDIG
