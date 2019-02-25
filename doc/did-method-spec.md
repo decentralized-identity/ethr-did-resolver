@@ -206,7 +206,7 @@ the DID document:
 
 The name of the attribute added to ERC1056 should follow this format:
 
-`did/pub/(Secp256k1|RSA|Ed25519)/(veriKey|sigAuth)/(hex|base64)
+`did/pub/(Secp256k1|RSA|Ed25519)/(veriKey|sigAuth)/(hex|base64)`
 
 ##### Hex encoded Secp256k1 Verification Key
 
