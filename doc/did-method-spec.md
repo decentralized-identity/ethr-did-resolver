@@ -14,11 +14,11 @@ please see the [DID Primer](https://github.com/WebOfTrustInfo/rebooting-the-web-
 
 ## Abstract
 Decentralized Identifiers (DIDs, see [1]) are designed to be compatible with any distributed ledger or network.
-In the Ethereum community, a pattern is known as ERC1056 (see [2]) utilizes a smart contract for a lightweight
+In the Ethereum community, a pattern known as ERC1056 (see [2]) utilizes a smart contract for a lightweight
 identity management system intended explicitly for off-chain usage.
 
-We propose a new DID method that allows any Ethereum account regardless if a smart contract or key pair,
-to become a valid identity. An identity needs no registration. In the case of key management or additional
+We propose a new DID method that allows any any Ethereum smart contract or key pair account to become a valid identity.
+An identity needs no registration. In the case that key management or additional
 attributes such as "service endpoints" are required, we deployed ERC1056 smart contracts on:
 
 * Mainnet: `0xdca7ef03e98e0dc2b855be647c39abe984fcf21b`
@@ -36,13 +36,11 @@ represented, both on-chain as well as off-chain or in payment channels through t
 
 For a reference implementation of this DID method specification see [3].
 
-### Identity Ownership
-Each identity has a single address which maintains ultimate control over it. By default, each identity is controlled
-by itself. As ongoing technological and security improvements occur, an owner can replace themselves with any other
-Ethereum address, such as an advanced multi-signature contract.
-
-There is only ever a single identity owner. More advanced ownership models are managed through a multi-signature
-contract.
+### Identity Ownership 
+By default, each identity is controlled by itself. Each identity can only be controlled by single 
+address at any given time. By default, this is the address of the identity itself. The owner can 
+replace themselves with any other Ethereum address, including contracts to allow more advanced
+models such as multi-signature ownership.
 
 ## Target System
 
@@ -134,7 +132,7 @@ read only contract function `identityOwner(address identity)` on the deployed ve
 
 The identity owner will always have a `publicKey` with the id set as the DID with the fragment `#owner` appended.
 
-An entry is also added to the `authentication` array of the DID document with type `Secp256k1SignatureAuthentication2018.
+An entry is also added to the `authentication` array of the DID document with type `Secp256k1SignatureAuthentication2018`.
 
 #### Enumerating Contract Events to build the DID Document
 
@@ -208,7 +206,7 @@ the DID document:
 
 The name of the attribute added to ERC1056 should follow this format:
 
-`did/pub/(Secp256k1|RSA|Ed25519)/(veriKey|sigAuth)/(hex|base64)
+`did/pub/(Secp256k1|RSA|Ed25519)/(veriKey|sigAuth)/(hex|base64)`
 
 ##### Hex encoded Secp256k1 Verification Key
 
