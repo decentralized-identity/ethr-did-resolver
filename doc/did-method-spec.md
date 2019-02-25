@@ -64,8 +64,20 @@ The target system is the Ethereum network where the ERC1056 is deployed. This co
 - Supports any EVM-compliant blockchain 
 
 ## JSON-LD Context Definition
-Note this DID method specification uses the `Secp256k1VerificationKey2018` type and
-an `ethereumAddress` instead of a `publicKeyHex`.
+Note this DID method specification uses the `Secp256k1VerificationKey2018`, 
+`Secp256k1SignatureAuthentication2018` types and an `ethereumAddress` instead of
+a `publicKeyHex`.
+
+The definition of the ethr DID JSON-LD context is:
+
+    {
+        "@context":
+        {
+            "ethereumAddress": "https://github.com/uport-project/ethr-did-resolver#ethereumAddress",
+            "Secp256k1VerificationKey2018": "https://github.com/uport-project/ethr-did-resolver#Secp256k1VerificationKey2018",
+            "Secp256k1SignatureAuthentication2018": "https://github.com/uport-project/ethr-did-resolver#Secp256k1VerificationKey2018",
+        }
+    }
 
 ## DID Method Name
 
