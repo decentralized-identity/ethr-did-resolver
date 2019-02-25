@@ -5,7 +5,14 @@ did:ethr method
 
 - uPort Team: <https://www.uport.me/contact>
 
-## Summary
+## Preface
+
+The ethr DID method specification conforms to the requirements specified in 
+the [DID specification](https://w3c-ccg.github.io/did-spec/), currently published by the 
+W3C Credentials Community Group. For more information about DIDs and DID method specifications, 
+please see the [DID Primer](https://github.com/WebOfTrustInfo/rebooting-the-web-of-trust-fall2017/blob/master/topics-and-advance-readings/did-primer.md)
+
+## Abstract
 Decentralized Identifiers (DIDs, see [1]) are designed to be compatible with any distributed ledger or network.
 In the Ethereum community, a pattern is known as ERC1056 (see [2]) utilizes a smart contract for a lightweight
 identity management system intended explicitly for off-chain usage.
@@ -29,7 +36,7 @@ represented, both on-chain as well as off-chain or in payment channels through t
 
 For a reference implementation of this DID method specification see [3].
 
-## Identity Ownership
+### Identity Ownership
 Each identity has a single address which maintains ultimate control over it. By default, each identity is controlled
 by itself. As ongoing technological and security improvements occur, an owner can replace themselves with any other
 Ethereum address, such as an advanced multi-signature contract.
@@ -37,7 +44,16 @@ Ethereum address, such as an advanced multi-signature contract.
 There is only ever a single identity owner. More advanced ownership models are managed through a multi-signature
 contract.
 
-## Advantages
+## Target System
+
+The target system is the Ethereum network where the ERC1056 is deployed. This could either be:
+- Mainnet
+- Ropsten
+- Rinkeby
+- Kovan
+- other EVM-compliant blockchains such as private chains, or consortium chains.
+
+### Advantages
 - No transaction fee on identity creation
 - Uses Ethereum's built-in account abstraction
 - Multi-sig wallet for identity owner
@@ -46,6 +62,10 @@ contract.
 - Flexibility to use key management
 - Flexibility to allow third-party funding service to pay the gas fee if needed
 - Supports any EVM-compliant blockchain 
+
+## JSON-LD Context Definition
+Note this DID method specification uses the `Secp256k1VerificationKey2018` type and
+an `ethereumAddress` instead of a `publicKeyHex`.
 
 ## DID Method Name
 
@@ -87,8 +107,6 @@ transactions to the ERC1056 registry looks like this:
            type: 'Secp256k1SignatureAuthentication2018',
            publicKey: 'did:ethr:0xb9c5714089478a327f09197987f16f9e5d936e8a#owner'}]
     }
-
-Note this uses the `Secp256k1VerificationKey2018` type and an `ethereumAddress` instead of a `publicKeyHex`.
  
 ### Read (Resolve)
 
@@ -240,6 +258,11 @@ functions as defined by the ERC1056 standard. This includes the delegates and ad
 detailed description in the [ERC1056 documentation](https://github.com/ethereum/EIPs/issues/1056). All these functions
 will trigger the respective Ethereum events which are used to build the DID Document for a given identity as
 described in [Enumerating Contract Events to build the DID Document](#Enumerating-Contract-Events-to-build-the-DID-Document). 
+
+## Reference Implementations
+
+The code at [https://github.com/uport-project/ethr-did-resolver]() is intended to present a reference implementation
+of this DID method. 
 
 References
 ----------
