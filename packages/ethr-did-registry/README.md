@@ -235,3 +235,4 @@ Make sure you have truffle installed, then run:
 ```
 $ truffle test
 ```
+
