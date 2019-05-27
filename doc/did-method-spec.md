@@ -17,7 +17,7 @@ Decentralized Identifiers (DIDs, see [1]) are designed to be compatible with any
 In the Ethereum community, a pattern known as ERC1056 (see [2]) utilizes a smart contract for a lightweight
 identity management system intended explicitly for off-chain usage.
 
-We propose a new DID method that allows any any Ethereum smart contract or key pair account to become a valid identity.
+The described DID method allows any Ethereum smart contract or key pair account to become a valid identity.
 An identity needs no registration. In the case that key management or additional
 attributes such as "service endpoints" are required, we deployed ERC1056 smart contracts on:
 
@@ -37,7 +37,7 @@ represented, both on-chain as well as off-chain or in payment channels through t
 For a reference implementation of this DID method specification see [3].
 
 ### Identity Ownership 
-By default, each identity is controlled by itself. Each identity can only be controlled by single 
+By default, each identity is controlled by itself. Each identity can only be controlled by a single 
 address at any given time. By default, this is the address of the identity itself. The owner can 
 replace themselves with any other Ethereum address, including contracts to allow more advanced
 models such as multi-signature ownership.
@@ -62,7 +62,7 @@ The target system is the Ethereum network where the ERC1056 is deployed. This co
 - Supports any EVM-compliant blockchain 
 
 ## JSON-LD Context Definition
-Note this DID method specification uses the `Secp256k1VerificationKey2018`, 
+Note, this DID method specification uses the `Secp256k1VerificationKey2018`, 
 `Secp256k1SignatureAuthentication2018` types and an `ethereumAddress` instead of
 a `publicKeyHex`.
 
@@ -86,12 +86,24 @@ MUST be in lowercase. The remainder of the DID, after the prefix, is specified b
 
 ## Method Specific Identifier
 
-The method specific identifier is represented as the Hex-encoded Ethereum address on the target network.
+The method specific identifier is represented as the Hex-encoded Ethereum address
+on the target network.
 
 	ethr-did = "did:ethr:" ethr-address
 	ethr-address = "0x" 40*HEXDIG
+	
+    ethr-did = "did:ethr:" ethr-specific-idstring
+    ethr-specific-idstring = [ ethr-network ":" ] ethr-address
+    ethr-network = "mainnet" / "ropsten" / "rinkeby" / "kovan"
 
 The Ethereum address is case-insensitive.
+
+Note, if no public Ethereum network was specified, it is assumed that the DID is anchored
+on the Ethereum mainnet per default. This means the following DIDs will resolve to the same
+DID Document:
+
+    did:ethr:mainnet:0xb9c5714089478a327f09197987f16f9e5d936e8a
+    did:ethr:0xb9c5714089478a327f09197987f16f9e5d936e8a
 
 ## CRUD Operation Definitions
 
