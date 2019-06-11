@@ -11,7 +11,7 @@ const gasLimits = {
 generateDeployTx = (code, name) => {
   const rawTx = {
     nonce: 0,
-    gasPrice: 10000000000, // 10 Gwei
+    gasPrice: 0, // 10 Gwei
     gasLimit: gasLimits[name] || 2000000,
     value: 0,
     data: code,
