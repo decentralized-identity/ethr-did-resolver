@@ -16,7 +16,7 @@
     },
     {
         "name": "rsk",
-        "rpcUrl": " https://b9d98bad.ngrok.io",
+        "rpcUrl": "https://public-node.rsk.co",
         "registry": "0xdca7ef03e98e0dc2b855be647c39abe984fcf21b"
     },
     {
