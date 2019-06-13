@@ -23,7 +23,8 @@ This contract allows Ethereum addresses to present signing information about the
 |Ropsten (id: 3)                    |[0xdca7ef03e98e0dc2b855be647c39abe984fcf21b](https://ropsten.etherscan.io/address/0xdca7ef03e98e0dc2b855be647c39abe984fcf21b)           |
 |Rinkeby (id: 4)                    |[0xdca7ef03e98e0dc2b855be647c39abe984fcf21b](https://rinkeby.etherscan.io/address/0xdca7ef03e98e0dc2b855be647c39abe984fcf21b)           |
 |Kovan (id: 42)                     |[0xdca7ef03e98e0dc2b855be647c39abe984fcf21b](https://kovan.etherscan.io/address/0xdca7ef03e98e0dc2b855be647c39abe984fcf21b)             |
-|RSK Testnet (id: 30)               |[0xdca7ef03e98e0dc2b855be647c39abe984fcf21b](https://explorer.testnet.rsk.co/address/0xdca7ef03e98e0dc2b855be647c39abe984fcf21b)        |
+|RSK (id: 30)                       |[0xdca7ef03e98e0dc2b855be647c39abe984fcf21b](https://explorer.rsk.co/address/0xdca7ef03e98e0dc2b855be647c39abe984fcf21b)        |
+|RSK Testnet (id: 31)               |[0xdca7ef03e98e0dc2b855be647c39abe984fcf21b](https://explorer.testnet.rsk.co/address/0xdca7ef03e98e0dc2b855be647c39abe984fcf21b)        |
 |Alastria Telsius (id: 83584648538 )|[0x05cc574b19a3c11308f761b3d7263bd8608bc532](http://blkexplorer0.telsius.alastria.io/account/0x05cc574b19a3c11308f761b3d7263bd8608bc532)|
 
 
