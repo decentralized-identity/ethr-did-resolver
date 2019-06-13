@@ -1,9 +1,8 @@
-ETHR DID Method Specification
-=================
+# ETHR DID Method Specification
 
 ## Author
 
-- uPort Team: <https://www.uport.me/contact>
+-   uPort Team: <https://www.uport.me/contact>
 
 ## Preface
 
@@ -13,6 +12,7 @@ W3C Credentials Community Group. For more information about DIDs and DID method 
 please see the [DID Primer](https://github.com/WebOfTrustInfo/rebooting-the-web-of-trust-fall2017/blob/master/topics-and-advance-readings/did-primer.md)
 
 ## Abstract
+
 Decentralized Identifiers (DIDs, see [1]) are designed to be compatible with any distributed ledger or network.
 In the Ethereum community, a pattern known as ERC1056 (see [2]) utilizes a smart contract for a lightweight
 identity management system intended explicitly for off-chain usage.
@@ -21,10 +21,13 @@ We propose a new DID method that allows any any Ethereum smart contract or key p
 An identity needs no registration. In the case that key management or additional
 attributes such as "service endpoints" are required, we deployed ERC1056 smart contracts on:
 
-* Mainnet: `0xdca7ef03e98e0dc2b855be647c39abe984fcf21b`
-* Ropsten: `0xdca7ef03e98e0dc2b855be647c39abe984fcf21b`
-* Rinkeby: `0xdca7ef03e98e0dc2b855be647c39abe984fcf21b`
-* Kovan: `0xdca7ef03e98e0dc2b855be647c39abe984fcf21b`
+-   Mainnet: `0xdca7ef03e98e0dc2b855be647c39abe984fcf21b`
+-   Ropsten: `0xdca7ef03e98e0dc2b855be647c39abe984fcf21b`
+-   Rinkeby: `0xdca7ef03e98e0dc2b855be647c39abe984fcf21b`
+-   Kovan:   `0xdca7ef03e98e0dc2b855be647c39abe984fcf21b`
+-   RSK:     `0xdca7ef03e98e0dc2b855be647c39abe984fcf21b`
+-   RSK Testnet:`0xdca7ef03e98e0dc2b855be647c39abe984fcf21b`
+-   Alastria Telsius:`0x05cc574b19a3c11308f761b3d7263bd8608bc532`
 
 Since each Ethereum transaction must be funded, there is a growing trend of on-chain transactions that are
 authenticated via an externally created signature and not by the actual transaction originator. This allows for
@@ -36,7 +39,8 @@ represented, both on-chain as well as off-chain or in payment channels through t
 
 For a reference implementation of this DID method specification see [3].
 
-### Identity Ownership 
+### Identity Ownership
+
 By default, each identity is controlled by itself. Each identity can only be controlled by single 
 address at any given time. By default, this is the address of the identity itself. The owner can 
 replace themselves with any other Ethereum address, including contracts to allow more advanced
@@ -45,23 +49,26 @@ models such as multi-signature ownership.
 ## Target System
 
 The target system is the Ethereum network where the ERC1056 is deployed. This could either be:
-- Mainnet
-- Ropsten
-- Rinkeby
-- Kovan
-- other EVM-compliant blockchains such as private chains, or consortium chains.
+
+-   Mainnet
+-   Ropsten
+-   Rinkeby
+-   Kovan
+-   other EVM-compliant blockchains such as private chains, or consortium chains.
 
 ### Advantages
-- No transaction fee on identity creation
-- Uses Ethereum's built-in account abstraction
-- Multi-sig wallet for identity owner
-- Decoupling claims data from the underlying identity
-- Decoupling Ethereum interaction from the underlying identity
-- Flexibility to use key management
-- Flexibility to allow third-party funding service to pay the gas fee if needed
-- Supports any EVM-compliant blockchain 
+
+-   No transaction fee on identity creation
+-   Uses Ethereum's built-in account abstraction
+-   Multi-sig wallet for identity owner
+-   Decoupling claims data from the underlying identity
+-   Decoupling Ethereum interaction from the underlying identity
+-   Flexibility to use key management
+-   Flexibility to allow third-party funding service to pay the gas fee if needed
+-   Supports any EVM-compliant blockchain 
 
 ## JSON-LD Context Definition
+
 Note this DID method specification uses the `Secp256k1VerificationKey2018`, 
 `Secp256k1SignatureAuthentication2018` types and an `ethereumAddress` instead of
 a `publicKeyHex`.
@@ -88,8 +95,8 @@ MUST be in lowercase. The remainder of the DID, after the prefix, is specified b
 
 The method specific identifier is represented as the Hex-encoded Ethereum address on the target network.
 
-	ethr-did = "did:ethr:" ethr-address
-	ethr-address = "0x" 40*HEXDIG
+    ethr-did = "did:ethr:" ethr-address
+    ethr-address = "0x" 40*HEXDIG
 
 The Ethereum address is case-insensitive.
 
@@ -117,7 +124,7 @@ transactions to the ERC1056 registry looks like this:
            type: 'Secp256k1SignatureAuthentication2018',
            publicKey: 'did:ethr:0xb9c5714089478a327f09197987f16f9e5d936e8a#owner'}]
     }
- 
+
 ### Read (Resolve)
 
 The DID document is built by using read only functions and contract events on the ERC1056 registry.
@@ -137,9 +144,10 @@ An entry is also added to the `authentication` array of the DID document with ty
 #### Enumerating Contract Events to build the DID Document
 
 The ERC1056 contract publishes three types of events for each identity.
-- `DIDOwnerChanged`
-- `DIDDelegateChanged`
-- `DIDAttributeChanged`
+
+-   `DIDOwnerChanged`
+-   `DIDDelegateChanged`
+-   `DIDAttributeChanged`
 
 If a change has ever been made for an identity the block number is stored in the changed mapping.
 
@@ -149,20 +157,20 @@ Each event contains a `previousChange` value which contains the block number of 
 
 To see all changes in history for an identity use the following pseudo code:
 
-1. Call `changed(address identity)` on the ERC1056 contract.
-2. If result is `null` return.
-3. Filter for events for all the above types with the contracts address on the specified block.
-4. If event has a previous change then go to 3
+1.  Call `changed(address identity)` on the ERC1056 contract.
+2.  If result is `null` return.
+3.  Filter for events for all the above types with the contracts address on the specified block.
+4.  If event has a previous change then go to 3
 
 #### Delegate Keys
 
 Delegate keys are Ethereum addresses that can either be general signing keys or optionally also perform
 authentication.
-    
+
 They are also verifiable from Solidity.
-    
+
 A `DIDDelegateChanged` event is published that is used to build a DID document.
-    
+
     event DIDDelegateChanged(
         address indexed identity,
         bytes32 delegateType,
@@ -171,10 +179,12 @@ A `DIDDelegateChanged` event is published that is used to build a DID document.
         uint previousChange
       );
       
+
 The only 2 `delegateTypes` that are currently published in the DID document are:
-- `veriKey` which adds a `Secp256k1VerificationKey2018` to the `publicKey` section of the DID document.
-- `sigAuth` which adds a `Secp256k1SignatureAuthentication2018` to the `publicKey` section of document. An entry
-is also added to the `authentication` section of the DID document.
+
+-   `veriKey` which adds a `Secp256k1VerificationKey2018` to the `publicKey` section of the DID document.
+-   `sigAuth` which adds a `Secp256k1SignatureAuthentication2018` to the `publicKey` section of document. An entry
+    is also added to the `authentication` section of the DID document.
 
 Note, the `delegateType` is a `bytes32` type for Ethereum gas efficiency reasons and not a `string`. This 
 restricts us to 32 bytes, which is why we use the short hand versions above.
@@ -185,7 +195,7 @@ Only events with a `validTo` in seconds greater or equal to the current time sho
 
 Non-Ethereum keys, service endpoints etc. can be added using attributes. Attributes only exist on the 
 blockchain as contract events of type `DIDAttributeChanged` and can thus not be queried from within solidity code.
-    
+
     event DIDAttributeChanged(
         address indexed identity,
         bytes32 name,
@@ -199,8 +209,9 @@ Note, the name is a `bytes32` type for Ethereum gas efficiency reasons and not a
 
 While any attribute can be stored, for the DID document we currently support adding to each of these sections of 
 the DID document:
-- Public Keys
-- Service Endpoints
+
+-   Public Keys
+-   Service Endpoints
 
 #### Public Keys
 
@@ -222,6 +233,7 @@ generates a public key entry like the following:
     }
 
 ##### Base64 encoded Ed25519 Verification Key
+
 A `DIDAttributeChanged` event for the identity `0xf3beac30c498d9e26865f34fcaa57dbb935b0d74` with the name 
 `did/pub/Ed25519/veriKey/base64` and the value of `0xb97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71`
 generates a public key entry like this:
@@ -234,6 +246,7 @@ generates a public key entry like this:
     }
 
 #### Service Endpoints
+
 The name of the attribute should follow this format:
 
 `did/svc/[ServiceName]`
@@ -252,33 +265,33 @@ A `DIDAttributeChanged` event for the identity `0xf3beac30c498d9e26865f34fcaa57d
 The DID Document may be updated by invoking the relevant smart contract functions as defined by the ERC1056 standard.
 This includes changes to the identity owner, adding delegates and adding additional attributes. Please find a
 detailed description in the [ERC1056 documentation](https://github.com/ethereum/EIPs/issues/1056).
- 
+
 These functions will trigger the respective Ethereum events which are used to build the DID Document for a given
 identity as described in [Enumerating Contract Events to build the DID Document](#Enumerating-Contract-Events-to-build-the-DID-Document).
 
-### Delete (Revoke) 
- 
+### Delete (Revoke)
+
 Two cases need to be distinguished:
-- In case no changes were written to ERC1056, nothing needs to be done, and the private key which belongs to the
-Ethereum address needs to be deleted from the storage medium used to protect the keys, e.g., mobile device.
-- In case ERC1056 was utilized, the owner of the smart contract needs to be set to `0x0`. Although, `0x0`is a valid
-Ethereum address, this will indicate the identity has no owner which is a common approach for invalidation, 
-e.g., tokens. Other elements of the DID Document may be revoked explicitly by invoking the relevant smart contract
-functions as defined by the ERC1056 standard. This includes the delegates and additional attributes. Please find a
-detailed description in the [ERC1056 documentation](https://github.com/ethereum/EIPs/issues/1056). All these functions
-will trigger the respective Ethereum events which are used to build the DID Document for a given identity as
-described in [Enumerating Contract Events to build the DID Document](#Enumerating-Contract-Events-to-build-the-DID-Document). 
+
+-   In case no changes were written to ERC1056, nothing needs to be done, and the private key which belongs to the
+    Ethereum address needs to be deleted from the storage medium used to protect the keys, e.g., mobile device.
+-   In case ERC1056 was utilized, the owner of the smart contract needs to be set to `0x0`. Although, `0x0`is a valid
+    Ethereum address, this will indicate the identity has no owner which is a common approach for invalidation, 
+    e.g., tokens. Other elements of the DID Document may be revoked explicitly by invoking the relevant smart contract
+    functions as defined by the ERC1056 standard. This includes the delegates and additional attributes. Please find a
+    detailed description in the [ERC1056 documentation](https://github.com/ethereum/EIPs/issues/1056). All these functions
+    will trigger the respective Ethereum events which are used to build the DID Document for a given identity as
+    described in [Enumerating Contract Events to build the DID Document](#Enumerating-Contract-Events-to-build-the-DID-Document). 
 
 ## Reference Implementations
 
-The code at [https://github.com/uport-project/ethr-did-resolver]() is intended to present a reference implementation
+The code at [https://github.com/uport-project/ethr-did-resolver](<>) is intended to present a reference implementation
 of this DID method. 
 
-References
-----------
+## References
 
- **[1]** https://w3c-ccg.github.io/did-spec/
+ **[1]** <https://w3c-ccg.github.io/did-spec/>
 
- **[2]** https://github.com/ethereum/EIPs/issues/1056 
- 
- **[3]** https://github.com/uport-project/ethr-did-resolver
+ **[2]** <https://github.com/ethereum/EIPs/issues/1056> 
+
+ **[3]** <https://github.com/uport-project/ethr-did-resolver>

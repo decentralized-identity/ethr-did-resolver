@@ -65,9 +65,9 @@ An entry is also added to the `authentication` array of the DID document with ty
 
 The `EthereumDIDRegistry` contract publishes 3 types of events for each identity.
 
-- `DIDOwnerChanged`
-- `DIDDelegateChanged`
-- `DIDAttributeChanged`
+-   `DIDOwnerChanged`
+-   `DIDDelegateChanged`
+-   `DIDAttributeChanged`
 
 If a change has ever been made for an identity the block number is stored in the `changed` mapping.
 
@@ -77,10 +77,10 @@ Each event contains a `previousChange` value which contains the block number of 
 
 To see all changes in history for an identity use the following pseudo code:
 
-1. call `changed(address identity)` contract
-2. if result is null return
-3. filter for events for all the above types with the contracts address on the specified block
-4. if event has a previous change then go to 3
+1.  call `changed(address identity)` contract
+2.  if result is null return
+3.  filter for events for all the above types with the contracts address on the specified block
+4.  if event has a previous change then go to 3
 
 ### Delegate Keys
 
@@ -102,8 +102,8 @@ event DIDDelegateChanged(
 
 The only 2 delegateTypes that are currently published in the DID Document are:
 
-- `veriKey` Which adds a `Secp256k1VerificationKey2018` to the `publicKey` section of document
-- `sigAuth` Which adds a `Secp256k1SignatureAuthentication2018` to the `publicKey` section of document. An entry is also added to the `authentication` section of document.
+-   `veriKey` Which adds a `Secp256k1VerificationKey2018` to the `publicKey` section of document
+-   `sigAuth` Which adds a `Secp256k1SignatureAuthentication2018` to the `publicKey` section of document. An entry is also added to the `authentication` section of document.
 
 **Note** The `delegateType` is a `bytes32` type for Ethereum gas efficiency reasons and not a string. This restricts us to 32 bytes, which is why we use the short hand versions above.
 
@@ -127,8 +127,8 @@ event DIDAttributeChanged(
 
 While any attribute can be stored. For the DID document we currently support adding to each of these sections of the DID document:
 
-- [`Public Keys`](https://w3c-ccg.github.io/did-spec/#public-keys)
-- [`Service Endpoints`](https://w3c-ccg.github.io/did-spec/#service-endpoints)
+-   [`Public Keys`](https://w3c-ccg.github.io/did-spec/#public-keys)
+-   [`Service Endpoints`](https://w3c-ccg.github.io/did-spec/#service-endpoints)
 
 ### Public Keys
 
@@ -187,12 +187,49 @@ The resolver presents a simple `resolver()` function that returns a ES6 Promise 
 
 ```js
 import resolve from 'did-resolver'
-import registerResolver from 'ethr-did-resolver'
+import register from 'ethr-did-resolver'
 
-registerResolver()
+register()
 
 resolve('did:ethr:0xf3beac30c498d9e26865f34fcaa57dbb935b0d74').then(doc => console.log)
 
 // You can also use ES7 async/await syntax
 const doc = await resolve('did:ethr:0xf3beac30c498d9e26865f34fcaa57dbb935b0d74')
+```
+
+## Resolving a DID document in a private chain
+
+The `register(conf)` function allows to configure diferent private networks.
+
+The `conf` object can have the following parameters:
+
+| Param                | Description                                                                  |
+| -------------------- | ---------------------------------------------------------------------------- |
+| provider             | web3 provider object for mainnet                                             |
+| web3                 | web3 object (will use web3.currentProvider) for mainnet                      |
+| rpcUrl               | JSON-RPC URL to access mainnet                                               |
+| registry             | Address of the registry on mainnet                                           |
+| networks             | array of non mainnet network and their configs                               |
+| networks[0].name     | name of the private network. Same as in `did:ethr:privateNetworkName:0x....` |
+| networks[0].provider | web3 provider object for the private network                                 |
+| networks[0].web3     | web3 object (will use web3.currentProvider) for the private network          |
+| networks[0].rpcUrl   | JSON-RPC URL to access the private network                                   |
+| networks[0].registry | Address of the registry on the private network                               |
+
+Either provider, web3 or rpcUrl is needed.
+
+```js
+import resolve from 'did-resolver'
+import register from 'ethr-did-resolver'
+
+const registyAddress='0x....' //Registry address on privChain
+const jsonRpcEndpoint='https://priv.chain/rpc' //JSON-RPC endpoint for privChain
+
+register({ 
+  networks:[
+    { name: 'privchain', rpcUrl: jsonRpcEndpoint, registry: registryAddress }
+  ]
+})
+
+resolve('did:ethr:privchain:0xf3beac30c498d9e26865f34fcaa57dbb935b0d74').then(doc => console.log)
 ```

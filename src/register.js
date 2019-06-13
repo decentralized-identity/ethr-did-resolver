@@ -176,27 +176,49 @@ function configureProvider(conf = {}) {
   }
 }
 
-export default function register(conf = {}) {
+function configureNetwork(conf = {}){
   const provider = configureProvider(conf)
   const eth = new Eth(provider)
   const registryAddress = conf.registry || REGISTRY
   const DidReg = new EthContract(eth)(DidRegistryContract)
   const didReg = DidReg.at(registryAddress)
+  
+  return { eth, registryAddress, didReg}
+}
+
+function confNetworks(networksConf=[]){
+  let networks={}
+  for(let i=0;i<networksConf.length;i++){
+    const net=networksConf[i];
+    networks[net.name]=configureNetwork(net);
+  }
+  return networks;
+}
+
+export default function register(conf = {}) {
+  
   const logDecoder = abi.logDecoder(DidRegistryContract, false)
 
-  const lastChanged = async identity => {
-    const result = await didReg.changed(identity)
+  const networks={
+    'mainnet': configureNetwork(conf),
+    ...confNetworks(require('./networks.json')),
+    ...confNetworks(conf.networks)
+  }
+
+  const lastChanged = async (identity,network) => {
+    const result = await networks[network].didReg.changed(identity)
     if (result) {
       return result['0']
     }
   }
-  async function changeLog(identity) {
+
+  async function changeLog(identity,network) {
     const history = []
-    let previousChange = await lastChanged(identity)
+    let previousChange = await lastChanged(identity,network)
     while (previousChange) {
       const blockNumber = previousChange
-      const logs = await eth.getLogs({
-        address: registryAddress,
+      const logs = await networks[network].eth.getLogs({
+        address: networks[network].registryAddress,
         topics: [null, `0x000000000000000000000000${identity.slice(2)}`],
         fromBlock: previousChange,
         toBlock: previousChange,
@@ -213,10 +235,18 @@ export default function register(conf = {}) {
     return history
   }
   async function resolve(did, parsed) {
-    if (!parsed.id.match(/^0x[0-9a-fA-F]{40}$/))
+    const fullId=parsed.id.match(/^(.*)?(0x[0-9a-fA-F]{40})$/)
+    if (!fullId)
       throw new Error(`Not a valid ethr DID: ${did}`)
-    const owner = await didReg.identityOwner(parsed.id)
-    const history = await changeLog(parsed.id)
+
+    const id=fullId[2];
+    const network = (!fullId[1]) ? 'mainnet' : fullId[1].slice(0,-1);
+
+    if(!networks[network])      
+      throw new Error(`No conf for network: ${network}`)
+
+    const owner = await networks[network].didReg.identityOwner(id)
+    const history = await changeLog(id,network)
     return wrapDidDocument(did, owner['0'], history)
   }
   registerMethod('ethr', resolve)
