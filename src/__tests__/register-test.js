@@ -881,7 +881,7 @@ describe('ethrResolver', () => {
         })
 
         it('resolves on privChain', async () => {
-            const alt_registry = await DidReg.new({
+            const altRegistry = await DidReg.new({
                 from: accounts[0],
                 gasPrice: 100000000000,
                 gas: 4712388, //1779962
@@ -889,7 +889,7 @@ describe('ethrResolver', () => {
 
             register({ 
                 networks:[
-                    { name: 'privchain',provider, registry: alt_registry.address }
+                    { name: 'privchain',provider, registry: altRegistry.address }
                 ]
             })
 
@@ -915,7 +915,7 @@ describe('ethrResolver', () => {
         })
     
         it('resolves on privChain:subChain', async () => {
-            const alt_registry = await DidReg.new({
+            const altRegistry = await DidReg.new({
                 from: accounts[0],
                 gasPrice: 100000000000,
                 gas: 4712388, //1779962
@@ -923,7 +923,7 @@ describe('ethrResolver', () => {
 
             register({ 
                 networks:[
-                    { name: 'privChain:subChain',provider, registry: alt_registry.address }
+                    { name: 'privChain:subChain',provider, registry: altRegistry.address }
                 ]
             })
             const pdid='did:ethr:privChain:subChain:'+unregistered;

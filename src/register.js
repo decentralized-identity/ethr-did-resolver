@@ -70,6 +70,7 @@ export function wrapDidDocument(did, owner, history) {
                             type: 'Secp256k1SignatureAuthentication2018',
                             publicKey: `${did}#delegate-${delegateCount}`,
                         }
+                    // falls through
                     case 'veriKey':
                         pks[key] = {
                             id: `${did}#delegate-${delegateCount}`,
@@ -90,7 +91,7 @@ export function wrapDidDocument(did, owner, history) {
                     const type = attrTypes[match[4]] || match[4]
                     const encoding = match[6]
                     switch (section) {
-                        case 'pub':
+                        case 'pub': {
                             delegateCount++
                             const pk = {
                                 id: `${did}#delegate-${delegateCount}`,
@@ -126,6 +127,7 @@ export function wrapDidDocument(did, owner, history) {
                             }
                             pks[key] = pk
                             break
+                        }
                         case 'svc':
                             services[key] = {
                                 type: algo,
