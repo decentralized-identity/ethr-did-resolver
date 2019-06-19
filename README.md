@@ -1,3 +1,4 @@
+<!--lint disable no-literal-urls-->
 ---
 title: "Ethr DID Resolver"
 index: 7
@@ -5,6 +6,7 @@ category: "ethr-did-resolver"
 type: "reference"
 source: "https://github.com/uport-project/ethr-did-resolver/blob/develop/README.md"
 ---
+<!--lint enable no-literal-urls-->
 
 # ethr DID Resolver
 
@@ -203,18 +205,18 @@ The `register(conf)` function allows to configure diferent private networks.
 
 The `conf` object can have the following parameters:
 
-| Param                | Description                                                                  |
-| -------------------- | ---------------------------------------------------------------------------- |
-| provider             | web3 provider object for mainnet                                             |
-| web3                 | web3 object (will use web3.currentProvider) for mainnet                      |
-| rpcUrl               | JSON-RPC URL to access mainnet                                               |
-| registry             | Address of the registry on mainnet                                           |
-| networks             | array of non mainnet network and their configs                               |
-| networks[0].name     | name of the private network. Same as in `did:ethr:privateNetworkName:0x....` |
-| networks[0].provider | web3 provider object for the private network                                 |
-| networks[0].web3     | web3 object (will use web3.currentProvider) for the private network          |
-| networks[0].rpcUrl   | JSON-RPC URL to access the private network                                   |
-| networks[0].registry | Address of the registry on the private network                               |
+| Param                  | Description                                                                  |
+| ---------------------- | ---------------------------------------------------------------------------- |
+| `provider`             | web3 provider object for mainnet                                             |
+| `web3`                 | web3 object (will use web3.currentProvider) for mainnet                      |
+| `rpcUrl`               | JSON-RPC URL to access mainnet                                               |
+| `registry`             | Address of the registry on mainnet                                           |
+| `networks`             | array of non mainnet network and their configs                               |
+| `networks[0].name`     | name of the private network. Same as in `did:ethr:privateNetworkName:0x....` |
+| `networks[0].provider` | web3 provider object for the private network                                 |
+| `networks[0].web3`     | web3 object (will use web3.currentProvider) for the private network          |
+| `networks[0].rpcUrl`   | JSON-RPC URL to access the private network                                   |
+| `networks[0].registry` | Address of the registry on the private network                               |
 
 Either provider, web3 or rpcUrl is needed.
 
