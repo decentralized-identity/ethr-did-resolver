@@ -75,14 +75,14 @@ a `publicKeyHex`.
 
 The definition of the ethr DID JSON-LD context is:
 
+  {
+    "@context":
     {
-        "@context":
-        {
-            "ethereumAddress": "https://github.com/uport-project/ethr-did-resolver#ethereumAddress",
-            "Secp256k1VerificationKey2018": "https://github.com/uport-project/ethr-did-resolver#Secp256k1VerificationKey2018",
-            "Secp256k1SignatureAuthentication2018": "https://github.com/uport-project/ethr-did-resolver#Secp256k1VerificationKey2018",
-        }
+      "ethereumAddress": "https://github.com/uport-project/ethr-did-resolver#ethereumAddress",
+      "Secp256k1VerificationKey2018": "https://github.com/uport-project/ethr-did-resolver#Secp256k1VerificationKey2018",
+      "Secp256k1SignatureAuthentication2018": "https://github.com/uport-project/ethr-did-resolver#Secp256k1VerificationKey2018",
     }
+  }
 
 ## DID Method Name
 
@@ -95,8 +95,8 @@ MUST be in lowercase. The remainder of the DID, after the prefix, is specified b
 
 The method specific identifier is represented as the Hex-encoded Ethereum address on the target network.
 
-    ethr-did = "did:ethr:" ethr-address
-    ethr-address = "0x" 40*HEXDIG
+  ethr-did = "did:ethr:" ethr-address
+  ethr-address = "0x" 40*HEXDIG
 
 The Ethereum address is case-insensitive.
 
@@ -112,18 +112,18 @@ brute force an Ethereum address, i.e., guessing the private key for a given publ
 The minimal DID document for a an Ethereum address, e.g., `0xf3beac30c498d9e26865f34fcaa57dbb935b0d74` with no
 transactions to the ERC1056 registry looks like this:
 
-    {
-      '@context': 'https://w3id.org/did/v1',
-      id: 'did:ethr:0xb9c5714089478a327f09197987f16f9e5d936e8a',
-      publicKey: [{
-           id: 'did:ethr:0xb9c5714089478a327f09197987f16f9e5d936e8a#owner',
-           type: 'Secp256k1VerificationKey2018',
-           owner: 'did:ethr:0xb9c5714089478a327f09197987f16f9e5d936e8a',
-           ethereumAddress: '0xb9c5714089478a327f09197987f16f9e5d936e8a'}],
-      authentication: [{
-           type: 'Secp256k1SignatureAuthentication2018',
-           publicKey: 'did:ethr:0xb9c5714089478a327f09197987f16f9e5d936e8a#owner'}]
-    }
+  {
+    '@context': 'https://w3id.org/did/v1',
+    id: 'did:ethr:0xb9c5714089478a327f09197987f16f9e5d936e8a',
+    publicKey: [{
+       id: 'did:ethr:0xb9c5714089478a327f09197987f16f9e5d936e8a#owner',
+       type: 'Secp256k1VerificationKey2018',
+       owner: 'did:ethr:0xb9c5714089478a327f09197987f16f9e5d936e8a',
+       ethereumAddress: '0xb9c5714089478a327f09197987f16f9e5d936e8a'}],
+    authentication: [{
+       type: 'Secp256k1SignatureAuthentication2018',
+       publicKey: 'did:ethr:0xb9c5714089478a327f09197987f16f9e5d936e8a#owner'}]
+  }
 
 ### Read (Resolve)
 
@@ -171,20 +171,20 @@ They are also verifiable from Solidity.
 
 A `DIDDelegateChanged` event is published that is used to build a DID document.
 
-    event DIDDelegateChanged(
-        address indexed identity,
-        bytes32 delegateType,
-        address delegate,
-        uint validTo,
-        uint previousChange
-      );
-      
+  event DIDDelegateChanged(
+    address indexed identity,
+    bytes32 delegateType,
+    address delegate,
+    uint validTo,
+    uint previousChange
+    );
+    
 
 The only 2 `delegateTypes` that are currently published in the DID document are:
 
 -   `veriKey` which adds a `Secp256k1VerificationKey2018` to the `publicKey` section of the DID document.
 -   `sigAuth` which adds a `Secp256k1SignatureAuthentication2018` to the `publicKey` section of document. An entry
-    is also added to the `authentication` section of the DID document.
+  is also added to the `authentication` section of the DID document.
 
 Note, the `delegateType` is a `bytes32` type for Ethereum gas efficiency reasons and not a `string`. This 
 restricts us to 32 bytes, which is why we use the short hand versions above.
@@ -196,13 +196,13 @@ Only events with a `validTo` in seconds greater or equal to the current time sho
 Non-Ethereum keys, service endpoints etc. can be added using attributes. Attributes only exist on the 
 blockchain as contract events of type `DIDAttributeChanged` and can thus not be queried from within solidity code.
 
-    event DIDAttributeChanged(
-        address indexed identity,
-        bytes32 name,
-        bytes value,
-        uint validTo,
-        uint previousChange
-      );
+  event DIDAttributeChanged(
+    address indexed identity,
+    bytes32 name,
+    bytes value,
+    uint validTo,
+    uint previousChange
+    );
 
 Note, the name is a `bytes32` type for Ethereum gas efficiency reasons and not a `string`. This restricts us to 
 32 bytes, which is why we use the short hand attribute versions below.
@@ -225,12 +225,12 @@ A `DIDAttributeChanged` event for the identity `0xf3beac30c498d9e26865f34fcaa57d
 `did/pub/Secp256k1/veriKey/hex` and the value of `0x02b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71`
 generates a public key entry like the following:
 
-    {
-      id: "did:ethr:0xf3beac30c498d9e26865f34fcaa57dbb935b0d74#delegate-1",
-      type: "Secp256k1VerificationKey2018",
-      owner: "did:ethr:0xf3beac30c498d9e26865f34fcaa57dbb935b0d74",
-      publicKeyHex: '02b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71'
-    }
+  {
+    id: "did:ethr:0xf3beac30c498d9e26865f34fcaa57dbb935b0d74#delegate-1",
+    type: "Secp256k1VerificationKey2018",
+    owner: "did:ethr:0xf3beac30c498d9e26865f34fcaa57dbb935b0d74",
+    publicKeyHex: '02b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71'
+  }
 
 ##### Base64 encoded Ed25519 Verification Key
 
@@ -238,12 +238,12 @@ A `DIDAttributeChanged` event for the identity `0xf3beac30c498d9e26865f34fcaa57d
 `did/pub/Ed25519/veriKey/base64` and the value of `0xb97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71`
 generates a public key entry like this:
 
-    {
-      id: "did:ethr:0xf3beac30c498d9e26865f34fcaa57dbb935b0d74#delegate-1",
-      type: "Ed25519VerificationKey2018",
-      owner: "did:ethr:0xf3beac30c498d9e26865f34fcaa57dbb935b0d74",
-      publicKeyBase64: "uXww3nZ/CEzjCAFo7ikwU7ozsjXXEWoyY9KfFFCTa3E="
-    }
+  {
+    id: "did:ethr:0xf3beac30c498d9e26865f34fcaa57dbb935b0d74#delegate-1",
+    type: "Ed25519VerificationKey2018",
+    owner: "did:ethr:0xf3beac30c498d9e26865f34fcaa57dbb935b0d74",
+    publicKeyBase64: "uXww3nZ/CEzjCAFo7ikwU7ozsjXXEWoyY9KfFFCTa3E="
+  }
 
 #### Service Endpoints
 
@@ -255,10 +255,10 @@ A `DIDAttributeChanged` event for the identity `0xf3beac30c498d9e26865f34fcaa57d
 `did/svc/HubService` and value of the URL `https://hubs.uport.me` hex encoded as 
 `0x68747470733a2f2f687562732e75706f72742e6d65` generates a service endpoint entry like the following:
 
-    {
-      type: "HubService",
-      serviceEndpoint: "https://hubs.uport.me"
-    }
+  {
+    type: "HubService",
+    serviceEndpoint: "https://hubs.uport.me"
+  }
 
 ### Update
 
@@ -274,14 +274,14 @@ identity as described in [Enumerating Contract Events to build the DID Document]
 Two cases need to be distinguished:
 
 -   In case no changes were written to ERC1056, nothing needs to be done, and the private key which belongs to the
-    Ethereum address needs to be deleted from the storage medium used to protect the keys, e.g., mobile device.
+  Ethereum address needs to be deleted from the storage medium used to protect the keys, e.g., mobile device.
 -   In case ERC1056 was utilized, the owner of the smart contract needs to be set to `0x0`. Although, `0x0`is a valid
-    Ethereum address, this will indicate the identity has no owner which is a common approach for invalidation, 
-    e.g., tokens. Other elements of the DID Document may be revoked explicitly by invoking the relevant smart contract
-    functions as defined by the ERC1056 standard. This includes the delegates and additional attributes. Please find a
-    detailed description in the [ERC1056 documentation](https://github.com/ethereum/EIPs/issues/1056). All these functions
-    will trigger the respective Ethereum events which are used to build the DID Document for a given identity as
-    described in [Enumerating Contract Events to build the DID Document](#Enumerating-Contract-Events-to-build-the-DID-Document). 
+  Ethereum address, this will indicate the identity has no owner which is a common approach for invalidation, 
+  e.g., tokens. Other elements of the DID Document may be revoked explicitly by invoking the relevant smart contract
+  functions as defined by the ERC1056 standard. This includes the delegates and additional attributes. Please find a
+  detailed description in the [ERC1056 documentation](https://github.com/ethereum/EIPs/issues/1056). All these functions
+  will trigger the respective Ethereum events which are used to build the DID Document for a given identity as
+  described in [Enumerating Contract Events to build the DID Document](#Enumerating-Contract-Events-to-build-the-DID-Document). 
 
 ## Reference Implementations
 

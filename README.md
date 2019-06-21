@@ -37,13 +37,13 @@ The minimal DID document for a an ethereum address `0xf3beac30c498d9e26865f34fca
   '@context': 'https://w3id.org/did/v1',
   id: 'did:ethr:0xb9c5714089478a327f09197987f16f9e5d936e8a',
   publicKey: [{
-       id: 'did:ethr:0xb9c5714089478a327f09197987f16f9e5d936e8a#owner',
-       type: 'Secp256k1VerificationKey2018',
-       owner: 'did:ethr:0xb9c5714089478a327f09197987f16f9e5d936e8a',
-       ethereumAddress: '0xb9c5714089478a327f09197987f16f9e5d936e8a'}],
+     id: 'did:ethr:0xb9c5714089478a327f09197987f16f9e5d936e8a#owner',
+     type: 'Secp256k1VerificationKey2018',
+     owner: 'did:ethr:0xb9c5714089478a327f09197987f16f9e5d936e8a',
+     ethereumAddress: '0xb9c5714089478a327f09197987f16f9e5d936e8a'}],
   authentication: [{
-       type: 'Secp256k1SignatureAuthentication2018',
-       publicKey: 'did:ethr:0xb9c5714089478a327f09197987f16f9e5d936e8a#owner'}]
+     type: 'Secp256k1SignatureAuthentication2018',
+     publicKey: 'did:ethr:0xb9c5714089478a327f09197987f16f9e5d936e8a#owner'}]
 }
 ```
 
@@ -94,11 +94,11 @@ A `DIDDelegateChanged` event is published that is used to build a DID.
 
 ```solidity
 event DIDDelegateChanged(
-    address indexed identity,
-    bytes32 delegateType,
-    address delegate,
-    uint validTo,
-    uint previousChange
+  address indexed identity,
+  bytes32 delegateType,
+  address delegate,
+  uint validTo,
+  uint previousChange
   );
 ```
 
@@ -117,11 +117,11 @@ Non ethereum keys, service elements etc can be added using attributes. Attribute
 
 ```solidity
 event DIDAttributeChanged(
-    address indexed identity,
-    bytes32 name,
-    bytes value,
-    uint validTo,
-    uint previousChange
+  address indexed identity,
+  bytes32 name,
+  bytes value,
+  uint validTo,
+  uint previousChange
   );
 ```
 
@@ -229,7 +229,7 @@ const jsonRpcEndpoint='https://priv.chain/rpc' //JSON-RPC endpoint for privChain
 
 register({ 
   networks:[
-    { name: 'privchain', rpcUrl: jsonRpcEndpoint, registry: registryAddress }
+  { name: 'privchain', rpcUrl: jsonRpcEndpoint, registry: registryAddress }
   ]
 })
 
