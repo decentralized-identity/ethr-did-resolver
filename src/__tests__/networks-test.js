@@ -77,5 +77,49 @@ describe('ethrResolver (alt-chains)', () => {
         ],
       })
     })
+
+    it('resolves on rsk', () => {
+      const did='did:ethr:rsk:'+addr;
+      return expect(resolve(did)).resolves.toEqual({
+        '@context': 'https://w3id.org/did/v1',
+        id: did,
+        publicKey: [
+          {
+            id: `${did}#owner`,
+            type: 'Secp256k1VerificationKey2018',
+            owner: did,
+            ethereumAddress: addr,
+          },
+        ],
+        authentication: [
+          {
+            type: 'Secp256k1SignatureAuthentication2018',
+            publicKey: `${did}#owner`,
+          },
+        ],
+      })
+    })
+
+    it('resolves on rsk:testnet', () => {
+      const did='did:ethr:rsk:testnet:'+addr;
+      return expect(resolve(did)).resolves.toEqual({
+        '@context': 'https://w3id.org/did/v1',
+        id: did,
+        publicKey: [
+          {
+            id: `${did}#owner`,
+            type: 'Secp256k1VerificationKey2018',
+            owner: did,
+            ethereumAddress: addr,
+          },
+        ],
+        authentication: [
+          {
+            type: 'Secp256k1SignatureAuthentication2018',
+            publicKey: `${did}#owner`,
+          },
+        ],
+      })
+    })
   })
 })
