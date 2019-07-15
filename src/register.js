@@ -190,16 +190,21 @@ export default function register(conf = {}) {
       return result['0']
     }
   }
-  async function changeLog(identity) {
+  async function changeLog (identity) {
     const history = []
+    let owner = identity
     let previousChange = await lastChanged(identity)
+    if (previousChange) {
+      const ownerRecord = await didReg.identityOwner(identity)
+      owner = ownerRecord['0']
+    }
     while (previousChange) {
       const blockNumber = previousChange
       const logs = await eth.getLogs({
         address: registryAddress,
         topics: [null, `0x000000000000000000000000${identity.slice(2)}`],
         fromBlock: previousChange,
-        toBlock: previousChange,
+        toBlock: previousChange
       })
       const events = logDecoder(logs)
       previousChange = undefined
@@ -210,14 +215,12 @@ export default function register(conf = {}) {
         }
       }
     }
-    return history
+    return { owner, history }
   }
-  async function resolve(did, parsed) {
-    if (!parsed.id.match(/^0x[0-9a-fA-F]{40}$/))
-      throw new Error(`Not a valid ethr DID: ${did}`)
-    const owner = await didReg.identityOwner(parsed.id)
-    const history = await changeLog(parsed.id)
-    return wrapDidDocument(did, owner['0'], history)
+  async function resolve (did, parsed) {
+    if (!parsed.id.match(/^0x[0-9a-fA-F]{40}$/)) throw new Error(`Not a valid ethr DID: ${did}`)
+    const { owner, history } = await changeLog(parsed.id)
+    return wrapDidDocument(did, owner, history)
   }
   registerMethod('ethr', resolve)
 }
