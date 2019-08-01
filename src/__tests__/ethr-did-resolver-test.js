@@ -1,5 +1,5 @@
-import resolve from 'did-resolver'
-import register, { stringToBytes32, delegateTypes } from '../register'
+import { Resolver } from 'did-resolver'
+import getResolver, { stringToBytes32, delegateTypes } from '../ethr-did-resolver'
 import Contract from 'truffle-contract'
 import DidRegistryContract from 'ethr-did-registry'
 import Web3 from 'web3'
@@ -60,7 +60,7 @@ describe('ethrResolver', () => {
     )
   }
 
-  let registry, accounts, did, identity, owner, delegate1, delegate2
+  let registry, accounts, did, identity, owner, delegate1, delegate2, ethr, didResolver
 
   beforeAll(async () => {
     accounts = await getAccounts()
@@ -75,12 +75,13 @@ describe('ethrResolver', () => {
       gasPrice: 100000000000,
       gas: 4712388 // 1779962
     })
-    register({ provider, registry: registry.address })
+    ethr = getResolver({ provider, registry: registry.address })
+    didResolver = new Resolver({ethr})
   })
 
   describe('unregistered', () => {
     it('resolves document', () => {
-      return expect(resolve(did)).resolves.toEqual({
+      return expect(didResolver.resolve(did)).resolves.toEqual({
         '@context': 'https://w3id.org/did/v1',
         id: did,
         publicKey: [
@@ -107,7 +108,7 @@ describe('ethrResolver', () => {
     })
 
     it('resolves document', () => {
-      return expect(resolve(did)).resolves.toEqual({
+      return expect(didResolver.resolve(did)).resolves.toEqual({
         '@context': 'https://w3id.org/did/v1',
         id: did,
         publicKey: [
@@ -141,7 +142,7 @@ describe('ethrResolver', () => {
       })
 
       it('resolves document', () => {
-        return expect(resolve(did)).resolves.toEqual({
+        return expect(didResolver.resolve(did)).resolves.toEqual({
           '@context': 'https://w3id.org/did/v1',
           id: did,
           publicKey: [
@@ -180,7 +181,7 @@ describe('ethrResolver', () => {
       })
 
       it('resolves document', () => {
-        return expect(resolve(did)).resolves.toEqual({
+        return expect(didResolver.resolve(did)).resolves.toEqual({
           '@context': 'https://w3id.org/did/v1',
           id: did,
           publicKey: [
@@ -223,7 +224,7 @@ describe('ethrResolver', () => {
       })
 
       it('resolves document', () => {
-        return expect(resolve(did)).resolves.toEqual({
+        return expect(didResolver.resolve(did)).resolves.toEqual({
           '@context': 'https://w3id.org/did/v1',
           id: did,
           publicKey: [
@@ -266,7 +267,7 @@ describe('ethrResolver', () => {
       })
 
       it('resolves document', () => {
-        return expect(resolve(did)).resolves.toEqual({
+        return expect(didResolver.resolve(did)).resolves.toEqual({
           '@context': 'https://w3id.org/did/v1',
           id: did,
           publicKey: [
@@ -300,7 +301,7 @@ describe('ethrResolver', () => {
       })
 
       it('resolves document', () => {
-        return expect(resolve(did)).resolves.toEqual({
+        return expect(didResolver.resolve(did)).resolves.toEqual({
           '@context': 'https://w3id.org/did/v1',
           id: did,
           publicKey: [
@@ -345,7 +346,7 @@ describe('ethrResolver', () => {
           )
         })
         it('resolves document', () => {
-          return expect(resolve(did)).resolves.toEqual({
+          return expect(didResolver.resolve(did)).resolves.toEqual({
             '@context': 'https://w3id.org/did/v1',
             id: did,
             publicKey: [
@@ -395,7 +396,7 @@ describe('ethrResolver', () => {
         })
 
         it('resolves document', () => {
-          return expect(resolve(did)).resolves.toEqual({
+          return expect(didResolver.resolve(did)).resolves.toEqual({
             '@context': 'https://w3id.org/did/v1',
             id: did,
             publicKey: [
@@ -454,7 +455,7 @@ describe('ethrResolver', () => {
         })
 
         it('resolves document', () => {
-          return expect(resolve(did)).resolves.toEqual({
+          return expect(didResolver.resolve(did)).resolves.toEqual({
             '@context': 'https://w3id.org/did/v1',
             id: did,
             publicKey: [
@@ -520,7 +521,7 @@ describe('ethrResolver', () => {
           )
         })
         it('resolves document', () => {
-          return expect(resolve(did)).resolves.toEqual({
+          return expect(didResolver.resolve(did)).resolves.toEqual({
             '@context': 'https://w3id.org/did/v1',
             id: did,
             publicKey: [
@@ -592,7 +593,7 @@ describe('ethrResolver', () => {
           sleep(1)
         })
         it('resolves document', () => {
-          return expect(resolve(did)).resolves.toEqual({
+          return expect(didResolver.resolve(did)).resolves.toEqual({
             '@context': 'https://w3id.org/did/v1',
             id: did,
             publicKey: [
@@ -655,7 +656,7 @@ describe('ethrResolver', () => {
           sleep(1)
         })
         it('resolves document', () => {
-          return expect(resolve(did)).resolves.toEqual({
+          return expect(didResolver.resolve(did)).resolves.toEqual({
             '@context': 'https://w3id.org/did/v1',
             id: did,
             publicKey: [
@@ -710,7 +711,7 @@ describe('ethrResolver', () => {
         })
 
         it('resolves document', () => {
-          return expect(resolve(did)).resolves.toEqual({
+          return expect(didResolver.resolve(did)).resolves.toEqual({
             '@context': 'https://w3id.org/did/v1',
             id: did,
             publicKey: [
@@ -761,7 +762,7 @@ describe('ethrResolver', () => {
         })
 
         it('resolves document', () => {
-          return expect(resolve(did)).resolves.toEqual({
+          return expect(didResolver.resolve(did)).resolves.toEqual({
             '@context': 'https://w3id.org/did/v1',
             id: did,
             publicKey: [
@@ -817,7 +818,7 @@ describe('ethrResolver', () => {
     })
 
     it('resolves document', async () => {
-      expect(await resolve(did)).toEqual({
+      expect(await didResolver.resolve(did)).toEqual({
         '@context': 'https://w3id.org/did/v1',
         id: did,
         publicKey: [
@@ -857,7 +858,7 @@ describe('ethrResolver', () => {
   describe('error handling', () => {
     it('rejects promise', () => {
       return expect(
-        resolve('did:ethr:2nQtiQG6Cgm1GYTBaaKAgr76uY7iSexUkqX')
+        didResolver.resolve('did:ethr:2nQtiQG6Cgm1GYTBaaKAgr76uY7iSexUkqX')
       ).rejects.toEqual(
         new Error(
           'Not a valid ethr DID: did:ethr:2nQtiQG6Cgm1GYTBaaKAgr76uY7iSexUkqX'

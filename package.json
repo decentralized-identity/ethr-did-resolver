@@ -2,9 +2,9 @@
   "name": "ethr-did-resolver",
   "version": "0.2.0",
   "description": "Resolve DID documents around ethereum addresses",
-  "main": "dist/register.js",
-  "source": "src/register.js",
-  "module": "dist/register.ejs",
+  "main": "dist/ethr-did-resolver.js",
+  "source": "src/ethr-did-resolver.js",
+  "module": "dist/ethr-did-resolver.ejs",
   "repository": {
     "type": "git",
     "url": "https://github.com/uport-project/ethr-did-resolver.git"
@@ -53,7 +53,7 @@
   },
   "dependencies": {
     "buffer": "^5.1.0",
-    "did-resolver": "0.0.6",
+    "did-resolver": "uport-project/did-resolver#feature/unglobalize",
     "ethjs-abi": "^0.2.1",
     "ethjs-contract": "^0.1.9",
     "ethjs-provider-http": "^0.1.6",

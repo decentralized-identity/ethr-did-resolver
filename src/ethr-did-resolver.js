@@ -176,7 +176,7 @@ function configureProvider (conf = {}) {
   }
 }
 
-export default function register (conf = {}) {
+export default function getResolver(conf = {}) {
   const provider = configureProvider(conf)
   const eth = new Eth(provider)
   const registryAddress = conf.registry || REGISTRY
@@ -217,12 +217,9 @@ export default function register (conf = {}) {
     }
     return { owner, history }
   }
-  async function resolve (did, parsed) {
+  return async function resolve (did, parsed) {
     if (!parsed.id.match(/^0x[0-9a-fA-F]{40}$/)) throw new Error(`Not a valid ethr DID: ${did}`)
     const { owner, history } = await changeLog(parsed.id)
     return wrapDidDocument(did, owner, history)
   }
-  registerMethod('ethr', resolve)
 }
-
-// module.exports = register
