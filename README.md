@@ -186,13 +186,15 @@ A `DIDAttributeChanged` event for the identity `0xf3beac30c498d9e26865f34fcaa57d
 The resolver presents a simple `resolver()` function that returns a ES6 Promise returning the DID document.
 
 ```js
-import resolve from 'did-resolver'
-import registerResolver from 'ethr-did-resolver'
+import { Resolver } from 'did-resolver'
+import getResolver from 'ethr-did-resolver'
 
-registerResolver.default()
+const providerConfig = { provider, registry: registry.address }
 
-resolve.default('did:ethr:0xf3beac30c498d9e26865f34fcaa57dbb935b0d74').then(doc => console.log)
+const ethrDidResolver = getResolver()
+const didResolver = Resolver({ethr: ethrDidResolver})
+didResolver.resolve('did:ethr:0xf3beac30c498d9e26865f34fcaa57dbb935b0d74').then(doc => console.log)
 
 // You can also use ES7 async/await syntax
-const doc = await resolve.default('did:ethr:0xf3beac30c498d9e26865f34fcaa57dbb935b0d74')
+const doc = await didResolver.resolve('did:ethr:0xf3beac30c498d9e26865f34fcaa57dbb935b0d74')
 ```
