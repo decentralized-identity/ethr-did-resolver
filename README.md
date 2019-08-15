@@ -189,10 +189,14 @@ The resolver presents a simple `resolver()` function that returns a ES6 Promise 
 import { Resolver } from 'did-resolver'
 import getResolver from 'ethr-did-resolver'
 
-const providerConfig = { provider, registry: registry.address }
+// You can set a rpc endpoint to be used by the web3 provider
+// You can also set an address for your own ethr-did-registry contract
+const providerConfig = { rpcUrl: 'https://rinkeby.infura.io/ethr-did', registry: registry.address }
 
-const ethrDidResolver = getResolver()
-const didResolver = Resolver({ethr: ethrDidResolver})
+// getResolver will return an object with a key/value pair of { "ethr": resolver } where resolver is a function used by the generic did resolver. 
+const ethrDidResolver = getResolver(providerConfig)
+const didResolver = Resolver(ethrDidResolver)
+
 didResolver.resolve('did:ethr:0xf3beac30c498d9e26865f34fcaa57dbb935b0d74').then(doc => console.log)
 
 // You can also use ES7 async/await syntax

@@ -1,4 +1,3 @@
-import { registerMethod } from 'did-resolver'
 import HttpProvider from 'ethjs-provider-http'
 import Eth from 'ethjs-query'
 import abi from 'ethjs-abi'
@@ -217,9 +216,11 @@ export default function getResolver(conf = {}) {
     }
     return { owner, history }
   }
-  return async function resolve (did, parsed) {
+  async function resolve (did, parsed) {
     if (!parsed.id.match(/^0x[0-9a-fA-F]{40}$/)) throw new Error(`Not a valid ethr DID: ${did}`)
     const { owner, history } = await changeLog(parsed.id)
     return wrapDidDocument(did, owner, history)
   }
+
+  return { 'ethr': resolve }
 }

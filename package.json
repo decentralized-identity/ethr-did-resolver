@@ -53,7 +53,7 @@
   },
   "dependencies": {
     "buffer": "^5.1.0",
-    "did-resolver": "uport-project/did-resolver#feature/unglobalize",
+    "did-resolver": "0.0.6",
     "ethjs-abi": "^0.2.1",
     "ethjs-contract": "^0.1.9",
     "ethjs-provider-http": "^0.1.6",
