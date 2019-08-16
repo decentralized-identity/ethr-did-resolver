@@ -1,6 +1,6 @@
 {
   "name": "ethr-did-resolver",
-  "version": "0.2.0",
+  "version": "1.0.0",
   "description": "Resolve DID documents around ethereum addresses",
   "main": "dist/ethr-did-resolver.js",
   "source": "src/ethr-did-resolver.js",
@@ -53,7 +53,7 @@
   },
   "dependencies": {
     "buffer": "^5.1.0",
-    "did-resolver": "0.0.6",
+    "did-resolver": "1.0.0",
     "ethjs-abi": "^0.2.1",
     "ethjs-contract": "^0.1.9",
     "ethjs-provider-http": "^0.1.6",
