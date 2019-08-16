@@ -1,5 +1,5 @@
-import { Resolver } from "did-resolver";
-import getResolver, { stringToBytes32, delegateTypes } from "../ethr-did-resolver";
+import { Resolver } from 'did-resolver'
+import getResolver, { stringToBytes32, delegateTypes } from '../ethr-did-resolver'
 import Contract from 'truffle-contract'
 import DidRegistryContract from 'ethr-did-registry'
 import Web3 from 'web3'
@@ -60,7 +60,7 @@ describe('ethrResolver', () => {
     )
   }
 
-  let registry, accounts, did, identity, owner, delegate1, delegate2, ethr, didResolver;
+  let registry, accounts, did, identity, owner, delegate1, delegate2, ethr, didResolver
 
   beforeAll(async () => {
     accounts = await getAccounts()
@@ -75,8 +75,8 @@ describe('ethrResolver', () => {
       gasPrice: 100000000000,
       gas: 4712388 // 1779962
     })
-    ethr = getResolver({ provider, registry: registry.address });
-    didResolver = new Resolver(ethr);
+    ethr = getResolver({ provider, registry: registry.address })
+    didResolver = new Resolver(ethr)
   })
 
   describe('unregistered', () => {

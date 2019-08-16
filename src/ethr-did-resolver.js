@@ -175,7 +175,7 @@ function configureProvider (conf = {}) {
   }
 }
 
-export default function getResolver(conf = {}) {
+export default function getResolver (conf = {}) {
   const provider = configureProvider(conf)
   const eth = new Eth(provider)
   const registryAddress = conf.registry || REGISTRY
