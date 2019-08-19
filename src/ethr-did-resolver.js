@@ -1,4 +1,3 @@
-import { registerMethod } from 'did-resolver'
 import HttpProvider from 'ethjs-provider-http'
 import Eth from 'ethjs-query'
 import abi from 'ethjs-abi'
@@ -176,7 +175,7 @@ function configureProvider (conf = {}) {
   }
 }
 
-export default function register (conf = {}) {
+export default function getResolver (conf = {}) {
   const provider = configureProvider(conf)
   const eth = new Eth(provider)
   const registryAddress = conf.registry || REGISTRY
@@ -222,7 +221,6 @@ export default function register (conf = {}) {
     const { owner, history } = await changeLog(parsed.id)
     return wrapDidDocument(did, owner, history)
   }
-  registerMethod('ethr', resolve)
-}
 
-// module.exports = register
+  return { 'ethr': resolve }
+}
