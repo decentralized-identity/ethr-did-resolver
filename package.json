@@ -1,8 +1,10 @@
 {
   "name": "ethr-did-resolver",
-  "version": "0.2.0",
+  "version": "1.0.0",
   "description": "Resolve DID documents around ethereum addresses",
-  "main": "lib/register.js",
+  "main": "dist/ethr-did-resolver.js",
+  "source": "src/ethr-did-resolver.js",
+  "module": "dist/ethr-did-resolver.ejs",
   "repository": {
     "type": "git",
     "url": "https://github.com/uport-project/ethr-did-resolver.git"
@@ -19,38 +21,39 @@
   "author": "Pelle Braendgaard <pelle.braendgaard@consensys.net>",
   "license": "Apache-2.0",
   "scripts": {
-    "test": "jest",
-    "build:es5": "./node_modules/.bin/babel src -d lib",
-    "build:webpack": "./node_modules/.bin/webpack lib/register.js",
-    "build": "yarn build:es5 && yarn test && yarn build:webpack",
-    "prepublishOnly": "yarn build"
+    "build": "./node_modules/.bin/microbundle",
+    "test": "./node_modules/.bin/jest"
   },
   "jest": {
     "coverageDirectory": "./coverage/",
     "collectCoverage": true,
-    "testURL": "http://localhost/"
+    "testURL": "http://localhost/",
+    "transform": {
+      "^.+\\.jsx?$": "babel-jest"
+    }
   },
   "devDependencies": {
-    "babel-cli": "^6.26.0",
-    "babel-core": "^6.26.0",
-    "babel-jest": "^22.4.3",
-    "babel-plugin-transform-es2015-modules-umd": "^6.24.1",
-    "babel-plugin-transform-runtime": "^6.23.0",
-    "babel-preset-env": "^1.6.1",
-    "ganache-cli": "^6.1.0",
-    "jest": "^22.4.3",
-    "jsdom": "11.11.0",
-    "regenerator-runtime": "^0.11.1",
-    "standard": "^11.0.0",
-    "truffle-contract": "^3.0.4",
-    "webpack": "^4.5.0",
-    "webpack-cli": "^2.0.14"
+    "@babel/cli": "^7.5.0",
+    "@babel/core": "^7.5.4",
+    "@babel/preset-env": "^7.5.4",
+    "babel-jest": "^24.8.0",
+    "eslint-config-standard": "^13.0.1",
+    "eslint-plugin-import": "^2.18.0",
+    "eslint-plugin-jest": "^22.8.0",
+    "eslint-plugin-node": "^9.1.0",
+    "eslint-plugin-promise": "^4.2.1",
+    "eslint-plugin-standard": "^4.0.0",
+    "ganache-cli": "^6.4.5",
+    "jdom": "^3.1.0",
+    "jest": "^24.8.0",
+    "microbundle": "^0.11.0",
+    "regenerator-runtime": "^0.13.2",
+    "standard": "^13.0.2",
+    "truffle-contract": "^3.0.7"
   },
   "dependencies": {
-    "babel-plugin-module-resolver": "^3.1.1",
-    "babel-runtime": "^6.26.0",
     "buffer": "^5.1.0",
-    "did-resolver": "0.0.6",
+    "did-resolver": "1.0.0",
     "ethjs-abi": "^0.2.1",
     "ethjs-contract": "^0.1.9",
     "ethjs-provider-http": "^0.1.6",

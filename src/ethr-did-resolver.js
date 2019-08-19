@@ -1,4 +1,3 @@
-import { registerMethod } from 'did-resolver'
 import HttpProvider from 'ethjs-provider-http'
 import Eth from 'ethjs-query'
 import abi from 'ethjs-abi'
@@ -8,13 +7,13 @@ import DidRegistryContract from '../contracts/ethr-did-registry.json'
 import { Buffer } from 'buffer'
 export const REGISTRY = '0xdca7ef03e98e0dc2b855be647c39abe984fcf21b'
 
-export function bytes32toString(bytes32) {
+export function bytes32toString (bytes32) {
   return Buffer.from(bytes32.slice(2), 'hex')
     .toString('utf8')
     .replace(/\0+$/, '')
 }
 
-export function stringToBytes32(str) {
+export function stringToBytes32 (str) {
   const buffstr =
     '0x' +
     Buffer.from(str)
@@ -25,15 +24,15 @@ export function stringToBytes32(str) {
 
 export const delegateTypes = {
   Secp256k1SignatureAuthentication2018: stringToBytes32('sigAuth'),
-  Secp256k1VerificationKey2018: stringToBytes32('veriKey'),
+  Secp256k1VerificationKey2018: stringToBytes32('veriKey')
 }
 
 export const attrTypes = {
   sigAuth: 'SignatureAuthentication2018',
-  veriKey: 'VerificationKey2018',
+  veriKey: 'VerificationKey2018'
 }
 
-export function wrapDidDocument(did, owner, history) {
+export function wrapDidDocument (did, owner, history) {
   const now = new BN(Math.floor(new Date().getTime() / 1000))
   // const expired = {}
   const publicKey = [
@@ -41,23 +40,23 @@ export function wrapDidDocument(did, owner, history) {
       id: `${did}#owner`,
       type: 'Secp256k1VerificationKey2018',
       owner: did,
-      ethereumAddress: owner,
-    },
+      ethereumAddress: owner
+    }
   ]
 
   const authentication = [
     {
       type: 'Secp256k1SignatureAuthentication2018',
-      publicKey: `${did}#owner`,
-    },
+      publicKey: `${did}#owner`
+    }
   ]
 
   let delegateCount = 0
   const auth = {}
   const pks = {}
   const services = {}
-  for (let event of history) {
-    let validTo = event.validTo
+  for (const event of history) {
+    const validTo = event.validTo
     const key = `${event._eventName}-${event.delegateType ||
       event.name}-${event.delegate || event.value}`
     if (validTo && validTo.gte(now)) {
@@ -68,14 +67,15 @@ export function wrapDidDocument(did, owner, history) {
           case 'sigAuth':
             auth[key] = {
               type: 'Secp256k1SignatureAuthentication2018',
-              publicKey: `${did}#delegate-${delegateCount}`,
+              publicKey: `${did}#delegate-${delegateCount}`
             }
+          // eslint-disable-line no-fallthrough
           case 'veriKey':
             pks[key] = {
               id: `${did}#delegate-${delegateCount}`,
               type: 'Secp256k1VerificationKey2018',
               owner: did,
-              ethereumAddress: event.delegate,
+              ethereumAddress: event.delegate
             }
             break
         }
@@ -95,7 +95,7 @@ export function wrapDidDocument(did, owner, history) {
               const pk = {
                 id: `${did}#delegate-${delegateCount}`,
                 type: `${algo}${type}`,
-                owner: did,
+                owner: did
               }
               switch (encoding) {
                 case null:
@@ -132,7 +132,7 @@ export function wrapDidDocument(did, owner, history) {
                 serviceEndpoint: Buffer.from(
                   event.value.slice(2),
                   'hex'
-                ).toString(),
+                ).toString()
               }
               break
           }
@@ -145,8 +145,7 @@ export function wrapDidDocument(did, owner, history) {
           (event._eventName === 'DIDAttributeChanged' &&
             bytes32toString(event.name).match(/^did\/pub\//))) &&
         validTo.lt(now)
-      )
-        delegateCount--
+      ) { delegateCount-- }
       delete auth[key]
       delete pks[key]
       delete services[key]
@@ -157,7 +156,7 @@ export function wrapDidDocument(did, owner, history) {
     '@context': 'https://w3id.org/did/v1',
     id: did,
     publicKey: publicKey.concat(Object.values(pks)),
-    authentication: authentication.concat(Object.values(auth)),
+    authentication: authentication.concat(Object.values(auth))
   }
   if (Object.values(services).length > 0) {
     doc.service = Object.values(services)
@@ -166,7 +165,7 @@ export function wrapDidDocument(did, owner, history) {
   return doc
 }
 
-function configureProvider(conf = {}) {
+function configureProvider (conf = {}) {
   if (conf.provider) {
     return conf.provider
   } else if (conf.web3) {
@@ -176,7 +175,7 @@ function configureProvider(conf = {}) {
   }
 }
 
-export default function register(conf = {}) {
+export default function getResolver (conf = {}) {
   const provider = configureProvider(conf)
   const eth = new Eth(provider)
   const registryAddress = conf.registry || REGISTRY
@@ -190,36 +189,38 @@ export default function register(conf = {}) {
       return result['0']
     }
   }
-  async function changeLog(identity) {
+  async function changeLog (identity) {
     const history = []
+    let owner = identity
     let previousChange = await lastChanged(identity)
+    if (previousChange) {
+      const ownerRecord = await didReg.identityOwner(identity)
+      owner = ownerRecord['0']
+    }
     while (previousChange) {
       const blockNumber = previousChange
       const logs = await eth.getLogs({
         address: registryAddress,
         topics: [null, `0x000000000000000000000000${identity.slice(2)}`],
         fromBlock: previousChange,
-        toBlock: previousChange,
+        toBlock: previousChange
       })
       const events = logDecoder(logs)
       previousChange = undefined
-      for (let event of events) {
+      for (const event of events) {
         history.unshift(event)
         if (event.previousChange.lt(blockNumber)) {
           previousChange = event.previousChange
         }
       }
     }
-    return history
+    return { owner, history }
   }
-  async function resolve(did, parsed) {
-    if (!parsed.id.match(/^0x[0-9a-fA-F]{40}$/))
-      throw new Error(`Not a valid ethr DID: ${did}`)
-    const owner = await didReg.identityOwner(parsed.id)
-    const history = await changeLog(parsed.id)
-    return wrapDidDocument(did, owner['0'], history)
+  async function resolve (did, parsed) {
+    if (!parsed.id.match(/^0x[0-9a-fA-F]{40}$/)) throw new Error(`Not a valid ethr DID: ${did}`)
+    const { owner, history } = await changeLog(parsed.id)
+    return wrapDidDocument(did, owner, history)
   }
-  registerMethod('ethr', resolve)
-}
 
-// module.exports = register
+  return { 'ethr': resolve }
+}
