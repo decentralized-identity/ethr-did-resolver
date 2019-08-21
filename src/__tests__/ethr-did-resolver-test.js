@@ -1,5 +1,5 @@
 import { Resolver } from 'did-resolver'
-import getResolver, { stringToBytes32, delegateTypes } from '../ethr-did-resolver'
+import { getResolver, stringToBytes32, delegateTypes } from '../ethr-did-resolver'
 import Contract from 'truffle-contract'
 import DidRegistryContract from 'ethr-did-registry'
 import Web3 from 'web3'
