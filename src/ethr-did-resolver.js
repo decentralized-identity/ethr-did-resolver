@@ -5,15 +5,15 @@ import BN from 'bn.js'
 import EthContract from 'ethjs-contract'
 import DidRegistryContract from '../contracts/ethr-did-registry.json'
 import { Buffer } from 'buffer'
-export const REGISTRY = '0xdca7ef03e98e0dc2b855be647c39abe984fcf21b'
+const REGISTRY = '0xdca7ef03e98e0dc2b855be647c39abe984fcf21b'
 
-export function bytes32toString (bytes32) {
+function bytes32toString (bytes32) {
   return Buffer.from(bytes32.slice(2), 'hex')
     .toString('utf8')
     .replace(/\0+$/, '')
 }
 
-export function stringToBytes32 (str) {
+function stringToBytes32 (str) {
   const buffstr =
     '0x' +
     Buffer.from(str)
@@ -22,17 +22,17 @@ export function stringToBytes32 (str) {
   return buffstr + '0'.repeat(66 - buffstr.length)
 }
 
-export const delegateTypes = {
+const delegateTypes = {
   Secp256k1SignatureAuthentication2018: stringToBytes32('sigAuth'),
   Secp256k1VerificationKey2018: stringToBytes32('veriKey')
 }
 
-export const attrTypes = {
+const attrTypes = {
   sigAuth: 'SignatureAuthentication2018',
   veriKey: 'VerificationKey2018'
 }
 
-export function wrapDidDocument (did, owner, history) {
+function wrapDidDocument (did, owner, history) {
   const now = new BN(Math.floor(new Date().getTime() / 1000))
   // const expired = {}
   const publicKey = [
@@ -175,7 +175,7 @@ function configureProvider (conf = {}) {
   }
 }
 
-export default function getResolver (conf = {}) {
+function getResolver (conf = {}) {
   const provider = configureProvider(conf)
   const eth = new Eth(provider)
   const registryAddress = conf.registry || REGISTRY
@@ -223,4 +223,14 @@ export default function getResolver (conf = {}) {
   }
 
   return { 'ethr': resolve }
+}
+
+module.exports = {
+  REGISTRY,
+  bytes32toString,
+  stringToBytes32,
+  delegateTypes,
+  attrTypes,
+  wrapDidDocument,
+  getResolver
 }
