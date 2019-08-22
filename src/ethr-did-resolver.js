@@ -225,7 +225,6 @@ function getResolver (conf = {}) {
   return { 'ethr': resolve }
 }
 
-
 module.exports = {
   REGISTRY,
   bytes32toString,
