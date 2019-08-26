@@ -16,10 +16,10 @@ export function bytes32toString(bytes32) {
 
 export function stringToBytes32(str) {
   const buffstr =
-  '0x' +
-  Buffer.from(str)
-    .slice(0, 32)
-    .toString('hex')
+    '0x' +
+    Buffer.from(str)
+      .slice(0, 32)
+      .toString('hex')
   return buffstr + '0'.repeat(66 - buffstr.length)
 }
 
@@ -59,7 +59,7 @@ export function wrapDidDocument(did, owner, history) {
   for (let event of history) {
     let validTo = event.validTo
     const key = `${event._eventName}-${event.delegateType ||
-    event.name}-${event.delegate || event.value}`
+      event.name}-${event.delegate || event.value}`
     if (validTo && validTo.gte(now)) {
       if (event._eventName === 'DIDDelegateChanged') {
         delegateCount++
@@ -143,10 +143,10 @@ export function wrapDidDocument(did, owner, history) {
     } else {
       if (
         delegateCount > 0 &&
-    (event._eventName === 'DIDDelegateChanged' ||
-      (event._eventName === 'DIDAttributeChanged' &&
-      bytes32toString(event.name).match(/^did\/pub\//))) &&
-    validTo.lt(now)
+        (event._eventName === 'DIDDelegateChanged' ||
+          (event._eventName === 'DIDAttributeChanged' &&
+            bytes32toString(event.name).match(/^did\/pub\//))) &&
+        validTo.lt(now)
       )
         delegateCount--
       delete auth[key]
