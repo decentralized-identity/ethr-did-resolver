@@ -90,7 +90,7 @@ function wrapDidDocument (did, owner, history) {
           const type = attrTypes[match[4]] || match[4]
           const encoding = match[6]
           switch (section) {
-            case 'pub': {
+            case 'pub':
               delegateCount++
               const pk = {
                 id: `${did}#delegate-${delegateCount}`,
@@ -126,7 +126,6 @@ function wrapDidDocument (did, owner, history) {
               }
               pks[key] = pk
               break
-            }
             case 'svc':
               services[key] = {
                 type: algo,
@@ -186,7 +185,7 @@ function getResolver (conf = {}) {
   return { eth, registryAddress, didReg}
 }
 
-function confNetworks(networksConf=[]){
+function configureNetworks(networksConf=[]){
   let networks={}
   for(let i=0;i<networksConf.length;i++){
     const net=networksConf[i];
@@ -201,8 +200,8 @@ export default function register(conf = {}) {
 
   const networks={
     'mainnet': getResolver(conf),
-    ...confNetworks(require('./networks.json')),
-    ...confNetworks(conf.networks)
+    ...configureNetworks(require('./networks.json')),
+    ...configureNetworks(conf.networks)
   }
 
   const lastChanged = async (identity,network) => {
