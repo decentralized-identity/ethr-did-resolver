@@ -1,5 +1,5 @@
-import resolve from 'did-resolver'
-import register, { stringToBytes32, delegateTypes } from '../register'
+import { Resolver } from 'did-resolver'
+import { getResolver, stringToBytes32, delegateTypes } from '../ethr-did-resolver'
 import Contract from 'truffle-contract'
 import DidRegistryContract from 'ethr-did-registry'
 import Web3 from 'web3'
@@ -7,7 +7,7 @@ import ganache from 'ganache-cli'
 
 const {
   Secp256k1SignatureAuthentication2018,
-  Secp256k1VerificationKey2018,
+  Secp256k1VerificationKey2018
 } = delegateTypes
 
 function sleep(seconds) {
@@ -34,7 +34,7 @@ describe('ethrResolver', () => {
         {
           jsonrpc: '2.0',
           method: 'miner_stop',
-          id: new Date().getTime(),
+          id: new Date().getTime()
         },
         (e, val) => {
           if (e) reject(e)
@@ -44,23 +44,23 @@ describe('ethrResolver', () => {
     )
 
   const startMining = () => {
-    new Promise(async (resolve, reject) => {
+    return new Promise((resolve, reject) =>
       web3.currentProvider.send(
         {
           jsonrpc: '2.0',
           method: 'miner_start',
           params: [1],
-          id: new Date().getTime(),
+          id: new Date().getTime()
         },
         (e, val) => {
           if (e) reject(e)
           return resolve(val)
         }
       )
-    })
+    )
   }
 
-  let registry, accounts, did, identity, owner, delegate1, delegate2, unregistered
+  let registry, accounts, did, identity, owner, delegate1, delegate2, ethr, didResolver
 
   beforeAll(async () => {
     accounts = await getAccounts()
@@ -75,14 +75,15 @@ describe('ethrResolver', () => {
     registry = await DidReg.new({
       from: accounts[0],
       gasPrice: 100000000000,
-      gas: 4712388, //1779962
+      gas: 4712388 // 1779962
     })
-    register({ provider, registry: registry.address })
+    ethr = getResolver({ provider, registry: registry.address })
+    didResolver = new Resolver(ethr)
   })
 
   describe('unregistered', () => {
     it('resolves document', () => {
-      return expect(resolve(did)).resolves.toEqual({
+      return expect(didResolver.resolve(did)).resolves.toEqual({
         '@context': 'https://w3id.org/did/v1',
         id: did,
         publicKey: [
@@ -90,15 +91,15 @@ describe('ethrResolver', () => {
             id: `${did}#owner`,
             type: 'Secp256k1VerificationKey2018',
             owner: did,
-            ethereumAddress: identity,
-          },
+            ethereumAddress: identity
+          }
         ],
         authentication: [
           {
             type: 'Secp256k1SignatureAuthentication2018',
-            publicKey: `${did}#owner`,
-          },
-        ],
+            publicKey: `${did}#owner`
+          }
+        ]
       })
     })
   })
@@ -109,7 +110,7 @@ describe('ethrResolver', () => {
     })
 
     it('resolves document', () => {
-      return expect(resolve(did)).resolves.toEqual({
+      return expect(didResolver.resolve(did)).resolves.toEqual({
         '@context': 'https://w3id.org/did/v1',
         id: did,
         publicKey: [
@@ -117,15 +118,15 @@ describe('ethrResolver', () => {
             id: `${did}#owner`,
             type: 'Secp256k1VerificationKey2018',
             owner: did,
-            ethereumAddress: owner,
-          },
+            ethereumAddress: owner
+          }
         ],
         authentication: [
           {
             type: 'Secp256k1SignatureAuthentication2018',
-            publicKey: `${did}#owner`,
-          },
-        ],
+            publicKey: `${did}#owner`
+          }
+        ]
       })
     })
   })
@@ -143,7 +144,7 @@ describe('ethrResolver', () => {
       })
 
       it('resolves document', () => {
-        return expect(resolve(did)).resolves.toEqual({
+        return expect(didResolver.resolve(did)).resolves.toEqual({
           '@context': 'https://w3id.org/did/v1',
           id: did,
           publicKey: [
@@ -151,21 +152,21 @@ describe('ethrResolver', () => {
               id: `${did}#owner`,
               type: 'Secp256k1VerificationKey2018',
               owner: did,
-              ethereumAddress: owner,
+              ethereumAddress: owner
             },
             {
               id: `${did}#delegate-1`,
               type: 'Secp256k1VerificationKey2018',
               owner: did,
-              ethereumAddress: delegate1,
-            },
+              ethereumAddress: delegate1
+            }
           ],
           authentication: [
             {
               type: 'Secp256k1SignatureAuthentication2018',
-              publicKey: `${did}#owner`,
-            },
-          ],
+              publicKey: `${did}#owner`
+            }
+          ]
         })
       })
     })
@@ -182,7 +183,7 @@ describe('ethrResolver', () => {
       })
 
       it('resolves document', () => {
-        return expect(resolve(did)).resolves.toEqual({
+        return expect(didResolver.resolve(did)).resolves.toEqual({
           '@context': 'https://w3id.org/did/v1',
           id: did,
           publicKey: [
@@ -190,31 +191,31 @@ describe('ethrResolver', () => {
               id: `${did}#owner`,
               type: 'Secp256k1VerificationKey2018',
               owner: did,
-              ethereumAddress: owner,
+              ethereumAddress: owner
             },
             {
               id: `${did}#delegate-1`,
               type: 'Secp256k1VerificationKey2018',
               owner: did,
-              ethereumAddress: delegate1,
+              ethereumAddress: delegate1
             },
             {
               id: `${did}#delegate-2`,
               type: 'Secp256k1VerificationKey2018',
               owner: did,
-              ethereumAddress: delegate2,
-            },
+              ethereumAddress: delegate2
+            }
           ],
           authentication: [
             {
               type: 'Secp256k1SignatureAuthentication2018',
-              publicKey: `${did}#owner`,
+              publicKey: `${did}#owner`
             },
             {
               type: 'Secp256k1SignatureAuthentication2018',
-              publicKey: `${did}#delegate-2`,
-            },
-          ],
+              publicKey: `${did}#delegate-2`
+            }
+          ]
         })
       })
     })
@@ -225,7 +226,7 @@ describe('ethrResolver', () => {
       })
 
       it('resolves document', () => {
-        return expect(resolve(did)).resolves.toEqual({
+        return expect(didResolver.resolve(did)).resolves.toEqual({
           '@context': 'https://w3id.org/did/v1',
           id: did,
           publicKey: [
@@ -233,25 +234,25 @@ describe('ethrResolver', () => {
               id: `${did}#owner`,
               type: 'Secp256k1VerificationKey2018',
               owner: did,
-              ethereumAddress: owner,
+              ethereumAddress: owner
             },
             {
               id: `${did}#delegate-1`,
               type: 'Secp256k1VerificationKey2018',
               owner: did,
-              ethereumAddress: delegate2,
-            },
+              ethereumAddress: delegate2
+            }
           ],
           authentication: [
             {
               type: 'Secp256k1SignatureAuthentication2018',
-              publicKey: `${did}#owner`,
+              publicKey: `${did}#owner`
             },
             {
               type: 'Secp256k1SignatureAuthentication2018',
-              publicKey: `${did}#delegate-1`,
-            },
-          ],
+              publicKey: `${did}#delegate-1`
+            }
+          ]
         })
       })
     })
@@ -268,7 +269,7 @@ describe('ethrResolver', () => {
       })
 
       it('resolves document', () => {
-        return expect(resolve(did)).resolves.toEqual({
+        return expect(didResolver.resolve(did)).resolves.toEqual({
           '@context': 'https://w3id.org/did/v1',
           id: did,
           publicKey: [
@@ -276,15 +277,15 @@ describe('ethrResolver', () => {
               id: `${did}#owner`,
               type: 'Secp256k1VerificationKey2018',
               owner: did,
-              ethereumAddress: owner,
-            },
+              ethereumAddress: owner
+            }
           ],
           authentication: [
             {
               type: 'Secp256k1SignatureAuthentication2018',
-              publicKey: `${did}#owner`,
-            },
-          ],
+              publicKey: `${did}#owner`
+            }
+          ]
         })
       })
     })
@@ -302,7 +303,7 @@ describe('ethrResolver', () => {
       })
 
       it('resolves document', () => {
-        return expect(resolve(did)).resolves.toEqual({
+        return expect(didResolver.resolve(did)).resolves.toEqual({
           '@context': 'https://w3id.org/did/v1',
           id: did,
           publicKey: [
@@ -310,25 +311,25 @@ describe('ethrResolver', () => {
               id: `${did}#owner`,
               type: 'Secp256k1VerificationKey2018',
               owner: did,
-              ethereumAddress: owner,
+              ethereumAddress: owner
             },
             {
               id: `${did}#delegate-1`,
               type: 'Secp256k1VerificationKey2018',
               owner: did,
-              ethereumAddress: delegate2,
-            },
+              ethereumAddress: delegate2
+            }
           ],
           authentication: [
             {
               type: 'Secp256k1SignatureAuthentication2018',
-              publicKey: `${did}#owner`,
+              publicKey: `${did}#owner`
             },
             {
               type: 'Secp256k1SignatureAuthentication2018',
-              publicKey: `${did}#delegate-1`,
-            },
-          ],
+              publicKey: `${did}#delegate-1`
+            }
+          ]
         })
       })
     })
@@ -347,7 +348,7 @@ describe('ethrResolver', () => {
           )
         })
         it('resolves document', () => {
-          return expect(resolve(did)).resolves.toEqual({
+          return expect(didResolver.resolve(did)).resolves.toEqual({
             '@context': 'https://w3id.org/did/v1',
             id: did,
             publicKey: [
@@ -355,32 +356,32 @@ describe('ethrResolver', () => {
                 id: `${did}#owner`,
                 type: 'Secp256k1VerificationKey2018',
                 owner: did,
-                ethereumAddress: owner,
+                ethereumAddress: owner
               },
               {
                 id: `${did}#delegate-1`,
                 type: 'Secp256k1VerificationKey2018',
                 owner: did,
-                ethereumAddress: delegate2,
+                ethereumAddress: delegate2
               },
               {
                 id: `${did}#delegate-2`,
                 type: 'Secp256k1VerificationKey2018',
                 owner: did,
                 publicKeyHex:
-          '02b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71',
-              },
+                  '02b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71'
+              }
             ],
             authentication: [
               {
                 type: 'Secp256k1SignatureAuthentication2018',
-                publicKey: `${did}#owner`,
+                publicKey: `${did}#owner`
               },
               {
                 type: 'Secp256k1SignatureAuthentication2018',
-                publicKey: `${did}#delegate-1`,
-              },
-            ],
+                publicKey: `${did}#delegate-1`
+              }
+            ]
           })
         })
       })
@@ -397,7 +398,7 @@ describe('ethrResolver', () => {
         })
 
         it('resolves document', () => {
-          return expect(resolve(did)).resolves.toEqual({
+          return expect(didResolver.resolve(did)).resolves.toEqual({
             '@context': 'https://w3id.org/did/v1',
             id: did,
             publicKey: [
@@ -405,20 +406,20 @@ describe('ethrResolver', () => {
                 id: `${did}#owner`,
                 type: 'Secp256k1VerificationKey2018',
                 owner: did,
-                ethereumAddress: owner,
+                ethereumAddress: owner
               },
               {
                 id: `${did}#delegate-1`,
                 type: 'Secp256k1VerificationKey2018',
                 owner: did,
-                ethereumAddress: delegate2,
+                ethereumAddress: delegate2
               },
               {
                 id: `${did}#delegate-2`,
                 type: 'Secp256k1VerificationKey2018',
                 owner: did,
                 publicKeyHex:
-          '02b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71',
+                  '02b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71'
               },
               {
                 id: `${did}#delegate-3`,
@@ -427,19 +428,19 @@ describe('ethrResolver', () => {
                 publicKeyBase64: Buffer.from(
                   '02b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71',
                   'hex'
-                ).toString('base64'),
-              },
+                ).toString('base64')
+              }
             ],
             authentication: [
               {
                 type: 'Secp256k1SignatureAuthentication2018',
-                publicKey: `${did}#owner`,
+                publicKey: `${did}#owner`
               },
               {
                 type: 'Secp256k1SignatureAuthentication2018',
-                publicKey: `${did}#delegate-1`,
-              },
-            ],
+                publicKey: `${did}#delegate-1`
+              }
+            ]
           })
         })
       })
@@ -456,7 +457,7 @@ describe('ethrResolver', () => {
         })
 
         it('resolves document', () => {
-          return expect(resolve(did)).resolves.toEqual({
+          return expect(didResolver.resolve(did)).resolves.toEqual({
             '@context': 'https://w3id.org/did/v1',
             id: did,
             publicKey: [
@@ -464,20 +465,20 @@ describe('ethrResolver', () => {
                 id: `${did}#owner`,
                 type: 'Secp256k1VerificationKey2018',
                 owner: did,
-                ethereumAddress: owner,
+                ethereumAddress: owner
               },
               {
                 id: `${did}#delegate-1`,
                 type: 'Secp256k1VerificationKey2018',
                 owner: did,
-                ethereumAddress: delegate2,
+                ethereumAddress: delegate2
               },
               {
                 id: `${did}#delegate-2`,
                 type: 'Secp256k1VerificationKey2018',
                 owner: did,
                 publicKeyHex:
-          '02b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71',
+                  '02b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71'
               },
               {
                 id: `${did}#delegate-3`,
@@ -486,25 +487,25 @@ describe('ethrResolver', () => {
                 publicKeyBase64: Buffer.from(
                   '02b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71',
                   'hex'
-                ).toString('base64'),
+                ).toString('base64')
               },
               {
                 id: `${did}#delegate-4`,
                 type: 'RSAVerificationKey2018',
                 owner: did,
-                publicKeyPem: '-----BEGIN PUBLIC KEY...END PUBLIC KEY-----\r\n',
-              },
+                publicKeyPem: '-----BEGIN PUBLIC KEY...END PUBLIC KEY-----\r\n'
+              }
             ],
             authentication: [
               {
                 type: 'Secp256k1SignatureAuthentication2018',
-                publicKey: `${did}#owner`,
+                publicKey: `${did}#owner`
               },
               {
                 type: 'Secp256k1SignatureAuthentication2018',
-                publicKey: `${did}#delegate-1`,
-              },
-            ],
+                publicKey: `${did}#delegate-1`
+              }
+            ]
           })
         })
       })
@@ -522,7 +523,7 @@ describe('ethrResolver', () => {
           )
         })
         it('resolves document', () => {
-          return expect(resolve(did)).resolves.toEqual({
+          return expect(didResolver.resolve(did)).resolves.toEqual({
             '@context': 'https://w3id.org/did/v1',
             id: did,
             publicKey: [
@@ -530,20 +531,20 @@ describe('ethrResolver', () => {
                 id: `${did}#owner`,
                 type: 'Secp256k1VerificationKey2018',
                 owner: did,
-                ethereumAddress: owner,
+                ethereumAddress: owner
               },
               {
                 id: `${did}#delegate-1`,
                 type: 'Secp256k1VerificationKey2018',
                 owner: did,
-                ethereumAddress: delegate2,
+                ethereumAddress: delegate2
               },
               {
                 id: `${did}#delegate-2`,
                 type: 'Secp256k1VerificationKey2018',
                 owner: did,
                 publicKeyHex:
-          '02b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71',
+                  '02b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71'
               },
               {
                 id: `${did}#delegate-3`,
@@ -552,31 +553,31 @@ describe('ethrResolver', () => {
                 publicKeyBase64: Buffer.from(
                   '02b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71',
                   'hex'
-                ).toString('base64'),
+                ).toString('base64')
               },
               {
                 id: `${did}#delegate-4`,
                 type: 'RSAVerificationKey2018',
                 owner: did,
-                publicKeyPem: '-----BEGIN PUBLIC KEY...END PUBLIC KEY-----\r\n',
-              },
+                publicKeyPem: '-----BEGIN PUBLIC KEY...END PUBLIC KEY-----\r\n'
+              }
             ],
             authentication: [
               {
                 type: 'Secp256k1SignatureAuthentication2018',
-                publicKey: `${did}#owner`,
+                publicKey: `${did}#owner`
               },
               {
                 type: 'Secp256k1SignatureAuthentication2018',
-                publicKey: `${did}#delegate-1`,
-              },
+                publicKey: `${did}#delegate-1`
+              }
             ],
             service: [
               {
                 type: 'HubService',
-                serviceEndpoint: 'https://hubs.uport.me',
-              },
-            ],
+                serviceEndpoint: 'https://hubs.uport.me'
+              }
+            ]
           })
         })
       })
@@ -594,7 +595,7 @@ describe('ethrResolver', () => {
           sleep(1)
         })
         it('resolves document', () => {
-          return expect(resolve(did)).resolves.toEqual({
+          return expect(didResolver.resolve(did)).resolves.toEqual({
             '@context': 'https://w3id.org/did/v1',
             id: did,
             publicKey: [
@@ -602,13 +603,13 @@ describe('ethrResolver', () => {
                 id: `${did}#owner`,
                 type: 'Secp256k1VerificationKey2018',
                 owner: did,
-                ethereumAddress: owner,
+                ethereumAddress: owner
               },
               {
                 id: `${did}#delegate-1`,
                 type: 'Secp256k1VerificationKey2018',
                 owner: did,
-                ethereumAddress: delegate2,
+                ethereumAddress: delegate2
               },
               {
                 id: `${did}#delegate-3`,
@@ -617,31 +618,31 @@ describe('ethrResolver', () => {
                 publicKeyBase64: Buffer.from(
                   '02b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71',
                   'hex'
-                ).toString('base64'),
+                ).toString('base64')
               },
               {
                 id: `${did}#delegate-4`,
                 type: 'RSAVerificationKey2018',
                 owner: did,
-                publicKeyPem: '-----BEGIN PUBLIC KEY...END PUBLIC KEY-----\r\n',
-              },
+                publicKeyPem: '-----BEGIN PUBLIC KEY...END PUBLIC KEY-----\r\n'
+              }
             ],
             authentication: [
               {
                 type: 'Secp256k1SignatureAuthentication2018',
-                publicKey: `${did}#owner`,
+                publicKey: `${did}#owner`
               },
               {
                 type: 'Secp256k1SignatureAuthentication2018',
-                publicKey: `${did}#delegate-1`,
-              },
+                publicKey: `${did}#delegate-1`
+              }
             ],
             service: [
               {
                 type: 'HubService',
-                serviceEndpoint: 'https://hubs.uport.me',
-              },
-            ],
+                serviceEndpoint: 'https://hubs.uport.me'
+              }
+            ]
           })
         })
       })
@@ -657,7 +658,7 @@ describe('ethrResolver', () => {
           sleep(1)
         })
         it('resolves document', () => {
-          return expect(resolve(did)).resolves.toEqual({
+          return expect(didResolver.resolve(did)).resolves.toEqual({
             '@context': 'https://w3id.org/did/v1',
             id: did,
             publicKey: [
@@ -665,37 +666,37 @@ describe('ethrResolver', () => {
                 id: `${did}#owner`,
                 type: 'Secp256k1VerificationKey2018',
                 owner: did,
-                ethereumAddress: owner,
+                ethereumAddress: owner
               },
               {
                 id: `${did}#delegate-1`,
                 type: 'Secp256k1VerificationKey2018',
                 owner: did,
-                ethereumAddress: delegate2,
+                ethereumAddress: delegate2
               },
               {
                 id: `${did}#delegate-4`,
                 type: 'RSAVerificationKey2018',
                 owner: did,
-                publicKeyPem: '-----BEGIN PUBLIC KEY...END PUBLIC KEY-----\r\n',
-              },
+                publicKeyPem: '-----BEGIN PUBLIC KEY...END PUBLIC KEY-----\r\n'
+              }
             ],
             authentication: [
               {
                 type: 'Secp256k1SignatureAuthentication2018',
-                publicKey: `${did}#owner`,
+                publicKey: `${did}#owner`
               },
               {
                 type: 'Secp256k1SignatureAuthentication2018',
-                publicKey: `${did}#delegate-1`,
-              },
+                publicKey: `${did}#delegate-1`
+              }
             ],
             service: [
               {
                 type: 'HubService',
-                serviceEndpoint: 'https://hubs.uport.me',
-              },
-            ],
+                serviceEndpoint: 'https://hubs.uport.me'
+              }
+            ]
           })
         })
       })
@@ -712,7 +713,7 @@ describe('ethrResolver', () => {
         })
 
         it('resolves document', () => {
-          return expect(resolve(did)).resolves.toEqual({
+          return expect(didResolver.resolve(did)).resolves.toEqual({
             '@context': 'https://w3id.org/did/v1',
             id: did,
             publicKey: [
@@ -720,31 +721,31 @@ describe('ethrResolver', () => {
                 id: `${did}#owner`,
                 type: 'Secp256k1VerificationKey2018',
                 owner: did,
-                ethereumAddress: owner,
+                ethereumAddress: owner
               },
               {
                 id: `${did}#delegate-1`,
                 type: 'Secp256k1VerificationKey2018',
                 owner: did,
-                ethereumAddress: delegate2,
-              },
+                ethereumAddress: delegate2
+              }
             ],
             authentication: [
               {
                 type: 'Secp256k1SignatureAuthentication2018',
-                publicKey: `${did}#owner`,
+                publicKey: `${did}#owner`
               },
               {
                 type: 'Secp256k1SignatureAuthentication2018',
-                publicKey: `${did}#delegate-1`,
-              },
+                publicKey: `${did}#delegate-1`
+              }
             ],
             service: [
               {
                 type: 'HubService',
-                serviceEndpoint: 'https://hubs.uport.me',
-              },
-            ],
+                serviceEndpoint: 'https://hubs.uport.me'
+              }
+            ]
           })
         })
       })
@@ -763,7 +764,7 @@ describe('ethrResolver', () => {
         })
 
         it('resolves document', () => {
-          return expect(resolve(did)).resolves.toEqual({
+          return expect(didResolver.resolve(did)).resolves.toEqual({
             '@context': 'https://w3id.org/did/v1',
             id: did,
             publicKey: [
@@ -771,25 +772,25 @@ describe('ethrResolver', () => {
                 id: `${did}#owner`,
                 type: 'Secp256k1VerificationKey2018',
                 owner: did,
-                ethereumAddress: owner,
+                ethereumAddress: owner
               },
               {
                 id: `${did}#delegate-1`,
                 type: 'Secp256k1VerificationKey2018',
                 owner: did,
-                ethereumAddress: delegate2,
-              },
+                ethereumAddress: delegate2
+              }
             ],
             authentication: [
               {
                 type: 'Secp256k1SignatureAuthentication2018',
-                publicKey: `${did}#owner`,
+                publicKey: `${did}#owner`
               },
               {
                 type: 'Secp256k1SignatureAuthentication2018',
-                publicKey: `${did}#delegate-1`,
-              },
-            ],
+                publicKey: `${did}#delegate-1`
+              }
+            ]
           })
         })
       })
@@ -814,12 +815,12 @@ describe('ethrResolver', () => {
           10,
           { from: owner }
         ),
-        sleep(1).then(() => startMining()),
+        sleep(1).then(() => startMining())
       ])
     })
 
     it('resolves document', async () => {
-      expect(await resolve(did)).toEqual({
+      expect(await didResolver.resolve(did)).toEqual({
         '@context': 'https://w3id.org/did/v1',
         id: did,
         publicKey: [
@@ -827,31 +828,31 @@ describe('ethrResolver', () => {
             id: `${did}#owner`,
             type: 'Secp256k1VerificationKey2018',
             owner: did,
-            ethereumAddress: owner,
+            ethereumAddress: owner
           },
           {
             id: `${did}#delegate-1`,
             type: 'Secp256k1VerificationKey2018',
             owner: did,
-            ethereumAddress: delegate2,
-          },
+            ethereumAddress: delegate2
+          }
         ],
         authentication: [
           {
             type: 'Secp256k1SignatureAuthentication2018',
-            publicKey: `${did}#owner`,
+            publicKey: `${did}#owner`
           },
           {
             type: 'Secp256k1SignatureAuthentication2018',
-            publicKey: `${did}#delegate-1`,
-          },
+            publicKey: `${did}#delegate-1`
+          }
         ],
         service: [
           {
             type: 'TestService',
-            serviceEndpoint: 'https://test.uport.me',
-          },
-        ],
+            serviceEndpoint: 'https://test.uport.me'
+          }
+        ]
       })
     })
   })
@@ -859,7 +860,7 @@ describe('ethrResolver', () => {
   describe('error handling', () => {
     it('rejects promise', () => {
       return expect(
-        resolve('did:ethr:2nQtiQG6Cgm1GYTBaaKAgr76uY7iSexUkqX')
+        didResolver.resolve('did:ethr:2nQtiQG6Cgm1GYTBaaKAgr76uY7iSexUkqX')
       ).rejects.toEqual(
         new Error(
           'Not a valid ethr DID: did:ethr:2nQtiQG6Cgm1GYTBaaKAgr76uY7iSexUkqX'
