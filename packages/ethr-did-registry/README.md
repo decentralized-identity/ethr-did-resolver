@@ -12,18 +12,21 @@ This contract allows on-chain and off-chain resolving and management for [DIDs (
 
 A DID is an [Identifier](https://w3c-ccg.github.io/did-spec/#decentralized-identifiers-dids) that allows you to lookup a [DID document](https://w3c-ccg.github.io/did-spec/#did-documents) that can be used to authenticate you and messages created by you.
 
-It's designed for resolving public keys for off-chain authentication&mdash;where the public key resolution is handled by using decentralized technology.
+It's designed for resolving public keys for off-chain authentication—where the public key resolution is handled by using decentralized technology.
 
 This contract allows Ethereum addresses to present signing information about themselves with no prior registration. It allows them to perform key rotation and specify different keys and services that are used on its behalf for both on and off-chain usage.
 
 ## Contract Deployments
-|Network|Address|
-| --|--|
-|Mainnet (id: 1)|[0xdca7ef03e98e0dc2b855be647c39abe984fcf21b](https://etherscan.io/address/0xdca7ef03e98e0dc2b855be647c39abe984fcf21b)|
-|Ropsten (id: 3)|[0xdca7ef03e98e0dc2b855be647c39abe984fcf21b](https://ropsten.etherscan.io/address/0xdca7ef03e98e0dc2b855be647c39abe984fcf21b)|
-|Rinkeby (id: 4)|[0xdca7ef03e98e0dc2b855be647c39abe984fcf21b](https://rinkeby.etherscan.io/address/0xdca7ef03e98e0dc2b855be647c39abe984fcf21b)|
-|Kovan (id: 42)|[0xdca7ef03e98e0dc2b855be647c39abe984fcf21b](https://kovan.etherscan.io/address/0xdca7ef03e98e0dc2b855be647c39abe984fcf21b)|
 
+| Network                             | Address                                                                                                                                  |
+| ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| Mainnet (id: 1)                     | [0xdca7ef03e98e0dc2b855be647c39abe984fcf21b](https://etherscan.io/address/0xdca7ef03e98e0dc2b855be647c39abe984fcf21b)                    |
+| Ropsten (id: 3)                     | [0xdca7ef03e98e0dc2b855be647c39abe984fcf21b](https://ropsten.etherscan.io/address/0xdca7ef03e98e0dc2b855be647c39abe984fcf21b)            |
+| Rinkeby (id: 4)                     | [0xdca7ef03e98e0dc2b855be647c39abe984fcf21b](https://rinkeby.etherscan.io/address/0xdca7ef03e98e0dc2b855be647c39abe984fcf21b)            |
+| Kovan (id: 42)                      | [0xdca7ef03e98e0dc2b855be647c39abe984fcf21b](https://kovan.etherscan.io/address/0xdca7ef03e98e0dc2b855be647c39abe984fcf21b)              |
+| RSK (id: 30)                        | [0xdca7ef03e98e0dc2b855be647c39abe984fcf21b](https://explorer.rsk.co/address/0xdca7ef03e98e0dc2b855be647c39abe984fcf21b)                 |
+| RSK Testnet (id: 31)                | [0xdca7ef03e98e0dc2b855be647c39abe984fcf21b](https://explorer.testnet.rsk.co/address/0xdca7ef03e98e0dc2b855be647c39abe984fcf21b)         |
+| Alastria Telsius (id: 83584648538 ) | [0x05cc574b19a3c11308f761b3d7263bd8608bc532](http://blkexplorer0.telsius.alastria.io/account/0x05cc574b19a3c11308f761b3d7263bd8608bc532) |
 
 ## Using the Registry
 
@@ -51,6 +54,7 @@ let networkId = 1 // Mainnet
 let DidReg = web3.eth.contract(DidRegistryContract.abi)
 let didReg = DidReg.at(DidRegistryContract.networks[networkId].address)
 ```
+
 ## On-chain vs. Off-chain
 For on-chain interactions Ethereum has a built-in account abstraction that can be used regardless of whether the account is a smart contract or a key pair. Any transaction has a `msg.sender` as the verified sender of the transaction.
 
@@ -61,19 +65,23 @@ These kinds of transactions have to be signed by an actual key pair and thus can
 We propose a way of a smart contract or regular key pair delegating signing for various purposes to externally managed key pairs. This allows a smart contract to be represented, both on-chain as well as off-chain or in payment channels through temporary or permanent delegates.
 
 ## Identity Identifier
+
 Any Ethereum account regardless of whether it's a key pair or smart contract based is considered to be an account identifier.
 
 An identity needs no registration.
 
 ## Identity Ownership
+
 Each identity has a single address which maintains ultimate control over it. By default, each identity is controlled by itself. As ongoing technological and security improvements occur, an owner can replace themselves with any other Ethereum address, such as an advanced multi-signature contract.
 
 There is only ever a single identity owner. More advanced ownership models are managed through a multi-signature contract.
 
 ### Looking up Identity Ownership
+
 Ownership of identity is verified by calling the `identityOwner(address identity) public view returns(address)` function. This returns the address of the current Identity Owner.
 
 ### Changing Identity Ownership
+
 The account owner can replace themselves at any time, by calling the `changeOwner(address identity, address newOwner)` function.
 
 There is also a version of this function which is called with an externally created signature, that is passed to a transaction funding service.
@@ -85,23 +93,28 @@ The signature should be signed of the keccak256 hash of the following tightly pa
 `byte(0x19), byte(0), address of registry, nonce[currentOwner], identity, "changeOwner", newOwner`
 
 ## Delegates
+
 Delegates are addresses that are delegated for a specific time to perform a function on behalf of an identity.
 
 They can be accessed both on and off-chain.
 
 ### Delegate Types
+
 The type of function is simply a string, that is determined by a protocol or application higher up.
 
 Examples:
-- ‘DID-JWT’
-- ‘Raiden’
+
+-   ‘DID-JWT’
+-   ‘Raiden’
 
 ### Validity
+
 Delegates expire. The expiration time is application specific and dependent on the security requirements of the identity owner.
 
 Validity is set using the number of seconds from the time that adding the delegate is set.
 
 ### Looking up a Delegate
+
 You can check to see if an address is a delegate for an identity using the`validDelegate(address identity, string delegateType, address delegate) returns(bool)` function. This returns true if the address is a valid delegate of the given delegateType.
 
 ### Adding a Delegate
@@ -145,6 +158,7 @@ event DIDDelegateChanged(
 ```
 
 ## Adding Off-chain Attributes
+
 An identity may need to publish some information that is only needed off-chain but still requires the security benefits of using a blockchain.
 
 ### Setting Attributes
@@ -193,10 +207,10 @@ By using linked events that always link to the previous block with a change to t
 
 Each identity has its previously changed block stored in the `changed` mapping.
 
-1. Lookup `previousChange` block for identity
-2. Lookup all events for a given identity address using web3, but only for the `previousChange` block
-3. Do something with the event
-4. Find `previousChange` from the event and repeat
+1.  Lookup `previousChange` block for identity
+2.  Lookup all events for a given identity address using web3, but only for the `previousChange` block
+3.  Do something with the event
+4.  Find `previousChange` from the event and repeat
 
 Example code
 
@@ -223,16 +237,19 @@ Iterate through the `DIDDelegateChanged` events to build a list of additional ke
 Iterate through `DIDAttributeChanged` events for service entries, encrypted public keys, and other public names. The attribute names are still to be determined.
 
 ## Deploy contract
+
 First run,
-```
+
+```bash
 $ scripts/generateDeployTxs.js
 ```
+
 You will get the data needed to deploy as an output from this command. Copy the `senderAddress` and send `cost` amount of ether to that address on the Ethereum network you wish to deploy to. Once this tx is confirmed, simply send the `rawTx` to the same network. `contractAddress` is the address of the deployed contract. This will be the same on all networks it's deployed to.
 
 ## Testing the Contracts
 
 Make sure you have truffle installed, then run:
-```
+
+```bash
 $ truffle test
 ```
-
