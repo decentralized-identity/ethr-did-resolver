@@ -181,31 +181,10 @@ function getResolver (conf = {}) {
   const registryAddress = conf.registry || REGISTRY
   const DidReg = new EthContract(eth)(DidRegistryContract)
   const didReg = DidReg.at(registryAddress)
-  
-  return { eth, registryAddress, didReg}
-}
-
-function configureNetworks(networksConf=[]){
-  let networks={}
-  for(let i=0;i<networksConf.length;i++){
-    const net=networksConf[i];
-    networks[net.name]=getResolver(net);
-  }
-  return networks;
-}
-
-export default function register(conf = {}) {
-  
   const logDecoder = abi.logDecoder(DidRegistryContract, false)
 
-  const networks={
-    'mainnet': getResolver(conf),
-    ...configureNetworks(require('./networks.json')),
-    ...configureNetworks(conf.networks)
-  }
-
-  const lastChanged = async (identity,network) => {
-    const result = await networks[network].didReg.changed(identity)
+  const lastChanged = async identity => {
+    const result = await didReg.changed(identity)
     if (result) {
       return result['0']
     }
@@ -220,8 +199,8 @@ export default function register(conf = {}) {
     }
     while (previousChange) {
       const blockNumber = previousChange
-      const logs = await networks[network].eth.getLogs({
-        address: networks[network].registryAddress,
+      const logs = await eth.getLogs({
+        address: registryAddress,
         topics: [null, `0x000000000000000000000000${identity.slice(2)}`],
         fromBlock: previousChange,
         toBlock: previousChange
@@ -237,18 +216,9 @@ export default function register(conf = {}) {
     }
     return { owner, history }
   }
-  async function resolve(did, parsed) {
-    const fullId=parsed.id.match(/^(.*)?(0x[0-9a-fA-F]{40})$/)
-    if (!fullId)
-      throw new Error(`Not a valid ethr DID: ${did}`)
-
-    const id=fullId[2];
-    const network = (!fullId[1]) ? 'mainnet' : fullId[1].slice(0,-1);
-
-    if(!networks[network])      
-      throw new Error(`No conf for network: ${network}`)
-
-    const { owner, history } = await changeLog(id)
+  async function resolve (did, parsed) {
+    if (!parsed.id.match(/^0x[0-9a-fA-F]{40}$/)) throw new Error(`Not a valid ethr DID: ${did}`)
+    const { owner, history } = await changeLog(parsed.id)
     return wrapDidDocument(did, owner, history)
   }
 

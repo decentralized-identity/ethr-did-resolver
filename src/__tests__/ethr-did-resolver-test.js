@@ -10,8 +10,8 @@ const {
   Secp256k1VerificationKey2018
 } = delegateTypes
 
-function sleep(seconds) {
-  return new Promise((resolve) => setTimeout(resolve, seconds * 1000))
+function sleep (seconds) {
+  return new Promise((resolve, reject) => setTimeout(resolve, seconds * 1000))
 }
 
 describe('ethrResolver', () => {
@@ -68,8 +68,6 @@ describe('ethrResolver', () => {
     owner = accounts[2]
     delegate1 = accounts[3]
     delegate2 = accounts[4]
-    unregistered = accounts[5]
-
     did = `did:ethr:${identity}`
 
     registry = await DidReg.new({
@@ -866,86 +864,6 @@ describe('ethrResolver', () => {
           'Not a valid ethr DID: did:ethr:2nQtiQG6Cgm1GYTBaaKAgr76uY7iSexUkqX'
         )
       )
-    })
-  })
-
-
-  describe('alt-networks', () => {
-    it('rejects no-conf network', () => {
-      return expect(
-        resolve('did:ethr:unknownChain:'+unregistered)
-      ).rejects.toEqual(
-        new Error(
-          'No conf for network: unknownChain'
-        )
-      )
-    })
-
-    it('resolves on privChain', async () => {
-      const altRegistry = await DidReg.new({
-        from: accounts[0],
-        gasPrice: 100000000000,
-        gas: 4712388, //1779962
-      })
-
-      register({ 
-        networks:[
-          { name: 'privchain',provider, registry: altRegistry.address }
-        ]
-      })
-
-      const pdid='did:ethr:privchain:'+unregistered;
-      return expect(resolve(pdid)).resolves.toEqual({
-        '@context': 'https://w3id.org/did/v1',
-        id: pdid,
-        publicKey: [
-          {
-            id: `${pdid}#owner`,
-            type: 'Secp256k1VerificationKey2018',
-            owner: pdid,
-            ethereumAddress: unregistered,
-          },
-        ],
-        authentication: [
-          {
-            type: 'Secp256k1SignatureAuthentication2018',
-            publicKey: `${pdid}#owner`,
-          },
-        ],
-      })
-    })
-  
-    it('resolves on privChain:subChain', async () => {
-      const altRegistry = await DidReg.new({
-        from: accounts[0],
-        gasPrice: 100000000000,
-        gas: 4712388, //1779962
-      })
-
-      register({ 
-        networks:[
-          { name: 'privChain:subChain',provider, registry: altRegistry.address }
-        ]
-      })
-      const pdid='did:ethr:privChain:subChain:'+unregistered;
-      return expect(resolve(pdid)).resolves.toEqual({
-        '@context': 'https://w3id.org/did/v1',
-        id: pdid,
-        publicKey: [
-          {
-            id: `${pdid}#owner`,
-            type: 'Secp256k1VerificationKey2018',
-            owner: pdid,
-            ethereumAddress: unregistered,
-          },
-        ],
-        authentication: [
-          {
-            type: 'Secp256k1SignatureAuthentication2018',
-            publicKey: `${pdid}#owner`,
-          },
-        ],
-      })
     })
   })
 })
