@@ -1,0 +1,29 @@
+[
+  {
+    "name": "ropsten",
+    "rpcUrl": "https://ropsten.infura.io/ethr-did",
+    "registry": "0xdca7ef03e98e0dc2b855be647c39abe984fcf21b"
+  },
+  {
+    "name": "rinkeby",
+    "rpcUrl": "https://rinkeby.infura.io/ethr-did",
+    "registry": "0xdca7ef03e98e0dc2b855be647c39abe984fcf21b"
+  },
+  {
+    "name": "kovan",
+    "rpcUrl": "https://kovan.infura.io/ethr-did",
+    "registry": "0xdca7ef03e98e0dc2b855be647c39abe984fcf21b"
+  }
+  ,
+  {
+    "name": "rsk",
+    "rpcUrl": "http://35.183.134.62:4444",
+    "registry": "0xdca7ef03e98e0dc2b855be647c39abe984fcf21b"
+  },
+  {
+    "name": "rsk:testnet",
+    "rpcUrl": "http://35.182.141.145:4444",
+    "registry": "0xdca7ef03e98e0dc2b855be647c39abe984fcf21b"
+  }
+  
+]

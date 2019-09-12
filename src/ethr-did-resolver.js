@@ -175,32 +175,52 @@ function configureProvider (conf = {}) {
   }
 }
 
-function getResolver (conf = {}) {
+function configureNetwork (conf = {}) {
   const provider = configureProvider(conf)
   const eth = new Eth(provider)
   const registryAddress = conf.registry || REGISTRY
   const DidReg = new EthContract(eth)(DidRegistryContract)
   const didReg = DidReg.at(registryAddress)
+
+  return { eth, registryAddress, didReg }
+}
+
+function configureNetworks (networksConf = []) {
+  const networks = {}
+  for (let i = 0; i < networksConf.length; i++) {
+    const net = networksConf[i]
+    networks[net.name] = configureNetwork(net)
+  }
+  return networks
+}
+
+function getResolver (conf = {}) {
   const logDecoder = abi.logDecoder(DidRegistryContract, false)
 
-  const lastChanged = async identity => {
-    const result = await didReg.changed(identity)
+  const networks = {
+    mainnet: configureNetwork(conf),
+    ...configureNetworks(require('./networks.json')),
+    ...configureNetworks(conf.networks)
+  }
+
+  const lastChanged = async (identity, networkId) => {
+    const result = await networks[networkId].didReg.changed(identity)
     if (result) {
       return result['0']
     }
   }
-  async function changeLog (identity) {
+  async function changeLog (identity, networkId) {
     const history = []
     let owner = identity
-    let previousChange = await lastChanged(identity)
+    let previousChange = await lastChanged(identity, networkId)
     if (previousChange) {
-      const ownerRecord = await didReg.identityOwner(identity)
+      const ownerRecord = await networks[networkId].didReg.identityOwner(identity)
       owner = ownerRecord['0']
     }
     while (previousChange) {
       const blockNumber = previousChange
-      const logs = await eth.getLogs({
-        address: registryAddress,
+      const logs = await networks[networkId].eth.getLogs({
+        address: networks[networkId].registryAddress,
         topics: [null, `0x000000000000000000000000${identity.slice(2)}`],
         fromBlock: previousChange,
         toBlock: previousChange
@@ -217,12 +237,18 @@ function getResolver (conf = {}) {
     return { owner, history }
   }
   async function resolve (did, parsed) {
-    if (!parsed.id.match(/^0x[0-9a-fA-F]{40}$/)) throw new Error(`Not a valid ethr DID: ${did}`)
-    const { owner, history } = await changeLog(parsed.id)
+    const fullId = parsed.id.match(/^(.*)?(0x[0-9a-fA-F]{40})$/)
+    if (!fullId) throw new Error(`Not a valid ethr DID: ${did}`)
+    const id = fullId[2]
+    const networkId = (!fullId[1]) ? 'mainnet' : fullId[1].slice(0, -1)
+
+    if (!networks[networkId]) throw new Error(`No conf for networkId: ${networkId}`)
+
+    const { owner, history } = await changeLog(id, networkId)
     return wrapDidDocument(did, owner, history)
   }
 
-  return { 'ethr': resolve }
+  return { ethr: resolve }
 }
 
 module.exports = {
