@@ -28,7 +28,7 @@ eg:
 
 The did resolver takes the ethereum address, checks for the current owner, looks at contract events and builds a simple DID document.
 
-The minimal DID document for a an ethereum address `0xf3beac30c498d9e26865f34fcaa57dbb935b0d74` with no transactions to the registry looks like this:
+The minimal DID document for a an ethereum address `0xb9c5714089478a327f09197987f16f9e5d936e8a` with no transactions to the registry looks like this:
 
 ```js
 {
