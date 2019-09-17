@@ -16,6 +16,8 @@ It's designed for resolving public keys for off-chain authentication—where the
 
 This contract allows Ethereum addresses to present signing information about themselves with no prior registration. It allows them to perform key rotation and specify different keys and services that are used on its behalf for both on and off-chain usage.
 
+[FAQ and helpdesk support](http://bit.ly/uPort_helpdesk)
+
 ## Contract Deployments
 
 | Network                             | Address                                                                                                                                  |
