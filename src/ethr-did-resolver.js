@@ -5,6 +5,7 @@ import BN from 'bn.js'
 import EthContract from 'ethjs-contract'
 import DidRegistryContract from '../contracts/ethr-did-registry.json'
 import { Buffer } from 'buffer'
+import networksJson from './networks.json'
 const REGISTRY = '0xdca7ef03e98e0dc2b855be647c39abe984fcf21b'
 
 function bytes32toString (bytes32) {
@@ -199,7 +200,7 @@ function getResolver (conf = {}) {
 
   const networks = {
     mainnet: configureNetwork(conf),
-    ...configureNetworks(require('./networks.json')),
+    ...configureNetworks(networksJson),
     ...configureNetworks(conf.networks)
   }
 
