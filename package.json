@@ -21,8 +21,9 @@
   "author": "Pelle Braendgaard <pelle.braendgaard@consensys.net>",
   "license": "Apache-2.0",
   "scripts": {
-    "build": "./node_modules/.bin/microbundle",
-    "test": "./node_modules/.bin/jest"
+    "build": "microbundle",
+    "test": "jest",
+    "prepublishOnly": "npm test && npm run build"
   },
   "jest": {
     "coverageDirectory": "./coverage/",
