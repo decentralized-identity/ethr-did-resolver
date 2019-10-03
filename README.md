@@ -3,7 +3,7 @@ title: "Ethr DID Resolver"
 index: 7
 category: "ethr-did-resolver"
 type: "reference"
-source: "https://github.com/uport-project/ethr-did-resolver/blob/develop/README.md"
+source: "https://github.com/decentralized-identity/ethr-did-resolver/blob/develop/README.md"
 ---
 
 # ethr DID Resolver
