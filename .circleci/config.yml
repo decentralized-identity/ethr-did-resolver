@@ -19,7 +19,7 @@ jobs:
             npm install
       - run:
           name: test
-          command: npm run test:ci && codecov
+          command: npm run test && codecov
 
       - run:
           name: code-coverage
@@ -32,6 +32,6 @@ jobs:
 
 workflows:
   version: 2
-  build-and-deploy:
+  build-and-test:
     jobs:
       - build
