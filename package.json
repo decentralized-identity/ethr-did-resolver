@@ -22,8 +22,11 @@
   "license": "Apache-2.0",
   "scripts": {
     "build": "microbundle",
+    "prepare": "npm run build",
+    "prepublishOnly": "npm test && npm run build",
+    "release": "semantic-release --debug",
     "test": "jest",
-    "prepublishOnly": "npm test && npm run build"
+    "test-with-coverage": "jest --coverage && codecov"
   },
   "jest": {
     "coverageDirectory": "./coverage/",
@@ -37,7 +40,12 @@
     "@babel/cli": "^7.5.0",
     "@babel/core": "^7.5.4",
     "@babel/preset-env": "^7.5.4",
+    "@commitlint/cli": "^8.2.0",
+    "@commitlint/config-conventional": "^8.2.0",
+    "@semantic-release/changelog": "^3.0.4",
+    "@semantic-release/git": "^7.0.16",
     "babel-jest": "^24.8.0",
+    "codecov": "^3.6.1",
     "eslint-config-standard": "^13.0.1",
     "eslint-plugin-import": "^2.18.0",
     "eslint-plugin-jest": "^22.8.0",
@@ -49,6 +57,7 @@
     "jest": "^24.8.0",
     "microbundle": "^0.11.0",
     "regenerator-runtime": "^0.13.2",
+    "semantic-release": "^15.13.27",
     "standard": "^13.0.2",
     "truffle-contract": "^3.0.7"
   },
