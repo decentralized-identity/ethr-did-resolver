@@ -22,6 +22,7 @@
   "license": "Apache-2.0",
   "scripts": {
     "build": "microbundle",
+    "lint": "node_modules/.bin/standard",
     "prepare": "npm run build",
     "prepublishOnly": "npm test && npm run build",
     "release": "semantic-release --debug",
