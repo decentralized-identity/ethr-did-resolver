@@ -110,7 +110,7 @@ jobs:
           name: Semantic release
           command: |
             git config user.email "devops@uport.me"
-            git config user.name "uport-eng"
+            git config user.name "uport-automation-bot"
             npm run release
 
   deploy-to-npm:
