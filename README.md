@@ -3,10 +3,15 @@ title: "Ethr DID Resolver"
 index: 7
 category: "ethr-did-resolver"
 type: "reference"
-source: "https://github.com/uport-project/ethr-did-resolver/blob/develop/README.md"
+source: "https://github.com/decentralized-identity/ethr-did-resolver/blob/develop/README.md"
 ---
 
 # ethr DID Resolver
+
+[![codecov](https://codecov.io/gh/decentralized-identity/ethr-did-resolver/branch/develop/graph/badge.svg)](https://codecov.io/gh/decentralized-identity/ethr-did-resolver)
+[![CircleCI](https://circleci.com/gh/decentralized-identity/ethr-did-resolver.svg?style=svg)](https://circleci.com/gh/decentralized-identity/ethr-did-resolver)
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/7bcde296af8e467787b04c956c2c9f6f)](https://www.codacy.com/manual/uport-project/ethr-did-resolver?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=uport-project/ethr-did-resolver&amp;utm_campaign=Badge_Grade)
+
 
 This library is intended to use ethereum addresses as fully self managed [Decentralized Identifiers](https://w3c-ccg.github.io/did-spec/#decentralized-identifiers-dids) and wrap them in a [DID Document](https://w3c-ccg.github.io/did-spec/#did-documents)
 
