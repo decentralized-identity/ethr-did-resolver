@@ -8,7 +8,9 @@ source: "https://github.com/uport-project/ethr-did-registry/blob/develop/README.
 
 # Ethereum DID Registry
 
-This contract allows on-chain and off-chain resolving and management for [DIDs (Decentralized Identifiers)](https://w3c-ccg.github.io/did-spec/).
+This library contains the Ethereum contract code that allows the owner of an ethr-did identity to update the attributes that appear in its did-document.  It exposes an API that allows developers to call the contract functions using Javascript.
+
+Use this if you want to interact directly with a deployed registry contract directly, or deploy a copy of the contract to another Ethereum network.
 
 A DID is an [Identifier](https://w3c-ccg.github.io/did-spec/#decentralized-identifiers-dids) that allows you to lookup a [DID document](https://w3c-ccg.github.io/did-spec/#did-documents) that can be used to authenticate you and messages created by you.
 
