@@ -10,6 +10,11 @@
     "registry": "0xdca7ef03e98e0dc2b855be647c39abe984fcf21b"
   },
   {
+    "name": "goerli",
+    "rpcUrl": "https://goerli.infura.io/ethr-did",
+    "registry": "0xdca7ef03e98e0dc2b855be647c39abe984fcf21b"
+  },
+  {
     "name": "kovan",
     "rpcUrl": "https://kovan.infura.io/ethr-did",
     "registry": "0xdca7ef03e98e0dc2b855be647c39abe984fcf21b"
