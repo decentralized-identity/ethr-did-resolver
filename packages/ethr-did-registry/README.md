@@ -27,6 +27,7 @@ This contract allows Ethereum addresses to present signing information about the
 | Mainnet (id: 1)                     | [0xdca7ef03e98e0dc2b855be647c39abe984fcf21b](https://etherscan.io/address/0xdca7ef03e98e0dc2b855be647c39abe984fcf21b)                    |
 | Ropsten (id: 3)                     | [0xdca7ef03e98e0dc2b855be647c39abe984fcf21b](https://ropsten.etherscan.io/address/0xdca7ef03e98e0dc2b855be647c39abe984fcf21b)            |
 | Rinkeby (id: 4)                     | [0xdca7ef03e98e0dc2b855be647c39abe984fcf21b](https://rinkeby.etherscan.io/address/0xdca7ef03e98e0dc2b855be647c39abe984fcf21b)            |
+| Goerli (id: 5)                     | [0xdca7ef03e98e0dc2b855be647c39abe984fcf21b](https://goerli.etherscan.io/address/0xdca7ef03e98e0dc2b855be647c39abe984fcf21b)             |
 | Kovan (id: 42)                      | [0xdca7ef03e98e0dc2b855be647c39abe984fcf21b](https://kovan.etherscan.io/address/0xdca7ef03e98e0dc2b855be647c39abe984fcf21b)              |
 | RSK (id: 30)                        | [0xdca7ef03e98e0dc2b855be647c39abe984fcf21b](https://explorer.rsk.co/address/0xdca7ef03e98e0dc2b855be647c39abe984fcf21b)                 |
 | RSK Testnet (id: 31)                | [0xdca7ef03e98e0dc2b855be647c39abe984fcf21b](https://explorer.testnet.rsk.co/address/0xdca7ef03e98e0dc2b855be647c39abe984fcf21b)         |
