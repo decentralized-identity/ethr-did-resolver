@@ -120,17 +120,17 @@ Validity is set using the number of seconds from the time that adding the delega
 
 ### Looking up a Delegate
 
-You can check to see if an address is a delegate for an identity using the`validDelegate(address identity, string delegateType, address delegate) returns(bool)` function. This returns true if the address is a valid delegate of the given delegateType.
+You can check to see if an address is a delegate for an identity using the`validDelegate(address identity, bytes32 delegateType, address delegate) returns(bool)` function. This returns true if the address is a valid delegate of the given delegateType.
 
 ### Adding a Delegate
 
 An identity can assign multiple delegates to manage signing on their behalf for specific purposes.
 
-The account owner can call the `addDelegate(address identity, string delegateType, address delegate, uint validity)` function.
+The account owner can call the `addDelegate(address identity, bytes32 delegateType, address delegate, uint validity)` function.
 
 There is also a version of this function which is called with an externally created signature, that is passed to a transaction funding service.
 
-The externally signed version has the following signature `addDelegateSigned(address identity, uint8 sigV, bytes32 sigR, bytes32 sigS, string delegateType, address delegate, uint validity)`.
+The externally signed version has the following signature `addDelegateSigned(address identity, uint8 sigV, bytes32 sigR, bytes32 sigS, bytes32 delegateType, address delegate, uint validity)`.
 
 The signature should be signed of the keccak256 hash of the following tightly packed parameters:
 
@@ -142,7 +142,7 @@ A delegate may be manually revoked by calling the `revokeDelegate(address identi
 
 There is also a version of this function which is called with an externally created signature, that is passed to a transaction funding service.
 
-The externally signed version has the following signature `revokeDelegateSigned(address identity, uint8 sigV, bytes32 sigR, bytes32 sigS, string delegateType, address delegate)`.
+The externally signed version has the following signature `revokeDelegateSigned(address identity, uint8 sigV, bytes32 sigR, bytes32 sigS, bytes32 delegateType, address delegate)`.
 
 The signature should be signed of the keccak256 hash of the following tightly packed parameters:
 
@@ -155,7 +155,7 @@ Attributes are stored as `DIDDelegateChanged` events. A `validTo` of 0 indicates
 ```solidity
 event DIDDelegateChanged(
     address indexed identity,
-    string delegateType,
+    bytes32 delegateType,
     address delegate,
     uint validTo,
     uint previousChange
@@ -168,11 +168,11 @@ An identity may need to publish some information that is only needed off-chain b
 
 ### Setting Attributes
 
-These attributes are set using the `setAttribute(address identity, string name, bytes value, uint validity)` function and published using events.
+These attributes are set using the `setAttribute(address identity, bytes32 name, bytes value, uint validity)` function and published using events.
 
 There is also a version of this function that is called with an externally created signature, that is passed to a transaction funding service.
 
-The externally signed version has the following signature `setAttributeSigned(address identity, uint8 sigV, bytes32 sigR, bytes32 sigS, string name, bytes value, uint validity)`.
+The externally signed version has the following signature `setAttributeSigned(address identity, uint8 sigV, bytes32 sigR, bytes32 sigS, bytes32 name, bytes value, uint validity)`.
 
 The signature should be signed off the keccak256 hash of the following tightly packed parameters:
 
@@ -180,11 +180,11 @@ The signature should be signed off the keccak256 hash of the following tightly p
 
 ### Revoking Attributes
 
-These attributes are revoked using the `revokeAttribute(address identity, string name, bytes value)` function and published using events.
+These attributes are revoked using the `revokeAttribute(address identity, bytes32 name, bytes value)` function and published using events.
 
 There is also a version of this function that is called with an externally created signature, that is passed to a transaction funding service.
 
-The externally signed version has the following signature `revokeAttributeSigned(address identity, uint8 sigV, bytes32 sigR, bytes32 sigS, string name, bytes value)`.
+The externally signed version has the following signature `revokeAttributeSigned(address identity, uint8 sigV, bytes32 sigR, bytes32 sigS, bytes32 name, bytes value)`.
 
 The signature should be signed off the keccak256 hash of the following tightly packed parameters:
 
@@ -197,12 +197,18 @@ Attributes are stored as `DIDAttributeChanged` events. A `validTo` of 0 indicate
 ```solidity
 event DIDAttributeChanged(
     address indexed identity,
-    string name,
+    bytes32 name,
     bytes value,
     uint validTo,
     uint previousChange
   );
 ```
+
+### Delegate types and attribute names encoding
+
+For gas cost reasons the names of attributes and types of delegates are fixed size `bytes32` values.
+In most situations, this is not a problem since most can be represented by strings shorter than 32 bytes.
+To get a bytes32 value from them, the recommended approach is to use the byte array representation of your string and right-pad it to get to 32 bytes.
 
 ## Enumerating Linked Identity Events
 
