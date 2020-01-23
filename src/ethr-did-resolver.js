@@ -202,14 +202,13 @@ function configureNetworks (networksConf = []) {
   return networks
 }
 
-function validateNetworksAgainstConfig(networks = {}, conf = {}) {
+function validateNetworksAgainstConfig (networks = {}, conf = {}) {
   if (conf.provider || conf.web3 || conf.rpcUrl) {
-    if (networks["mainnet"] === null) {
-      throw new Error("Ethereum provider configuration for mainnet was attempted but no valid configuration was provided.")
+    if (networks['mainnet'] === null) {
+      throw new Error('Ethereum provider configuration for mainnet was attempted but no valid configuration was provided.')
     }
   }
 
-  //if conf.networks => validate each network in the input was actually configured
   if (conf && conf.networks) {
     for (const expectedNet of conf.networks) {
       if (!networks[expectedNet.name]) {
@@ -225,7 +224,7 @@ function validateNetworksAgainstConfig(networks = {}, conf = {}) {
     }
   }
 
-  if (count == 0) {
+  if (count === 0) {
     throw new Error('EthrDIDResolver requires a provider configuration for at least one network')
   }
 }
