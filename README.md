@@ -19,15 +19,21 @@ It supports the proposed [Decentralized Identifiers](https://w3c-ccg.github.io/d
 
 It requires the `did-resolver` library, which is the primary interface for resolving DIDs.
 
-The DID method relies on the [ethr-did-registry](https://github.com/uport-project/ethr-did-registry).
+This DID method relies on the [ethr-did-registry](https://github.com/uport-project/ethr-did-registry).
 
 ## DID method
 
-To encode a DID for an Ethereum address, simply prepend `did:ethr:`
+To encode a DID for an Ethereum address on the ethereum mainnet, simply prepend `did:ethr:`
 
 eg:
 
 `did:ethr:0xf3beac30c498d9e26865f34fcaa57dbb935b0d74`
+
+Multi-network DIDs are also supported, if the proper configuration is provided during setup.
+
+For example:
+`did:ethr:rinkeby:0xf3beac30c498d9e26865f34fcaa57dbb935b0d74` gets resolved on the rinkeby testnet, and represents a
+distinct identifier than the generic one.
 
 ## DID Document
 
