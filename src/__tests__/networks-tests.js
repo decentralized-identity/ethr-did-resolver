@@ -11,7 +11,7 @@ describe('ethrResolver (alt-chains)', () => {
   describe('eth-testnets', () => {
     it('resolves on ropsten when configured', () => {
       const did = 'did:ethr:ropsten:' + addr
-      const ethr = getResolver({networks: [{name: "ropsten", rpcUrl: "https://ropsten.infura.io/v3/6b734e0b04454df8a6ce234023c04f26"}]})
+      const ethr = getResolver({ networks: [{ name: 'ropsten', rpcUrl: 'https://ropsten.infura.io/v3/6b734e0b04454df8a6ce234023c04f26' }] })
       const resolver = new Resolver(ethr)
       return expect(resolver.resolve(did)).resolves.toEqual({
         '@context': 'https://w3id.org/did/v1',
@@ -35,7 +35,7 @@ describe('ethrResolver (alt-chains)', () => {
 
     it('resolves on rinkeby when configured', () => {
       const did = 'did:ethr:rinkeby:' + addr
-      const ethr = getResolver({networks: [{name: "rinkeby", rpcUrl: "https://rinkeby.infura.io/v3/6b734e0b04454df8a6ce234023c04f26"}]})
+      const ethr = getResolver({ networks: [{ name: 'rinkeby', rpcUrl: 'https://rinkeby.infura.io/v3/6b734e0b04454df8a6ce234023c04f26' }] })
       const resolver = new Resolver(ethr)
       return expect(resolver.resolve(did)).resolves.toEqual({
         '@context': 'https://w3id.org/did/v1',
@@ -59,7 +59,7 @@ describe('ethrResolver (alt-chains)', () => {
 
     it('resolves on kovan when configured', () => {
       const did = 'did:ethr:kovan:' + addr
-      const ethr = getResolver({networks: [{name: "kovan", rpcUrl: "https://kovan.infura.io/v3/6b734e0b04454df8a6ce234023c04f26"}]})
+      const ethr = getResolver({ networks: [{ name: 'kovan', rpcUrl: 'https://kovan.infura.io/v3/6b734e0b04454df8a6ce234023c04f26' }] })
       const resolver = new Resolver(ethr)
       return expect(resolver.resolve(did)).resolves.toEqual({
         '@context': 'https://w3id.org/did/v1',
@@ -83,7 +83,7 @@ describe('ethrResolver (alt-chains)', () => {
 
     it('resolves on rsk when configured', () => {
       const did = 'did:ethr:rsk:' + addr
-      const ethr = getResolver({networks: [{name: "rsk", rpcUrl: "https://did.rsk.co:4444"}]})
+      const ethr = getResolver({ networks: [{ name: 'rsk', rpcUrl: 'https://did.rsk.co:4444' }] })
       const resolver = new Resolver(ethr)
       return expect(resolver.resolve(did)).resolves.toEqual({
         '@context': 'https://w3id.org/did/v1',
@@ -107,7 +107,7 @@ describe('ethrResolver (alt-chains)', () => {
 
     it.skip('resolves on rsk:testnet when configured', () => {
       const did = 'did:ethr:rsk:testnet:' + addr
-      const ethr = getResolver({networks: [{name: "rsk", rpcUrl: "https://did.testnet.rsk.co:4444"}]})
+      const ethr = getResolver({ networks: [{ name: 'rsk', rpcUrl: 'https://did.testnet.rsk.co:4444' }] })
       const resolver = new Resolver(ethr)
       return expect(resolver.resolve(did)).resolves.toEqual({
         '@context': 'https://w3id.org/did/v1',
