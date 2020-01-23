@@ -5,7 +5,6 @@ import BN from 'bn.js'
 import EthContract from 'ethjs-contract'
 import DidRegistryContract from '../contracts/ethr-did-registry.json'
 import { Buffer } from 'buffer'
-import networksJson from './networks.json'
 const REGISTRY = '0xdca7ef03e98e0dc2b855be647c39abe984fcf21b'
 
 function bytes32toString (bytes32) {
@@ -171,13 +170,18 @@ function configureProvider (conf = {}) {
     return conf.provider
   } else if (conf.web3) {
     return conf.web3.currentProvider
+  } else if (conf.rpcUrl) {
+    return new HttpProvider(conf.rpcUrl)
   } else {
-    return new HttpProvider(conf.rpcUrl || 'https://mainnet.infura.io/ethr-did')
+    return null
   }
 }
 
 function configureNetwork (conf = {}) {
   const provider = configureProvider(conf)
+  if (provider === null) {
+    return null
+  }
   const eth = new Eth(provider)
   const registryAddress = conf.registry || REGISTRY
   const DidReg = new EthContract(eth)(DidRegistryContract)
@@ -191,8 +195,39 @@ function configureNetworks (networksConf = []) {
   for (let i = 0; i < networksConf.length; i++) {
     const net = networksConf[i]
     networks[net.name] = configureNetwork(net)
+    if (networks[net.name] === null) {
+      console.warn(`invalid configuration for ${net.name}`)
+    }
   }
   return networks
+}
+
+function validateNetworksAgainstConfig(networks = {}, conf = {}) {
+  if (conf.provider || conf.web3 || conf.rpcUrl) {
+    if (networks["mainnet"] === null) {
+      throw new Error("Ethereum provider configuration for mainnet was attempted but no valid configuration was provided.")
+    }
+  }
+
+  //if conf.networks => validate each network in the input was actually configured
+  if (conf && conf.networks) {
+    for (const expectedNet of conf.networks) {
+      if (!networks[expectedNet.name]) {
+        throw new Error(`Ethereum provider configuration for ${expectedNet.name} was attempted but no valid configuration was provided`)
+      }
+    }
+  }
+
+  let count = 0
+  for (const net of Object.keys(networks)) {
+    if (networks[net] !== null) {
+      count++
+    }
+  }
+
+  if (count == 0) {
+    throw new Error('EthrDIDResolver requires a provider configuration for at least one network')
+  }
 }
 
 function getResolver (conf = {}) {
@@ -200,9 +235,10 @@ function getResolver (conf = {}) {
 
   const networks = {
     mainnet: configureNetwork(conf),
-    ...configureNetworks(networksJson),
     ...configureNetworks(conf.networks)
   }
+
+  validateNetworksAgainstConfig(networks, conf)
 
   const lastChanged = async (identity, networkId) => {
     const result = await networks[networkId].didReg.changed(identity)
