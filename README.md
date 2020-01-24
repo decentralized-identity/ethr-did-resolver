@@ -19,15 +19,21 @@ It supports the proposed [Decentralized Identifiers](https://w3c-ccg.github.io/d
 
 It requires the `did-resolver` library, which is the primary interface for resolving DIDs.
 
-The DID method relies on the [ethr-did-registry](https://github.com/uport-project/ethr-did-registry).
+This DID method relies on the [ethr-did-registry](https://github.com/uport-project/ethr-did-registry).
 
 ## DID method
 
-To encode a DID for an Ethereum address, simply prepend `did:ethr:`
+To encode a DID for an Ethereum address on the ethereum mainnet, simply prepend `did:ethr:`
 
 eg:
 
 `did:ethr:0xf3beac30c498d9e26865f34fcaa57dbb935b0d74`
+
+Multi-network DIDs are also supported, if the proper configuration is provided during setup.
+
+For example:
+`did:ethr:rinkeby:0xf3beac30c498d9e26865f34fcaa57dbb935b0d74` gets resolved on the rinkeby testnet, and represents a
+distinct identifier than the generic one.
 
 ## DID Document
 
@@ -35,7 +41,7 @@ The did resolver takes the ethereum address, checks for the current owner, looks
 
 The minimal DID document for a an ethereum address `0xb9c5714089478a327f09197987f16f9e5d936e8a` with no transactions to the registry looks like this:
 
-```js
+```javascript
 {
   '@context': 'https://w3id.org/did/v1',
   id: 'did:ethr:0xb9c5714089478a327f09197987f16f9e5d936e8a',
@@ -145,7 +151,7 @@ The name of the attribute should follow this format:
 
 A `DIDAttributeChanged` event for the identity `0xf3beac30c498d9e26865f34fcaa57dbb935b0d74` with the name `did/pub/Secp256k1/veriKey/hex` and the value of `0x02b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71` generates a `PublicKey` entry like this:
 
-```js
+```javascript
 {
   id: "did:ethr:0xf3beac30c498d9e26865f34fcaa57dbb935b0d74#delegate-1",
   type: "Secp256k1VerificationKey2018",
@@ -158,7 +164,7 @@ A `DIDAttributeChanged` event for the identity `0xf3beac30c498d9e26865f34fcaa57d
 
 A `DIDAttributeChanged` event for the identity `0xf3beac30c498d9e26865f34fcaa57dbb935b0d74` with the name `did/pub/Ed25519/veriKey/base64` and the value of `0xb97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71` generates a `PublicKey` entry like this:
 
-```js
+```javascript
 {
   id: "did:ethr:0xf3beac30c498d9e26865f34fcaa57dbb935b0d74#delegate-1",
   type: "Ed25519VerificationKey2018",
@@ -179,7 +185,7 @@ The name of the attribute should follow this format:
 
 A `DIDAttributeChanged` event for the identity `0xf3beac30c498d9e26865f34fcaa57dbb935b0d74` with the name `did/svc/HubService` and value of the url `https://hubs.uport.me` hex encoded as `0x68747470733a2f2f687562732e75706f72742e6d65` generates a `Service` entry like this:
 
-```js
+```javascript
 {
   type: "HubService",
   serviceEndpoint: "https://hubs.uport.me"
@@ -188,9 +194,12 @@ A `DIDAttributeChanged` event for the identity `0xf3beac30c498d9e26865f34fcaa57d
 
 ## Resolving a DID document
 
-The resolver presents a simple `resolver()` function that returns a ES6 Promise returning the DID document.
+The library presents a `resolver()` function that returns a ES6 Promise returning the DID document.
+It is not meant to be used directly but through the [`did-resolver`](https://github.com/decentralized-identity/did-resolver) aggregator.
+You can use the `getResolver(conf)` method to produce an entry that can be used with the `Resolver`
+constructor.
 
-```js
+```javascript
 import { Resolver } from 'did-resolver'
 import getResolver from 'ethr-did-resolver'
 
@@ -207,3 +216,33 @@ didResolver.resolve('did:ethr:0xf3beac30c498d9e26865f34fcaa57dbb935b0d74').then(
 // You can also use ES7 async/await syntax
 const doc = await didResolver.resolve('did:ethr:0xf3beac30c498d9e26865f34fcaa57dbb935b0d74')
 ```
+
+## Multi-network configuration
+
+An example configuration for multi-network DID resolving would look like this:
+
+```javascript
+const providerConfig = {
+  networks: [
+    { name: "mainnet", provider: web3.currentProvider },
+    { name: "0x4", rpcUrl: "https://rinkeby.infura.io/v3/<YOUR PROJECT ID>" }
+    { name: "rsk:testnet", registry: "0xdca7ef03e98e0dc2b855be647c39abe984fcf21b", rpcUrl: "https://did.testnet.rsk.co:4444" }
+    { name: "development", rpcUrl: "http://localhost:7545" }
+  ]
+}
+
+const ethrDidResolver = getResolver(providerConfig)
+```
+
+This allows you to resolve ethr-did's of the formats:
+* `did:ethr:0xabcabc03e98e0dc2b855be647c39abe984193675` (uses mainnet configuration)
+* `did:ethr:mainnet:0xabcabc03e98e0dc2b855be647c39abe984193675`
+* `did:ethr:0x4:0xabcabc03e98e0dc2b855be647c39abe984193675`
+* `did:ethr:development:0xabcabc03e98e0dc2b855be647c39abe984193675`
+* `did:ethr:rsk:testnet:0xabcabc03e98e0dc2b855be647c39abe984193675`
+
+For each network you can specify either an `rpcUrl`, a `provider` or a `web3` instance that can be used to access that particular network.
+
+These providers will have to support and `eth_call`, `eth_getLogs` to be able to resolve DIDs specific to that network. 
+
+You can also override the default registry address by specifying a `registry` attribute per network.
