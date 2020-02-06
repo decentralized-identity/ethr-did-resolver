@@ -117,7 +117,7 @@ no interaction with the target Ethereum network is required. The registration is
 brute force an Ethereum address, i.e., guessing the private key for a given public key on the Koblitz Curve
 (secp256k). The holder of the private key is the entity identified by the DID.
 
-The minimal DID document for a an Ethereum address, e.g., `0xf3beac30c498d9e26865f34fcaa57dbb935b0d74` with no
+The minimal DID document for an Ethereum address, e.g., `0xf3beac30c498d9e26865f34fcaa57dbb935b0d74` with no
 transactions to the ERC1056 registry looks like this:
 
   {
