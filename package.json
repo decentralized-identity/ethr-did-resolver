@@ -1,6 +1,6 @@
 {
   "name": "ethr-did-resolver",
-  "version": "1.0.2-dev",
+  "version": "1.0.3-dev",
   "description": "Resolve DID documents around ethereum addresses",
   "main": "dist/ethr-did-resolver.js",
   "source": "src/ethr-did-resolver.js",
@@ -10,6 +10,7 @@
     "url": "https://github.com/uport-project/ethr-did-resolver.git"
   },
   "files": [
+    "index.d.ts",
     "dist",
     "lib",
     "contracts",
