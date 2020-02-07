@@ -4,6 +4,7 @@
   "description": "Resolve DID documents around ethereum addresses",
   "main": "dist/ethr-did-resolver.js",
   "source": "src/ethr-did-resolver.js",
+  "types": "index.d.ts",
   "repository": {
     "type": "git",
     "url": "https://github.com/uport-project/ethr-did-resolver.git"
