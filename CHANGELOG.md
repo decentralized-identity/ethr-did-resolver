@@ -1,3 +1,10 @@
+# [2.1.0](https://github.com/uport-project/ethr-did-resolver/compare/2.0.0...2.1.0) (2020-02-10)
+
+
+### Features
+
+* Add types declaration stubb ([05944b1](https://github.com/uport-project/ethr-did-resolver/commit/05944b16f51c33814bdc146a9d8629cb04e6a5fd))
+
 # [2.0.0](https://github.com/uport-project/ethr-did-resolver/compare/1.0.3...2.0.0) (2020-01-24)
 
 
