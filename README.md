@@ -145,11 +145,25 @@ While any attribute can be stored. For the DID document we currently support add
 
 The name of the attribute should follow this format:
 
-`did/pub/(Secp256k1|RSA|Ed25519)/(veriKey|sigAuth)/(hex|base64)`
+`did/pub/(Secp256k1|RSA|Ed25519|X25519)/(veriKey|sigAuth|enc)/(hex|base64)`
 
-#### Hex encoded Secp256k1 Verification Key
+(Essentially `did/pub/<key algorithm>/<key purpose>/<encoding>`)
 
-A `DIDAttributeChanged` event for the identity `0xf3beac30c498d9e26865f34fcaa57dbb935b0d74` with the name `did/pub/Secp256k1/veriKey/hex` and the value of `0x02b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71` generates a `PublicKey` entry like this:
+#### Key purposes
+
+- `veriKey` adds a `<key algorithm>VerificationKey2018` to the `publicKey` section of document
+- `sigAuth` adds a `<key algorithm>SignatureAuthentication2018` to the `publicKey` section of document. An entry is also added to the `authentication` section of document.
+- `enc` adds a `<key algorithm>KeyAgreementKey2019` to the `publicKey` section.
+  This is used to perform a Diffie-Hellman key exchange and derive a secret key for encrypting messages to the DID that lists such a key.
+
+> **Note** The `<encoding>` only refers to the key encoding in the resolved DID document.
+> Attribute values should always be hex encoded.
+
+#### Example hex encoded Secp256k1 Verification Key
+
+A `DIDAttributeChanged` event for the identity `0xf3beac30c498d9e26865f34fcaa57dbb935b0d74` with the name
+`did/pub/Secp256k1/veriKey/hex` and the value of `0x02b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71`
+generates a `PublicKey` entry like this:
 
 ```javascript
 {
@@ -162,7 +176,9 @@ A `DIDAttributeChanged` event for the identity `0xf3beac30c498d9e26865f34fcaa57d
 
 #### Base64 encoded Ed25519 Verification Key
 
-A `DIDAttributeChanged` event for the identity `0xf3beac30c498d9e26865f34fcaa57dbb935b0d74` with the name `did/pub/Ed25519/veriKey/base64` and the value of `0xb97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71` generates a `PublicKey` entry like this:
+A `DIDAttributeChanged` event for the identity `0xf3beac30c498d9e26865f34fcaa57dbb935b0d74` with the name
+`did/pub/Ed25519/veriKey/base64` and the value of
+`0xb97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71` generates a `PublicKey` entry like this:
 
 ```javascript
 {
@@ -170,6 +186,22 @@ A `DIDAttributeChanged` event for the identity `0xf3beac30c498d9e26865f34fcaa57d
   type: "Ed25519VerificationKey2018",
   owner: "did:ethr:0xf3beac30c498d9e26865f34fcaa57dbb935b0d74",
   publicKeyBase64: "uXww3nZ/CEzjCAFo7ikwU7ozsjXXEWoyY9KfFFCTa3E="
+}
+```
+
+#### Base64 encoded X25519 Encryption Key
+
+A `DIDAttributeChanged` event for the identity `0xf3beac30c498d9e26865f34fcaa57dbb935b0d74` with the name
+`did/pub/X25519/enc/base64` and the value of
+`0x302a300506032b656e032100118557777ffb078774371a52b00fed75561dcf975e61c47553e664a617661052`
+generates a `PublicKey` entry like this:
+
+```javascript
+{
+  id: "did:ethr:0xf3beac30c498d9e26865f34fcaa57dbb935b0d74#delegate-1",
+  type: "X25519KeyAgreementKey2019",
+  owner: "did:ethr:0xf3beac30c498d9e26865f34fcaa57dbb935b0d74",
+  publicKeyBase64: "MCowBQYDK2VuAyEAEYVXd3/7B4d0NxpSsA/tdVYdz5deYcR1U+ZkphdmEFI="
 }
 ```
 
@@ -183,7 +215,9 @@ The name of the attribute should follow this format:
 
 #### Hex encoded Secp256k1 Verification Key
 
-A `DIDAttributeChanged` event for the identity `0xf3beac30c498d9e26865f34fcaa57dbb935b0d74` with the name `did/svc/HubService` and value of the url `https://hubs.uport.me` hex encoded as `0x68747470733a2f2f687562732e75706f72742e6d65` generates a `Service` entry like this:
+A `DIDAttributeChanged` event for the identity `0xf3beac30c498d9e26865f34fcaa57dbb935b0d74` with the name
+`did/svc/HubService` and value of the url `https://hubs.uport.me` hex encoded as
+`0x68747470733a2f2f687562732e75706f72742e6d65` generates a `Service` entry like this:
 
 ```javascript
 {
@@ -195,7 +229,8 @@ A `DIDAttributeChanged` event for the identity `0xf3beac30c498d9e26865f34fcaa57d
 ## Resolving a DID document
 
 The library presents a `resolver()` function that returns a ES6 Promise returning the DID document.
-It is not meant to be used directly but through the [`did-resolver`](https://github.com/decentralized-identity/did-resolver) aggregator.
+It is not meant to be used directly but through the
+[`did-resolver`](https://github.com/decentralized-identity/did-resolver) aggregator.
 You can use the `getResolver(conf)` method to produce an entry that can be used with the `Resolver`
 constructor.
 
