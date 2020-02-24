@@ -507,6 +507,51 @@ describe('ethrResolver', () => {
           })
         })
       })
+
+      describe('X25519KeyAgreementKey2019', () => {
+        let identity1, did1
+
+        beforeAll(async () => {
+          const accounts = await getAccounts()
+          identity1 = accounts[5]
+          did1 = `did:ethr:${identity1}`
+
+          await registry.setAttribute(
+            identity1,
+            stringToBytes32('did/pub/X25519/enc/base64'),
+            `0x${Buffer.from('MCowBQYDK2VuAyEAEYVXd3/7B4d0NxpSsA/tdVYdz5deYcR1U+ZkphdmEFI=', 'base64').toString('hex')}`,
+            86400,
+            { from: identity1 }
+          )
+        })
+
+        it('resolves document', () => {
+          return expect(didResolver.resolve(did1)).resolves.toEqual({
+            '@context': 'https://w3id.org/did/v1',
+            id: did1,
+            publicKey: [
+              {
+                id: `${did1}#owner`,
+                type: 'Secp256k1VerificationKey2018',
+                owner: did1,
+                ethereumAddress: identity1
+              },
+              {
+                id: `${did1}#delegate-1`,
+                type: 'X25519KeyAgreementKey2019',
+                owner: did1,
+                publicKeyBase64: 'MCowBQYDK2VuAyEAEYVXd3/7B4d0NxpSsA/tdVYdz5deYcR1U+ZkphdmEFI='
+              }
+            ],
+            authentication: [
+              {
+                type: 'Secp256k1SignatureAuthentication2018',
+                publicKey: `${did1}#owner`
+              }
+            ]
+          })
+        })
+      })
     })
 
     describe('add service endpoints', () => {
