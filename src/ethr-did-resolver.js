@@ -29,7 +29,8 @@ const delegateTypes = {
 
 const attrTypes = {
   sigAuth: 'SignatureAuthentication2018',
-  veriKey: 'VerificationKey2018'
+  veriKey: 'VerificationKey2018',
+  enc: 'KeyAgreementKey2019'
 }
 
 function wrapDidDocument (did, owner, history) {
