@@ -1,3 +1,10 @@
+# [2.2.0](https://github.com/uport-project/ethr-did-resolver/compare/2.1.0...2.2.0) (2020-02-25)
+
+
+### Features
+
+* add encryption key support for ethr-did-documents ([dff7b0f](https://github.com/uport-project/ethr-did-resolver/commit/dff7b0f3efe562be315aa636ddb3ab3e4fded486)), closes [#52](https://github.com/uport-project/ethr-did-resolver/issues/52)
+
 # [2.1.0](https://github.com/uport-project/ethr-did-resolver/compare/2.0.0...2.1.0) (2020-02-10)
 
 
