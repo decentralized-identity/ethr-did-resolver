@@ -7,7 +7,7 @@
 ## Preface
 
 The ethr DID method specification conforms to the requirements specified in 
-the [DID specification](https://w3c-ccg.github.io/did-spec/), currently published by the 
+the [DID specification](https://w3c-ccg.github.io/did-core/), currently published by the 
 W3C Credentials Community Group. For more information about DIDs and DID method specifications, 
 please see the [DID Primer](https://github.com/WebOfTrustInfo/rebooting-the-web-of-trust-fall2017/blob/master/topics-and-advance-readings/did-primer.md)
 
@@ -298,7 +298,7 @@ of this DID method.
 
 ## References
 
- **[1]** <https://w3c-ccg.github.io/did-spec/>
+ **[1]** <https://w3c-ccg.github.io/did-core/>
 
  **[2]** <https://github.com/ethereum/EIPs/issues/1056> 
 
