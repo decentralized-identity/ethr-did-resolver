@@ -76,9 +76,9 @@ The definition of the ethr DID JSON-LD context is:
   {
     "@context":
     {
-      "ethereumAddress": "https://github.com/uport-project/ethr-did-resolver#ethereumAddress",
-      "Secp256k1VerificationKey2018": "https://github.com/uport-project/ethr-did-resolver#Secp256k1VerificationKey2018",
-      "Secp256k1SignatureAuthentication2018": "https://github.com/uport-project/ethr-did-resolver#Secp256k1VerificationKey2018",
+      "ethereumAddress": "https://github.com/decentralized-identity/ethr-did-resolver#ethereumAddress",
+      "Secp256k1VerificationKey2018": "https://github.com/decentralized-identity/ethr-did-resolver#Secp256k1VerificationKey2018",
+      "Secp256k1SignatureAuthentication2018": "https://github.com/decentralized-identity/ethr-did-resolver#Secp256k1VerificationKey2018",
     }
   }
 
@@ -302,4 +302,4 @@ of this DID method.
 
  **[2]** <https://github.com/ethereum/EIPs/issues/1056> 
 
- **[3]** <https://github.com/uport-project/ethr-did-resolver>
+ **[3]** <https://github.com/decentralized-identity/ethr-did-resolver>
