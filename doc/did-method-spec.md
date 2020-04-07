@@ -293,7 +293,7 @@ Two cases need to be distinguished:
 
 ## Reference Implementations
 
-The code at [https://github.com/uport-project/ethr-did-resolver](<>) is intended to present a reference implementation
+The code at [https://github.com/decentralized-identity/ethr-did-resolver](<>) is intended to present a reference implementation
 of this DID method. 
 
 ## References
