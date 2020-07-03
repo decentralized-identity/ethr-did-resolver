@@ -1,7 +1,18 @@
 {
-  "extends": "standard",
-  "plugins": ["jest"],
-  "env": {
-    "jest/globals": true
-  }
+    "env": {
+        "browser": true,
+        "es2020": true,
+        "node": true,
+        "jest": true
+    },
+    "extends": [
+        "standard"
+    ],
+    "parserOptions": {
+        "ecmaVersion": 11,
+        "sourceType": "module"
+    },
+    "rules": {
+        "space-before-function-paren": ["off"]
+    }
 }

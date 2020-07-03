@@ -82,7 +82,7 @@ function wrapDidDocument(did, owner, history) {
           const type = attrTypes[match[4]] || match[4]
           const encoding = match[6]
           switch (section) {
-            case 'pub':
+            case 'pub': {
               delegateCount++
               const pk = {
                 id: `${did}#delegate-${delegateCount}`,
@@ -109,6 +109,7 @@ function wrapDidDocument(did, owner, history) {
               }
               pks[key] = pk
               break
+            }
             case 'svc':
               services[key] = {
                 type: algo,
@@ -185,7 +186,7 @@ function configureNetworks(networksConf = []) {
 
 function validateNetworksAgainstConfig(networks = {}, conf = {}) {
   if (conf.provider || conf.web3 || conf.rpcUrl) {
-    if (networks['mainnet'] === null) {
+    if (!networks.mainnet) {
       throw new Error(
         'Ethereum provider configuration for mainnet was attempted but no valid configuration was provided.'
       )
