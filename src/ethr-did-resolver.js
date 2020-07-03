@@ -7,18 +7,12 @@ import DidRegistryContract from '../contracts/ethr-did-registry.json'
 import { Buffer } from 'buffer'
 const REGISTRY = '0xdca7ef03e98e0dc2b855be647c39abe984fcf21b'
 
-function bytes32toString (bytes32) {
-  return Buffer.from(bytes32.slice(2), 'hex')
-    .toString('utf8')
-    .replace(/\0+$/, '')
+function bytes32toString(bytes32) {
+  return Buffer.from(bytes32.slice(2), 'hex').toString('utf8').replace(/\0+$/, '')
 }
 
-function stringToBytes32 (str) {
-  const buffstr =
-    '0x' +
-    Buffer.from(str)
-      .slice(0, 32)
-      .toString('hex')
+function stringToBytes32(str) {
+  const buffstr = '0x' + Buffer.from(str).slice(0, 32).toString('hex')
   return buffstr + '0'.repeat(66 - buffstr.length)
 }
 
@@ -33,7 +27,7 @@ const attrTypes = {
   enc: 'KeyAgreementKey2019'
 }
 
-function wrapDidDocument (did, owner, history) {
+function wrapDidDocument(did, owner, history) {
   const now = new BN(Math.floor(new Date().getTime() / 1000))
   // const expired = {}
   const publicKey = [
@@ -58,8 +52,7 @@ function wrapDidDocument (did, owner, history) {
   const services = {}
   for (const event of history) {
     const validTo = event.validTo
-    const key = `${event._eventName}-${event.delegateType ||
-      event.name}-${event.delegate || event.value}`
+    const key = `${event._eventName}-${event.delegateType || event.name}-${event.delegate || event.value}`
     if (validTo && validTo.gte(now)) {
       if (event._eventName === 'DIDDelegateChanged') {
         delegateCount++
@@ -82,9 +75,7 @@ function wrapDidDocument (did, owner, history) {
         }
       } else if (event._eventName === 'DIDAttributeChanged') {
         const name = bytes32toString(event.name)
-        const match = name.match(
-          /^did\/(pub|auth|svc)\/(\w+)(\/(\w+))?(\/(\w+))?$/
-        )
+        const match = name.match(/^did\/(pub|auth|svc)\/(\w+)(\/(\w+))?(\/(\w+))?$/)
         if (match) {
           const section = match[1]
           const algo = match[2]
@@ -105,22 +96,13 @@ function wrapDidDocument (did, owner, history) {
                   pk.publicKeyHex = event.value.slice(2)
                   break
                 case 'base64':
-                  pk.publicKeyBase64 = Buffer.from(
-                    event.value.slice(2),
-                    'hex'
-                  ).toString('base64')
+                  pk.publicKeyBase64 = Buffer.from(event.value.slice(2), 'hex').toString('base64')
                   break
                 case 'base58':
-                  pk.publicKeyBase58 = Buffer.from(
-                    event.value.slice(2),
-                    'hex'
-                  ).toString('base58')
+                  pk.publicKeyBase58 = Buffer.from(event.value.slice(2), 'hex').toString('base58')
                   break
                 case 'pem':
-                  pk.publicKeyPem = Buffer.from(
-                    event.value.slice(2),
-                    'hex'
-                  ).toString()
+                  pk.publicKeyPem = Buffer.from(event.value.slice(2), 'hex').toString()
                   break
                 default:
                   pk.value = event.value
@@ -130,10 +112,7 @@ function wrapDidDocument (did, owner, history) {
             case 'svc':
               services[key] = {
                 type: algo,
-                serviceEndpoint: Buffer.from(
-                  event.value.slice(2),
-                  'hex'
-                ).toString()
+                serviceEndpoint: Buffer.from(event.value.slice(2), 'hex').toString()
               }
               break
           }
@@ -143,10 +122,11 @@ function wrapDidDocument (did, owner, history) {
       if (
         delegateCount > 0 &&
         (event._eventName === 'DIDDelegateChanged' ||
-          (event._eventName === 'DIDAttributeChanged' &&
-            bytes32toString(event.name).match(/^did\/pub\//))) &&
+          (event._eventName === 'DIDAttributeChanged' && bytes32toString(event.name).match(/^did\/pub\//))) &&
         validTo.lt(now)
-      ) { delegateCount-- }
+      ) {
+        delegateCount--
+      }
       delete auth[key]
       delete pks[key]
       delete services[key]
@@ -166,7 +146,7 @@ function wrapDidDocument (did, owner, history) {
   return doc
 }
 
-function configureProvider (conf = {}) {
+function configureProvider(conf = {}) {
   if (conf.provider) {
     return conf.provider
   } else if (conf.web3) {
@@ -178,7 +158,7 @@ function configureProvider (conf = {}) {
   }
 }
 
-function configureNetwork (conf = {}) {
+function configureNetwork(conf = {}) {
   const provider = configureProvider(conf)
   if (provider === null) {
     return null
@@ -191,7 +171,7 @@ function configureNetwork (conf = {}) {
   return { eth, registryAddress, didReg }
 }
 
-function configureNetworks (networksConf = []) {
+function configureNetworks(networksConf = []) {
   const networks = {}
   for (let i = 0; i < networksConf.length; i++) {
     const net = networksConf[i]
@@ -203,17 +183,21 @@ function configureNetworks (networksConf = []) {
   return networks
 }
 
-function validateNetworksAgainstConfig (networks = {}, conf = {}) {
+function validateNetworksAgainstConfig(networks = {}, conf = {}) {
   if (conf.provider || conf.web3 || conf.rpcUrl) {
     if (networks['mainnet'] === null) {
-      throw new Error('Ethereum provider configuration for mainnet was attempted but no valid configuration was provided.')
+      throw new Error(
+        'Ethereum provider configuration for mainnet was attempted but no valid configuration was provided.'
+      )
     }
   }
 
   if (conf && conf.networks) {
     for (const expectedNet of conf.networks) {
       if (!networks[expectedNet.name]) {
-        throw new Error(`Ethereum provider configuration for ${expectedNet.name} was attempted but no valid configuration was provided`)
+        throw new Error(
+          `Ethereum provider configuration for ${expectedNet.name} was attempted but no valid configuration was provided`
+        )
       }
     }
   }
@@ -230,7 +214,7 @@ function validateNetworksAgainstConfig (networks = {}, conf = {}) {
   }
 }
 
-function getResolver (conf = {}) {
+function getResolver(conf = {}) {
   const logDecoder = abi.logDecoder(DidRegistryContract, false)
 
   const networks = {
@@ -246,7 +230,7 @@ function getResolver (conf = {}) {
       return result['0']
     }
   }
-  async function changeLog (identity, networkId) {
+  async function changeLog(identity, networkId) {
     const history = []
     let owner = identity
     let previousChange = await lastChanged(identity, networkId)
@@ -273,11 +257,11 @@ function getResolver (conf = {}) {
     }
     return { owner, history }
   }
-  async function resolve (did, parsed) {
+  async function resolve(did, parsed) {
     const fullId = parsed.id.match(/^(.*)?(0x[0-9a-fA-F]{40})$/)
     if (!fullId) throw new Error(`Not a valid ethr DID: ${did}`)
     const id = fullId[2]
-    const networkId = (!fullId[1]) ? 'mainnet' : fullId[1].slice(0, -1)
+    const networkId = !fullId[1] ? 'mainnet' : fullId[1].slice(0, -1)
 
     if (!networks[networkId]) throw new Error(`No conf for networkId: ${networkId}`)
 

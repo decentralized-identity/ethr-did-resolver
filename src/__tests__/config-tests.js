@@ -5,8 +5,9 @@ describe('getResolver', () => {
   const addr = '0xd0dbe9d3698738f899ccd8ee27ff2347a7faa4dd'
 
   it('throws when no configuration is provided', () => {
-    expect(() => { getResolver() })
-      .toThrow('EthrDIDResolver requires a provider configuration for at least one network')
+    expect(() => {
+      getResolver()
+    }).toThrow('EthrDIDResolver requires a provider configuration for at least one network')
   })
 
   it('throws when trying to resolve a non configured network', async () => {
