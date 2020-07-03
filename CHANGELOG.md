@@ -1,3 +1,15 @@
+# [2.3.0](https://github.com/decentralized-identity/ethr-did-resolver/compare/2.2.0...2.3.0) (2020-07-03)
+
+
+### Bug Fixes
+
+* **deps:** update dependency did-resolver to v1.1.0 ([ab47058](https://github.com/decentralized-identity/ethr-did-resolver/commit/ab470589d900f7abb97c80025405506b5ed422b8))
+
+
+### Features
+
+* add encryption key support for ethr-did-documents ([2f5825c](https://github.com/decentralized-identity/ethr-did-resolver/commit/2f5825cfa7540a470fea31c9dd89b873f659b2ec)), closes [#52](https://github.com/decentralized-identity/ethr-did-resolver/issues/52)
+
 # [2.2.0](https://github.com/uport-project/ethr-did-resolver/compare/2.1.0...2.2.0) (2020-02-25)
 
 
