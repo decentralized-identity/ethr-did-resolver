@@ -65,7 +65,7 @@
   },
   "dependencies": {
     "buffer": "^5.1.0",
-    "did-resolver": "1.0.0",
+    "did-resolver": "1.1.0",
     "ethjs-abi": "^0.2.1",
     "ethjs-contract": "^0.1.9",
     "ethjs-provider-http": "^0.1.6",
