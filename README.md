@@ -236,7 +236,7 @@ constructor.
 
 ```javascript
 import { Resolver } from 'did-resolver'
-import getResolver from 'ethr-did-resolver'
+import { getResolver } from 'ethr-did-resolver'
 
 // You can set a rpc endpoint to be used by the web3 provider
 // You can also set an address for your own ethr-did-registry contract
