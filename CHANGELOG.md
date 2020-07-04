@@ -1,3 +1,10 @@
+## [2.3.1](https://github.com/decentralized-identity/ethr-did-resolver/compare/2.3.0...2.3.1) (2020-07-04)
+
+
+### Bug Fixes
+
+* **deps:** update dependency ethjs-contract to ^0.2.0 ([b667ce6](https://github.com/decentralized-identity/ethr-did-resolver/commit/b667ce6757f01d39e6302d962d314d92901d3ffe))
+
 # [2.3.0](https://github.com/decentralized-identity/ethr-did-resolver/compare/2.2.0...2.3.0) (2020-07-03)
 
 
