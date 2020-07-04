@@ -60,7 +60,7 @@
     "husky": "4.2.5",
     "jdom": "3.2.1",
     "jest": "26.1.0",
-    "microbundle": "0.11.0",
+    "microbundle": "0.12.2",
     "prettier": "2.0.5",
     "regenerator-runtime": "0.13.5",
     "semantic-release": "15.13.28",
