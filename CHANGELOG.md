@@ -1,3 +1,10 @@
+## [2.3.2](https://github.com/decentralized-identity/ethr-did-resolver/compare/2.3.1...2.3.2) (2020-07-07)
+
+
+### Bug Fixes
+
+* **deps:** update dependency did-resolver to v2 ([#68](https://github.com/decentralized-identity/ethr-did-resolver/issues/68)) ([831ec17](https://github.com/decentralized-identity/ethr-did-resolver/commit/831ec17f7f1511295420f88e9869a4f85cb121da))
+
 ## [2.3.1](https://github.com/decentralized-identity/ethr-did-resolver/compare/2.3.0...2.3.1) (2020-07-04)
 
 
