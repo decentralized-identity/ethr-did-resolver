@@ -62,7 +62,7 @@
     "jest": "26.1.0",
     "microbundle": "0.12.3",
     "prettier": "2.0.5",
-    "regenerator-runtime": "0.13.5",
+    "regenerator-runtime": "0.13.6",
     "semantic-release": "17.1.1",
     "truffle-contract": "3.0.7"
   },
