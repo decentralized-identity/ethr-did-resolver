@@ -244,7 +244,7 @@ const providerConfig = { rpcUrl: 'https://rinkeby.infura.io/ethr-did', registry:
 
 // getResolver will return an object with a key/value pair of { "ethr": resolver } where resolver is a function used by the generic did resolver. 
 const ethrDidResolver = getResolver(providerConfig)
-const didResolver = Resolver(ethrDidResolver)
+const didResolver = new Resolver(ethrDidResolver)
 
 didResolver.resolve('did:ethr:0xf3beac30c498d9e26865f34fcaa57dbb935b0d74').then(doc => console.log)
 
