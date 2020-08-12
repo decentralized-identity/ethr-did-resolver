@@ -59,7 +59,7 @@
     "ganache-cli": "6.10.1",
     "husky": "4.2.5",
     "jdom": "3.2.1",
-    "jest": "26.3.0",
+    "jest": "26.4.0",
     "microbundle": "0.12.3",
     "prettier": "2.0.5",
     "regenerator-runtime": "0.13.7",
