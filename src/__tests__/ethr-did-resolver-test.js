@@ -94,12 +94,12 @@ describe('ethrResolver', () => {
     )
   }
 
-  let registry, accounts, did, identity, owner, delegate1, delegate2, ethr, didResolver
+  let registry, accounts, did, identity, controller, delegate1, delegate2, ethr, didResolver
 
   beforeAll(async () => {
     accounts = await getAccounts()
     identity = accounts[1]
-    owner = accounts[2]
+    controller = accounts[2]
     delegate1 = accounts[3]
     delegate2 = accounts[4]
     did = `did:ethr:${identity}`
@@ -120,16 +120,16 @@ describe('ethrResolver', () => {
         id: did,
         publicKey: [
           {
-            id: `${did}#owner`,
+            id: `${did}#controller`,
             type: 'Secp256k1VerificationKey2018',
-            owner: did,
+            controller: did,
             ethereumAddress: identity
           }
         ],
         authentication: [
           {
             type: 'Secp256k1SignatureAuthentication2018',
-            publicKey: `${did}#owner`
+            publicKey: `${did}#controller`
           }
         ]
       })
@@ -143,35 +143,35 @@ describe('ethrResolver', () => {
         id: pubdid,
         publicKey: [
           {
-            id: `${pubdid}#owner`,
+            id: `${pubdid}#controller`,
             type: 'Secp256k1VerificationKey2018',
-            owner: pubdid,
+            controller: pubdid,
             ethereumAddress: identity
           },
           {
-            id: `${pubdid}#ownerKey`,
+            id: `${pubdid}#controllerKey`,
             type: 'Secp256k1VerificationKey2018',
-            owner: pubdid,
+            controller: pubdid,
             publicKeyHex: pubKey
           }
         ],
         authentication: [
           {
             type: 'Secp256k1SignatureAuthentication2018',
-            publicKey: `${pubdid}#owner`
+            publicKey: `${pubdid}#controller`
           },
           {
             type: 'Secp256k1SignatureAuthentication2018',
-            publicKey: `${pubdid}#ownerKey`
+            publicKey: `${pubdid}#controllerKey`
           }
         ]
       })
     })
   })
 
-  describe('owner changed', () => {
+  describe('controller changed', () => {
     beforeAll(async () => {
-      await registry.changeOwner(identity, owner, { from: identity })
+      await registry.changeOwner(identity, controller, { from: identity })
     })
 
     it('resolves document', () => {
@@ -180,22 +180,22 @@ describe('ethrResolver', () => {
         id: did,
         publicKey: [
           {
-            id: `${did}#owner`,
+            id: `${did}#controller`,
             type: 'Secp256k1VerificationKey2018',
-            owner: did,
-            ethereumAddress: owner
+            controller: did,
+            ethereumAddress: controller
           }
         ],
         authentication: [
           {
             type: 'Secp256k1SignatureAuthentication2018',
-            publicKey: `${did}#owner`
+            publicKey: `${did}#controller`
           }
         ]
       })
     })
 
-    it('changing owner invalidates the publicKey as identifier', async () => {
+    it('changing controller invalidates the publicKey as identifier', async () => {
       const pubKey = '0x0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798'
       const pubdid = `did:ethr:${pubKey}`
       const doc = await didResolver.resolve(pubdid)
@@ -204,16 +204,16 @@ describe('ethrResolver', () => {
         id: pubdid,
         publicKey: [
           {
-            id: `${pubdid}#owner`,
+            id: `${pubdid}#controller`,
             type: 'Secp256k1VerificationKey2018',
-            owner: pubdid,
-            ethereumAddress: owner
+            controller: pubdid,
+            ethereumAddress: controller
           }
         ],
         authentication: [
           {
             type: 'Secp256k1SignatureAuthentication2018',
-            publicKey: `${pubdid}#owner`
+            publicKey: `${pubdid}#controller`
           }
         ]
       })
@@ -225,7 +225,7 @@ describe('ethrResolver', () => {
   describe('delegates', () => {
     describe('add signing delegate', () => {
       beforeAll(async () => {
-        await registry.addDelegate(identity, Secp256k1VerificationKey2018, delegate1, 2, { from: owner })
+        await registry.addDelegate(identity, Secp256k1VerificationKey2018, delegate1, 2, { from: controller })
       })
 
       it('resolves document', () => {
@@ -234,22 +234,22 @@ describe('ethrResolver', () => {
           id: did,
           publicKey: [
             {
-              id: `${did}#owner`,
+              id: `${did}#controller`,
               type: 'Secp256k1VerificationKey2018',
-              owner: did,
-              ethereumAddress: owner
+              controller: did,
+              ethereumAddress: controller
             },
             {
               id: `${did}#delegate-1`,
               type: 'Secp256k1VerificationKey2018',
-              owner: did,
+              controller: did,
               ethereumAddress: delegate1
             }
           ],
           authentication: [
             {
               type: 'Secp256k1SignatureAuthentication2018',
-              publicKey: `${did}#owner`
+              publicKey: `${did}#controller`
             }
           ]
         })
@@ -258,7 +258,7 @@ describe('ethrResolver', () => {
 
     describe('add auth delegate', () => {
       beforeAll(async () => {
-        await registry.addDelegate(identity, Secp256k1SignatureAuthentication2018, delegate2, 10, { from: owner })
+        await registry.addDelegate(identity, Secp256k1SignatureAuthentication2018, delegate2, 10, { from: controller })
       })
 
       it('resolves document', () => {
@@ -267,28 +267,28 @@ describe('ethrResolver', () => {
           id: did,
           publicKey: [
             {
-              id: `${did}#owner`,
+              id: `${did}#controller`,
               type: 'Secp256k1VerificationKey2018',
-              owner: did,
-              ethereumAddress: owner
+              controller: did,
+              ethereumAddress: controller
             },
             {
               id: `${did}#delegate-1`,
               type: 'Secp256k1VerificationKey2018',
-              owner: did,
+              controller: did,
               ethereumAddress: delegate1
             },
             {
               id: `${did}#delegate-2`,
               type: 'Secp256k1VerificationKey2018',
-              owner: did,
+              controller: did,
               ethereumAddress: delegate2
             }
           ],
           authentication: [
             {
               type: 'Secp256k1SignatureAuthentication2018',
-              publicKey: `${did}#owner`
+              publicKey: `${did}#controller`
             },
             {
               type: 'Secp256k1SignatureAuthentication2018',
@@ -310,22 +310,22 @@ describe('ethrResolver', () => {
           id: did,
           publicKey: [
             {
-              id: `${did}#owner`,
+              id: `${did}#controller`,
               type: 'Secp256k1VerificationKey2018',
-              owner: did,
-              ethereumAddress: owner
+              controller: did,
+              ethereumAddress: controller
             },
             {
               id: `${did}#delegate-1`,
               type: 'Secp256k1VerificationKey2018',
-              owner: did,
+              controller: did,
               ethereumAddress: delegate2
             }
           ],
           authentication: [
             {
               type: 'Secp256k1SignatureAuthentication2018',
-              publicKey: `${did}#owner`
+              publicKey: `${did}#controller`
             },
             {
               type: 'Secp256k1SignatureAuthentication2018',
@@ -338,7 +338,7 @@ describe('ethrResolver', () => {
 
     describe('revokes delegate', () => {
       beforeAll(async () => {
-        await registry.revokeDelegate(identity, Secp256k1SignatureAuthentication2018, delegate2, { from: owner })
+        await registry.revokeDelegate(identity, Secp256k1SignatureAuthentication2018, delegate2, { from: controller })
         await sleep(1)
       })
 
@@ -348,16 +348,16 @@ describe('ethrResolver', () => {
           id: did,
           publicKey: [
             {
-              id: `${did}#owner`,
+              id: `${did}#controller`,
               type: 'Secp256k1VerificationKey2018',
-              owner: did,
-              ethereumAddress: owner
+              controller: did,
+              ethereumAddress: controller
             }
           ],
           authentication: [
             {
               type: 'Secp256k1SignatureAuthentication2018',
-              publicKey: `${did}#owner`
+              publicKey: `${did}#controller`
             }
           ]
         })
@@ -367,7 +367,7 @@ describe('ethrResolver', () => {
     describe('re-add auth delegate', () => {
       beforeAll(async () => {
         await sleep(3)
-        await registry.addDelegate(identity, Secp256k1SignatureAuthentication2018, delegate2, 86400, { from: owner })
+        await registry.addDelegate(identity, Secp256k1SignatureAuthentication2018, delegate2, 86400, { from: controller })
       })
 
       it('resolves document', () => {
@@ -376,22 +376,22 @@ describe('ethrResolver', () => {
           id: did,
           publicKey: [
             {
-              id: `${did}#owner`,
+              id: `${did}#controller`,
               type: 'Secp256k1VerificationKey2018',
-              owner: did,
-              ethereumAddress: owner
+              controller: did,
+              ethereumAddress: controller
             },
             {
               id: `${did}#delegate-1`,
               type: 'Secp256k1VerificationKey2018',
-              owner: did,
+              controller: did,
               ethereumAddress: delegate2
             }
           ],
           authentication: [
             {
               type: 'Secp256k1SignatureAuthentication2018',
-              publicKey: `${did}#owner`
+              publicKey: `${did}#controller`
             },
             {
               type: 'Secp256k1SignatureAuthentication2018',
@@ -412,7 +412,7 @@ describe('ethrResolver', () => {
             stringToBytes32('did/pub/Secp256k1/veriKey'),
             '0x02b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71',
             10,
-            { from: owner }
+            { from: controller }
           )
         })
         it('resolves document', () => {
@@ -421,28 +421,28 @@ describe('ethrResolver', () => {
             id: did,
             publicKey: [
               {
-                id: `${did}#owner`,
+                id: `${did}#controller`,
                 type: 'Secp256k1VerificationKey2018',
-                owner: did,
-                ethereumAddress: owner
+                controller: did,
+                ethereumAddress: controller
               },
               {
                 id: `${did}#delegate-1`,
                 type: 'Secp256k1VerificationKey2018',
-                owner: did,
+                controller: did,
                 ethereumAddress: delegate2
               },
               {
                 id: `${did}#delegate-2`,
                 type: 'Secp256k1VerificationKey2018',
-                owner: did,
+                controller: did,
                 publicKeyHex: '02b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71'
               }
             ],
             authentication: [
               {
                 type: 'Secp256k1SignatureAuthentication2018',
-                publicKey: `${did}#owner`
+                publicKey: `${did}#controller`
               },
               {
                 type: 'Secp256k1SignatureAuthentication2018',
@@ -460,7 +460,7 @@ describe('ethrResolver', () => {
             stringToBytes32('did/pub/Ed25519/veriKey/base64'),
             '0x02b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71',
             10,
-            { from: owner }
+            { from: controller }
           )
         })
 
@@ -470,27 +470,27 @@ describe('ethrResolver', () => {
             id: did,
             publicKey: [
               {
-                id: `${did}#owner`,
+                id: `${did}#controller`,
                 type: 'Secp256k1VerificationKey2018',
-                owner: did,
-                ethereumAddress: owner
+                controller: did,
+                ethereumAddress: controller
               },
               {
                 id: `${did}#delegate-1`,
                 type: 'Secp256k1VerificationKey2018',
-                owner: did,
+                controller: did,
                 ethereumAddress: delegate2
               },
               {
                 id: `${did}#delegate-2`,
                 type: 'Secp256k1VerificationKey2018',
-                owner: did,
+                controller: did,
                 publicKeyHex: '02b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71'
               },
               {
                 id: `${did}#delegate-3`,
                 type: 'Ed25519VerificationKey2018',
-                owner: did,
+                controller: did,
                 publicKeyBase64: Buffer.from(
                   '02b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71',
                   'hex'
@@ -500,7 +500,7 @@ describe('ethrResolver', () => {
             authentication: [
               {
                 type: 'Secp256k1SignatureAuthentication2018',
-                publicKey: `${did}#owner`
+                publicKey: `${did}#controller`
               },
               {
                 type: 'Secp256k1SignatureAuthentication2018',
@@ -518,7 +518,7 @@ describe('ethrResolver', () => {
             stringToBytes32('did/pub/RSA/veriKey/pem'),
             '-----BEGIN PUBLIC KEY...END PUBLIC KEY-----\r\n',
             10,
-            { from: owner }
+            { from: controller }
           )
         })
 
@@ -528,27 +528,27 @@ describe('ethrResolver', () => {
             id: did,
             publicKey: [
               {
-                id: `${did}#owner`,
+                id: `${did}#controller`,
                 type: 'Secp256k1VerificationKey2018',
-                owner: did,
-                ethereumAddress: owner
+                controller: did,
+                ethereumAddress: controller
               },
               {
                 id: `${did}#delegate-1`,
                 type: 'Secp256k1VerificationKey2018',
-                owner: did,
+                controller: did,
                 ethereumAddress: delegate2
               },
               {
                 id: `${did}#delegate-2`,
                 type: 'Secp256k1VerificationKey2018',
-                owner: did,
+                controller: did,
                 publicKeyHex: '02b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71'
               },
               {
                 id: `${did}#delegate-3`,
                 type: 'Ed25519VerificationKey2018',
-                owner: did,
+                controller: did,
                 publicKeyBase64: Buffer.from(
                   '02b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71',
                   'hex'
@@ -557,14 +557,14 @@ describe('ethrResolver', () => {
               {
                 id: `${did}#delegate-4`,
                 type: 'RSAVerificationKey2018',
-                owner: did,
+                controller: did,
                 publicKeyPem: '-----BEGIN PUBLIC KEY...END PUBLIC KEY-----\r\n'
               }
             ],
             authentication: [
               {
                 type: 'Secp256k1SignatureAuthentication2018',
-                publicKey: `${did}#owner`
+                publicKey: `${did}#controller`
               },
               {
                 type: 'Secp256k1SignatureAuthentication2018',
@@ -600,22 +600,22 @@ describe('ethrResolver', () => {
             id: did1,
             publicKey: [
               {
-                id: `${did1}#owner`,
+                id: `${did1}#controller`,
                 type: 'Secp256k1VerificationKey2018',
-                owner: did1,
+                controller: did1,
                 ethereumAddress: identity1
               },
               {
                 id: `${did1}#delegate-1`,
                 type: 'X25519KeyAgreementKey2019',
-                owner: did1,
+                controller: did1,
                 publicKeyBase64: 'MCowBQYDK2VuAyEAEYVXd3/7B4d0NxpSsA/tdVYdz5deYcR1U+ZkphdmEFI='
               }
             ],
             authentication: [
               {
                 type: 'Secp256k1SignatureAuthentication2018',
-                publicKey: `${did1}#owner`
+                publicKey: `${did1}#controller`
               }
             ]
           })
@@ -627,7 +627,7 @@ describe('ethrResolver', () => {
       describe('HubService', () => {
         beforeAll(async () => {
           await registry.setAttribute(identity, stringToBytes32('did/svc/HubService'), 'https://hubs.uport.me', 10, {
-            from: owner
+            from: controller
           })
         })
         it('resolves document', () => {
@@ -636,27 +636,27 @@ describe('ethrResolver', () => {
             id: did,
             publicKey: [
               {
-                id: `${did}#owner`,
+                id: `${did}#controller`,
                 type: 'Secp256k1VerificationKey2018',
-                owner: did,
-                ethereumAddress: owner
+                controller: did,
+                ethereumAddress: controller
               },
               {
                 id: `${did}#delegate-1`,
                 type: 'Secp256k1VerificationKey2018',
-                owner: did,
+                controller: did,
                 ethereumAddress: delegate2
               },
               {
                 id: `${did}#delegate-2`,
                 type: 'Secp256k1VerificationKey2018',
-                owner: did,
+                controller: did,
                 publicKeyHex: '02b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71'
               },
               {
                 id: `${did}#delegate-3`,
                 type: 'Ed25519VerificationKey2018',
-                owner: did,
+                controller: did,
                 publicKeyBase64: Buffer.from(
                   '02b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71',
                   'hex'
@@ -665,14 +665,14 @@ describe('ethrResolver', () => {
               {
                 id: `${did}#delegate-4`,
                 type: 'RSAVerificationKey2018',
-                owner: did,
+                controller: did,
                 publicKeyPem: '-----BEGIN PUBLIC KEY...END PUBLIC KEY-----\r\n'
               }
             ],
             authentication: [
               {
                 type: 'Secp256k1SignatureAuthentication2018',
-                publicKey: `${did}#owner`
+                publicKey: `${did}#controller`
               },
               {
                 type: 'Secp256k1SignatureAuthentication2018',
@@ -697,7 +697,7 @@ describe('ethrResolver', () => {
             identity,
             stringToBytes32('did/pub/Secp256k1/veriKey'),
             '0x02b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71',
-            { from: owner }
+            { from: controller }
           )
           sleep(1)
         })
@@ -707,21 +707,21 @@ describe('ethrResolver', () => {
             id: did,
             publicKey: [
               {
-                id: `${did}#owner`,
+                id: `${did}#controller`,
                 type: 'Secp256k1VerificationKey2018',
-                owner: did,
-                ethereumAddress: owner
+                controller: did,
+                ethereumAddress: controller
               },
               {
                 id: `${did}#delegate-1`,
                 type: 'Secp256k1VerificationKey2018',
-                owner: did,
+                controller: did,
                 ethereumAddress: delegate2
               },
               {
                 id: `${did}#delegate-3`,
                 type: 'Ed25519VerificationKey2018',
-                owner: did,
+                controller: did,
                 publicKeyBase64: Buffer.from(
                   '02b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71',
                   'hex'
@@ -730,14 +730,14 @@ describe('ethrResolver', () => {
               {
                 id: `${did}#delegate-4`,
                 type: 'RSAVerificationKey2018',
-                owner: did,
+                controller: did,
                 publicKeyPem: '-----BEGIN PUBLIC KEY...END PUBLIC KEY-----\r\n'
               }
             ],
             authentication: [
               {
                 type: 'Secp256k1SignatureAuthentication2018',
-                publicKey: `${did}#owner`
+                publicKey: `${did}#controller`
               },
               {
                 type: 'Secp256k1SignatureAuthentication2018',
@@ -760,7 +760,7 @@ describe('ethrResolver', () => {
             identity,
             stringToBytes32('did/pub/Ed25519/veriKey/base64'),
             '0x02b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71',
-            { from: owner }
+            { from: controller }
           )
           sleep(1)
         })
@@ -770,28 +770,28 @@ describe('ethrResolver', () => {
             id: did,
             publicKey: [
               {
-                id: `${did}#owner`,
+                id: `${did}#controller`,
                 type: 'Secp256k1VerificationKey2018',
-                owner: did,
-                ethereumAddress: owner
+                controller: did,
+                ethereumAddress: controller
               },
               {
                 id: `${did}#delegate-1`,
                 type: 'Secp256k1VerificationKey2018',
-                owner: did,
+                controller: did,
                 ethereumAddress: delegate2
               },
               {
                 id: `${did}#delegate-4`,
                 type: 'RSAVerificationKey2018',
-                owner: did,
+                controller: did,
                 publicKeyPem: '-----BEGIN PUBLIC KEY...END PUBLIC KEY-----\r\n'
               }
             ],
             authentication: [
               {
                 type: 'Secp256k1SignatureAuthentication2018',
-                publicKey: `${did}#owner`
+                publicKey: `${did}#controller`
               },
               {
                 type: 'Secp256k1SignatureAuthentication2018',
@@ -814,7 +814,7 @@ describe('ethrResolver', () => {
             identity,
             stringToBytes32('did/pub/RSA/veriKey/pem'),
             '-----BEGIN PUBLIC KEY...END PUBLIC KEY-----\r\n',
-            { from: owner }
+            { from: controller }
           )
           sleep(1)
         })
@@ -825,22 +825,22 @@ describe('ethrResolver', () => {
             id: did,
             publicKey: [
               {
-                id: `${did}#owner`,
+                id: `${did}#controller`,
                 type: 'Secp256k1VerificationKey2018',
-                owner: did,
-                ethereumAddress: owner
+                controller: did,
+                ethereumAddress: controller
               },
               {
                 id: `${did}#delegate-1`,
                 type: 'Secp256k1VerificationKey2018',
-                owner: did,
+                controller: did,
                 ethereumAddress: delegate2
               }
             ],
             authentication: [
               {
                 type: 'Secp256k1SignatureAuthentication2018',
-                publicKey: `${did}#owner`
+                publicKey: `${did}#controller`
               },
               {
                 type: 'Secp256k1SignatureAuthentication2018',
@@ -862,7 +862,7 @@ describe('ethrResolver', () => {
       describe('HubService', () => {
         beforeAll(async () => {
           await registry.revokeAttribute(identity, stringToBytes32('did/svc/HubService'), 'https://hubs.uport.me', {
-            from: owner
+            from: controller
           })
           sleep(1)
         })
@@ -873,22 +873,22 @@ describe('ethrResolver', () => {
             id: did,
             publicKey: [
               {
-                id: `${did}#owner`,
+                id: `${did}#controller`,
                 type: 'Secp256k1VerificationKey2018',
-                owner: did,
-                ethereumAddress: owner
+                controller: did,
+                ethereumAddress: controller
               },
               {
                 id: `${did}#delegate-1`,
                 type: 'Secp256k1VerificationKey2018',
-                owner: did,
+                controller: did,
                 ethereumAddress: delegate2
               }
             ],
             authentication: [
               {
                 type: 'Secp256k1SignatureAuthentication2018',
-                publicKey: `${did}#owner`
+                publicKey: `${did}#controller`
               },
               {
                 type: 'Secp256k1SignatureAuthentication2018',
@@ -906,10 +906,10 @@ describe('ethrResolver', () => {
       await stopMining()
       await Promise.all([
         registry.setAttribute(identity, stringToBytes32('did/svc/TestService'), 'https://test.uport.me', 10, {
-          from: owner
+          from: controller
         }),
         registry.setAttribute(identity, stringToBytes32('did/svc/TestService'), 'https://test.uport.me', 10, {
-          from: owner
+          from: controller
         }),
         sleep(1).then(() => startMining())
       ])
@@ -921,22 +921,22 @@ describe('ethrResolver', () => {
         id: did,
         publicKey: [
           {
-            id: `${did}#owner`,
+            id: `${did}#controller`,
             type: 'Secp256k1VerificationKey2018',
-            owner: did,
-            ethereumAddress: owner
+            controller: did,
+            ethereumAddress: controller
           },
           {
             id: `${did}#delegate-1`,
             type: 'Secp256k1VerificationKey2018',
-            owner: did,
+            controller: did,
             ethereumAddress: delegate2
           }
         ],
         authentication: [
           {
             type: 'Secp256k1SignatureAuthentication2018',
-            publicKey: `${did}#owner`
+            publicKey: `${did}#controller`
           },
           {
             type: 'Secp256k1SignatureAuthentication2018',

@@ -31,36 +31,36 @@ const attrTypes = {
   enc: 'KeyAgreementKey2019'
 }
 
-function wrapDidDocument(did, owner, ownerKey, history) {
+function wrapDidDocument(did, controller, controllerKey, history) {
   const now = new BN(Math.floor(new Date().getTime() / 1000))
   // const expired = {}
   const publicKey = [
     {
-      id: `${did}#owner`,
+      id: `${did}#controller`,
       type: 'Secp256k1VerificationKey2018',
-      owner: did,
-      ethereumAddress: owner
+      controller: did,
+      ethereumAddress: controller
     }
   ]
 
   const authentication = [
     {
       type: 'Secp256k1SignatureAuthentication2018',
-      publicKey: `${did}#owner`
+      publicKey: `${did}#controller`
     }
   ]
 
-  if (ownerKey) {
+  if (controllerKey) {
     publicKey.push({
-      id: `${did}#ownerKey`,
+      id: `${did}#controllerKey`,
       type: 'Secp256k1VerificationKey2018',
-      owner: did,
-      publicKeyHex: ownerKey
+      controller: did,
+      publicKeyHex: controllerKey
     })
 
     authentication.push({
       type: 'Secp256k1SignatureAuthentication2018',
-      publicKey: `${did}#ownerKey`
+      publicKey: `${did}#controllerKey`
     })
   }
 
@@ -86,7 +86,7 @@ function wrapDidDocument(did, owner, ownerKey, history) {
             pks[key] = {
               id: `${did}#delegate-${delegateCount}`,
               type: 'Secp256k1VerificationKey2018',
-              owner: did,
+              controller: did,
               ethereumAddress: event.delegate
             }
             break
@@ -105,7 +105,7 @@ function wrapDidDocument(did, owner, ownerKey, history) {
               const pk = {
                 id: `${did}#delegate-${delegateCount}`,
                 type: `${algo}${type}`,
-                owner: did
+                controller: did
               }
               switch (encoding) {
                 case null:
@@ -261,15 +261,15 @@ function getResolver(conf = {}) {
   async function changeLog(identity, networkId) {
     const history = []
     let { address, publicKey } = interpretIdentifier(identity)
-    let owner = address
+    let controller = address
     let previousChange = await lastChanged(address, networkId)
     if (previousChange) {
-      const ownerRecord = await networks[networkId].didReg.identityOwner(address)
-      const newOwner = '' + ownerRecord['0']
-      if (newOwner.toLowerCase() !== owner.toLowerCase()) {
+      const controllerRecord = await networks[networkId].didReg.identityOwner(address)
+      const newController = '' + controllerRecord['0']
+      if (newController.toLowerCase() !== controller.toLowerCase()) {
         publicKey = null
       }
-      owner = newOwner
+      controller = newController
     }
     while (previousChange) {
       const blockNumber = previousChange
@@ -288,7 +288,7 @@ function getResolver(conf = {}) {
         }
       }
     }
-    return { owner, history, publicKey }
+    return { controller, history, publicKey }
   }
   async function resolve(did, parsed) {
     const fullId = parsed.id.match(identifierMatcher)
@@ -298,8 +298,8 @@ function getResolver(conf = {}) {
 
     if (!networks[networkId]) throw new Error(`No conf for networkId: ${networkId}`)
 
-    const { owner, history, publicKey } = await changeLog(id, networkId)
-    return wrapDidDocument(did, owner, publicKey, history)
+    const { controller, history, publicKey } = await changeLog(id, networkId)
+    return wrapDidDocument(did, controller, publicKey, history)
   }
 
   return { ethr: resolve }

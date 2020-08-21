@@ -37,7 +37,7 @@ distinct identifier than the generic one.
 
 ## DID Document
 
-The did resolver takes the ethereum address, checks for the current owner, looks at contract events and builds a simple DID document.
+The did resolver takes the ethereum address, checks for the current controller, looks at contract events and builds a simple DID document.
 
 The minimal DID document for a an ethereum address `0xb9c5714089478a327f09197987f16f9e5d936e8a` with no transactions to the registry looks like this:
 
@@ -46,13 +46,13 @@ The minimal DID document for a an ethereum address `0xb9c5714089478a327f09197987
   '@context': 'https://w3id.org/did/v1',
   id: 'did:ethr:0xb9c5714089478a327f09197987f16f9e5d936e8a',
   publicKey: [{
-       id: 'did:ethr:0xb9c5714089478a327f09197987f16f9e5d936e8a#owner',
+       id: 'did:ethr:0xb9c5714089478a327f09197987f16f9e5d936e8a#controller',
        type: 'Secp256k1VerificationKey2018',
-       owner: 'did:ethr:0xb9c5714089478a327f09197987f16f9e5d936e8a',
+       controller: 'did:ethr:0xb9c5714089478a327f09197987f16f9e5d936e8a',
        ethereumAddress: '0xb9c5714089478a327f09197987f16f9e5d936e8a'}],
   authentication: [{
        type: 'Secp256k1SignatureAuthentication2018',
-       publicKey: 'did:ethr:0xb9c5714089478a327f09197987f16f9e5d936e8a#owner'}]
+       publicKey: 'did:ethr:0xb9c5714089478a327f09197987f16f9e5d936e8a#controller'}]
 }
 ```
 
@@ -64,11 +64,11 @@ The DID document is built by using read only functions and contract events on th
 
 Any value from the registry that returns an ethereum address will be added to the `publicKey` array of the DID document with type `Secp256k1VerificationKey2018` and an `ethereumAddress` attribute containing the address.
 
-### Owner Address
+### Controller Address
 
-Each identity always has an owner address. By default it's the same as the identity address, but check the read only contract function `identityOwner(address identity)` on the deployed version of the EthrDIDRegistry contract.
+Each identity always has a controller address. By default it's the same as the identity address, but check the read only contract function `identityOwner(address identity)` on the deployed version of the EthrDIDRegistry contract.
 
-The Identity owner will always have a `publicKey` with the id set as the DID with the fragment `#owner` appended.
+The Identity controller will always have a `publicKey` with the id set as the DID with the fragment `#controller` appended.
 
 An entry is also added to the `authentication` array of the DID document with type `Secp256k1SignatureAuthentication2018`.
 
@@ -76,7 +76,7 @@ An entry is also added to the `authentication` array of the DID document with ty
 
 The `EthereumDIDRegistry` contract publishes 3 types of events for each identity.
 
-- `DIDOwnerChanged`
+- `DIDOwnerChanged` (indicating a change of controller)
 - `DIDDelegateChanged`
 - `DIDAttributeChanged`
 
@@ -169,7 +169,7 @@ generates a `PublicKey` entry like this:
 {
   id: "did:ethr:0xf3beac30c498d9e26865f34fcaa57dbb935b0d74#delegate-1",
   type: "Secp256k1VerificationKey2018",
-  owner: "did:ethr:0xf3beac30c498d9e26865f34fcaa57dbb935b0d74",
+  controller: "did:ethr:0xf3beac30c498d9e26865f34fcaa57dbb935b0d74",
   publicKeyHex: '02b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71'
 }
 ```
@@ -184,7 +184,7 @@ A `DIDAttributeChanged` event for the identity `0xf3beac30c498d9e26865f34fcaa57d
 {
   id: "did:ethr:0xf3beac30c498d9e26865f34fcaa57dbb935b0d74#delegate-1",
   type: "Ed25519VerificationKey2018",
-  owner: "did:ethr:0xf3beac30c498d9e26865f34fcaa57dbb935b0d74",
+  controller: "did:ethr:0xf3beac30c498d9e26865f34fcaa57dbb935b0d74",
   publicKeyBase64: "uXww3nZ/CEzjCAFo7ikwU7ozsjXXEWoyY9KfFFCTa3E="
 }
 ```
@@ -200,7 +200,7 @@ generates a `PublicKey` entry like this:
 {
   id: "did:ethr:0xf3beac30c498d9e26865f34fcaa57dbb935b0d74#delegate-1",
   type: "X25519KeyAgreementKey2019",
-  owner: "did:ethr:0xf3beac30c498d9e26865f34fcaa57dbb935b0d74",
+  controller: "did:ethr:0xf3beac30c498d9e26865f34fcaa57dbb935b0d74",
   publicKeyBase64: "MCowBQYDK2VuAyEAEYVXd3/7B4d0NxpSsA/tdVYdz5deYcR1U+ZkphdmEFI="
 }
 ```
@@ -242,7 +242,7 @@ import { getResolver } from 'ethr-did-resolver'
 // You can also set an address for your own ethr-did-registry contract
 const providerConfig = { rpcUrl: 'https://rinkeby.infura.io/ethr-did', registry: registry.address }
 
-// getResolver will return an object with a key/value pair of { "ethr": resolver } where resolver is a function used by the generic did resolver. 
+// getResolver will return an object with a key/value pair of { "ethr": resolver } where resolver is a function used by the generic did resolver.
 const ethrDidResolver = getResolver(providerConfig)
 const didResolver = new Resolver(ethrDidResolver)
 
@@ -278,6 +278,6 @@ This allows you to resolve ethr-did's of the formats:
 
 For each network you can specify either an `rpcUrl`, a `provider` or a `web3` instance that can be used to access that particular network.
 
-These providers will have to support and `eth_call`, `eth_getLogs` to be able to resolve DIDs specific to that network. 
+These providers will have to support and `eth_call`, `eth_getLogs` to be able to resolve DIDs specific to that network.
 
 You can also override the default registry address by specifying a `registry` attribute per network.
