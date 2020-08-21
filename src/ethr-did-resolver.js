@@ -5,7 +5,11 @@ import BN from 'bn.js'
 import EthContract from 'ethjs-contract'
 import DidRegistryContract from '../contracts/ethr-did-registry.json'
 import { Buffer } from 'buffer'
+import { toEthereumAddress } from './utils'
+
 const REGISTRY = '0xdca7ef03e98e0dc2b855be647c39abe984fcf21b'
+
+const identifierMatcher = /^(.*)?(0x[0-9a-fA-F]{40}|0x[0-9a-fA-F]{66})$/
 
 function bytes32toString(bytes32) {
   return Buffer.from(bytes32.slice(2), 'hex').toString('utf8').replace(/\0+$/, '')
@@ -27,7 +31,7 @@ const attrTypes = {
   enc: 'KeyAgreementKey2019'
 }
 
-function wrapDidDocument(did, owner, history) {
+function wrapDidDocument(did, owner, ownerKey, history) {
   const now = new BN(Math.floor(new Date().getTime() / 1000))
   // const expired = {}
   const publicKey = [
@@ -45,6 +49,20 @@ function wrapDidDocument(did, owner, history) {
       publicKey: `${did}#owner`
     }
   ]
+
+  if (ownerKey) {
+    publicKey.push({
+      id: `${did}#ownerKey`,
+      type: 'Secp256k1VerificationKey2018',
+      owner: did,
+      publicKeyHex: ownerKey
+    })
+
+    authentication.push({
+      type: 'Secp256k1SignatureAuthentication2018',
+      publicKey: `${did}#ownerKey`
+    })
+  }
 
   let delegateCount = 0
   const auth = {}
@@ -231,19 +249,33 @@ function getResolver(conf = {}) {
       return result['0']
     }
   }
+
+  const interpretIdentifier = (identifier) => {
+    if (identifier.length > 42) {
+      return { address: toEthereumAddress(identifier), publicKey: identifier }
+    } else {
+      return { address: identifier }
+    }
+  }
+
   async function changeLog(identity, networkId) {
     const history = []
-    let owner = identity
-    let previousChange = await lastChanged(identity, networkId)
+    let { address, publicKey } = interpretIdentifier(identity)
+    let owner = address
+    let previousChange = await lastChanged(address, networkId)
     if (previousChange) {
-      const ownerRecord = await networks[networkId].didReg.identityOwner(identity)
-      owner = ownerRecord['0']
+      const ownerRecord = await networks[networkId].didReg.identityOwner(address)
+      const newOwner = '' + ownerRecord['0']
+      if (newOwner.toLowerCase() !== owner.toLowerCase()) {
+        publicKey = null
+      }
+      owner = newOwner
     }
     while (previousChange) {
       const blockNumber = previousChange
       const logs = await networks[networkId].eth.getLogs({
         address: networks[networkId].registryAddress,
-        topics: [null, `0x000000000000000000000000${identity.slice(2)}`],
+        topics: [null, `0x000000000000000000000000${address.slice(2)}`],
         fromBlock: previousChange,
         toBlock: previousChange
       })
@@ -256,18 +288,18 @@ function getResolver(conf = {}) {
         }
       }
     }
-    return { owner, history }
+    return { owner, history, publicKey }
   }
   async function resolve(did, parsed) {
-    const fullId = parsed.id.match(/^(.*)?(0x[0-9a-fA-F]{40})$/)
+    const fullId = parsed.id.match(identifierMatcher)
     if (!fullId) throw new Error(`Not a valid ethr DID: ${did}`)
     const id = fullId[2]
     const networkId = !fullId[1] ? 'mainnet' : fullId[1].slice(0, -1)
 
     if (!networks[networkId]) throw new Error(`No conf for networkId: ${networkId}`)
 
-    const { owner, history } = await changeLog(id, networkId)
-    return wrapDidDocument(did, owner, history)
+    const { owner, history, publicKey } = await changeLog(id, networkId)
+    return wrapDidDocument(did, owner, publicKey, history)
   }
 
   return { ethr: resolve }
@@ -280,5 +312,6 @@ module.exports = {
   delegateTypes,
   attrTypes,
   wrapDidDocument,
-  getResolver
+  getResolver,
+  identifierMatcher
 }

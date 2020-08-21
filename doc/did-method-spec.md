@@ -100,18 +100,26 @@ The method specific identifier is represented as the Hex-encoded Ethereum addres
 on the target network.
 
     ethr-did = "did:ethr:" ethr-specific-idstring
-    ethr-specific-idstring = [ ethr-network ":" ] ethr-address
-    ethr-network = "mainnet" / "ropsten" / "rinkeby" / "kovan"
-    ethr-address = "0x" 40*HEXDIG
+    ethr-specific-idstring = [ ethr-network ":" ] ethereum-address / public-key-hex
+    ethr-network = "mainnet" / "ropsten" / "rinkeby" / "kovan" / network-chain-id
+    network-chain-id = "0x" *HEXDIG
+    ethereum-address = "0x" 40*HEXDIG
+    public-key-hex = "0x" 66*HEXDIG
 
-The Ethereum address is case-insensitive.
+The Ethereum address or publicKeyHex are case-insensitive.
 
 Note, if no public Ethereum network was specified, it is assumed that the DID is anchored
 on the Ethereum mainnet per default. This means the following DIDs will resolve to the same
 DID Document:
 
     did:ethr:mainnet:0xb9c5714089478a327f09197987f16f9e5d936e8a
+    did:ethr:0x1:0xb9c5714089478a327f09197987f16f9e5d936e8a
     did:ethr:0xb9c5714089478a327f09197987f16f9e5d936e8a
+
+If the identifier is a `public-key-hex`:
+  * it MUST be represented in compressed form (see https://en.bitcoin.it/wiki/Secp256k1)
+  * the corresponding `ethereumAddress` entry is also added to the default DID document, unless the `owner` has been changed to a different address.
+  * all CRUD operations MUST be made using the corresponding `ethereumAddress` and MUST originate from the correct `owner` address.
 
 ## CRUD Operation Definitions
 
