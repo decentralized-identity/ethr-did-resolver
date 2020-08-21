@@ -1,3 +1,10 @@
+# [2.4.0](https://github.com/decentralized-identity/ethr-did-resolver/compare/2.3.4...2.4.0) (2020-08-21)
+
+
+### Features
+
+* add ability to use a compressed publicKey as identifier ([#73](https://github.com/decentralized-identity/ethr-did-resolver/issues/73)) ([e257eb3](https://github.com/decentralized-identity/ethr-did-resolver/commit/e257eb3b1681d7cde1a67e8056e4757589ceaaac)), closes [#56](https://github.com/decentralized-identity/ethr-did-resolver/issues/56)
+
 ## [2.3.4](https://github.com/decentralized-identity/ethr-did-resolver/compare/2.3.3...2.3.4) (2020-08-19)
 
 
