@@ -21,15 +21,18 @@ The described DID method allows any Ethereum smart contract or key pair account 
 An identity needs no registration. In the case that key management or additional
 attributes such as "service endpoints" are required, we deployed ERC1056 smart contracts on:
 
--   Mainnet: `0xdca7ef03e98e0dc2b855be647c39abe984fcf21b`
--   Ropsten: `0xdca7ef03e98e0dc2b855be647c39abe984fcf21b`
--   Rinkeby: `0xdca7ef03e98e0dc2b855be647c39abe984fcf21b`
--   Kovan:   `0xdca7ef03e98e0dc2b855be647c39abe984fcf21b`
--   RSK:     `0xdca7ef03e98e0dc2b855be647c39abe984fcf21b`
--   RSK Testnet:`0xdca7ef03e98e0dc2b855be647c39abe984fcf21b`
--   Alastria Telsius:`0x05cc574b19a3c11308f761b3d7263bd8608bc532`
--   ARTIS tau1:   `0xdca7ef03e98e0dc2b855be647c39abe984fcf21b`
--   ARTIS sigma1: `0xdca7ef03e98e0dc2b855be647c39abe984fcf21b`
+Name             | ethr-network  | chain_id | address
+-----------------|---------------|----------|--------
+Mainnet          | `mainnet`     | 0x1      | `0xdca7ef03e98e0dc2b855be647c39abe984fcf21b`
+Ropsten          | `ropsten`     | 0x3      | `0xdca7ef03e98e0dc2b855be647c39abe984fcf21b`
+Rinkeby          | `rinkeby`     | 0x4      | `0xdca7ef03e98e0dc2b855be647c39abe984fcf21b`
+Goerli           | `goerli`      | 0x5      | `0xdca7ef03e98e0dc2b855be647c39abe984fcf21b`
+Kovan            | `kovan`       | 0x2a     | `0xdca7ef03e98e0dc2b855be647c39abe984fcf21b`
+RSK              | `rsk`         | 0x1e     | `0xdca7ef03e98e0dc2b855be647c39abe984fcf21b`
+RSK Testnet      | `rsk:testnet` | 0x1f     | `0xdca7ef03e98e0dc2b855be647c39abe984fcf21b`
+Alastria Telsius | ?             | ?        | `0x05cc574b19a3c11308f761b3d7263bd8608bc532`
+ARTIS tau1       | `artis_t1`    | 0x03c401 | `0xdca7ef03e98e0dc2b855be647c39abe984fcf21b`
+ARTIS sigma1     | `artis_s1`    | 0x03c301 | `0xdca7ef03e98e0dc2b855be647c39abe984fcf21b`
 
 Since each Ethereum transaction must be funded, there is a growing trend of on-chain transactions that are
 authenticated via an externally created signature and not by the actual transaction originator. This allows for
