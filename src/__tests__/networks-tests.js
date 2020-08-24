@@ -20,16 +20,16 @@ describe('ethrResolver (alt-chains)', () => {
         id: did,
         publicKey: [
           {
-            id: `${did}#owner`,
+            id: `${did}#controller`,
             type: 'Secp256k1VerificationKey2018',
-            owner: did,
+            controller: did,
             ethereumAddress: addr
           }
         ],
         authentication: [
           {
             type: 'Secp256k1SignatureAuthentication2018',
-            publicKey: `${did}#owner`
+            publicKey: `${did}#controller`
           }
         ]
       })
@@ -46,16 +46,16 @@ describe('ethrResolver (alt-chains)', () => {
         id: did,
         publicKey: [
           {
-            id: `${did}#owner`,
+            id: `${did}#controller`,
             type: 'Secp256k1VerificationKey2018',
-            owner: did,
+            controller: did,
             ethereumAddress: addr
           }
         ],
         authentication: [
           {
             type: 'Secp256k1SignatureAuthentication2018',
-            publicKey: `${did}#owner`
+            publicKey: `${did}#controller`
           }
         ]
       })
@@ -72,16 +72,16 @@ describe('ethrResolver (alt-chains)', () => {
         id: did,
         publicKey: [
           {
-            id: `${did}#owner`,
+            id: `${did}#controller`,
             type: 'Secp256k1VerificationKey2018',
-            owner: did,
+            controller: did,
             ethereumAddress: addr
           }
         ],
         authentication: [
           {
             type: 'Secp256k1SignatureAuthentication2018',
-            publicKey: `${did}#owner`
+            publicKey: `${did}#controller`
           }
         ]
       })
@@ -96,16 +96,16 @@ describe('ethrResolver (alt-chains)', () => {
         id: did,
         publicKey: [
           {
-            id: `${did}#owner`,
+            id: `${did}#controller`,
             type: 'Secp256k1VerificationKey2018',
-            owner: did,
+            controller: did,
             ethereumAddress: addr
           }
         ],
         authentication: [
           {
             type: 'Secp256k1SignatureAuthentication2018',
-            publicKey: `${did}#owner`
+            publicKey: `${did}#controller`
           }
         ]
       })
@@ -120,16 +120,16 @@ describe('ethrResolver (alt-chains)', () => {
         id: did,
         publicKey: [
           {
-            id: `${did}#owner`,
+            id: `${did}#controller`,
             type: 'Secp256k1VerificationKey2018',
-            owner: did,
+            controller: did,
             ethereumAddress: addr
           }
         ],
         authentication: [
           {
             type: 'Secp256k1SignatureAuthentication2018',
-            publicKey: `${did}#owner`
+            publicKey: `${did}#controller`
           }
         ]
       })
@@ -145,26 +145,26 @@ describe('ethrResolver (alt-chains)', () => {
         id: did,
         publicKey: [
           {
-            id: `${did}#owner`,
+            id: `${did}#controller`,
             type: 'Secp256k1VerificationKey2018',
-            owner: did,
+            controller: did,
             ethereumAddress: '0xf3beac30c498d9e26865f34fcaa57dbb935b0d74'
           },
           {
-            id: `${did}#ownerKey`,
+            id: `${did}#controllerKey`,
             type: 'Secp256k1VerificationKey2018',
-            owner: did,
+            controller: did,
             publicKeyHex: '0x03fdd57adec3d438ea237fe46b33ee1e016eda6b585c3e27ea66686c2ea5358479'
           }
         ],
         authentication: [
           {
             type: 'Secp256k1SignatureAuthentication2018',
-            publicKey: `${did}#owner`
+            publicKey: `${did}#controller`
           },
           {
             type: 'Secp256k1SignatureAuthentication2018',
-            publicKey: `${did}#ownerKey`
+            publicKey: `${did}#controllerKey`
           }
         ]
       })
