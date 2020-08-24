@@ -1,3 +1,15 @@
+# [3.0.0](https://github.com/decentralized-identity/ethr-did-resolver/compare/2.4.0...3.0.0) (2020-08-24)
+
+
+### Bug Fixes
+
+* change 'owner' to 'controller' to follow W3C Spec ([#75](https://github.com/decentralized-identity/ethr-did-resolver/issues/75)) ([#81](https://github.com/decentralized-identity/ethr-did-resolver/issues/81)) ([af37b3f](https://github.com/decentralized-identity/ethr-did-resolver/commit/af37b3fe66dedda688156bb421948364c3ab3606))
+
+
+### BREAKING CHANGES
+
+* JWTs that refer to the `did:ethr:...#owner` key in their header may be considered invalid after this upgrade, as the key id is now `did:ethr:...#controller`
+
 # [2.4.0](https://github.com/decentralized-identity/ethr-did-resolver/compare/2.3.4...2.4.0) (2020-08-21)
 
 
