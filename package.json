@@ -61,7 +61,7 @@
     "jdom": "3.2.1",
     "jest": "26.4.2",
     "microbundle": "0.12.3",
-    "prettier": "2.0.5",
+    "prettier": "2.1.0",
     "regenerator-runtime": "0.13.7",
     "semantic-release": "17.1.1",
     "truffle-contract": "3.0.7"
