@@ -57,7 +57,7 @@
     "eslint-plugin-promise": "4.2.1",
     "eslint-plugin-standard": "4.0.1",
     "ganache-cli": "6.10.1",
-    "husky": "4.2.5",
+    "husky": "4.3.0",
     "jdom": "3.2.1",
     "jest": "26.4.2",
     "microbundle": "0.12.3",
