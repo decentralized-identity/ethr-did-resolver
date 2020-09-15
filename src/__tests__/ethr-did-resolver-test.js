@@ -49,6 +49,12 @@ describe('ethrResolver', () => {
         //  address: '0xe1ab8145f7e55dc933d51a18c793f901a3a0b276'
         //  publicKey: '022f8bde4d1a07209355b4a7250a5c5128e88b84bddc619ab7cba8d569b240efe4'
         balance: '0x1000000000000000000'
+      },
+      {
+        secretKey: '0x0000000000000000000000000000000000000000000000000000000000000006',
+        //  address: '0xE57bFE9F44b819898F47BF37E5AF72a0783e1141'
+        //  publicKey: -
+        balance: '0x1000000000000000000'
       }
     ]
   })
@@ -94,7 +100,7 @@ describe('ethrResolver', () => {
     )
   }
 
-  let registry, accounts, did, identity, controller, delegate1, delegate2, ethr, didResolver
+  let registry, accounts, did, identity, controller, delegate1, delegate2, toDeactivate, zero, ethr, didResolver, toDeactivateDid
 
   beforeAll(async () => {
     accounts = await getAccounts()
@@ -102,7 +108,11 @@ describe('ethrResolver', () => {
     controller = accounts[2]
     delegate1 = accounts[3]
     delegate2 = accounts[4]
+    // accounts[5] used somewhere else
+    toDeactivate = accounts[6]
+    zero = '0x0000000000000000000000000000000000000000'
     did = `did:ethr:${identity}`
+    toDeactivateDid = `did:ethr:${toDeactivate}`
 
     registry = await DidReg.new({
       from: accounts[0],
@@ -219,6 +229,19 @@ describe('ethrResolver', () => {
       })
       expect(doc.publicKey.length).toBe(1)
       expect(doc.authentication.length).toBe(1)
+    })
+  })
+
+  describe('deactivate did', () => {
+    beforeAll(async () => {
+      await registry.changeOwner(toDeactivate, controller, { from: toDeactivate })
+      await registry.changeOwner(toDeactivate, zero, { from: controller })
+    })
+
+    it('does\'t resolve document', async () => {
+      return await expect(didResolver.resolve(toDeactivateDid)).rejects.toThrow(
+        `resolver returned null for ${toDeactivateDid}`
+      )
     })
   })
 

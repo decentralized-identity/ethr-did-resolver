@@ -290,6 +290,12 @@ function getResolver(conf = {}) {
     }
     return { controller, history, publicKey }
   }
+
+  function isDeactivated(history) {
+    const e = history[history.length - 1]
+    return e && e._eventName === 'DIDOwnerChanged' && e.owner === '0x0000000000000000000000000000000000000000'
+  }
+
   async function resolve(did, parsed) {
     const fullId = parsed.id.match(identifierMatcher)
     if (!fullId) throw new Error(`Not a valid ethr DID: ${did}`)
@@ -299,6 +305,9 @@ function getResolver(conf = {}) {
     if (!networks[networkId]) throw new Error(`No conf for networkId: ${networkId}`)
 
     const { controller, history, publicKey } = await changeLog(id, networkId)
+    if (isDeactivated(history)) {
+      return null
+    }
     return wrapDidDocument(did, controller, publicKey, history)
   }
 
