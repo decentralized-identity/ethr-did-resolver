@@ -58,7 +58,7 @@ describe('ethrResolver', () => {
   web3.setProvider(provider)
   const getAccounts = () =>
     new Promise((resolve, reject) =>
-      web3.eth.getAccounts((error, accounts) => (error ? reject(error) : resolve(accounts)))
+      web3.eth.getAccounts((error, accounts) => (error ? reject(error) : resolve(accounts.map((a) => a.toLowerCase()))))
     )
   DidReg.setProvider(provider)
 
