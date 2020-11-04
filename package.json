@@ -67,7 +67,7 @@
     "truffle-contract": "3.0.7"
   },
   "dependencies": {
-    "buffer": "^5.1.0",
+    "buffer": "^6.0.0",
     "did-resolver": "2.1.1",
     "elliptic": "^6.5.3",
     "ethjs-abi": "^0.2.1",
