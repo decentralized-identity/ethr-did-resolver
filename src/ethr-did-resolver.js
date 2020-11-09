@@ -280,6 +280,7 @@ function getResolver(conf = {}) {
         toBlock: previousChange
       })
       const events = logDecoder(logs)
+      events.reverse()
       previousChange = undefined
       for (const event of events) {
         history.unshift(event)

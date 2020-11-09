@@ -953,6 +953,60 @@ describe('ethrResolver', () => {
     })
   })
 
+  describe('attribute revocation event in same block(-batch) as attribute creation', () => {
+    beforeAll(async () => {
+      await stopMining()
+      await Promise.all([
+        registry.setAttribute(identity, stringToBytes32('did/svc/TestService2'), 'https://test2.uport.me', 10, {
+          from: controller
+        }),
+        sleep(1).then(() =>
+          registry.revokeAttribute(identity, stringToBytes32('did/svc/TestService2'), 'https://test2.uport.me', {
+            from: controller
+          })
+        ),
+        sleep(2).then(() => startMining())
+      ])
+    })
+
+    it('resolves document', async () => {
+      expect(await didResolver.resolve(did)).toEqual({
+        '@context': 'https://w3id.org/did/v1',
+        id: did,
+        publicKey: [
+          {
+            id: `${did}#controller`,
+            type: 'Secp256k1VerificationKey2018',
+            controller: did,
+            ethereumAddress: controller
+          },
+          {
+            id: `${did}#delegate-1`,
+            type: 'Secp256k1VerificationKey2018',
+            controller: did,
+            ethereumAddress: delegate2
+          }
+        ],
+        authentication: [
+          {
+            type: 'Secp256k1SignatureAuthentication2018',
+            publicKey: `${did}#controller`
+          },
+          {
+            type: 'Secp256k1SignatureAuthentication2018',
+            publicKey: `${did}#delegate-1`
+          }
+        ],
+        service: [
+          {
+            type: 'TestService',
+            serviceEndpoint: 'https://test.uport.me'
+          }
+        ]
+      })
+    })
+  })
+
   describe('error handling', () => {
     it('rejects promise', () => {
       return expect(didResolver.resolve('did:ethr:2nQtiQG6Cgm1GYTBaaKAgr76uY7iSexUkqX')).rejects.toEqual(
