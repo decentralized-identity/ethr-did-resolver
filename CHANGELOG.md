@@ -1,3 +1,10 @@
+## [3.0.1](https://github.com/decentralized-identity/ethr-did-resolver/compare/3.0.0...3.0.1) (2020-11-09)
+
+
+### Bug Fixes
+
+* reverse events to have consistent order ([#87](https://github.com/decentralized-identity/ethr-did-resolver/issues/87)) ([08b9692](https://github.com/decentralized-identity/ethr-did-resolver/commit/08b9692b8c6abf1da158fb3ce3dc4d49d9393068)), closes [/github.com/decentralized-identity/ethr-did-resolver/issues/86#issuecomment-699961595](https://github.com//github.com/decentralized-identity/ethr-did-resolver/issues/86/issues/issuecomment-699961595)
+
 # [3.0.0](https://github.com/decentralized-identity/ethr-did-resolver/compare/2.4.0...3.0.0) (2020-08-24)
 
 
