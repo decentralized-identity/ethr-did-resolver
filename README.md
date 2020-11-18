@@ -213,8 +213,6 @@ The name of the attribute should follow this format:
 
 `did/svc/[ServiceName]`
 
-#### Hex encoded Secp256k1 Verification Key
-
 A `DIDAttributeChanged` event for the identity `0xf3beac30c498d9e26865f34fcaa57dbb935b0d74` with the name
 `did/svc/HubService` and value of the url `https://hubs.uport.me` hex encoded as
 `0x68747470733a2f2f687562732e75706f72742e6d65` generates a `Service` entry like this:
@@ -223,6 +221,28 @@ A `DIDAttributeChanged` event for the identity `0xf3beac30c498d9e26865f34fcaa57d
 {
   type: "HubService",
   serviceEndpoint: "https://hubs.uport.me"
+}
+```
+
+### alsoKnownAs
+
+The name of the attribute should follow this format:
+
+`did/alsoKnownAs`
+
+A `DIDAttributeChanged` event for the identity `0xf3beac30c498d9e26865f34fcaa57dbb935b0d74` with the name
+`did/alsoKnownAs` and value of the URL `did:ethr:0x0123456789012345678901234567890123456789` hex encoded as
+`0x6469643a657468723a307830313233343536373839303132333435363738393031323334353637383930313233343536373839`
+adds the mentioned URL to the `alsoKnownAs` property (array) of the DID document:
+
+```javascript
+{
+  '@context': 'https://w3id.org/did/v1',
+  id: 'did:ethr:0xf3beac30c498d9e26865f34fcaa57dbb935b0d74',
+  alsoKnownAs: [
+    'did:ethr:0x0123456789012345678901234567890123456789'
+  ],
+  // ...
 }
 ```
 
