@@ -68,6 +68,7 @@ function wrapDidDocument(did, controller, controllerKey, history) {
   const auth = {}
   const pks = {}
   const services = {}
+  const alsoKnownAs = {}
   for (const event of history) {
     const validTo = event.validTo
     const key = `${event._eventName}-${event.delegateType || event.name}-${event.delegate || event.value}`
@@ -93,7 +94,7 @@ function wrapDidDocument(did, controller, controllerKey, history) {
         }
       } else if (event._eventName === 'DIDAttributeChanged') {
         const name = bytes32toString(event.name)
-        const match = name.match(/^did\/(pub|auth|svc)\/(\w+)(\/(\w+))?(\/(\w+))?$/)
+        const match = name.match(/^did\/(pub|auth|svc|alsoKnownAs)(\/(\w+))?(\/(\w+))?(\/(\w+))?$/)
         if (match) {
           const section = match[1]
           const algo = match[2]
@@ -134,6 +135,9 @@ function wrapDidDocument(did, controller, controllerKey, history) {
                 serviceEndpoint: Buffer.from(event.value.slice(2), 'hex').toString()
               }
               break
+            case 'alsoKnownAs':
+              alsoKnownAs[key] = Buffer.from(event.value.slice(2), 'hex').toString()
+              break
           }
         }
       }
@@ -149,12 +153,14 @@ function wrapDidDocument(did, controller, controllerKey, history) {
       delete auth[key]
       delete pks[key]
       delete services[key]
+      delete alsoKnownAs[key]
     }
   }
 
   const doc = {
     '@context': 'https://w3id.org/did/v1',
     id: did,
+    ...(Object.values(alsoKnownAs).length > 0 ? { alsoKnownAs: Object.values(alsoKnownAs) } : {}),
     publicKey: publicKey.concat(Object.values(pks)),
     authentication: authentication.concat(Object.values(auth))
   }
