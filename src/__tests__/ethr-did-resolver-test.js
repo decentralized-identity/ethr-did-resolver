@@ -94,7 +94,7 @@ describe('ethrResolver', () => {
     )
   }
 
-  let registry, accounts, did, identity, controller, delegate1, delegate2, ethr, didResolver
+  let registry, accounts, did, identity, controller, delegate1, delegate2, ethr, didResolver, aka1, aka2
 
   beforeAll(async () => {
     accounts = await getAccounts()
@@ -103,6 +103,8 @@ describe('ethrResolver', () => {
     delegate1 = accounts[3]
     delegate2 = accounts[4]
     did = `did:ethr:${identity}`
+    aka1 = `did:ethr:rinkeby:${identity}`
+    aka2 = `did:ethr:ropsten:${identity}`
 
     registry = await DidReg.new({
       from: accounts[0],
@@ -629,6 +631,217 @@ describe('ethrResolver', () => {
           await registry.setAttribute(identity, stringToBytes32('did/svc/HubService'), 'https://hubs.uport.me', 10, {
             from: controller
           })
+        })
+        it('resolves document', () => {
+          return expect(didResolver.resolve(did)).resolves.toEqual({
+            '@context': 'https://w3id.org/did/v1',
+            id: did,
+            publicKey: [
+              {
+                id: `${did}#controller`,
+                type: 'Secp256k1VerificationKey2018',
+                controller: did,
+                ethereumAddress: controller
+              },
+              {
+                id: `${did}#delegate-1`,
+                type: 'Secp256k1VerificationKey2018',
+                controller: did,
+                ethereumAddress: delegate2
+              },
+              {
+                id: `${did}#delegate-2`,
+                type: 'Secp256k1VerificationKey2018',
+                controller: did,
+                publicKeyHex: '02b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71'
+              },
+              {
+                id: `${did}#delegate-3`,
+                type: 'Ed25519VerificationKey2018',
+                controller: did,
+                publicKeyBase64: Buffer.from(
+                  '02b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71',
+                  'hex'
+                ).toString('base64')
+              },
+              {
+                id: `${did}#delegate-4`,
+                type: 'RSAVerificationKey2018',
+                controller: did,
+                publicKeyPem: '-----BEGIN PUBLIC KEY...END PUBLIC KEY-----\r\n'
+              }
+            ],
+            authentication: [
+              {
+                type: 'Secp256k1SignatureAuthentication2018',
+                publicKey: `${did}#controller`
+              },
+              {
+                type: 'Secp256k1SignatureAuthentication2018',
+                publicKey: `${did}#delegate-1`
+              }
+            ],
+            service: [
+              {
+                type: 'HubService',
+                serviceEndpoint: 'https://hubs.uport.me'
+              }
+            ]
+          })
+        })
+      })
+    })
+
+    describe('add alsoKnownAs', () => {
+      describe('aka1', () => {
+        beforeAll(async () => {
+          await registry.setAttribute(identity, stringToBytes32('did/alsoKnownAs'), aka1, 10, {
+            from: controller
+          })
+        })
+        it('resolves document', () => {
+          return expect(didResolver.resolve(did)).resolves.toEqual({
+            '@context': 'https://w3id.org/did/v1',
+            id: did,
+            alsoKnownAs: [aka1],
+            publicKey: [
+              {
+                id: `${did}#controller`,
+                type: 'Secp256k1VerificationKey2018',
+                controller: did,
+                ethereumAddress: controller
+              },
+              {
+                id: `${did}#delegate-1`,
+                type: 'Secp256k1VerificationKey2018',
+                controller: did,
+                ethereumAddress: delegate2
+              },
+              {
+                id: `${did}#delegate-2`,
+                type: 'Secp256k1VerificationKey2018',
+                controller: did,
+                publicKeyHex: '02b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71'
+              },
+              {
+                id: `${did}#delegate-3`,
+                type: 'Ed25519VerificationKey2018',
+                controller: did,
+                publicKeyBase64: Buffer.from(
+                  '02b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71',
+                  'hex'
+                ).toString('base64')
+              },
+              {
+                id: `${did}#delegate-4`,
+                type: 'RSAVerificationKey2018',
+                controller: did,
+                publicKeyPem: '-----BEGIN PUBLIC KEY...END PUBLIC KEY-----\r\n'
+              }
+            ],
+            authentication: [
+              {
+                type: 'Secp256k1SignatureAuthentication2018',
+                publicKey: `${did}#controller`
+              },
+              {
+                type: 'Secp256k1SignatureAuthentication2018',
+                publicKey: `${did}#delegate-1`
+              }
+            ],
+            service: [
+              {
+                type: 'HubService',
+                serviceEndpoint: 'https://hubs.uport.me'
+              }
+            ]
+          })
+        })
+      })
+
+      describe('aka2 (twice)', () => {
+        beforeAll(async () => {
+          await Promise.all([
+            registry.setAttribute(identity, stringToBytes32('did/alsoKnownAs'), aka2, 10, {
+              from: controller
+            }),
+            registry.setAttribute(identity, stringToBytes32('did/alsoKnownAs'), aka2, 10, {
+              from: controller
+            })
+          ])
+        })
+        it('resolves document', () => {
+          return expect(didResolver.resolve(did)).resolves.toEqual({
+            '@context': 'https://w3id.org/did/v1',
+            id: did,
+            alsoKnownAs: [aka1, aka2],
+            publicKey: [
+              {
+                id: `${did}#controller`,
+                type: 'Secp256k1VerificationKey2018',
+                controller: did,
+                ethereumAddress: controller
+              },
+              {
+                id: `${did}#delegate-1`,
+                type: 'Secp256k1VerificationKey2018',
+                controller: did,
+                ethereumAddress: delegate2
+              },
+              {
+                id: `${did}#delegate-2`,
+                type: 'Secp256k1VerificationKey2018',
+                controller: did,
+                publicKeyHex: '02b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71'
+              },
+              {
+                id: `${did}#delegate-3`,
+                type: 'Ed25519VerificationKey2018',
+                controller: did,
+                publicKeyBase64: Buffer.from(
+                  '02b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71',
+                  'hex'
+                ).toString('base64')
+              },
+              {
+                id: `${did}#delegate-4`,
+                type: 'RSAVerificationKey2018',
+                controller: did,
+                publicKeyPem: '-----BEGIN PUBLIC KEY...END PUBLIC KEY-----\r\n'
+              }
+            ],
+            authentication: [
+              {
+                type: 'Secp256k1SignatureAuthentication2018',
+                publicKey: `${did}#controller`
+              },
+              {
+                type: 'Secp256k1SignatureAuthentication2018',
+                publicKey: `${did}#delegate-1`
+              }
+            ],
+            service: [
+              {
+                type: 'HubService',
+                serviceEndpoint: 'https://hubs.uport.me'
+              }
+            ]
+          })
+        })
+      })
+    })
+
+    describe('revoke alsoKnownAs', () => {
+      describe('aka1 + aka2', () => {
+        beforeAll(async () => {
+          await Promise.all([
+            registry.setAttribute(identity, stringToBytes32('did/alsoKnownAs'), aka1, 10, {
+              from: controller
+            }),
+            registry.setAttribute(identity, stringToBytes32('did/alsoKnownAs'), aka2, 10, {
+              from: controller
+            })
+          ])
         })
         it('resolves document', () => {
           return expect(didResolver.resolve(did)).resolves.toEqual({
