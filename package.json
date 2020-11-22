@@ -63,7 +63,7 @@
     "microbundle": "0.12.4",
     "prettier": "2.2.0",
     "regenerator-runtime": "0.13.7",
-    "semantic-release": "17.2.4",
+    "semantic-release": "17.3.0",
     "truffle-contract": "3.0.7"
   },
   "dependencies": {
