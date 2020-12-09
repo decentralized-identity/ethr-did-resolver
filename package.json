@@ -1,6 +1,6 @@
 {
   "name": "ethr-did-resolver",
-  "version": "3.0.1",
+  "version": "3.0.2",
   "description": "Resolve DID documents around ethereum addresses",
   "main": "dist/ethr-did-resolver.js",
   "source": "src/ethr-did-resolver.js",
