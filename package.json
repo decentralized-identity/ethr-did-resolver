@@ -64,7 +64,7 @@
     "prettier": "2.2.1",
     "regenerator-runtime": "0.13.7",
     "semantic-release": "17.3.0",
-    "truffle-contract": "3.0.7"
+    "truffle-contract": "4.0.31"
   },
   "dependencies": {
     "buffer": "^5.1.0",
