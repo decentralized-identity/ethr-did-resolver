@@ -1,3 +1,11 @@
+## [3.0.3](https://github.com/decentralized-identity/ethr-did-resolver/compare/3.0.2...3.0.3) (2020-12-17)
+
+
+### Bug Fixes
+
+* **deps:** update dependency buffer to v6 ([#93](https://github.com/decentralized-identity/ethr-did-resolver/issues/93)) ([e1dc861](https://github.com/decentralized-identity/ethr-did-resolver/commit/e1dc8612b32c06b8bbb046fe6003d70ca1b3960d))
+* **types:** simplify type exports ([#101](https://github.com/decentralized-identity/ethr-did-resolver/issues/101)) ([90ca9b5](https://github.com/decentralized-identity/ethr-did-resolver/commit/90ca9b5b3fb13c9531b542eb9fc8d3e51454d4b1))
+
 ## [3.0.2](https://github.com/decentralized-identity/ethr-did-resolver/compare/3.0.1...3.0.2) (2020-12-09)
 
 
