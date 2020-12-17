@@ -1,3 +1,1 @@
-declare module "ethr-did-resolver" {
-  export function getResolver(options: any): any;
-}
+declare module "ethr-did-resolver"
