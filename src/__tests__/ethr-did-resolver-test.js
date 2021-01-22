@@ -4,6 +4,7 @@ import Contract from 'truffle-contract'
 import DidRegistryContract from 'ethr-did-registry'
 import Web3 from 'web3'
 import ganache from 'ganache-cli'
+import base58 from 'bs58'
 
 const { Secp256k1SignatureAuthentication2018, Secp256k1VerificationKey2018 } = delegateTypes
 
@@ -505,6 +506,52 @@ describe('ethrResolver', () => {
               {
                 type: 'Secp256k1SignatureAuthentication2018',
                 publicKey: `${did}#delegate-1`
+              }
+            ]
+          })
+        })
+      })
+
+      describe('Ed25519VerificationKey2018 in base58', () => {
+        let identity, did
+        beforeAll(async () => {
+          const accounts = await getAccounts()
+          identity = accounts[3]
+          did = `did:ethr:${identity}`
+
+          await registry.setAttribute(
+            identity,
+            stringToBytes32('did/pub/Ed25519/veriKey/base58'),
+            '0xb97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71',
+            10,
+            { from: identity }
+          )
+        })
+        it('resolves document', () => {
+          return expect(didResolver.resolve(did)).resolves.toEqual({
+            '@context': 'https://w3id.org/did/v1',
+            id: did,
+            publicKey: [
+              {
+                id: `${did}#controller`,
+                type: 'Secp256k1VerificationKey2018',
+                controller: did,
+                ethereumAddress: identity
+              },
+              {
+                id: `${did}#delegate-1`,
+                type: 'Ed25519VerificationKey2018',
+                controller: did,
+                publicKeyBase58: base58.encode(Buffer.from(
+                  'b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71',
+                  'hex'
+                ))
+              }
+            ],
+            authentication: [
+              {
+                type: 'Secp256k1SignatureAuthentication2018',
+                publicKey: `${did}#controller`
               }
             ]
           })

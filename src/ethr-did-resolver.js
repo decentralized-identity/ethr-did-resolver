@@ -6,6 +6,7 @@ import EthContract from 'ethjs-contract'
 import DidRegistryContract from '../contracts/ethr-did-registry.json'
 import { Buffer } from 'buffer'
 import { toEthereumAddress } from './utils'
+import base58 from 'bs58'
 
 const REGISTRY = '0xdca7ef03e98e0dc2b855be647c39abe984fcf21b'
 
@@ -117,7 +118,7 @@ function wrapDidDocument(did, controller, controllerKey, history) {
                   pk.publicKeyBase64 = Buffer.from(event.value.slice(2), 'hex').toString('base64')
                   break
                 case 'base58':
-                  pk.publicKeyBase58 = Buffer.from(event.value.slice(2), 'hex').toString('base58')
+                  pk.publicKeyBase58 = base58.encode(Buffer.from(event.value.slice(2), 'hex'))
                   break
                 case 'pem':
                   pk.publicKeyPem = Buffer.from(event.value.slice(2), 'hex').toString()

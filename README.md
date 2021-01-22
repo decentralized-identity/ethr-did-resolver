@@ -189,6 +189,22 @@ A `DIDAttributeChanged` event for the identity `0xf3beac30c498d9e26865f34fcaa57d
 }
 ```
 
+or, if you prefer the more commonly used base58 encoding for ed25519 keys:
+
+A `DIDAttributeChanged` event for the identity `0xf3beac30c498d9e26865f34fcaa57dbb935b0d74` with the name
+`did/pub/Ed25519/veriKey/base58` and the value of
+`0xb97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71` generates a `PublicKey` entry like this:
+
+```javascript
+{
+  id: "did:ethr:0xf3beac30c498d9e26865f34fcaa57dbb935b0d74#delegate-1",
+  type: "Ed25519VerificationKey2018",
+  controller: "did:ethr:0xf3beac30c498d9e26865f34fcaa57dbb935b0d74",
+  publicKeyBase58: "DV4G2kpBKjE6zxKor7Cj21iL9x9qyXb6emqjszBXcuhz"
+}
+```
+
+
 #### Base64 encoded X25519 Encryption Key
 
 A `DIDAttributeChanged` event for the identity `0xf3beac30c498d9e26865f34fcaa57dbb935b0d74` with the name
