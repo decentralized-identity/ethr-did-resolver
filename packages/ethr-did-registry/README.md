@@ -32,6 +32,8 @@ This contract allows Ethereum addresses to present signing information about the
 | RSK (id: 30)                        | [0xdca7ef03e98e0dc2b855be647c39abe984fcf21b](https://explorer.rsk.co/address/0xdca7ef03e98e0dc2b855be647c39abe984fcf21b)                 |
 | RSK Testnet (id: 31)                | [0xdca7ef03e98e0dc2b855be647c39abe984fcf21b](https://explorer.testnet.rsk.co/address/0xdca7ef03e98e0dc2b855be647c39abe984fcf21b)         |
 | Alastria Telsius (id: 83584648538 ) | [0x05cc574b19a3c11308f761b3d7263bd8608bc532](http://blkexplorer0.telsius.alastria.io/account/0x05cc574b19a3c11308f761b3d7263bd8608bc532) |
+| ARTIS tau1 (id: 246785 ) | [0xdca7ef03e98e0dc2b855be647c39abe984fcf21b](https://explorer.tau1.artis.network/address/0xdCa7EF03e98e0DC2B855bE647C39ABe984fcF21B/transactions) |
+| ARTIS sigma1 (id: 246529 ) | [0xdca7ef03e98e0dc2b855be647c39abe984fcf21b](https://explorer.sigma1.artis.network/address/0xdCa7EF03e98e0DC2B855bE647C39ABe984fcF21B/transactions) |
 
 ## Using the Registry
 
