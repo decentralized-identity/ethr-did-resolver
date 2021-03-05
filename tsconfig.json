@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "target": "es2015",
+    "lib": ["es2015"],
+    "module": "commonjs",
+    "declaration": true,
+    "sourceMap": true,
+    "outDir": "lib",
+    "strict": true,
+    "resolveJsonModule": true,
+    "esModuleInterop": true
+  },
+  "include": [
+    "src"
+  ],
+  "exclude": [
+    "node_modules",
+    "**/__tests__/*",
+    "lib"
+  ]
+}
