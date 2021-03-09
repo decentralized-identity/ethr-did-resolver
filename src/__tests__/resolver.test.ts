@@ -6,6 +6,7 @@ import { getResolver } from '../resolver'
 import DidRegistryContract from 'ethr-did-registry'
 // import Web3 from 'web3'
 import ganache from 'ganache-cli'
+import { stringToBytes32 } from '../utils'
 
 // const { Secp256k1SignatureAuthentication2018, Secp256k1VerificationKey2018 } = delegateTypes
 
@@ -156,7 +157,7 @@ describe('ethrResolver', () => {
     registryContract = await factory.deploy()
     registryContract = await registryContract.deployed()
 
-    console.log(await registryContract.deployTransaction.wait())
+    await registryContract.deployTransaction.wait()
 
     const registry = registryContract.address
 
@@ -169,13 +170,11 @@ describe('ethrResolver', () => {
     did = `did:ethr:dev:${identity}`
 
     didResolver = new Resolver(getResolver({ name: 'dev', provider: web3Provider, registry }))
-    console.log('doing this before tests')
   })
 
   describe('unregistered', () => {
     it('resolves document', async () => {
       expect.assertions(1)
-      console.log('doing this in test', didResolver)
       await expect(didResolver.resolve(did)).resolves.toEqual({
         didDocumentMetadata: {},
         didResolutionMetadata: { contentType: 'application/did+ld+json' },
@@ -233,260 +232,279 @@ describe('ethrResolver', () => {
     }
     const contract = registryContract.connect(web3Provider.getSigner(oldOwner))
     const ownerChange = await contract.functions.changeOwner(identity, newOwner, overrides)
-    console.log(ownerChange)
-    console.log(await ownerChange.wait())
+    return await ownerChange.wait()
   }
 
-  // async function addDelegate(controller, identity, delegateType, delegateAddress, exp) {
-  //   console.log(`adding delegate for ${oldOwner} on registry at ${registryContract.address}`)
-  //   const overrides = {
-  //     gasLimit: 123456,
-  //     gasPrice: 1000000000
-  //   }
-  //   const contract = registryContract.connect(web3Provider.getSigner(controller))
-  //   const addDelegateTx = await contract.functions.addDelegate(identity, delegateType, delegateAddress, exp, overrides)
-  //   console.log(addDelegateTx)
-  //   console.log(await addDelegateTx.wait())
-  // }
+  async function addDelegate(
+    controller: string,
+    identity: string,
+    delegateType: string,
+    delegateAddress: string,
+    exp: number
+  ) {
+    console.log(`adding delegate ${delegateAddress}(${delegateType}) for ${identity}, using controller:${controller}`)
+    const overrides = {
+      gasLimit: 123456,
+      gasPrice: 1000000000,
+    }
+    const delegateTypeBytes = stringToBytes32(delegateType)
+    const contract = registryContract.connect(web3Provider.getSigner(controller))
+    const addDelegateTx = await contract.functions.addDelegate(
+      identity,
+      delegateTypeBytes,
+      delegateAddress,
+      exp,
+      overrides
+    )
+    addDelegateTx
+    return await addDelegateTx.wait()
+  }
+
+  async function revokeDelegate(controller: string, identity: string, delegateType: string, delegateAddress: string) {
+    console.log(
+      `revoking delegate ${delegateAddress}(${delegateType}) for ${identity}, using controller: ${controller}`
+    )
+    const overrides = {
+      gasLimit: 123456,
+      gasPrice: 1000000000,
+    }
+    const delegateTypeBytes = stringToBytes32(delegateType)
+    const contract = registryContract.connect(web3Provider.getSigner(controller))
+    const addDelegateTx = await contract.functions.revokeDelegate(
+      identity,
+      delegateTypeBytes,
+      delegateAddress,
+      overrides
+    )
+    return await addDelegateTx.wait()
+  }
 
   // // await registry.addDelegate(identity, Secp256k1VerificationKey2018, delegate1, 2, { from: controller })
 
-  // describe('controller changed', () => {
-  //   beforeAll(async () => {
-  //     // await registry.changeOwner(identity, controller, { from: identity })
-  //     await changeOwner(identity, controller)
-  //   })
+  describe('controller changed', () => {
+    beforeAll(async () => {
+      // await registry.changeOwner(identity, controller, { from: identity })
+      await changeOwner(identity, controller)
+    })
 
-  //   it('resolves document', () => {
-  //     return expect(didResolver.resolve(did)).resolves.toEqual({
-  //       '@context': 'https://w3id.org/did/v1',
-  //       id: did,
-  //       publicKey: [
-  //         {
-  //           id: `${did}#controller`,
-  //           type: 'Secp256k1VerificationKey2018',
-  //           controller: did,
-  //           ethereumAddress: controller
-  //         }
-  //       ],
-  //       authentication: [
-  //         {
-  //           type: 'Secp256k1SignatureAuthentication2018',
-  //           publicKey: `${did}#controller`
-  //         }
-  //       ]
-  //     })
-  //   })
+    it('resolves document', async () => {
+      expect.assertions(1)
+      await expect(didResolver.resolve(did)).resolves.toEqual({
+        didDocumentMetadata: {},
+        didResolutionMetadata: { contentType: 'application/did+ld+json' },
+        didDocument: {
+          '@context': 'https://w3id.org/did/v1',
+          id: did,
+          publicKey: [
+            {
+              id: `${did}#controller`,
+              type: 'EcdsaSecp256k1RecoveryMethod2020',
+              controller: did,
+              ethereumAddress: controller,
+            },
+          ],
+          authentication: [`${did}#controller`],
+        },
+      })
+    })
 
-  //   it('changing controller invalidates the publicKey as identifier', async () => {
-  //     const pubKey = '0x0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798'
-  //     const pubdid = `did:ethr:${pubKey}`
-  //     const doc = await didResolver.resolve(pubdid)
-  //     expect(doc).toEqual({
-  //       '@context': 'https://w3id.org/did/v1',
-  //       id: pubdid,
-  //       publicKey: [
-  //         {
-  //           id: `${pubdid}#controller`,
-  //           type: 'Secp256k1VerificationKey2018',
-  //           controller: pubdid,
-  //           ethereumAddress: controller
-  //         }
-  //       ],
-  //       authentication: [
-  //         {
-  //           type: 'Secp256k1SignatureAuthentication2018',
-  //           publicKey: `${pubdid}#controller`
-  //         }
-  //       ]
-  //     })
-  //     expect(doc.publicKey.length).toBe(1)
-  //     expect(doc.authentication.length).toBe(1)
-  //   })
-  // })
+    it('changing controller invalidates the publicKey as identifier', async () => {
+      expect.assertions(3)
+      const pubKey = '0x0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798'
+      const pubdid = `did:ethr:dev:${pubKey}`
+      const { didDocument } = await didResolver.resolve(pubdid)
+      expect(didDocument).toEqual({
+        '@context': 'https://w3id.org/did/v1',
+        id: pubdid,
+        publicKey: [
+          {
+            id: `${pubdid}#controller`,
+            type: 'EcdsaSecp256k1RecoveryMethod2020',
+            controller: pubdid,
+            ethereumAddress: controller,
+          },
+        ],
+        authentication: [`${pubdid}#controller`],
+      })
+      expect(didDocument?.publicKey?.length).toBe(1)
+      expect(didDocument?.authentication?.length).toBe(1)
+    })
+  })
 
-  // describe('delegates', () => {
-  //   describe('add signing delegate', () => {
-  //     beforeAll(async () => {
-  //       // await registry.addDelegate(identity, Secp256k1VerificationKey2018, delegate1, 2, { from: controller })
-  //       await addDelegate(identity, identity, Secp256k1VerificationKey2018, delegate1, 2)
-  //     })
+  describe('delegates', () => {
+    describe('add signing delegate', () => {
+      beforeAll(async () => {
+        // await registry.addDelegate(identity, Secp256k1VerificationKey2018, delegate1, 2, { from: controller })
+        await addDelegate(controller, identity, 'veriKey', delegate1, 100)
+      })
 
-  //     it('resolves document', () => {
-  //       return expect(didResolver.resolve(did)).resolves.toEqual({
-  //         '@context': 'https://w3id.org/did/v1',
-  //         id: did,
-  //         publicKey: [
-  //           {
-  //             id: `${did}#controller`,
-  //             type: 'Secp256k1VerificationKey2018',
-  //             controller: did,
-  //             ethereumAddress: controller
-  //           },
-  //           {
-  //             id: `${did}#delegate-1`,
-  //             type: 'Secp256k1VerificationKey2018',
-  //             controller: did,
-  //             ethereumAddress: delegate1
-  //           }
-  //         ],
-  //         authentication: [
-  //           {
-  //             type: 'Secp256k1SignatureAuthentication2018',
-  //             publicKey: `${did}#controller`
-  //           }
-  //         ]
-  //       })
-  //     })
-  //   })
+      it('resolves document', async () => {
+        expect.assertions(1)
+        await expect(didResolver.resolve(did)).resolves.toEqual({
+          didDocumentMetadata: {},
+          didResolutionMetadata: { contentType: 'application/did+ld+json' },
+          didDocument: {
+            '@context': 'https://w3id.org/did/v1',
+            id: did,
+            publicKey: [
+              {
+                id: `${did}#controller`,
+                type: 'EcdsaSecp256k1RecoveryMethod2020',
+                controller: did,
+                ethereumAddress: controller,
+              },
+              {
+                id: `${did}#delegate-1`,
+                type: 'EcdsaSecp256k1RecoveryMethod2020',
+                controller: did,
+                ethereumAddress: delegate1,
+              },
+            ],
+            authentication: [`${did}#controller`],
+          },
+        })
+      })
+    })
 
-  //   describe('add auth delegate', () => {
-  //     beforeAll(async () => {
-  //       await addDelegate(identity, identity, Secp256k1SignatureAuthentication2018, delegate2, 10)
-  //       // await registry.addDelegate(identity, Secp256k1SignatureAuthentication2018, delegate2, 10, { from: controller })
-  //     })
+    describe('add auth delegate', () => {
+      // beforeAll(async () => {
+      //   // await registry.addDelegate(identity, Secp256k1SignatureAuthentication2018, delegate2, 10, { from: controller })
+      // })
 
-  //     it('resolves document', () => {
-  //       return expect(didResolver.resolve(did)).resolves.toEqual({
-  //         '@context': 'https://w3id.org/did/v1',
-  //         id: did,
-  //         publicKey: [
-  //           {
-  //             id: `${did}#controller`,
-  //             type: 'Secp256k1VerificationKey2018',
-  //             controller: did,
-  //             ethereumAddress: controller
-  //           },
-  //           {
-  //             id: `${did}#delegate-1`,
-  //             type: 'Secp256k1VerificationKey2018',
-  //             controller: did,
-  //             ethereumAddress: delegate1
-  //           },
-  //           {
-  //             id: `${did}#delegate-2`,
-  //             type: 'Secp256k1VerificationKey2018',
-  //             controller: did,
-  //             ethereumAddress: delegate2
-  //           }
-  //         ],
-  //         authentication: [
-  //           {
-  //             type: 'Secp256k1SignatureAuthentication2018',
-  //             publicKey: `${did}#controller`
-  //           },
-  //           {
-  //             type: 'Secp256k1SignatureAuthentication2018',
-  //             publicKey: `${did}#delegate-2`
-  //           }
-  //         ]
-  //       })
-  //     })
-  //   })
+      it('resolves document', async () => {
+        expect.assertions(1)
+        await addDelegate(controller, identity, 'sigAuth', delegate2, 1)
+        // console.log(JSON.stringify((await didResolver.resolve(did)).didDocument, null, 2))
+        await expect(didResolver.resolve(did)).resolves.toMatchObject({
+          didDocumentMetadata: {},
+          didResolutionMetadata: { contentType: 'application/did+ld+json' },
+          didDocument: {
+            '@context': 'https://w3id.org/did/v1',
+            id: did,
+            publicKey: [
+              {
+                id: `${did}#controller`,
+                type: 'EcdsaSecp256k1RecoveryMethod2020',
+                controller: did,
+                ethereumAddress: controller,
+              },
+              {
+                id: `${did}#delegate-1`,
+                type: 'EcdsaSecp256k1RecoveryMethod2020',
+                controller: did,
+                ethereumAddress: delegate1,
+              },
+              {
+                id: `${did}#delegate-2`,
+                type: 'EcdsaSecp256k1RecoveryMethod2020',
+                controller: did,
+                ethereumAddress: delegate2,
+              },
+            ],
+            authentication: [`${did}#controller`, `${did}#delegate-2`],
+          },
+        })
+      })
+    })
 
-  //   describe('expire automatically', () => {
-  //     beforeAll(async () => {
-  //       await sleep(3)
-  //     })
+    describe('expire automatically', () => {
+      beforeAll(async () => {
+        await sleep(3)
+      })
 
-  //     it('resolves document', () => {
-  //       return expect(didResolver.resolve(did)).resolves.toEqual({
-  //         '@context': 'https://w3id.org/did/v1',
-  //         id: did,
-  //         publicKey: [
-  //           {
-  //             id: `${did}#controller`,
-  //             type: 'Secp256k1VerificationKey2018',
-  //             controller: did,
-  //             ethereumAddress: controller
-  //           },
-  //           {
-  //             id: `${did}#delegate-1`,
-  //             type: 'Secp256k1VerificationKey2018',
-  //             controller: did,
-  //             ethereumAddress: delegate2
-  //           }
-  //         ],
-  //         authentication: [
-  //           {
-  //             type: 'Secp256k1SignatureAuthentication2018',
-  //             publicKey: `${did}#controller`
-  //           },
-  //           {
-  //             type: 'Secp256k1SignatureAuthentication2018',
-  //             publicKey: `${did}#delegate-1`
-  //           }
-  //         ]
-  //       })
-  //     })
-  //   })
+      it('resolves document', async () => {
+        expect.assertions(1)
+        await expect(didResolver.resolve(did)).resolves.toEqual({
+          didDocumentMetadata: {},
+          didResolutionMetadata: { contentType: 'application/did+ld+json' },
+          didDocument: {
+            '@context': 'https://w3id.org/did/v1',
+            id: did,
+            publicKey: [
+              {
+                id: `${did}#controller`,
+                type: 'EcdsaSecp256k1RecoveryMethod2020',
+                controller: did,
+                ethereumAddress: controller,
+              },
+              {
+                id: `${did}#delegate-1`,
+                type: 'EcdsaSecp256k1RecoveryMethod2020',
+                controller: did,
+                ethereumAddress: delegate1,
+              },
+            ],
+            authentication: [`${did}#controller`],
+          },
+        })
+      })
+    })
 
-  //   describe('revokes delegate', () => {
-  //     beforeAll(async () => {
-  //       await registry.revokeDelegate(identity, Secp256k1SignatureAuthentication2018, delegate2, { from: controller })
-  //       await sleep(1)
-  //     })
+    describe('revokes delegate', () => {
+      // beforeAll(async () => {
+      //   await revokeDelegate(controller, identity, 'sigAuth', delegate1)
+      //   await sleep(1)
+      // })
+      
+      it('resolves document', async () => {
+        expect.assertions(1)
+        await revokeDelegate(controller, identity, 'veriKey', delegate1)
+        await sleep(1)
+        await expect(didResolver.resolve(did)).resolves.toEqual({
+          didDocumentMetadata: {},
+          didResolutionMetadata: { contentType: 'application/did+ld+json' },
+          didDocument: {
+            '@context': 'https://w3id.org/did/v1',
+            id: did,
+            publicKey: [
+              {
+                id: `${did}#controller`,
+                type: 'EcdsaSecp256k1RecoveryMethod2020',
+                controller: did,
+                ethereumAddress: controller,
+              },
+            ],
+            authentication: [`${did}#controller`],
+          },
+        })
+      })
+    })
 
-  //     it('resolves document', () => {
-  //       return expect(didResolver.resolve(did)).resolves.toEqual({
-  //         '@context': 'https://w3id.org/did/v1',
-  //         id: did,
-  //         publicKey: [
-  //           {
-  //             id: `${did}#controller`,
-  //             type: 'Secp256k1VerificationKey2018',
-  //             controller: did,
-  //             ethereumAddress: controller
-  //           }
-  //         ],
-  //         authentication: [
-  //           {
-  //             type: 'Secp256k1SignatureAuthentication2018',
-  //             publicKey: `${did}#controller`
-  //           }
-  //         ]
-  //       })
-  //     })
-  //   })
-
-  //   describe('re-add auth delegate', () => {
-  //     beforeAll(async () => {
-  //       await sleep(3)
-  //       await registry.addDelegate(identity, Secp256k1SignatureAuthentication2018, delegate2, 86400, { from: controller })
-  //     })
-
-  //     it('resolves document', () => {
-  //       return expect(didResolver.resolve(did)).resolves.toEqual({
-  //         '@context': 'https://w3id.org/did/v1',
-  //         id: did,
-  //         publicKey: [
-  //           {
-  //             id: `${did}#controller`,
-  //             type: 'Secp256k1VerificationKey2018',
-  //             controller: did,
-  //             ethereumAddress: controller
-  //           },
-  //           {
-  //             id: `${did}#delegate-1`,
-  //             type: 'Secp256k1VerificationKey2018',
-  //             controller: did,
-  //             ethereumAddress: delegate2
-  //           }
-  //         ],
-  //         authentication: [
-  //           {
-  //             type: 'Secp256k1SignatureAuthentication2018',
-  //             publicKey: `${did}#controller`
-  //           },
-  //           {
-  //             type: 'Secp256k1SignatureAuthentication2018',
-  //             publicKey: `${did}#delegate-1`
-  //           }
-  //         ]
-  //       })
-  //     })
-  //   })
-  // })
+    describe('re-add auth delegate', () => {
+      // beforeAll(async () => {
+      //   await sleep(3)
+      //   await addDelegate(controller, identity, 'sigAuth', delegate2, 86400)
+      // })
+      
+      it('resolves document', async () => {
+        expect.assertions(1)
+        await addDelegate(controller, identity, 'sigAuth', delegate2, 86400)
+        await expect(didResolver.resolve(did)).resolves.toEqual({
+          didDocumentMetadata: {},
+          didResolutionMetadata: { contentType: 'application/did+ld+json' },
+          didDocument: {
+            '@context': 'https://w3id.org/did/v1',
+            id: did,
+            publicKey: [
+              {
+                id: `${did}#controller`,
+                type: 'EcdsaSecp256k1RecoveryMethod2020',
+                controller: did,
+                ethereumAddress: controller,
+              },
+              {
+                id: `${did}#delegate-1`,
+                type: 'EcdsaSecp256k1RecoveryMethod2020',
+                controller: did,
+                ethereumAddress: delegate2,
+              },
+            ],
+            authentication: [`${did}#controller`, `${did}#delegate-1`],
+          },
+        })
+      })
+    })
+  })
 
   // describe('attributes', () => {
   //   describe('add publicKey', () => {

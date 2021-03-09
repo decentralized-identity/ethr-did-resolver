@@ -166,7 +166,7 @@ export class EthrDidResolver {
         if (event._eventName === 'DIDDelegateChanged') {
           const currentEvent = <DIDDelegateChanged>event
           delegateCount++
-          const delegateType = bytes32toString(currentEvent.delegateType)
+          const delegateType = currentEvent.delegateType
           switch (delegateType) {
             case 'sigAuth':
               auth[eventIndex] = `${did}#delegate-${delegateCount}`
@@ -174,7 +174,7 @@ export class EthrDidResolver {
             case 'veriKey':
               pks[eventIndex] = {
                 id: `${did}#delegate-${delegateCount}`,
-                type: 'Secp256k1VerificationKey2018',
+                type: 'EcdsaSecp256k1RecoveryMethod2020',
                 controller: did,
                 ethereumAddress: currentEvent.delegate
               }
