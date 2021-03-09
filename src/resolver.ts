@@ -215,17 +215,15 @@ export class EthrDidResolver {
         }
       } else {
         if (
-          delegateCount > 0 &&
-          (event._eventName === 'DIDDelegateChanged' ||
-            (event._eventName === 'DIDAttributeChanged' &&
-              bytes32toString((<DIDAttributeChanged>event).name).match(/^did\/pub\//)))
+          event._eventName === 'DIDDelegateChanged' ||
+          (event._eventName === 'DIDAttributeChanged' && (<DIDAttributeChanged>event).name.match(/^did\/pub\//))
         ) {
-          delegateCount--
+          delegateCount++
         } else if (
           event._eventName === 'DIDAttributeChanged' &&
-          bytes32toString((<DIDAttributeChanged>event).name).match(/^did\/svc\//)
+          (<DIDAttributeChanged>event).name.match(/^did\/svc\//)
         ) {
-          serviceCount--
+          serviceCount++
         }
         delete auth[eventIndex]
         delete pks[eventIndex]

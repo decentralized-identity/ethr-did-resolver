@@ -346,13 +346,13 @@ describe('ethrResolver', () => {
                 ethereumAddress: controller,
               },
               {
-                id: `${did}#delegate-1`,
+                id: `${did}#delegate-4`,
                 type: 'EcdsaSecp256k1RecoveryMethod2020',
                 controller: did,
                 ethereumAddress: delegate2,
               },
             ],
-            authentication: [`${did}#controller`, `${did}#delegate-1`],
+            authentication: [`${did}#controller`, `${did}#delegate-4`],
           },
         })
       })
@@ -382,19 +382,19 @@ describe('ethrResolver', () => {
                 ethereumAddress: controller,
               },
               {
-                id: `${did}#delegate-1`,
+                id: `${did}#delegate-4`,
                 type: 'EcdsaSecp256k1RecoveryMethod2020',
                 controller: did,
                 ethereumAddress: delegate2,
               },
               {
-                id: `${did}#delegate-2`,
+                id: `${did}#delegate-5`,
                 type: 'EcdsaSecp256k1VerificationKey2019',
                 controller: did,
                 publicKeyHex: '02b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71',
               },
             ],
-            authentication: [`${did}#controller`, `${did}#delegate-1`],
+            authentication: [`${did}#controller`, `${did}#delegate-4`],
           })
         })
       })
@@ -420,19 +420,19 @@ describe('ethrResolver', () => {
                 ethereumAddress: controller,
               },
               {
-                id: `${did}#delegate-1`,
+                id: `${did}#delegate-4`,
                 type: 'EcdsaSecp256k1RecoveryMethod2020',
                 controller: did,
                 ethereumAddress: delegate2,
               },
               {
-                id: `${did}#delegate-2`,
+                id: `${did}#delegate-5`,
                 type: 'EcdsaSecp256k1VerificationKey2019',
                 controller: did,
                 publicKeyHex: '02b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71',
               },
               {
-                id: `${did}#delegate-3`,
+                id: `${did}#delegate-6`,
                 type: 'Ed25519VerificationKey2018',
                 controller: did,
                 publicKeyBase64: Buffer.from(
@@ -441,7 +441,7 @@ describe('ethrResolver', () => {
                 ).toString('base64'),
               },
             ],
-            authentication: [`${did}#controller`, `${did}#delegate-1`],
+            authentication: [`${did}#controller`, `${did}#delegate-4`],
           })
         })
       })
@@ -467,19 +467,19 @@ describe('ethrResolver', () => {
                 ethereumAddress: controller,
               },
               {
-                id: `${did}#delegate-1`,
+                id: `${did}#delegate-4`,
                 type: 'EcdsaSecp256k1RecoveryMethod2020',
                 controller: did,
                 ethereumAddress: delegate2,
               },
               {
-                id: `${did}#delegate-2`,
+                id: `${did}#delegate-5`,
                 type: 'EcdsaSecp256k1VerificationKey2019',
                 controller: did,
                 publicKeyHex: '02b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71',
               },
               {
-                id: `${did}#delegate-3`,
+                id: `${did}#delegate-6`,
                 type: 'Ed25519VerificationKey2018',
                 controller: did,
                 publicKeyBase64: Buffer.from(
@@ -488,13 +488,13 @@ describe('ethrResolver', () => {
                 ).toString('base64'),
               },
               {
-                id: `${did}#delegate-4`,
+                id: `${did}#delegate-7`,
                 type: 'RSAVerificationKey2018',
                 controller: did,
                 publicKeyPem: '-----BEGIN PUBLIC KEY...END PUBLIC KEY-----\r\n',
               },
             ],
-            authentication: [`${did}#controller`, `${did}#delegate-1`],
+            authentication: [`${did}#controller`, `${did}#delegate-4`],
           })
         })
       })
@@ -560,19 +560,19 @@ describe('ethrResolver', () => {
                 ethereumAddress: controller,
               },
               {
-                id: `${did}#delegate-1`,
+                id: `${did}#delegate-4`,
                 type: 'EcdsaSecp256k1RecoveryMethod2020',
                 controller: did,
                 ethereumAddress: delegate2,
               },
               {
-                id: `${did}#delegate-2`,
+                id: `${did}#delegate-5`,
                 type: 'EcdsaSecp256k1VerificationKey2019',
                 controller: did,
                 publicKeyHex: '02b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71',
               },
               {
-                id: `${did}#delegate-3`,
+                id: `${did}#delegate-6`,
                 type: 'Ed25519VerificationKey2018',
                 controller: did,
                 publicKeyBase64: Buffer.from(
@@ -581,13 +581,13 @@ describe('ethrResolver', () => {
                 ).toString('base64'),
               },
               {
-                id: `${did}#delegate-4`,
+                id: `${did}#delegate-7`,
                 type: 'RSAVerificationKey2018',
                 controller: did,
                 publicKeyPem: '-----BEGIN PUBLIC KEY...END PUBLIC KEY-----\r\n',
               },
             ],
-            authentication: [`${did}#controller`, `${did}#delegate-1`],
+            authentication: [`${did}#controller`, `${did}#delegate-4`],
             service: [
               {
                 id: `${did}#service-1`,
@@ -622,13 +622,13 @@ describe('ethrResolver', () => {
               ethereumAddress: controller,
             },
             {
-              id: `${did}#delegate-1`,
+              id: `${did}#delegate-4`,
               type: 'EcdsaSecp256k1RecoveryMethod2020',
               controller: did,
               ethereumAddress: delegate2,
             },
             {
-              id: `${did}#delegate-3`,
+              id: `${did}#delegate-6`,
               type: 'Ed25519VerificationKey2018',
               controller: did,
               publicKeyBase64: Buffer.from(
@@ -637,13 +637,13 @@ describe('ethrResolver', () => {
               ).toString('base64'),
             },
             {
-              id: `${did}#delegate-4`,
+              id: `${did}#delegate-7`,
               type: 'RSAVerificationKey2018',
               controller: did,
               publicKeyPem: '-----BEGIN PUBLIC KEY...END PUBLIC KEY-----\r\n',
             },
           ],
-          authentication: [`${did}#controller`, `${did}#delegate-1`],
+          authentication: [`${did}#controller`, `${did}#delegate-4`],
           service: [
             {
               id: `${did}#service-1`,
@@ -675,19 +675,19 @@ describe('ethrResolver', () => {
               ethereumAddress: controller,
             },
             {
-              id: `${did}#delegate-1`,
+              id: `${did}#delegate-4`,
               type: 'EcdsaSecp256k1RecoveryMethod2020',
               controller: did,
               ethereumAddress: delegate2,
             },
             {
-              id: `${did}#delegate-4`,
+              id: `${did}#delegate-7`,
               type: 'RSAVerificationKey2018',
               controller: did,
               publicKeyPem: '-----BEGIN PUBLIC KEY...END PUBLIC KEY-----\r\n',
             },
           ],
-          authentication: [`${did}#controller`, `${did}#delegate-1`],
+          authentication: [`${did}#controller`, `${did}#delegate-4`],
           service: [
             {
               id: `${did}#service-1`,
@@ -719,13 +719,13 @@ describe('ethrResolver', () => {
               ethereumAddress: controller,
             },
             {
-              id: `${did}#delegate-1`,
+              id: `${did}#delegate-4`,
               type: 'EcdsaSecp256k1RecoveryMethod2020',
               controller: did,
               ethereumAddress: delegate2,
             },
           ],
-          authentication: [`${did}#controller`, `${did}#delegate-1`],
+          authentication: [`${did}#controller`, `${did}#delegate-4`],
           service: [
             {
               id: `${did}#service-1`,
@@ -758,13 +758,13 @@ describe('ethrResolver', () => {
                 ethereumAddress: controller,
               },
               {
-                id: `${did}#delegate-1`,
+                id: `${did}#delegate-4`,
                 type: 'EcdsaSecp256k1RecoveryMethod2020',
                 controller: did,
                 ethereumAddress: delegate2,
               },
             ],
-            authentication: [`${did}#controller`, `${did}#delegate-1`],
+            authentication: [`${did}#controller`, `${did}#delegate-4`],
           })
         })
       })
@@ -800,16 +800,16 @@ describe('ethrResolver', () => {
               ethereumAddress: controller,
             },
             {
-              id: `${did}#delegate-1`,
+              id: `${did}#delegate-4`,
               type: 'EcdsaSecp256k1RecoveryMethod2020',
               controller: did,
               ethereumAddress: delegate2,
             },
           ],
-          authentication: [`${did}#controller`, `${did}#delegate-1`],
+          authentication: [`${did}#controller`, `${did}#delegate-4`],
           service: [
             {
-              id: `${did}#service-3`,
+              id: `${did}#service-4`,
               type: 'TestService',
               serviceEndpoint: 'https://test.uport.me',
             },
@@ -854,16 +854,16 @@ describe('ethrResolver', () => {
               ethereumAddress: controller,
             },
             {
-              id: `${did}#delegate-1`,
+              id: `${did}#delegate-4`,
               type: 'EcdsaSecp256k1RecoveryMethod2020',
               controller: did,
               ethereumAddress: delegate2,
             },
           ],
-          authentication: [`${did}#controller`, `${did}#delegate-1`],
+          authentication: [`${did}#controller`, `${did}#delegate-4`],
           service: [
             {
-              id: `${did}#service-2`,
+              id: `${did}#service-4`,
               type: 'TestService',
               serviceEndpoint: 'https://test.uport.me',
             },
