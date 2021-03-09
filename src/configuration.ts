@@ -1,5 +1,5 @@
 import { Contract, ContractFactory } from '@ethersproject/contracts'
-import { InfuraProvider, JsonRpcProvider, Networkish, Provider } from '@ethersproject/providers'
+import { InfuraProvider, JsonRpcProvider, Provider } from '@ethersproject/providers'
 import DidRegistryContract from 'ethr-did-registry'
 
 export const DEFAULT_REGISTRY_ADDRESS = '0xdca7ef03e98e0dc2b855be647c39abe984fcf21b'

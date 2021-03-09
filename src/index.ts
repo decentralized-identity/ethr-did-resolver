@@ -1,4 +1,4 @@
-import { EthrDid } from './controller'
+import { EthrDidController } from './controller'
 import { getResolver } from './resolver'
 
-export { EthrDid, getResolver }
+export { getResolver }
