@@ -2,9 +2,9 @@
   "name": "ethr-did-resolver",
   "version": "3.0.3",
   "description": "Resolve DID documents around ethereum addresses",
-  "main": "dist/ethr-did-resolver.js",
-  "source": "src/ethr-did-resolver.js",
-  "types": "index.d.ts",
+  "main": "lib/index.js",
+  "source": "src/index.ts",
+  "types": "lib/index.d.ts",
   "repository": {
     "type": "git",
     "url": "https://github.com/decentralized-identity/ethr-did-resolver.git"
@@ -43,7 +43,7 @@
   "scripts": {
     "build": "microbundle",
     "lint": "eslint \"src/**/*.js\"",
-    "format": "prettier --write \"src/**/*.js\"",
+    "format": "prettier --write \"src/**/*.(js|ts)\"",
     "prepare": "npm run build",
     "prepublishOnly": "npm test && npm run build",
     "release": "semantic-release --debug",
@@ -81,20 +81,5 @@
     "hooks": {
       "commit-msg": "commitlint -E HUSKY_GIT_PARAMS"
     }
-  },
-  "standard": {
-    "ignore": [
-      "lib/**"
-    ],
-    "globals": [
-      "it",
-      "describe",
-      "expect",
-      "jest",
-      "beforeAll",
-      "beforeEach",
-      "afterAll",
-      "afterEach"
-    ]
   }
 }
