@@ -24,6 +24,8 @@ import {
   LegacyVerificationMethod,
   verificationMethodTypes,
   identifierMatcher,
+  nullAddress,
+  DIDOwnerChanged,
 } from './helpers'
 import { logDecoder } from './logParser'
 
@@ -67,7 +69,7 @@ export class EthrDidResolver {
     const contract = this.contracts[networkId]
     const provider = contract.provider
 
-    const history = []
+    const history: ERC1056Event[] = []
     const { address, publicKey } = interpretIdentifier(identity)
     let controllerKey = publicKey
     let controller = address
@@ -108,7 +110,14 @@ export class EthrDidResolver {
     controller: string,
     controllerKey: string | undefined,
     history: ERC1056Event[]
-  ): DIDDocument {
+  ): { didDocument: DIDDocument; deactivated: boolean } {
+    const baseDIDDocument: DIDDocument = {
+      '@context': 'https://w3id.org/did/v1',
+      id: did,
+      publicKey: [],
+      authentication: [],
+    }
+
     // const now = new BN(Math.floor(new Date().getTime() / 1000))
     const now = BigNumber.from(Math.floor(new Date().getTime() / 1000))
     // const expired = {}
@@ -133,6 +142,7 @@ export class EthrDidResolver {
       authentication.push(`${did}#controllerKey`)
     }
 
+    let deactivated = false
     let delegateCount = 0
     let serviceCount = 0
     const auth: Record<string, string> = {}
@@ -230,12 +240,18 @@ export class EthrDidResolver {
         delete auth[eventIndex]
         delete pks[eventIndex]
         delete services[eventIndex]
+
+        if (event._eventName === eventNames.DIDOwnerChanged) {
+          if ((<DIDOwnerChanged>event).owner === nullAddress) {
+            deactivated = true
+            break
+          }
+        }
       }
     }
 
     const doc: DIDDocument = {
-      '@context': 'https://w3id.org/did/v1',
-      id: did,
+      ...baseDIDDocument,
       publicKey: publicKey.concat(Object.values(pks)),
       authentication: authentication.concat(Object.values(auth)),
     }
@@ -243,7 +259,7 @@ export class EthrDidResolver {
       doc.service = Object.values(services)
     }
 
-    return doc
+    return deactivated ? { didDocument: baseDIDDocument, deactivated } : { didDocument: doc, deactivated }
   }
 
   async resolve(
@@ -264,11 +280,12 @@ export class EthrDidResolver {
 
     const { controller, history, controllerKey } = await this.changeLog(id, networkId, options.blockTag)
     try {
-      const doc = this.wrapDidDocument(did, controller, controllerKey, history)
+      const { didDocument, deactivated } = this.wrapDidDocument(did, controller, controllerKey, history)
+      const status = deactivated ? { deactivated: true } : {}
       return {
-        didDocumentMetadata: {},
+        didDocumentMetadata: { ...status },
         didResolutionMetadata: { contentType: 'application/did+ld+json' },
-        didDocument: doc,
+        didDocument,
       }
     } catch (e) {
       return {

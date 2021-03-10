@@ -41,6 +41,10 @@ export function createProvider(): JsonRpcProvider {
           //  publicKey: '022f8bde4d1a07209355b4a7250a5c5128e88b84bddc619ab7cba8d569b240efe4'
           balance: '0x1000000000000000000000',
         },
+        {
+          secretKey: '0x0000000000000000000000000000000000000000000000000000000000000006',
+          balance: `0x1000000000000000000000`,
+        },
       ],
     })
   )

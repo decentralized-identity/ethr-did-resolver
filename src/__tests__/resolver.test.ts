@@ -6,6 +6,7 @@ import DidRegistryContract from 'ethr-did-registry'
 import * as u8a from 'uint8arrays'
 import { interpretIdentifier, stringToBytes32 } from '../helpers'
 import { createProvider, sleep, startMining, stopMining } from './testUtils'
+import { nullAddress } from '../helpers'
 
 describe('ethrResolver', () => {
   // let registry, accounts, did, identity, controller, delegate1, delegate2, ethr, didResolver
@@ -884,6 +885,29 @@ describe('ethrResolver', () => {
               },
             ],
             authentication: [`${did}#controller`],
+          },
+        })
+      })
+    })
+
+    describe('can deactivate a DID (https://github.com/decentralized-identity/ethr-did-resolver/issues/83)', () => {
+      it('resolves deactivated document', async () => {
+        expect.assertions(1)
+        const identity = accounts[6]
+        const did = `did:ethr:dev:${identity}`
+        await new EthrDidController(identity, registryContract).changeOwner(nullAddress, { from: identity })
+        await expect(didResolver.resolve(did)).resolves.toEqual({
+          didDocumentMetadata: {
+            deactivated: true,
+          },
+          didResolutionMetadata: {
+            contentType: 'application/did+ld+json',
+          },
+          didDocument: {
+            '@context': 'https://w3id.org/did/v1',
+            id: did,
+            publicKey: [],
+            authentication: [],
           },
         })
       })
