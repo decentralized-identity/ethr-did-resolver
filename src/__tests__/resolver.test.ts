@@ -6,7 +6,6 @@ import DidRegistryContract from 'ethr-did-registry'
 
 import { interpretIdentifier, stringToBytes32 } from '../utils'
 import { createProvider, sleep, startMining, stopMining } from './testUtils'
-import { verificationMethodTypes } from '..'
 
 describe('ethrResolver', () => {
   // let registry, accounts, did, identity, controller, delegate1, delegate2, ethr, didResolver
@@ -816,6 +815,37 @@ describe('ethrResolver', () => {
       expect(JSON.stringify(didDocumentLow).toLowerCase()).toEqual(JSON.stringify(didDocumentChecksum).toLowerCase())
     })
 
+    it('adds sigAuth to authentication section (https://github.com/decentralized-identity/ethr-did-resolver/issues/95)', async () => {
+      expect.assertions(1)
+      const delegate2DID = `did:ethr:dev:${delegate2}`
+      const authPubKey = `31303866356238393330623164633235386162353765386630646362363932353963363162316166`
+      await new EthrDidController(delegate2, registryContract).setAttribute(
+        'did/pub/Ed25519/sigAuth/hex',
+        `0x${authPubKey}`,
+        86400,
+        { from: delegate2 }
+      )
+      const { didDocument } = await didResolver.resolve(delegate2DID)
+      expect(didDocument).toEqual({
+        '@context': 'https://w3id.org/did/v1',
+        id: delegate2DID,
+        publicKey: [
+          {
+            id: `${delegate2DID}#controller`,
+            controller: delegate2DID,
+            type: 'EcdsaSecp256k1RecoveryMethod2020',
+            ethereumAddress: delegate2,
+          },
+          {
+            id: `${delegate2DID}#delegate-1`,
+            controller: delegate2DID,
+            type: `Ed25519VerificationKey2018`,
+            publicKeyHex: authPubKey,
+          },
+        ],
+        authentication: [`${delegate2DID}#controller`, `${delegate2DID}#delegate-1`],
+      })
+    })
   })
 
   describe('error handling', () => {

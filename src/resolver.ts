@@ -164,11 +164,10 @@ export class EthrDidResolver {
         } else if (event._eventName === eventNames.DIDAttributeChanged) {
           const currentEvent = <DIDAttributeChanged>event
           const name = currentEvent.name //conversion from bytes32 is done in logParser
-          const match = name.match(/^did\/(pub|auth|svc)\/(\w+)(\/(\w+))?(\/(\w+))?$/)
-          // const match = name.match(/^did\/([vaukdis]*)\/(\w+)(\/(\w+))?(\/(\w+))?$/)
+          const match = name.match(/^did\/(pub|svc)\/(\w+)(\/(\w+))?(\/(\w+))?$/)
           if (match) {
             const section = match[1]
-            const algo = match[2]
+            const algorithm = match[2]
             const type = legacyAttrTypes[match[4]] || match[4]
             const encoding = match[6]
             switch (section) {
@@ -176,10 +175,10 @@ export class EthrDidResolver {
                 delegateCount++
                 const pk: LegacyVerificationMethod = {
                   id: `${did}#delegate-${delegateCount}`,
-                  type: `${algo}${type}`,
+                  type: `${algorithm}${type}`,
                   controller: did,
                 }
-                pk.type = legacyAlgoMap[pk.type] || pk.type
+                pk.type = legacyAlgoMap[pk.type] || algorithm
                 switch (encoding) {
                   case null:
                   case undefined:
@@ -199,13 +198,16 @@ export class EthrDidResolver {
                     pk.value = currentEvent.value
                 }
                 pks[eventIndex] = pk
+                if (match[4] === 'sigAuth') {
+                  auth[eventIndex] = pk.id
+                }
                 break
               }
               case 'svc':
                 serviceCount++
                 services[eventIndex] = {
                   id: `${did}#service-${serviceCount}`,
-                  type: algo,
+                  type: algorithm,
                   serviceEndpoint: Buffer.from(currentEvent.value.slice(2), 'hex').toString(),
                 }
                 break

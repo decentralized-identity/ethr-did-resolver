@@ -1,6 +1,5 @@
 import { BigNumber } from '@ethersproject/bignumber'
 import { VerificationMethod } from 'did-resolver'
-import { stringToBytes32 } from './utils'
 
 export type address = string
 export type uint256 = BigNumber
@@ -34,6 +33,8 @@ export enum verificationMethodTypes {
   EcdsaSecp256k1VerificationKey2019 = 'EcdsaSecp256k1VerificationKey2019',
   EcdsaSecp256k1RecoveryMethod2020 = 'EcdsaSecp256k1RecoveryMethod2020',
   Ed25519VerificationKey2018 = 'Ed25519VerificationKey2018',
+  RSAVerificationKey2018 = 'RSAVerificationKey2018',
+  X25519KeyAgreementKey2019 = 'X25519KeyAgreementKey2019',
 }
 
 export enum eventNames {
@@ -60,7 +61,14 @@ export const legacyAttrTypes: Record<string, string> = {
 }
 
 export const legacyAlgoMap: Record<string, string> = {
+  /**@deprecated */
   Secp256k1VerificationKey2018: verificationMethodTypes.EcdsaSecp256k1VerificationKey2019,
   /**@deprecated */
-  Secp256k1SignatureAuthentication2018: stringToBytes32('sigAuth'),
+  Ed25519SignatureAuthentication2018: verificationMethodTypes.Ed25519VerificationKey2018,
+  /**@deprecated */
+  Secp256k1SignatureAuthentication2018: verificationMethodTypes.EcdsaSecp256k1VerificationKey2019,
+  //keep legacy mapping
+  RSAVerificationKey2018: verificationMethodTypes.RSAVerificationKey2018,
+  Ed25519VerificationKey2018: verificationMethodTypes.Ed25519VerificationKey2018,
+  X25519KeyAgreementKey2019: verificationMethodTypes.X25519KeyAgreementKey2019,
 }
