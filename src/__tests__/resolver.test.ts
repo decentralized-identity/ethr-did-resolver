@@ -4,8 +4,9 @@ import { getResolver } from '../resolver'
 import { EthrDidController } from '../controller'
 import DidRegistryContract from 'ethr-did-registry'
 
-import { stringToBytes32 } from '../utils'
+import { interpretIdentifier, stringToBytes32 } from '../utils'
 import { createProvider, sleep, startMining, stopMining } from './testUtils'
+import { verificationMethodTypes } from '..'
 
 describe('ethrResolver', () => {
   // let registry, accounts, did, identity, controller, delegate1, delegate2, ethr, didResolver
@@ -792,6 +793,29 @@ describe('ethrResolver', () => {
         },
       })
     })
+  })
+
+  describe('regression', () => {
+    it('resolves same document with case sensitive eth address (https://github.com/decentralized-identity/ethr-did-resolver/issues/105)', async () => {
+      expect.assertions(3)
+      const lowId = keyAgreementController.toLowerCase()
+      const checkSumId = interpretIdentifier(lowId).address
+      const keyAgrDid = `did:ethr:dev:${lowId}`
+      const keyAgrDidChecksum = `did:ethr:dev:${checkSumId}`
+      await new EthrDidController(lowId, registryContract).setAttribute(
+        'did/pub/Secp256k1/veriKey/hex',
+        '0x02b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71',
+        10,
+        { from: lowId }
+      )
+      const didDocumentLow = (await didResolver.resolve(keyAgrDid)).didDocument
+      const didDocumentChecksum = (await didResolver.resolve(keyAgrDidChecksum)).didDocument
+      expect(keyAgrDid).not.toEqual(keyAgrDidChecksum)
+      expect(didDocumentLow).toBeDefined()
+      //we don't care about the actual keys, only about their sameness
+      expect(JSON.stringify(didDocumentLow).toLowerCase()).toEqual(JSON.stringify(didDocumentChecksum).toLowerCase())
+    })
+
   })
 
   describe('error handling', () => {
