@@ -12,7 +12,7 @@ import {
   VerificationMethod,
 } from 'did-resolver'
 import { ConfigurationOptions, ConfiguredNetworks, configureResolverWithNetworks } from './configuration'
-import { bytes32toString, DIDAttributeChanged, DIDDelegateChanged, ERC1056Event, interpretIdentifier } from './utils'
+import { DIDAttributeChanged, DIDDelegateChanged, ERC1056Event, interpretIdentifier } from './utils'
 
 interface LegacyVerificationMethod extends VerificationMethod {
   /**@deprecated */
