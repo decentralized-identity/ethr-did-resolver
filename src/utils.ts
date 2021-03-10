@@ -1,34 +1,6 @@
-import { BigNumber } from '@ethersproject/bignumber'
 import { computeAddress } from '@ethersproject/transactions'
 import { getAddress } from '@ethersproject/address'
-
-type address = string
-type uint256 = BigNumber
-type bytes32 = string
-type bytes = string
-
-export interface ERC1056Event {
-  identity: address
-  previousChange: uint256
-  validTo?: uint256
-  _eventName: string
-}
-
-export interface DIDOwnerChanged extends ERC1056Event {
-  owner: address
-}
-
-export interface DIDAttributeChanged extends ERC1056Event {
-  name: bytes32
-  value: bytes
-  validTo: uint256
-}
-
-export interface DIDDelegateChanged extends ERC1056Event {
-  delegateType: bytes32
-  delegate: address
-  validTo: uint256
-}
+import { bytes32 } from './types'
 
 export function bytes32toString(input: bytes32 | Uint8Array): string {
   const buff: Buffer = typeof input === 'string' ? Buffer.from(input.slice(2), 'hex') : Buffer.from(input)

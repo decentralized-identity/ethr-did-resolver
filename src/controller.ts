@@ -2,25 +2,26 @@ import { Signer } from '@ethersproject/abstract-signer'
 import { CallOverrides, Contract } from '@ethersproject/contracts'
 import { BlockTag, JsonRpcProvider, TransactionReceipt } from '@ethersproject/providers'
 import { interpretIdentifier, stringToBytes32 } from './utils'
+import { address } from './types'
 
 export class EthrDidController {
   private contract: Contract
   private signer?: Signer
   private address: string
 
-  constructor(identifier: string, contract: Contract, signer?: Signer) {
+  constructor(identifier: string | address, contract: Contract, signer?: Signer) {
     this.contract = contract
     this.signer = signer
     const { address } = interpretIdentifier(identifier)
     this.address = address
   }
 
-  async getOwner(address: string, blockTag?: BlockTag): Promise<string> {
+  async getOwner(address: address, blockTag?: BlockTag): Promise<string> {
     const result = await this.contract.functions.identityOwner(address, { blockTag })
     return result[0]
   }
 
-  async attachContract(controller?: string | Promise<string>): Promise<Contract> {
+  async attachContract(controller?: address | Promise<address>): Promise<Contract> {
     const currentOwner = controller ? await controller : await this.getOwner(this.address, 'latest')
     const signer = this.signer
       ? this.signer
@@ -28,7 +29,7 @@ export class EthrDidController {
     return this.contract.connect(signer)
   }
 
-  async changeOwner(newOwner: string, options: CallOverrides = {}): Promise<TransactionReceipt> {
+  async changeOwner(newOwner: address, options: CallOverrides = {}): Promise<TransactionReceipt> {
     // console.log(`changing owner for ${oldOwner} on registry at ${registryContract.address}`)
     const overrides = {
       gasLimit: 123456,
@@ -45,7 +46,7 @@ export class EthrDidController {
 
   async addDelegate(
     delegateType: string,
-    delegateAddress: string,
+    delegateAddress: address,
     exp: number,
     options: CallOverrides = {}
   ): Promise<TransactionReceipt> {
@@ -71,7 +72,7 @@ export class EthrDidController {
 
   async revokeDelegate(
     delegateType: string,
-    delegateAddress: string,
+    delegateAddress: address,
     options: CallOverrides = {}
   ): Promise<TransactionReceipt> {
     const overrides = {

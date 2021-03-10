@@ -12,29 +12,18 @@ import {
   VerificationMethod,
 } from 'did-resolver'
 import { ConfigurationOptions, ConfiguredNetworks, configureResolverWithNetworks } from './configuration'
-import { DIDAttributeChanged, DIDDelegateChanged, ERC1056Event, interpretIdentifier } from './utils'
+import { interpretIdentifier } from './utils'
 import { EthrDidController } from './controller'
-
-interface LegacyVerificationMethod extends VerificationMethod {
-  /**@deprecated */
-  publicKeyHex?: string
-  /**@deprecated */
-  publicKeyBase64?: string
-  /**@deprecated */
-  publicKeyPem?: string
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  [x: string]: any
-}
-
-const legacyAttrTypes: Record<string, string> = {
-  sigAuth: 'SignatureAuthentication2018',
-  veriKey: 'VerificationKey2018',
-  enc: 'KeyAgreementKey2019',
-}
-
-const legacyAlgoMap: Record<string, string> = {
-  Secp256k1VerificationKey2018: 'EcdsaSecp256k1VerificationKey2019',
-}
+import {
+  DIDAttributeChanged,
+  DIDDelegateChanged,
+  ERC1056Event,
+  eventNames,
+  legacyAlgoMap,
+  legacyAttrTypes,
+  LegacyVerificationMethod,
+  verificationMethodTypes,
+} from './types'
 
 export const identifierMatcher = /^(.*)?(0x[0-9a-fA-F]{40}|0x[0-9a-fA-F]{66})$/
 
@@ -126,7 +115,7 @@ export class EthrDidResolver {
     const publicKey: VerificationMethod[] = [
       {
         id: `${did}#controller`,
-        type: 'EcdsaSecp256k1RecoveryMethod2020',
+        type: verificationMethodTypes.EcdsaSecp256k1RecoveryMethod2020,
         controller: did,
         ethereumAddress: controller,
       },
@@ -137,7 +126,7 @@ export class EthrDidResolver {
     if (controllerKey) {
       publicKey.push({
         id: `${did}#controllerKey`,
-        type: 'EcdsaSecp256k1VerificationKey2019',
+        type: verificationMethodTypes.EcdsaSecp256k1VerificationKey2019,
         controller: did,
         publicKeyHex: controllerKey,
       })
@@ -155,7 +144,7 @@ export class EthrDidResolver {
         (<DIDDelegateChanged>event).delegateType || (<DIDAttributeChanged>event).name
       }-${(<DIDDelegateChanged>event).delegate || (<DIDAttributeChanged>event).value}`
       if (validTo && validTo.gte(now)) {
-        if (event._eventName === 'DIDDelegateChanged') {
+        if (event._eventName === eventNames.DIDDelegateChanged) {
           const currentEvent = <DIDDelegateChanged>event
           delegateCount++
           const delegateType = currentEvent.delegateType //conversion from bytes32 is done in logParser
@@ -166,13 +155,13 @@ export class EthrDidResolver {
             case 'veriKey':
               pks[eventIndex] = {
                 id: `${did}#delegate-${delegateCount}`,
-                type: 'EcdsaSecp256k1RecoveryMethod2020',
+                type: verificationMethodTypes.EcdsaSecp256k1RecoveryMethod2020,
                 controller: did,
                 ethereumAddress: currentEvent.delegate,
               }
               break
           }
-        } else if (event._eventName === 'DIDAttributeChanged') {
+        } else if (event._eventName === eventNames.DIDAttributeChanged) {
           const currentEvent = <DIDAttributeChanged>event
           const name = currentEvent.name //conversion from bytes32 is done in logParser
           const match = name.match(/^did\/(pub|auth|svc)\/(\w+)(\/(\w+))?(\/(\w+))?$/)
@@ -225,12 +214,13 @@ export class EthrDidResolver {
         }
       } else {
         if (
-          event._eventName === 'DIDDelegateChanged' ||
-          (event._eventName === 'DIDAttributeChanged' && (<DIDAttributeChanged>event).name.match(/^did\/pub\//))
+          event._eventName === eventNames.DIDDelegateChanged ||
+          (event._eventName === eventNames.DIDAttributeChanged &&
+            (<DIDAttributeChanged>event).name.match(/^did\/pub\//))
         ) {
           delegateCount++
         } else if (
-          event._eventName === 'DIDAttributeChanged' &&
+          event._eventName === eventNames.DIDAttributeChanged &&
           (<DIDAttributeChanged>event).name.match(/^did\/svc\//)
         ) {
           serviceCount++
