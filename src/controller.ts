@@ -15,7 +15,7 @@ export class EthrDidController {
     this.address = address
   }
 
-  async getOwner(address: string, blockTag: BlockTag): Promise<string> {
+  async getOwner(address: string, blockTag?: BlockTag): Promise<string> {
     const result = await this.contract.functions.identityOwner(address, { blockTag })
     return result[0]
   }

@@ -20,16 +20,7 @@ function populateEventMetaClass(logResult: LogDescription): ERC1056Event {
     result[input.name] = val
   })
   result._eventName = logResult.name
-  switch (result._eventName) {
-    case 'DIDOwnerChanged':
-      return result as DIDOwnerChanged
-    case 'DIDDelegateChanged':
-      return result as DIDDelegateChanged
-    case 'DIDAttributeChanged':
-      return result as DIDAttributeChanged
-    default:
-      return result as ERC1056Event
-  }
+  return result as ERC1056Event
 }
 
 export function logDecoder(contract: Contract, logs: Log[]): ERC1056Event[] {

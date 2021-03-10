@@ -13,6 +13,7 @@ import {
 } from 'did-resolver'
 import { ConfigurationOptions, ConfiguredNetworks, configureResolverWithNetworks } from './configuration'
 import { DIDAttributeChanged, DIDDelegateChanged, ERC1056Event, interpretIdentifier } from './utils'
+import { EthrDidController } from './controller'
 
 interface LegacyVerificationMethod extends VerificationMethod {
   /**@deprecated */
@@ -53,11 +54,8 @@ export class EthrDidResolver {
    * @param address
    */
   async getOwner(address: string, networkId: string, blockTag?: BlockTag): Promise<string> {
-    // const contract = new Contract(this.registryAddress, DidRegistryContract as any, this.provider)
     //TODO: check if address or public key
-    const controllerRecord = await this.contracts[networkId].functions.identityOwner(address, { blockTag })
-    // console.log(`controller for address ${address} is '${controllerRecord[0]}'`)
-    return controllerRecord[0]
+    return new EthrDidController(address, this.contracts[networkId]).getOwner(address, blockTag)
   }
 
   /**

@@ -158,5 +158,14 @@ describe('ethrResolver (alt-chains)', () => {
         },
       })
     })
+
+    it('throws on resolving unconfigured network', async () => {
+      expect.assertions(1)
+      const ethr = getResolver({ networks: [{ name: 'rsk', rpcUrl: 'https://did.rsk.co:4444' }] })
+      const resolver = new Resolver(ethr)
+      await expect(
+        resolver.resolve('did:ethr:zrx:0x03fdd57adec3d438ea237fe46b33ee1e016eda6b585c3e27ea66686c2ea5358479')
+      ).rejects.toThrowError('unknown_network: The DID resolver does not have a configuration for network: zrx')
+    })
   })
 })

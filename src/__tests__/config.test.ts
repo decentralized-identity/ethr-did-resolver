@@ -60,9 +60,29 @@ describe('configuration', () => {
     expect(contracts['']).toBeDefined()
   })
 
+  it('works with rpc and numbered chainId', async () => {
+    const contracts = configureResolverWithNetworks({
+      rpcUrl: 'some rinkeby JSONRPC URL',
+      chainId: 1,
+    })
+    expect(contracts['0x1']).toBeDefined()
+  })
+
   it('throws when no configuration is provided', () => {
     expect(() => {
       configureResolverWithNetworks()
-    }).toThrow('invalid_config: Please make sure to have at least one network')
+    }).toThrowError('invalid_config: Please make sure to have at least one network')
+  })
+
+  it('throws when no relevant configuration is provided for a network', () => {
+    expect(() => {
+      configureResolverWithNetworks({ networks: [{ chainId: '0xbad' }] })
+    }).toThrowError('invalid_config: No web3 provider could be determined for network')
+  })
+
+  it('throws when malformed configuration is provided for a network', () => {
+    expect(() => {
+      configureResolverWithNetworks({ networks: [{ web3: '0xbad' }] })
+    }).toThrowError('invalid_config: No web3 provider could be determined for network')
   })
 })

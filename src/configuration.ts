@@ -1,3 +1,4 @@
+import { BigNumber } from '@ethersproject/bignumber'
 import { Contract, ContractFactory } from '@ethersproject/contracts'
 import { InfuraProvider, JsonRpcProvider, Provider } from '@ethersproject/providers'
 import DidRegistryContract from 'ethr-did-registry'
@@ -60,23 +61,11 @@ function configureNetworksWithInfura(projectId?: string): ConfiguredNetworks {
   return configureNetworks({ networks })
 }
 
-function hexToNumber(hex?: string | number): number | undefined {
-  if (typeof hex === 'string') {
-    let num = hex
-    if (num.startsWith('0x')) {
-      num = num.substring(2)
-    }
-    return parseInt(num, 16)
-  } else {
-    return hex
-  }
-}
-
 function getContractForNetwork(conf: ProviderConfiguration): Contract {
   let provider: Provider = conf.provider || conf.web3?.currentProvider
   if (!provider) {
     if (conf.rpcUrl) {
-      const chainId = hexToNumber(conf.chainId)
+      const chainId = conf.chainId ? BigNumber.from(conf.chainId).toNumber() : conf.chainId
       const networkName = knownInfuraNetworks[conf.name || ''] ? conf.name?.replace('mainnet', 'homestead') : 'any'
       provider = new JsonRpcProvider(conf.rpcUrl, chainId || networkName)
     } else {
@@ -104,7 +93,7 @@ function configureNetwork(net: ProviderConfiguration): ConfiguredNetworks {
   return networks
 }
 
-function configureNetworks(conf: MultiProviderConfiguration = {}): ConfiguredNetworks {
+function configureNetworks(conf: MultiProviderConfiguration): ConfiguredNetworks {
   return {
     ...configureNetwork(conf),
     ...conf.networks?.reduce<ConfiguredNetworks>((networks, net) => {
