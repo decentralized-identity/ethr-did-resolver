@@ -1,5 +1,6 @@
 import { BlockTag } from '@ethersproject/providers'
 import { BigNumber } from '@ethersproject/bignumber'
+import { Base58 } from "@ethersproject/basex";
 import { logDecoder } from './logParser'
 import {
   DIDDocument,
@@ -188,9 +189,9 @@ export class EthrDidResolver {
                   case 'base64':
                     pk.publicKeyBase64 = Buffer.from(currentEvent.value.slice(2), 'hex').toString('base64')
                     break
-                  // case 'base58':
-                  //   pk.publicKeyBase58 = Buffer.from(currentEvent.value.slice(2), 'hex').toString('base58')
-                  //   break
+                  case 'base58':
+                    pk.publicKeyBase58 = Base58.encode(Buffer.from(currentEvent.value.slice(2), 'hex'))
+                    break
                   case 'pem':
                     pk.publicKeyPem = Buffer.from(currentEvent.value.slice(2), 'hex').toString()
                     break

@@ -3,7 +3,7 @@ import { Resolver } from 'did-resolver'
 import { getResolver } from '../resolver'
 import { EthrDidController } from '../controller'
 import DidRegistryContract from 'ethr-did-registry'
-
+import * as u8a from 'uint8arrays'
 import { interpretIdentifier, stringToBytes32 } from '../utils'
 import { createProvider, sleep, startMining, stopMining } from './testUtils'
 
@@ -797,7 +797,7 @@ describe('ethrResolver', () => {
   describe('regression', () => {
     it('resolves same document with case sensitive eth address (https://github.com/decentralized-identity/ethr-did-resolver/issues/105)', async () => {
       expect.assertions(3)
-      const lowId = keyAgreementController.toLowerCase()
+      const lowId = accounts[5].toLowerCase()
       const checkSumId = interpretIdentifier(lowId).address
       const keyAgrDid = `did:ethr:dev:${lowId}`
       const keyAgrDidChecksum = `did:ethr:dev:${checkSumId}`
@@ -817,33 +817,75 @@ describe('ethrResolver', () => {
 
     it('adds sigAuth to authentication section (https://github.com/decentralized-identity/ethr-did-resolver/issues/95)', async () => {
       expect.assertions(1)
-      const delegate2DID = `did:ethr:dev:${delegate2}`
+      const identity = accounts[4]
+      const did = `did:ethr:dev:${identity}`
       const authPubKey = `31303866356238393330623164633235386162353765386630646362363932353963363162316166`
-      await new EthrDidController(delegate2, registryContract).setAttribute(
+      await new EthrDidController(identity, registryContract).setAttribute(
         'did/pub/Ed25519/sigAuth/hex',
         `0x${authPubKey}`,
         86400,
-        { from: delegate2 }
+        { from: identity }
       )
-      const { didDocument } = await didResolver.resolve(delegate2DID)
+      const { didDocument } = await didResolver.resolve(did)
       expect(didDocument).toEqual({
         '@context': 'https://w3id.org/did/v1',
-        id: delegate2DID,
+        id: did,
         publicKey: [
           {
-            id: `${delegate2DID}#controller`,
-            controller: delegate2DID,
+            id: `${did}#controller`,
+            controller: did,
             type: 'EcdsaSecp256k1RecoveryMethod2020',
             ethereumAddress: delegate2,
           },
           {
-            id: `${delegate2DID}#delegate-1`,
-            controller: delegate2DID,
+            id: `${did}#delegate-1`,
+            controller: did,
             type: `Ed25519VerificationKey2018`,
             publicKeyHex: authPubKey,
           },
         ],
-        authentication: [`${delegate2DID}#controller`, `${delegate2DID}#delegate-1`],
+        authentication: [`${did}#controller`, `${did}#delegate-1`],
+      })
+    })
+
+    describe('Ed25519VerificationKey2018 in base58 (https://github.com/decentralized-identity/ethr-did-resolver/pull/106)', () => {
+      it('resolves document', async () => {
+        expect.assertions(1)
+        const identity = accounts[3]
+        const did = `did:ethr:dev:${identity}`
+        const publicKeyHex = `b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71`
+        const expectedPublicKeyBase58 = u8a.toString(u8a.fromString(publicKeyHex, 'base16'), 'base58btc')
+        await new EthrDidController(identity, registryContract).setAttribute(
+          'did/pub/Ed25519/veriKey/base58',
+          `0x${publicKeyHex}`,
+          86400,
+          { from: identity }
+        )
+        await expect(didResolver.resolve(did)).resolves.toEqual({
+          didDocumentMetadata: {},
+          didResolutionMetadata: {
+            contentType: 'application/did+ld+json',
+          },
+          didDocument: {
+            '@context': 'https://w3id.org/did/v1',
+            id: did,
+            publicKey: [
+              {
+                id: `${did}#controller`,
+                type: 'EcdsaSecp256k1RecoveryMethod2020',
+                controller: did,
+                ethereumAddress: identity,
+              },
+              {
+                id: `${did}#delegate-1`,
+                type: 'Ed25519VerificationKey2018',
+                controller: did,
+                publicKeyBase58: expectedPublicKeyBase58,
+              },
+            ],
+            authentication: [`${did}#controller`],
+          },
+        })
       })
     })
   })
