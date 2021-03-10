@@ -22,6 +22,7 @@ interface LegacyVerificationMethod extends VerificationMethod {
   publicKeyBase64?: string
   /**@deprecated */
   publicKeyPem?: string
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [x: string]: any
 }
 
@@ -69,19 +70,24 @@ export class EthrDidResolver {
     return BigNumber.from(result['0'])
   }
 
-  async changeLog(identity: string, networkId: string, blockTag: BlockTag = 'latest') {
+  async changeLog(
+    identity: string,
+    networkId: string,
+    blockTag: BlockTag = 'latest'
+  ): Promise<{ controller: string; history: ERC1056Event[]; controllerKey?: string }> {
     const contract = this.contracts[networkId]
     const provider = contract.provider
 
     const history = []
-    let { address, publicKey } = interpretIdentifier(identity)
+    const { address, publicKey } = interpretIdentifier(identity)
+    let controllerKey = publicKey
     let controller = address
     let previousChange: BigNumber | null = await this.previousChange(address, networkId, blockTag)
     // console.log(`gigel 1 - '${previousChange}' - ${typeof previousChange}`)
     if (previousChange) {
       const newController = await this.getOwner(address, networkId, blockTag)
       if (newController.toLowerCase() !== controller.toLowerCase()) {
-        publicKey = undefined
+        controllerKey = undefined
       }
       controller = newController
     }
@@ -90,6 +96,7 @@ export class EthrDidResolver {
       // console.log(`gigel ${previousChange}`)
       const logs = await provider.getLogs({
         address: contract.address, // networks[networkId].registryAddress,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         topics: [null as any, `0x000000000000000000000000${address.slice(2)}`],
         fromBlock: previousChange.toHexString(),
         toBlock: previousChange.toHexString(),
@@ -104,10 +111,15 @@ export class EthrDidResolver {
         }
       }
     }
-    return { controller, history, publicKey }
+    return { controller, history, controllerKey }
   }
 
-  wrapDidDocument(did: string, controller: string, controllerKey: string | undefined, history: ERC1056Event[]) {
+  wrapDidDocument(
+    did: string,
+    controller: string,
+    controllerKey: string | undefined,
+    history: ERC1056Event[]
+  ): DIDDocument {
     // const now = new BN(Math.floor(new Date().getTime() / 1000))
     const now = BigNumber.from(Math.floor(new Date().getTime() / 1000))
     // const expired = {}
@@ -139,7 +151,7 @@ export class EthrDidResolver {
     const services: Record<string, ServiceEndpoint> = {}
     for (const event of history) {
       const validTo = event.validTo || BigNumber.from(0)
-      let eventIndex = `${event._eventName}-${
+      const eventIndex = `${event._eventName}-${
         (<DIDDelegateChanged>event).delegateType || (<DIDAttributeChanged>event).name
       }-${(<DIDDelegateChanged>event).delegate || (<DIDAttributeChanged>event).value}`
       if (validTo && validTo.gte(now)) {
@@ -258,9 +270,9 @@ export class EthrDidResolver {
     if (!this.contracts[networkId])
       throw new Error(`unknown_network: The DID resolver does not have a configuration for network: ${networkId}`)
 
-    const { controller, history, publicKey } = await this.changeLog(id, networkId, options.blockTag)
+    const { controller, history, controllerKey } = await this.changeLog(id, networkId, options.blockTag)
     try {
-      const doc = this.wrapDidDocument(did, controller, publicKey, history)
+      const doc = this.wrapDidDocument(did, controller, controllerKey, history)
       return {
         didDocumentMetadata: {},
         didResolutionMetadata: { contentType: 'application/did+ld+json' },

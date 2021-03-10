@@ -1,6 +1,6 @@
 import { Signer } from '@ethersproject/abstract-signer'
-import { Contract } from '@ethersproject/contracts'
-import { BlockTag, JsonRpcProvider } from '@ethersproject/providers'
+import { CallOverrides, Contract } from '@ethersproject/contracts'
+import { BlockTag, JsonRpcProvider, TransactionReceipt } from '@ethersproject/providers'
 import { interpretIdentifier, stringToBytes32 } from './utils'
 
 export class EthrDidController {
@@ -20,15 +20,15 @@ export class EthrDidController {
     return result[0]
   }
 
-  async attachContract(controller?: string): Promise<Contract> {
-    const currentOwner = controller ? controller : await this.getOwner(this.address, 'latest')
+  async attachContract(controller?: string | Promise<string>): Promise<Contract> {
+    const currentOwner = controller ? await controller : await this.getOwner(this.address, 'latest')
     const signer = this.signer
       ? this.signer
       : (<JsonRpcProvider>this.contract.provider).getSigner(currentOwner) || this.contract.signer
     return this.contract.connect(signer)
   }
 
-  async changeOwner(newOwner: string, options: any) {
+  async changeOwner(newOwner: string, options: CallOverrides = {}): Promise<TransactionReceipt> {
     // console.log(`changing owner for ${oldOwner} on registry at ${registryContract.address}`)
     const overrides = {
       gasLimit: 123456,
@@ -43,7 +43,12 @@ export class EthrDidController {
     return await ownerChange.wait()
   }
 
-  async addDelegate(delegateType: string, delegateAddress: string, exp: number, options: any) {
+  async addDelegate(
+    delegateType: string,
+    delegateAddress: string,
+    exp: number,
+    options: CallOverrides = {}
+  ): Promise<TransactionReceipt> {
     const overrides = {
       gasLimit: 123456,
       gasPrice: 1000000000,
@@ -64,7 +69,11 @@ export class EthrDidController {
     return await addDelegateTx.wait()
   }
 
-  async revokeDelegate(delegateType: string, delegateAddress: string, options: any) {
+  async revokeDelegate(
+    delegateType: string,
+    delegateAddress: string,
+    options: CallOverrides = {}
+  ): Promise<TransactionReceipt> {
     const overrides = {
       gasLimit: 123456,
       gasPrice: 1000000000,
@@ -82,7 +91,12 @@ export class EthrDidController {
     return await addDelegateTx.wait()
   }
 
-  async setAttribute(attrName: string, attrValue: string, exp: number, options: any) {
+  async setAttribute(
+    attrName: string,
+    attrValue: string,
+    exp: number,
+    options: CallOverrides = {}
+  ): Promise<TransactionReceipt> {
     const overrides = {
       gasLimit: 123456,
       gasPrice: 1000000000,
@@ -97,7 +111,7 @@ export class EthrDidController {
     return await setAttrTx.wait()
   }
 
-  async revokeAttribute(attrName: string, attrValue: string, options: any) {
+  async revokeAttribute(attrName: string, attrValue: string, options: CallOverrides = {}): Promise<TransactionReceipt> {
     // console.log(`revoking attribute ${attrName}(${attrValue}) for ${identity}`)
     const overrides = {
       gasLimit: 123456,

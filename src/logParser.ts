@@ -2,9 +2,10 @@ import { BigNumber } from '@ethersproject/bignumber'
 import { Contract } from '@ethersproject/contracts'
 import { Log } from '@ethersproject/providers'
 import { LogDescription } from '@ethersproject/abi'
-import { bytes32toString, DIDAttributeChanged, DIDDelegateChanged, DIDOwnerChanged, ERC1056Event } from './utils'
+import { bytes32toString, ERC1056Event } from './utils'
 
 function populateEventMetaClass(logResult: LogDescription): ERC1056Event {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const result: Record<string, any> = {}
   if (logResult.eventFragment.inputs.length !== logResult.args.length) {
     throw new TypeError('malformed event input. wrong number of arguments')
@@ -24,12 +25,10 @@ function populateEventMetaClass(logResult: LogDescription): ERC1056Event {
 }
 
 export function logDecoder(contract: Contract, logs: Log[]): ERC1056Event[] {
-  // console.log('logDecoder called with:', logs)
-  const results = logs.map((log: Log) => {
+  const results: ERC1056Event[] = logs.map((log: Log) => {
     const res = contract.interface.parseLog(log)
     const event = populateEventMetaClass(res)
-    // console.log(`decoding log ${JSON.stringify(log)} got ${JSON.stringify(event)} from ${JSON.stringify(res)}`)
     return event
   })
-  return results as any
+  return results
 }

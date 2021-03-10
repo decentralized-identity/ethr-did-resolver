@@ -10,12 +10,6 @@
     "resolveJsonModule": true,
     "esModuleInterop": true
   },
-  "include": [
-    "src"
-  ],
-  "exclude": [
-    "node_modules",
-    "**/__tests__/*",
-    "lib"
-  ]
+  "include": ["src"],
+  "exclude": ["node_modules", "**/__tests__/*", "lib"]
 }

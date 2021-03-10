@@ -9,9 +9,7 @@
       "request": "launch",
       "name": "Jest All",
       "program": "${workspaceFolder}/node_modules/.bin/jest",
-      "args": [
-        "--runInBand"
-      ],
+      "args": ["--runInBand"],
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen",
       "windows": {
@@ -23,9 +21,7 @@
       "request": "launch",
       "name": "Jest Current File",
       "program": "${workspaceFolder}/node_modules/.bin/jest",
-      "args": [
-        "${relativeFile}", "--detectOpenHandles"
-      ],
+      "args": ["${relativeFile}", "--detectOpenHandles"],
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen",
       "windows": {
@@ -36,38 +32,26 @@
       "type": "node",
       "request": "launch",
       "name": "Launch Program",
-      "skipFiles": [
-        "<node_internals>/**"
-      ],
+      "skipFiles": ["<node_internals>/**"],
       "program": "${workspaceFolder}/lib/index.js",
       "preLaunchTask": "tsc: build - tsconfig.json",
-      "outFiles": [
-        "${workspaceFolder}/lib/**/*.js"
-      ]
+      "outFiles": ["${workspaceFolder}/lib/**/*.js"]
     },
     {
       "type": "node",
       "request": "launch",
       "name": "test revoker",
-      "skipFiles": [
-        "<node_internals>/**"
-      ],
+      "skipFiles": ["<node_internals>/**"],
       "program": "${workspaceFolder}/node_modules/.bin/jest",
-      "args": [
-        "revokerTests"
-      ]
+      "args": ["revokerTests"]
     },
     {
       "type": "node",
       "request": "launch",
       "name": "test basic",
-      "skipFiles": [
-        "<node_internals>/**"
-      ],
+      "skipFiles": ["<node_internals>/**"],
       "program": "${workspaceFolder}/node_modules/.bin/jest",
-      "args": [
-        "basic"
-      ]
+      "args": ["basic"]
     }
   ]
 }

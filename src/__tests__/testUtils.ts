@@ -1,7 +1,7 @@
 import { JsonRpcProvider, Web3Provider } from '@ethersproject/providers'
 import ganache from 'ganache-cli'
 
-export function createProvider() {
+export function createProvider(): JsonRpcProvider {
   return new Web3Provider(
     ganache.provider({
       accounts: [
@@ -46,12 +46,12 @@ export function createProvider() {
   )
 }
 
-export async function sleep(seconds: number) {
-  return new Promise((resolve, reject) => setTimeout(resolve, seconds * 1000))
+export async function sleep(seconds: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, seconds * 1000))
 }
-export async function stopMining(provider: JsonRpcProvider) {
+export async function stopMining(provider: JsonRpcProvider): Promise<unknown> {
   return provider.send('miner_stop', [])
 }
-export async function startMining(provider: JsonRpcProvider) {
+export async function startMining(provider: JsonRpcProvider): Promise<unknown> {
   return provider.send('miner_start', [1])
 }

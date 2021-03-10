@@ -1,4 +1,3 @@
-import { JsonRpcProvider } from '@ethersproject/providers'
 import { Contract, ContractFactory } from '@ethersproject/contracts'
 import { Resolver } from 'did-resolver'
 import { getResolver } from '../resolver'
@@ -18,10 +17,9 @@ describe('ethrResolver', () => {
     delegate1: string,
     delegate2: string,
     keyAgreementController: string,
-    didResolver: Resolver,
-    web3Provider: JsonRpcProvider
+    didResolver: Resolver
 
-  web3Provider = createProvider()
+  const web3Provider = createProvider()
 
   beforeAll(async () => {
     const factory = ContractFactory.fromSolidity(DidRegistryContract).connect(web3Provider.getSigner(0))
