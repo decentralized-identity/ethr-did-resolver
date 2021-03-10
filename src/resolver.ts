@@ -34,7 +34,7 @@ const legacyAlgoMap: Record<string, string> = {
   Secp256k1VerificationKey2018: 'EcdsaSecp256k1VerificationKey2019',
 }
 
-const identifierMatcher = /^(.*)?(0x[0-9a-fA-F]{40}|0x[0-9a-fA-F]{66})$/
+export const identifierMatcher = /^(.*)?(0x[0-9a-fA-F]{40}|0x[0-9a-fA-F]{66})$/
 
 export function getResolver(options: ConfigurationOptions): Record<string, DIDResolver> {
   return new EthrDidResolver(options).build()

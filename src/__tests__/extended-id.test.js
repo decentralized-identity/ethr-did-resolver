@@ -1,4 +1,4 @@
-import { identifierMatcher } from '../ethr-did-resolver'
+import { identifierMatcher } from '../resolver'
 
 describe('pattern matcher', () => {
   const matcher = identifierMatcher
