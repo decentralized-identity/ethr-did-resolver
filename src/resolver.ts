@@ -1,7 +1,8 @@
-import { BlockTag } from '@ethersproject/providers'
+import { Base58 } from '@ethersproject/basex'
 import { BigNumber } from '@ethersproject/bignumber'
-import { Base58 } from "@ethersproject/basex";
-import { logDecoder } from './logParser'
+import { BlockTag } from '@ethersproject/providers'
+import { ConfigurationOptions, ConfiguredNetworks, configureResolverWithNetworks } from './configuration'
+import { EthrDidController } from './controller'
 import {
   DIDDocument,
   DIDResolutionOptions,
@@ -12,10 +13,8 @@ import {
   ServiceEndpoint,
   VerificationMethod,
 } from 'did-resolver'
-import { ConfigurationOptions, ConfiguredNetworks, configureResolverWithNetworks } from './configuration'
-import { interpretIdentifier } from './utils'
-import { EthrDidController } from './controller'
 import {
+  interpretIdentifier,
   DIDAttributeChanged,
   DIDDelegateChanged,
   ERC1056Event,
@@ -24,9 +23,9 @@ import {
   legacyAttrTypes,
   LegacyVerificationMethod,
   verificationMethodTypes,
-} from './types'
-
-export const identifierMatcher = /^(.*)?(0x[0-9a-fA-F]{40}|0x[0-9a-fA-F]{66})$/
+  identifierMatcher,
+} from './helpers'
+import { logDecoder } from './logParser'
 
 export function getResolver(options: ConfigurationOptions): Record<string, DIDResolver> {
   return new EthrDidResolver(options).build()

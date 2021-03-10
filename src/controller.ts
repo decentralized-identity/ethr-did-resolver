@@ -1,8 +1,7 @@
 import { Signer } from '@ethersproject/abstract-signer'
 import { CallOverrides, Contract } from '@ethersproject/contracts'
 import { BlockTag, JsonRpcProvider, TransactionReceipt } from '@ethersproject/providers'
-import { interpretIdentifier, stringToBytes32 } from './utils'
-import { address } from './types'
+import { address, interpretIdentifier, stringToBytes32 } from './helpers'
 
 export class EthrDidController {
   private contract: Contract

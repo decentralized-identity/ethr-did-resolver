@@ -4,7 +4,7 @@ import { getResolver } from '../resolver'
 import { EthrDidController } from '../controller'
 import DidRegistryContract from 'ethr-did-registry'
 import * as u8a from 'uint8arrays'
-import { interpretIdentifier, stringToBytes32 } from '../utils'
+import { interpretIdentifier, stringToBytes32 } from '../helpers'
 import { createProvider, sleep, startMining, stopMining } from './testUtils'
 
 describe('ethrResolver', () => {
@@ -797,19 +797,19 @@ describe('ethrResolver', () => {
   describe('regression', () => {
     it('resolves same document with case sensitive eth address (https://github.com/decentralized-identity/ethr-did-resolver/issues/105)', async () => {
       expect.assertions(3)
-      const lowId = accounts[5].toLowerCase()
-      const checkSumId = interpretIdentifier(lowId).address
-      const keyAgrDid = `did:ethr:dev:${lowId}`
-      const keyAgrDidChecksum = `did:ethr:dev:${checkSumId}`
-      await new EthrDidController(lowId, registryContract).setAttribute(
+      const lowAddress = accounts[5].toLowerCase()
+      const checksumAddress = interpretIdentifier(lowAddress).address
+      const lowDid = `did:ethr:dev:${lowAddress}`
+      const checksumDid = `did:ethr:dev:${checksumAddress}`
+      await new EthrDidController(lowAddress, registryContract).setAttribute(
         'did/pub/Secp256k1/veriKey/hex',
         '0x02b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71',
         10,
-        { from: lowId }
+        { from: lowAddress }
       )
-      const didDocumentLow = (await didResolver.resolve(keyAgrDid)).didDocument
-      const didDocumentChecksum = (await didResolver.resolve(keyAgrDidChecksum)).didDocument
-      expect(keyAgrDid).not.toEqual(keyAgrDidChecksum)
+      const didDocumentLow = (await didResolver.resolve(lowDid)).didDocument
+      const didDocumentChecksum = (await didResolver.resolve(checksumDid)).didDocument
+      expect(lowDid).not.toEqual(checksumDid)
       expect(didDocumentLow).toBeDefined()
       //we don't care about the actual keys, only about their sameness
       expect(JSON.stringify(didDocumentLow).toLowerCase()).toEqual(JSON.stringify(didDocumentChecksum).toLowerCase())

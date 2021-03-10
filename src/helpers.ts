@@ -1,5 +1,11 @@
+import { getAddress } from '@ethersproject/address'
 import { BigNumber } from '@ethersproject/bignumber'
+import { computeAddress } from '@ethersproject/transactions'
 import { VerificationMethod } from 'did-resolver'
+
+export const identifierMatcher = /^(.*)?(0x[0-9a-fA-F]{40}|0x[0-9a-fA-F]{66})$/
+export const DEFAULT_REGISTRY_ADDRESS = '0xdca7ef03e98e0dc2b855be647c39abe984fcf21b'
+export const DEFAULT_JSON_RPC = 'http://127.0.0.1:8545/'
 
 export type address = string
 export type uint256 = BigNumber
@@ -71,4 +77,34 @@ export const legacyAlgoMap: Record<string, string> = {
   RSAVerificationKey2018: verificationMethodTypes.RSAVerificationKey2018,
   Ed25519VerificationKey2018: verificationMethodTypes.Ed25519VerificationKey2018,
   X25519KeyAgreementKey2019: verificationMethodTypes.X25519KeyAgreementKey2019,
+}
+
+export function bytes32toString(input: bytes32 | Uint8Array): string {
+  const buff: Buffer = typeof input === 'string' ? Buffer.from(input.slice(2), 'hex') : Buffer.from(input)
+  return buff.toString('utf8').replace(/\0+$/, '')
+}
+
+export function stringToBytes32(str: string): string {
+  const buffStr = '0x' + Buffer.from(str).slice(0, 32).toString('hex')
+  return buffStr + '0'.repeat(66 - buffStr.length)
+}
+
+export function interpretIdentifier(identifier: string): { address: string; publicKey?: string } {
+  if (identifier.length > 42) {
+    return { address: computeAddress(identifier), publicKey: identifier }
+  } else {
+    return { address: getAddress(identifier) } // checksum address
+  }
+}
+
+const knownInfuraNetworks: Record<string, string> = {
+  mainnet: '0x1',
+  ropsten: '0x3',
+  rinkeby: '0x4',
+  goerli: '0x5',
+  kovan: '0x2a',
+}
+
+export const knownNetworks: Record<string, string> = {
+  ...knownInfuraNetworks,
 }

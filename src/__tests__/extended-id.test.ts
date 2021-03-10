@@ -1,4 +1,4 @@
-import { identifierMatcher } from '../resolver'
+import { identifierMatcher } from '../helpers'
 
 describe('pattern matcher', () => {
   const matcher = identifierMatcher

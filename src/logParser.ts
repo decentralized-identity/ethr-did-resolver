@@ -2,8 +2,7 @@ import { BigNumber } from '@ethersproject/bignumber'
 import { Contract } from '@ethersproject/contracts'
 import { Log } from '@ethersproject/providers'
 import { LogDescription } from '@ethersproject/abi'
-import { bytes32toString } from './utils'
-import { ERC1056Event } from './types'
+import { bytes32toString, ERC1056Event } from './helpers'
 
 function populateEventMetaClass(logResult: LogDescription): ERC1056Event {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
