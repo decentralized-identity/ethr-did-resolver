@@ -85,7 +85,7 @@
     "@ethersproject/contracts": "^5.0.12",
     "@ethersproject/providers": "^5.0.24",
     "@ethersproject/transactions": "^5.0.11",
-    "did-resolver": "^3.0.1",
+    "did-resolver": "^3.0.2",
     "ethr-did-registry": "^0.0.3"
   },
   "husky": {
