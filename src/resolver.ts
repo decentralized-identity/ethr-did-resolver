@@ -27,6 +27,7 @@ import {
   nullAddress,
   DIDOwnerChanged,
   knownNetworks,
+  Errors,
 } from './helpers'
 import { logDecoder } from './logParser'
 
@@ -280,13 +281,28 @@ export class EthrDidResolver {
   ): Promise<DIDResolutionResult> {
     const fullId = parsed.id.match(identifierMatcher)
     if (!fullId) {
-      throw new Error(`Not a valid ethr DID: ${did}`)
+      return {
+        didResolutionMetadata: {
+          error: Errors.invalidDid,
+          message: `Not a valid did:ethr: ${parsed.id}`,
+        },
+        didDocumentMetadata: {},
+        didDocument: null,
+      }
     }
     const id = fullId[2]
     const networkId = !fullId[1] ? 'mainnet' : fullId[1].slice(0, -1)
 
-    if (!this.contracts[networkId])
-      throw new Error(`unknown_network: The DID resolver does not have a configuration for network: ${networkId}`)
+    if (!this.contracts[networkId]) {
+      return {
+        didResolutionMetadata: {
+          error: Errors.unknownNetwork,
+          message: `The DID resolver does not have a configuration for network: ${networkId}`,
+        },
+        didDocumentMetadata: {},
+        didDocument: null,
+      }
+    }
 
     const { controller, history, controllerKey, chainId } = await this.changeLog(id, networkId, options.blockTag)
     try {
@@ -300,7 +316,7 @@ export class EthrDidResolver {
     } catch (e) {
       return {
         didResolutionMetadata: {
-          error: 'notFound',
+          error: Errors.notFound,
           message: e.toString(), // This is not in spec, nut may be helpful
         },
         didDocumentMetadata: {},

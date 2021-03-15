@@ -2,7 +2,7 @@ import { BigNumber } from '@ethersproject/bignumber'
 import { Contract, ContractFactory } from '@ethersproject/contracts'
 import { InfuraProvider, JsonRpcProvider, Provider } from '@ethersproject/providers'
 import DidRegistryContract from 'ethr-did-registry'
-import { DEFAULT_REGISTRY_ADDRESS, knownNetworks } from './helpers'
+import { DEFAULT_REGISTRY_ADDRESS, knownInfuraNetworks, knownNetworks } from './helpers'
 
 /**
  * A configuration entry for an ethereum network
@@ -57,8 +57,9 @@ function getContractForNetwork(conf: ProviderConfiguration): Contract {
   let provider: Provider = conf.provider || conf.web3?.currentProvider
   if (!provider) {
     if (conf.rpcUrl) {
-      const chainId = conf.chainId ? BigNumber.from(conf.chainId).toNumber() : conf.chainId
-      const networkName = knownNetworks[conf.name || ''] ? conf.name?.replace('mainnet', 'homestead') : 'any'
+      const chainIdRaw = conf.chainId ? conf.chainId : knownNetworks[conf.name || '']
+      const chainId = chainIdRaw ? BigNumber.from(chainIdRaw).toNumber() : chainIdRaw
+      const networkName = knownInfuraNetworks[conf.name || ''] ? conf.name?.replace('mainnet', 'homestead') : 'any'
       provider = new JsonRpcProvider(conf.rpcUrl, chainId || networkName)
     } else {
       throw new Error(`invalid_config: No web3 provider could be determined for network ${conf.name || conf.chainId}`)

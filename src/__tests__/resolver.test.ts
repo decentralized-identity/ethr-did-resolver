@@ -979,13 +979,4 @@ describe('ethrResolver', () => {
       })
     })
   })
-
-  describe('error handling', () => {
-    it('rejects promise', async () => {
-      expect.assertions(1)
-      await expect(didResolver.resolve('did:ethr:2nQtiQG6Cgm1GYTBaaKAgr76uY7iSexUkqX')).rejects.toEqual(
-        new Error('Not a valid ethr DID: did:ethr:2nQtiQG6Cgm1GYTBaaKAgr76uY7iSexUkqX')
-      )
-    })
-  })
 })
