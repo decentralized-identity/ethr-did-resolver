@@ -51,7 +51,10 @@ describe('ethrResolver', () => {
         didDocumentMetadata: {},
         didResolutionMetadata: { contentType: 'application/did+ld+json' },
         didDocument: {
-          '@context': 'https://w3id.org/did/v1',
+          '@context': [
+            'https://www.w3.org/ns/did/v1',
+            'https://w3c-ccg.github.io/security-vocab/contexts/security-v3-unstable.jsonld',
+          ],
           id: did,
           publicKey: [
             {
@@ -74,7 +77,10 @@ describe('ethrResolver', () => {
         didDocumentMetadata: {},
         didResolutionMetadata: { contentType: 'application/did+ld+json' },
         didDocument: {
-          '@context': 'https://w3id.org/did/v1',
+          '@context': [
+            'https://www.w3.org/ns/did/v1',
+            'https://w3c-ccg.github.io/security-vocab/contexts/security-v3-unstable.jsonld',
+          ],
           id: pubdid,
           publicKey: [
             {
@@ -104,7 +110,10 @@ describe('ethrResolver', () => {
         didDocumentMetadata: {},
         didResolutionMetadata: { contentType: 'application/did+ld+json' },
         didDocument: {
-          '@context': 'https://w3id.org/did/v1',
+          '@context': [
+            'https://www.w3.org/ns/did/v1',
+            'https://w3c-ccg.github.io/security-vocab/contexts/security-v3-unstable.jsonld',
+          ],
           id: did,
           publicKey: [
             {
@@ -125,7 +134,10 @@ describe('ethrResolver', () => {
       const pubdid = `did:ethr:dev:${pubKey}`
       const { didDocument } = await didResolver.resolve(pubdid)
       expect(didDocument).toEqual({
-        '@context': 'https://w3id.org/did/v1',
+        '@context': [
+          'https://www.w3.org/ns/did/v1',
+          'https://w3c-ccg.github.io/security-vocab/contexts/security-v3-unstable.jsonld',
+        ],
         id: pubdid,
         publicKey: [
           {
@@ -153,7 +165,10 @@ describe('ethrResolver', () => {
           didDocumentMetadata: {},
           didResolutionMetadata: { contentType: 'application/did+ld+json' },
           didDocument: {
-            '@context': 'https://w3id.org/did/v1',
+            '@context': [
+              'https://www.w3.org/ns/did/v1',
+              'https://w3c-ccg.github.io/security-vocab/contexts/security-v3-unstable.jsonld',
+            ],
             id: did,
             publicKey: [
               {
@@ -185,7 +200,10 @@ describe('ethrResolver', () => {
           didDocumentMetadata: {},
           didResolutionMetadata: { contentType: 'application/did+ld+json' },
           didDocument: {
-            '@context': 'https://w3id.org/did/v1',
+            '@context': [
+              'https://www.w3.org/ns/did/v1',
+              'https://w3c-ccg.github.io/security-vocab/contexts/security-v3-unstable.jsonld',
+            ],
             id: did,
             publicKey: [
               {
@@ -222,7 +240,10 @@ describe('ethrResolver', () => {
           didDocumentMetadata: {},
           didResolutionMetadata: { contentType: 'application/did+ld+json' },
           didDocument: {
-            '@context': 'https://w3id.org/did/v1',
+            '@context': [
+              'https://www.w3.org/ns/did/v1',
+              'https://w3c-ccg.github.io/security-vocab/contexts/security-v3-unstable.jsonld',
+            ],
             id: did,
             publicKey: [
               {
@@ -255,7 +276,10 @@ describe('ethrResolver', () => {
           didDocumentMetadata: {},
           didResolutionMetadata: { contentType: 'application/did+ld+json' },
           didDocument: {
-            '@context': 'https://w3id.org/did/v1',
+            '@context': [
+              'https://www.w3.org/ns/did/v1',
+              'https://w3c-ccg.github.io/security-vocab/contexts/security-v3-unstable.jsonld',
+            ],
             id: did,
             publicKey: [
               {
@@ -281,7 +305,10 @@ describe('ethrResolver', () => {
           didDocumentMetadata: {},
           didResolutionMetadata: { contentType: 'application/did+ld+json' },
           didDocument: {
-            '@context': 'https://w3id.org/did/v1',
+            '@context': [
+              'https://www.w3.org/ns/did/v1',
+              'https://w3c-ccg.github.io/security-vocab/contexts/security-v3-unstable.jsonld',
+            ],
             id: did,
             publicKey: [
               {
@@ -316,7 +343,10 @@ describe('ethrResolver', () => {
         )
         const { didDocument } = await didResolver.resolve(did)
         expect(didDocument).toEqual({
-          '@context': 'https://w3id.org/did/v1',
+          '@context': [
+            'https://www.w3.org/ns/did/v1',
+            'https://w3c-ccg.github.io/security-vocab/contexts/security-v3-unstable.jsonld',
+          ],
           id: did,
           publicKey: [
             {
@@ -352,7 +382,10 @@ describe('ethrResolver', () => {
         )
         const { didDocument } = await didResolver.resolve(did)
         expect(didDocument).toEqual({
-          '@context': 'https://w3id.org/did/v1',
+          '@context': [
+            'https://www.w3.org/ns/did/v1',
+            'https://w3c-ccg.github.io/security-vocab/contexts/security-v3-unstable.jsonld',
+          ],
           id: did,
           publicKey: [
             {
@@ -397,7 +430,10 @@ describe('ethrResolver', () => {
         )
         const { didDocument } = await didResolver.resolve(did)
         expect(didDocument).toEqual({
-          '@context': 'https://w3id.org/did/v1',
+          '@context': [
+            'https://www.w3.org/ns/did/v1',
+            'https://w3c-ccg.github.io/security-vocab/contexts/security-v3-unstable.jsonld',
+          ],
           id: did,
           publicKey: [
             {
@@ -449,7 +485,10 @@ describe('ethrResolver', () => {
         )
         const { didDocument } = await didResolver.resolve(keyAgrDid)
         expect(didDocument).toEqual({
-          '@context': 'https://w3id.org/did/v1',
+          '@context': [
+            'https://www.w3.org/ns/did/v1',
+            'https://w3c-ccg.github.io/security-vocab/contexts/security-v3-unstable.jsonld',
+          ],
           id: keyAgrDid,
           publicKey: [
             {
@@ -481,7 +520,10 @@ describe('ethrResolver', () => {
         )
         const { didDocument } = await didResolver.resolve(did)
         expect(didDocument).toEqual({
-          '@context': 'https://w3id.org/did/v1',
+          '@context': [
+            'https://www.w3.org/ns/did/v1',
+            'https://w3c-ccg.github.io/security-vocab/contexts/security-v3-unstable.jsonld',
+          ],
           id: did,
           publicKey: [
             {
@@ -541,7 +583,10 @@ describe('ethrResolver', () => {
       )
       const { didDocument } = await didResolver.resolve(did)
       expect(didDocument).toEqual({
-        '@context': 'https://w3id.org/did/v1',
+        '@context': [
+          'https://www.w3.org/ns/did/v1',
+          'https://w3c-ccg.github.io/security-vocab/contexts/security-v3-unstable.jsonld',
+        ],
         id: did,
         publicKey: [
           {
@@ -592,7 +637,10 @@ describe('ethrResolver', () => {
       )
       const { didDocument } = await didResolver.resolve(did)
       expect(didDocument).toEqual({
-        '@context': 'https://w3id.org/did/v1',
+        '@context': [
+          'https://www.w3.org/ns/did/v1',
+          'https://w3c-ccg.github.io/security-vocab/contexts/security-v3-unstable.jsonld',
+        ],
         id: did,
         publicKey: [
           {
@@ -634,7 +682,10 @@ describe('ethrResolver', () => {
       )
       const { didDocument } = await didResolver.resolve(did)
       expect(didDocument).toEqual({
-        '@context': 'https://w3id.org/did/v1',
+        '@context': [
+          'https://www.w3.org/ns/did/v1',
+          'https://w3c-ccg.github.io/security-vocab/contexts/security-v3-unstable.jsonld',
+        ],
         id: did,
         publicKey: [
           {
@@ -671,7 +722,10 @@ describe('ethrResolver', () => {
         )
         const { didDocument } = await didResolver.resolve(did)
         expect(didDocument).toEqual({
-          '@context': 'https://w3id.org/did/v1',
+          '@context': [
+            'https://www.w3.org/ns/did/v1',
+            'https://w3c-ccg.github.io/security-vocab/contexts/security-v3-unstable.jsonld',
+          ],
           id: did,
           publicKey: [
             {
@@ -712,7 +766,10 @@ describe('ethrResolver', () => {
           contentType: 'application/did+ld+json',
         },
         didDocument: {
-          '@context': 'https://w3id.org/did/v1',
+          '@context': [
+            'https://www.w3.org/ns/did/v1',
+            'https://w3c-ccg.github.io/security-vocab/contexts/security-v3-unstable.jsonld',
+          ],
           id: did,
           publicKey: [
             {
@@ -766,7 +823,10 @@ describe('ethrResolver', () => {
           contentType: 'application/did+ld+json',
         },
         didDocument: {
-          '@context': 'https://w3id.org/did/v1',
+          '@context': [
+            'https://www.w3.org/ns/did/v1',
+            'https://w3c-ccg.github.io/security-vocab/contexts/security-v3-unstable.jsonld',
+          ],
           id: did,
           publicKey: [
             {
@@ -829,7 +889,10 @@ describe('ethrResolver', () => {
       )
       const { didDocument } = await didResolver.resolve(did)
       expect(didDocument).toEqual({
-        '@context': 'https://w3id.org/did/v1',
+        '@context': [
+          'https://www.w3.org/ns/did/v1',
+          'https://w3c-ccg.github.io/security-vocab/contexts/security-v3-unstable.jsonld',
+        ],
         id: did,
         publicKey: [
           {
@@ -868,7 +931,10 @@ describe('ethrResolver', () => {
             contentType: 'application/did+ld+json',
           },
           didDocument: {
-            '@context': 'https://w3id.org/did/v1',
+            '@context': [
+              'https://www.w3.org/ns/did/v1',
+              'https://w3c-ccg.github.io/security-vocab/contexts/security-v3-unstable.jsonld',
+            ],
             id: did,
             publicKey: [
               {
@@ -904,7 +970,7 @@ describe('ethrResolver', () => {
             contentType: 'application/did+ld+json',
           },
           didDocument: {
-            '@context': 'https://w3id.org/did/v1',
+            '@context': 'https://www.w3.org/ns/did/v1',
             id: did,
             publicKey: [],
             authentication: [],

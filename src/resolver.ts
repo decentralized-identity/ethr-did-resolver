@@ -112,7 +112,10 @@ export class EthrDidResolver {
     history: ERC1056Event[]
   ): { didDocument: DIDDocument; deactivated: boolean } {
     const baseDIDDocument: DIDDocument = {
-      '@context': 'https://w3id.org/did/v1',
+      '@context': [
+        'https://www.w3.org/ns/did/v1',
+        'https://w3c-ccg.github.io/security-vocab/contexts/security-v3-unstable.jsonld',
+      ],
       id: did,
       publicKey: [],
       authentication: [],
@@ -259,7 +262,9 @@ export class EthrDidResolver {
       doc.service = Object.values(services)
     }
 
-    return deactivated ? { didDocument: baseDIDDocument, deactivated } : { didDocument: doc, deactivated }
+    return deactivated
+      ? { didDocument: { ...baseDIDDocument, '@context': 'https://www.w3.org/ns/did/v1' }, deactivated }
+      : { didDocument: doc, deactivated }
   }
 
   async resolve(

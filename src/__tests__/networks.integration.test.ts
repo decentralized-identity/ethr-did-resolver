@@ -18,7 +18,10 @@ describe('ethrResolver (alt-chains)', () => {
         didDocumentMetadata: {},
         didResolutionMetadata: { contentType: 'application/did+ld+json' },
         didDocument: {
-          '@context': 'https://w3id.org/did/v1',
+          '@context': [
+            'https://www.w3.org/ns/did/v1',
+            'https://w3c-ccg.github.io/security-vocab/contexts/security-v3-unstable.jsonld',
+          ],
           id: did,
           publicKey: [
             {
@@ -43,7 +46,10 @@ describe('ethrResolver (alt-chains)', () => {
         didDocumentMetadata: {},
         didResolutionMetadata: { contentType: 'application/did+ld+json' },
         didDocument: {
-          '@context': 'https://w3id.org/did/v1',
+          '@context': [
+            'https://www.w3.org/ns/did/v1',
+            'https://w3c-ccg.github.io/security-vocab/contexts/security-v3-unstable.jsonld',
+          ],
           id: did,
           publicKey: [
             {
@@ -68,7 +74,10 @@ describe('ethrResolver (alt-chains)', () => {
         didDocumentMetadata: {},
         didResolutionMetadata: { contentType: 'application/did+ld+json' },
         didDocument: {
-          '@context': 'https://w3id.org/did/v1',
+          '@context': [
+            'https://www.w3.org/ns/did/v1',
+            'https://w3c-ccg.github.io/security-vocab/contexts/security-v3-unstable.jsonld',
+          ],
           id: did,
           publicKey: [
             {
@@ -91,7 +100,10 @@ describe('ethrResolver (alt-chains)', () => {
         didDocumentMetadata: {},
         didResolutionMetadata: { contentType: 'application/did+ld+json' },
         didDocument: {
-          '@context': 'https://w3id.org/did/v1',
+          '@context': [
+            'https://www.w3.org/ns/did/v1',
+            'https://w3c-ccg.github.io/security-vocab/contexts/security-v3-unstable.jsonld',
+          ],
           id: did,
           publicKey: [
             {
@@ -114,7 +126,10 @@ describe('ethrResolver (alt-chains)', () => {
         didDocumentMetadata: {},
         didResolutionMetadata: { contentType: 'application/did+ld+json' },
         didDocument: {
-          '@context': 'https://w3id.org/did/v1',
+          '@context': [
+            'https://www.w3.org/ns/did/v1',
+            'https://w3c-ccg.github.io/security-vocab/contexts/security-v3-unstable.jsonld',
+          ],
           id: did,
           publicKey: [
             {
@@ -138,7 +153,10 @@ describe('ethrResolver (alt-chains)', () => {
         didDocumentMetadata: {},
         didResolutionMetadata: { contentType: 'application/did+ld+json' },
         didDocument: {
-          '@context': 'https://w3id.org/did/v1',
+          '@context': [
+            'https://www.w3.org/ns/did/v1',
+            'https://w3c-ccg.github.io/security-vocab/contexts/security-v3-unstable.jsonld',
+          ],
           id: did,
           publicKey: [
             {
