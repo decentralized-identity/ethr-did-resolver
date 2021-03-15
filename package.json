@@ -2,9 +2,10 @@
   "name": "ethr-did-resolver",
   "version": "3.0.3",
   "description": "Resolve DID documents around ethereum addresses",
-  "main": "dist/ethr-did-resolver.js",
-  "source": "src/ethr-did-resolver.js",
-  "types": "index.d.ts",
+  "main": "lib/index.umd.js",
+  "source": "src/index.ts",
+  "module": "lib/index.modern.js",
+  "types": "lib/index.d.ts",
   "repository": {
     "type": "git",
     "url": "https://github.com/decentralized-identity/ethr-did-resolver.git"
@@ -20,81 +21,78 @@
     ".babelrc"
   ],
   "author": "Pelle Braendgaard <pelle.braendgaard@consensys.net>",
+  "contributors": [
+    "Mircea Nistor <mircea.nistor@mesh.xyz>"
+  ],
   "license": "Apache-2.0",
+  "keywords": [
+    "DID",
+    "DID document",
+    "PKI",
+    "resolver",
+    "resolve",
+    "Verifiable Credential",
+    "W3C",
+    "ethereum",
+    "ethereumAddress",
+    "blockchainAccountId",
+    "registry",
+    "EIP1056",
+    "EcdsaSecp256k1RecoveryMethod2020",
+    "Ed25519VerificationKey2018",
+    "did:ethr"
+  ],
   "scripts": {
     "build": "microbundle",
-    "lint": "eslint \"src/**/*.js\"",
-    "format": "prettier --write \"src/**/*.js\"",
+    "lint": "eslint \"src/**/*.[jt]s\"",
+    "format": "prettier --write \"src/**/*.[jt]s\"",
     "prepare": "npm run build",
     "prepublishOnly": "npm test && npm run build",
     "release": "semantic-release --debug",
     "test": "jest",
     "test-with-coverage": "jest --coverage && codecov"
   },
-  "jest": {
-    "coverageDirectory": "./coverage/",
-    "collectCoverage": true,
-    "testURL": "http://localhost/",
-    "transform": {
-      "^.+\\.jsx?$": "babel-jest"
-    }
-  },
   "devDependencies": {
-    "@babel/cli": "7.12.10",
-    "@babel/core": "7.12.10",
-    "@babel/preset-env": "7.12.11",
-    "@commitlint/cli": "11.0.0",
-    "@commitlint/config-conventional": "11.0.0",
+    "@babel/core": "^7.13.10",
+    "@babel/preset-env": "^7.13.10",
+    "@babel/preset-typescript": "^7.13.0",
+    "@commitlint/cli": "^12.0.1",
+    "@commitlint/config-conventional": "^12.0.1",
     "@semantic-release/changelog": "5.0.1",
     "@semantic-release/git": "9.0.0",
-    "babel-jest": "26.6.3",
+    "@types/jest": "^26.0.20",
+    "@typescript-eslint/eslint-plugin": "^4.17.0",
+    "@typescript-eslint/parser": "^4.17.0",
+    "babel-jest": "^26.6.3",
     "codecov": "3.8.1",
-    "eslint": "7.15.0",
-    "eslint-config-standard": "16.0.2",
-    "eslint-plugin-import": "2.22.1",
-    "eslint-plugin-jest": "24.1.3",
-    "eslint-plugin-node": "11.1.0",
-    "eslint-plugin-promise": "4.2.1",
-    "eslint-plugin-standard": "4.1.0",
-    "ganache-cli": "6.10.2",
-    "husky": "4.3.6",
-    "jdom": "3.2.1",
+    "eslint": "^7.21.0",
+    "eslint-config-prettier": "^8.1.0",
+    "ganache-cli": "^6.12.2",
+    "husky": "^5.1.3",
     "jest": "26.6.3",
-    "microbundle": "0.12.4",
-    "prettier": "2.2.1",
-    "regenerator-runtime": "0.13.7",
-    "semantic-release": "17.3.0",
-    "truffle-contract": "3.0.7"
+    "microbundle": "^0.13.0",
+    "prettier": "^2.2.1",
+    "pretty-quick": "^3.1.0",
+    "semantic-release": "^17.4.1",
+    "typescript": "^4.2.3",
+    "uint8arrays": "^2.1.3"
   },
   "dependencies": {
-    "buffer": "^6.0.0",
-    "did-resolver": "2.1.2",
-    "elliptic": "^6.5.3",
-    "ethjs-abi": "^0.2.1",
-    "ethjs-contract": "^0.2.0",
-    "ethjs-provider-http": "^0.1.6",
-    "ethjs-query": "^0.3.5",
-    "ethr-did-registry": "^0.0.3",
-    "js-sha3": "^0.8.0"
+    "@ethersproject/abi": "^5.0.13",
+    "@ethersproject/abstract-signer": "^5.0.14",
+    "@ethersproject/address": "^5.0.11",
+    "@ethersproject/basex": "^5.0.9",
+    "@ethersproject/bignumber": "^5.0.15",
+    "@ethersproject/contracts": "^5.0.12",
+    "@ethersproject/providers": "^5.0.24",
+    "@ethersproject/transactions": "^5.0.11",
+    "did-resolver": "^3.0.2",
+    "ethr-did-registry": "^0.0.3"
   },
   "husky": {
     "hooks": {
+      "pre-commit": "pretty-quick --staged",
       "commit-msg": "commitlint -E HUSKY_GIT_PARAMS"
     }
-  },
-  "standard": {
-    "ignore": [
-      "lib/**"
-    ],
-    "globals": [
-      "it",
-      "describe",
-      "expect",
-      "jest",
-      "beforeAll",
-      "beforeEach",
-      "afterAll",
-      "afterEach"
-    ]
   }
 }
