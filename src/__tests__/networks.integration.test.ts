@@ -23,7 +23,7 @@ describe('ethrResolver (alt-chains)', () => {
             'https://w3c-ccg.github.io/security-vocab/contexts/security-v3-unstable.jsonld',
           ],
           id: did,
-          publicKey: [
+          verificationMethod: [
             {
               id: `${did}#controller`,
               type: 'EcdsaSecp256k1RecoveryMethod2020',
@@ -51,7 +51,7 @@ describe('ethrResolver (alt-chains)', () => {
             'https://w3c-ccg.github.io/security-vocab/contexts/security-v3-unstable.jsonld',
           ],
           id: did,
-          publicKey: [
+          verificationMethod: [
             {
               id: `${did}#controller`,
               type: 'EcdsaSecp256k1RecoveryMethod2020',
@@ -79,7 +79,7 @@ describe('ethrResolver (alt-chains)', () => {
             'https://w3c-ccg.github.io/security-vocab/contexts/security-v3-unstable.jsonld',
           ],
           id: did,
-          publicKey: [
+          verificationMethod: [
             {
               id: `${did}#controller`,
               type: 'EcdsaSecp256k1RecoveryMethod2020',
@@ -105,7 +105,7 @@ describe('ethrResolver (alt-chains)', () => {
             'https://w3c-ccg.github.io/security-vocab/contexts/security-v3-unstable.jsonld',
           ],
           id: did,
-          publicKey: [
+          verificationMethod: [
             {
               id: `${did}#controller`,
               type: 'EcdsaSecp256k1RecoveryMethod2020',
@@ -131,7 +131,7 @@ describe('ethrResolver (alt-chains)', () => {
             'https://w3c-ccg.github.io/security-vocab/contexts/security-v3-unstable.jsonld',
           ],
           id: did,
-          publicKey: [
+          verificationMethod: [
             {
               id: `${did}#controller`,
               type: 'EcdsaSecp256k1RecoveryMethod2020',
@@ -158,7 +158,7 @@ describe('ethrResolver (alt-chains)', () => {
             'https://w3c-ccg.github.io/security-vocab/contexts/security-v3-unstable.jsonld',
           ],
           id: did,
-          publicKey: [
+          verificationMethod: [
             {
               id: `${did}#controller`,
               type: 'EcdsaSecp256k1RecoveryMethod2020',

@@ -117,7 +117,7 @@ export class EthrDidResolver {
         'https://w3c-ccg.github.io/security-vocab/contexts/security-v3-unstable.jsonld',
       ],
       id: did,
-      publicKey: [],
+      verificationMethod: [],
       authentication: [],
     }
 
@@ -255,7 +255,7 @@ export class EthrDidResolver {
 
     const doc: DIDDocument = {
       ...baseDIDDocument,
-      publicKey: publicKey.concat(Object.values(pks)),
+      verificationMethod: publicKey.concat(Object.values(pks)),
       authentication: authentication.concat(Object.values(auth)),
     }
     if (Object.values(services).length > 0) {

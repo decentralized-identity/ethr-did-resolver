@@ -56,7 +56,7 @@ describe('ethrResolver', () => {
             'https://w3c-ccg.github.io/security-vocab/contexts/security-v3-unstable.jsonld',
           ],
           id: did,
-          publicKey: [
+          verificationMethod: [
             {
               id: `${did}#controller`,
               type: 'EcdsaSecp256k1RecoveryMethod2020',
@@ -82,7 +82,7 @@ describe('ethrResolver', () => {
             'https://w3c-ccg.github.io/security-vocab/contexts/security-v3-unstable.jsonld',
           ],
           id: pubdid,
-          publicKey: [
+          verificationMethod: [
             {
               id: `${pubdid}#controller`,
               type: 'EcdsaSecp256k1RecoveryMethod2020',
@@ -115,7 +115,7 @@ describe('ethrResolver', () => {
             'https://w3c-ccg.github.io/security-vocab/contexts/security-v3-unstable.jsonld',
           ],
           id: did,
-          publicKey: [
+          verificationMethod: [
             {
               id: `${did}#controller`,
               type: 'EcdsaSecp256k1RecoveryMethod2020',
@@ -139,7 +139,7 @@ describe('ethrResolver', () => {
           'https://w3c-ccg.github.io/security-vocab/contexts/security-v3-unstable.jsonld',
         ],
         id: pubdid,
-        publicKey: [
+        verificationMethod: [
           {
             id: `${pubdid}#controller`,
             type: 'EcdsaSecp256k1RecoveryMethod2020',
@@ -149,7 +149,7 @@ describe('ethrResolver', () => {
         ],
         authentication: [`${pubdid}#controller`],
       })
-      expect(didDocument?.publicKey?.length).toBe(1)
+      expect(didDocument?.verificationMethod?.length).toBe(1)
       expect(didDocument?.authentication?.length).toBe(1)
     })
   })
@@ -170,7 +170,7 @@ describe('ethrResolver', () => {
               'https://w3c-ccg.github.io/security-vocab/contexts/security-v3-unstable.jsonld',
             ],
             id: did,
-            publicKey: [
+            verificationMethod: [
               {
                 id: `${did}#controller`,
                 type: 'EcdsaSecp256k1RecoveryMethod2020',
@@ -205,7 +205,7 @@ describe('ethrResolver', () => {
               'https://w3c-ccg.github.io/security-vocab/contexts/security-v3-unstable.jsonld',
             ],
             id: did,
-            publicKey: [
+            verificationMethod: [
               {
                 id: `${did}#controller`,
                 type: 'EcdsaSecp256k1RecoveryMethod2020',
@@ -245,7 +245,7 @@ describe('ethrResolver', () => {
               'https://w3c-ccg.github.io/security-vocab/contexts/security-v3-unstable.jsonld',
             ],
             id: did,
-            publicKey: [
+            verificationMethod: [
               {
                 id: `${did}#controller`,
                 type: 'EcdsaSecp256k1RecoveryMethod2020',
@@ -281,7 +281,7 @@ describe('ethrResolver', () => {
               'https://w3c-ccg.github.io/security-vocab/contexts/security-v3-unstable.jsonld',
             ],
             id: did,
-            publicKey: [
+            verificationMethod: [
               {
                 id: `${did}#controller`,
                 type: 'EcdsaSecp256k1RecoveryMethod2020',
@@ -310,7 +310,7 @@ describe('ethrResolver', () => {
               'https://w3c-ccg.github.io/security-vocab/contexts/security-v3-unstable.jsonld',
             ],
             id: did,
-            publicKey: [
+            verificationMethod: [
               {
                 id: `${did}#controller`,
                 type: 'EcdsaSecp256k1RecoveryMethod2020',
@@ -348,7 +348,7 @@ describe('ethrResolver', () => {
             'https://w3c-ccg.github.io/security-vocab/contexts/security-v3-unstable.jsonld',
           ],
           id: did,
-          publicKey: [
+          verificationMethod: [
             {
               id: `${did}#controller`,
               type: 'EcdsaSecp256k1RecoveryMethod2020',
@@ -387,7 +387,7 @@ describe('ethrResolver', () => {
             'https://w3c-ccg.github.io/security-vocab/contexts/security-v3-unstable.jsonld',
           ],
           id: did,
-          publicKey: [
+          verificationMethod: [
             {
               id: `${did}#controller`,
               type: 'EcdsaSecp256k1RecoveryMethod2020',
@@ -435,7 +435,7 @@ describe('ethrResolver', () => {
             'https://w3c-ccg.github.io/security-vocab/contexts/security-v3-unstable.jsonld',
           ],
           id: did,
-          publicKey: [
+          verificationMethod: [
             {
               id: `${did}#controller`,
               type: 'EcdsaSecp256k1RecoveryMethod2020',
@@ -490,7 +490,7 @@ describe('ethrResolver', () => {
             'https://w3c-ccg.github.io/security-vocab/contexts/security-v3-unstable.jsonld',
           ],
           id: keyAgrDid,
-          publicKey: [
+          verificationMethod: [
             {
               id: `${keyAgrDid}#controller`,
               type: 'EcdsaSecp256k1RecoveryMethod2020',
@@ -525,7 +525,7 @@ describe('ethrResolver', () => {
             'https://w3c-ccg.github.io/security-vocab/contexts/security-v3-unstable.jsonld',
           ],
           id: did,
-          publicKey: [
+          verificationMethod: [
             {
               id: `${did}#controller`,
               type: 'EcdsaSecp256k1RecoveryMethod2020',
@@ -588,7 +588,7 @@ describe('ethrResolver', () => {
           'https://w3c-ccg.github.io/security-vocab/contexts/security-v3-unstable.jsonld',
         ],
         id: did,
-        publicKey: [
+        verificationMethod: [
           {
             id: `${did}#controller`,
             type: 'EcdsaSecp256k1RecoveryMethod2020',
@@ -642,7 +642,7 @@ describe('ethrResolver', () => {
           'https://w3c-ccg.github.io/security-vocab/contexts/security-v3-unstable.jsonld',
         ],
         id: did,
-        publicKey: [
+        verificationMethod: [
           {
             id: `${did}#controller`,
             type: 'EcdsaSecp256k1RecoveryMethod2020',
@@ -687,7 +687,7 @@ describe('ethrResolver', () => {
           'https://w3c-ccg.github.io/security-vocab/contexts/security-v3-unstable.jsonld',
         ],
         id: did,
-        publicKey: [
+        verificationMethod: [
           {
             id: `${did}#controller`,
             type: 'EcdsaSecp256k1RecoveryMethod2020',
@@ -727,7 +727,7 @@ describe('ethrResolver', () => {
             'https://w3c-ccg.github.io/security-vocab/contexts/security-v3-unstable.jsonld',
           ],
           id: did,
-          publicKey: [
+          verificationMethod: [
             {
               id: `${did}#controller`,
               type: 'EcdsaSecp256k1RecoveryMethod2020',
@@ -771,7 +771,7 @@ describe('ethrResolver', () => {
             'https://w3c-ccg.github.io/security-vocab/contexts/security-v3-unstable.jsonld',
           ],
           id: did,
-          publicKey: [
+          verificationMethod: [
             {
               id: `${did}#controller`,
               type: 'EcdsaSecp256k1RecoveryMethod2020',
@@ -828,7 +828,7 @@ describe('ethrResolver', () => {
             'https://w3c-ccg.github.io/security-vocab/contexts/security-v3-unstable.jsonld',
           ],
           id: did,
-          publicKey: [
+          verificationMethod: [
             {
               id: `${did}#controller`,
               type: 'EcdsaSecp256k1RecoveryMethod2020',
@@ -894,7 +894,7 @@ describe('ethrResolver', () => {
           'https://w3c-ccg.github.io/security-vocab/contexts/security-v3-unstable.jsonld',
         ],
         id: did,
-        publicKey: [
+        verificationMethod: [
           {
             id: `${did}#controller`,
             controller: did,
@@ -936,7 +936,7 @@ describe('ethrResolver', () => {
               'https://w3c-ccg.github.io/security-vocab/contexts/security-v3-unstable.jsonld',
             ],
             id: did,
-            publicKey: [
+            verificationMethod: [
               {
                 id: `${did}#controller`,
                 type: 'EcdsaSecp256k1RecoveryMethod2020',
@@ -972,7 +972,7 @@ describe('ethrResolver', () => {
           didDocument: {
             '@context': 'https://www.w3.org/ns/did/v1',
             id: did,
-            publicKey: [],
+            verificationMethod: [],
             authentication: [],
           },
         })
