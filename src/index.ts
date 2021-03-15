@@ -7,6 +7,7 @@ import {
   legacyAttrTypes,
   stringToBytes32,
   verificationMethodTypes,
+  Errors,
 } from './helpers'
 
 export {
@@ -20,4 +21,5 @@ export {
   legacyAttrTypes as attrTypes,
   verificationMethodTypes,
   identifierMatcher,
+  Errors,
 }
