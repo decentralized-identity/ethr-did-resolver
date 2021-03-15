@@ -1,3 +1,17 @@
+# [4.0.0](https://github.com/decentralized-identity/ethr-did-resolver/compare/3.1.0...4.0.0) (2021-03-15)
+
+
+### Features
+
+* upgrade to latest did core spec ([#99](https://github.com/decentralized-identity/ethr-did-resolver/issues/99)) ([#109](https://github.com/decentralized-identity/ethr-did-resolver/issues/109)) ([#111](https://github.com/decentralized-identity/ethr-did-resolver/issues/111)) ([2a023b1](https://github.com/decentralized-identity/ethr-did-resolver/commit/2a023b15a3a6cba1da05f8439dacb26e898104f1)), closes [#105](https://github.com/decentralized-identity/ethr-did-resolver/issues/105) [#95](https://github.com/decentralized-identity/ethr-did-resolver/issues/95) [#106](https://github.com/decentralized-identity/ethr-did-resolver/issues/106) [#83](https://github.com/decentralized-identity/ethr-did-resolver/issues/83) [#85](https://github.com/decentralized-identity/ethr-did-resolver/issues/85) [#83](https://github.com/decentralized-identity/ethr-did-resolver/issues/83) [#85](https://github.com/decentralized-identity/ethr-did-resolver/issues/85) [#95](https://github.com/decentralized-identity/ethr-did-resolver/issues/95) [#105](https://github.com/decentralized-identity/ethr-did-resolver/issues/105) [#106](https://github.com/decentralized-identity/ethr-did-resolver/issues/106)
+
+
+### BREAKING CHANGES
+
+* The return type is `DIDResolutionResult` which wraps a `DIDDocument`.
+* No errors are thrown during DID resolution. Please check `result.didResolutionMetadata.error` instead.
+* This DID core spec requirement will break for users expecting `publicKey`, `ethereumAddress`, `Secp256k1VerificationKey2018` entries in the DID document. They are replaced with `verificationMethod`, `blockchainAccountId` and `EcdsaSecp256k1VerificationKey2019` and `EcdsaSecp256k1RecoveryMethod2020` depending on the content.
+
 # [3.1.0](https://github.com/decentralized-identity/ethr-did-resolver/compare/3.0.3...3.1.0) (2021-03-15)
 
 
