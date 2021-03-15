@@ -1,3 +1,10 @@
+# [3.1.0](https://github.com/decentralized-identity/ethr-did-resolver/compare/3.0.3...3.1.0) (2021-03-15)
+
+
+### Features
+
+* upgrade to latest did core spec ([#99](https://github.com/decentralized-identity/ethr-did-resolver/issues/99)) ([#109](https://github.com/decentralized-identity/ethr-did-resolver/issues/109)) ([d46eea3](https://github.com/decentralized-identity/ethr-did-resolver/commit/d46eea3ad4d85450f75a645ea9b33aa5223dd7b0)), closes [#105](https://github.com/decentralized-identity/ethr-did-resolver/issues/105) [#95](https://github.com/decentralized-identity/ethr-did-resolver/issues/95) [#106](https://github.com/decentralized-identity/ethr-did-resolver/issues/106) [#83](https://github.com/decentralized-identity/ethr-did-resolver/issues/83) [#85](https://github.com/decentralized-identity/ethr-did-resolver/issues/85) [#83](https://github.com/decentralized-identity/ethr-did-resolver/issues/83) [#85](https://github.com/decentralized-identity/ethr-did-resolver/issues/85) [#95](https://github.com/decentralized-identity/ethr-did-resolver/issues/95) [#105](https://github.com/decentralized-identity/ethr-did-resolver/issues/105) [#106](https://github.com/decentralized-identity/ethr-did-resolver/issues/106)
+
 ## [3.0.3](https://github.com/decentralized-identity/ethr-did-resolver/compare/3.0.2...3.0.3) (2020-12-17)
 
 
