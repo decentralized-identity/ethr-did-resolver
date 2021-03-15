@@ -35,6 +35,7 @@
     "W3C",
     "ethereum",
     "ethereumAddress",
+    "blockchainAccountId",
     "registry",
     "EIP1056",
     "EcdsaSecp256k1RecoveryMethod2020",

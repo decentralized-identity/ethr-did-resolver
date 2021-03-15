@@ -2,7 +2,7 @@
 
 ## Author
 
-- uPort Team: <https://github.com/uport-project/veramo/discussions> or veramo-hello@mesh.xyz
+- Veramo core team: <https://github.com/uport-project/veramo/discussions> or veramo-hello@mesh.xyz
 
 ## Preface
 
@@ -63,17 +63,18 @@ The target system is the Ethereum network where the ERC1056 is deployed. This co
 
 ## JSON-LD Context Definition
 
-Since this DID method is native on EVM compatible blockchains it uses `ethereumAddress` for the default `verificationMethod` and for the on-chain delegates.
-When doing this, the type of the verificationMethod is set to `EcdsaSecp256k1RecoveryMethod2020`.
-These are currently registered in `https://w3c-ccg.github.io/security-vocab/contexts/security-v3-unstable.jsonld`
+Since this DID method still supports `publicKeyHex` and `publicKeyBase64` encodings for verification methods, it
+requires a valid JSON-LD context for those entries.
 To enable JSON-LD processing, the `@context` used when constructing DID documents for `did:ethr` should be:
 
 ```javascript
 "@context": [
   "https://www.w3.org/ns/did/v1",
-  "https://w3c-ccg.github.io/security-vocab/contexts/security-v3-unstable.jsonld"
+  "https://identity.foundation/EcdsaSecp256k1RecoverySignature2020/lds-ecdsa-secp256k1-recovery2020-0.0.jsonld"
 ]
 ```
+
+You will also need this `@context` if you need to use `EcdsaSecp256k1RecoveryMethod2020` in your apps.
 
 ## DID Method Name
 
@@ -93,7 +94,7 @@ The method specific identifier is represented as the Hex-encoded Ethereum addres
     ethereum-address = "0x" 40*HEXDIG
     public-key-hex = "0x" 66*HEXDIG
 
-The `ethereum-address` or `public-key-hex` are case-insensitive, however, `ethereumAddress` MAY be represented using
+The `ethereum-address` or `public-key-hex` are case-insensitive, however, `blockchainAccountId` MAY be represented using
 the [mixed case checksum representation described in EIP55](https://github.com/ethereum/EIPs/blob/master/EIPS/eip-55.md)
 
 Note, if no public Ethereum network was specified, it is assumed that the DID is anchored on the Ethereum mainnet per
@@ -106,9 +107,9 @@ default. This means the following DIDs will resolve to equivalent DID Documents:
 If the identifier is a `public-key-hex`:
 
 - it MUST be represented in compressed form (see https://en.bitcoin.it/wiki/Secp256k1)
-- the corresponding `ethereumAddress` entry is also added to the default DID document, unless the `owner` has been
+- the corresponding `blockchainAccountId` entry is also added to the default DID document, unless the `owner` has been
   changed to a different address.
-- all Read, Update, and Delete operations MUST be made using the corresponding `ethereumAddress` and MUST originate from the correct `owner`
+- all Read, Update, and Delete operations MUST be made using the corresponding `blockchainAccountId` and MUST originate from the correct `owner`
   address.
 
 ## CRUD Operation Definitions
@@ -120,22 +121,22 @@ interaction with the target Ethereum network is required. The registration is im
 force an Ethereum address, i.e., guessing the private key for a given public key on the Koblitz Curve
 (secp256k1). The holder of the private key is the entity identified by the DID.
 
-The minimal DID document for an Ethereum address, e.g., `0xf3beac30c498d9e26865f34fcaa57dbb935b0d74` with no
+The minimal DID document for an Ethereum address on mainnet, e.g., `0xf3beac30c498d9e26865f34fcaa57dbb935b0d74` with no
 transactions to the ERC1056 registry looks like this:
 
 ```json
 {
   "@context": [
     "https://www.w3.org/ns/did/v1",
-    "https://w3c-ccg.github.io/security-vocab/contexts/security-v3-unstable.jsonld"
+    "https://identity.foundation/EcdsaSecp256k1RecoverySignature2020/lds-ecdsa-secp256k1-recovery2020-0.0.jsonld"
   ],
   "id": "did:ethr:0xb9c5714089478a327f09197987f16f9e5d936e8a",
-  "publicKey": [
+  "verificationMethod": [
     {
       "id": "did:ethr:0xb9c5714089478a327f09197987f16f9e5d936e8a#controller",
       "type": "EcdsaSecp256k1RecoveryMethod2020",
       "controller": "did:ethr:0xb9c5714089478a327f09197987f16f9e5d936e8a",
-      "ethereumAddress": "0xb9c5714089478a327f09197987f16f9e5d936e8a"
+      "blockchainAccountId": "0xb9c5714089478a327f09197987f16f9e5d936e8a@eip155:1"
     }
   ],
   "authentication": ["did:ethr:0xb9c5714089478a327f09197987f16f9e5d936e8a#controller"]
@@ -148,15 +149,15 @@ The minimal DID Document for a public key where there are no corresponding TXs t
 {
   "@context": [
     "https://www.w3.org/ns/did/v1",
-    "https://w3c-ccg.github.io/security-vocab/contexts/security-v3-unstable.jsonld"
+    "https://identity.foundation/EcdsaSecp256k1RecoverySignature2020/lds-ecdsa-secp256k1-recovery2020-0.0.jsonld"
   ],
   "id": "did:ethr:0x0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798",
-  "publicKey": [
+  "verificationMethod": [
     {
       "id": "did:ethr:0x0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798#controller",
       "type": "EcdsaSecp256k1RecoveryMethod2020",
       "controller": "did:ethr:0x0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798",
-      "ethereumAddress": "0xb9c5714089478a327f09197987f16f9e5d936e8a"
+      "blockchainAccountId": "0xb9c5714089478a327f09197987f16f9e5d936e8a@eip155:1"
     },
     {
       "id": "did:ethr:0x0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798#controllerKey",
@@ -176,15 +177,15 @@ The minimal DID Document for a public key where there are no corresponding TXs t
 
 The DID document is built by using read only functions and contract events on the ERC1056 registry.
 
-Any value from the registry that returns an Ethereum address will be added to the `publicKey` array of the DID document
-with type `EcdsaSecp256k1RecoveryMethod2020` and an `ethereumAddress` attribute containing the address.
+Any value from the registry that returns an Ethereum address will be added to the `verificationMethod` array of the
+DID document with type `EcdsaSecp256k1RecoveryMethod2020` and an `blockchainAccountId` attribute containing the address.
 
 #### Controller Address
 
-Each identity always has a controller address. By default it is the same as the identity address, but check the read
+Each identity always has a controller address. By default, it is the same as the identity address, but check the read
 only contract function `identityOwner(address identity)` on the deployed version of the ERC1056 contract.
 
-The identity controller will always have a `publicKey` entry with the id set as the DID with the fragment `#controller`
+The identity controller will always have a `verificationMethod` entry with the id set as the DID with the fragment `#controller`
 appended.
 
 An entry for the controller is also added to the `authentication` array of the DID document.
@@ -230,10 +231,10 @@ event DIDDelegateChanged(
 
 The only 2 `delegateTypes` that are currently published in the DID document are:
 
-- `veriKey` which adds a `EcdsaSecp256k1RecoveryMethod2020` to the `publicKey` section of the DID document with the
-  `ethereumAddress` of the delegate.
-- `sigAuth` which adds a `EcdsaSecp256k1RecoveryMethod2020` to the `publicKey` section of document and a corresponding
-  entry to the `authentication` section.
+- `veriKey` which adds a `EcdsaSecp256k1RecoveryMethod2020` to the `verificationMethod` section of the DID document with
+  the `blockchainAccountId`(`ethereumAddress`) of the delegate.
+- `sigAuth` which adds a `EcdsaSecp256k1RecoveryMethod2020` to the `verificationMethod` section of document and a
+  corresponding entry to the `authentication` section.
 
 Note, the `delegateType` is a `bytes32` type for Ethereum gas efficiency reasons and not a `string`. This restricts us
 to 32 bytes, which is why we use the short hand versions above.
@@ -270,13 +271,15 @@ The name of the attribute added to ERC1056 should follow this format:
 `did/pub/(Secp256k1|RSA|Ed25519|X25519)/(veriKey|sigAuth|enc)/(hex|base64|base58)`
 
 (Essentially `did/pub/<key algorithm>/<key purpose>/<encoding>`)
+Please opt for the `base58` encoding since the other encodings are not spec compliant and will be removed in future
+versions of the spec and reference resolver.
 
 ##### Key purposes
 
-- `veriKey` adds a `<key algorithm>VerificationKey2018` to the `publicKey` section of document
-- `sigAuth` adds a `<key algorithm>VerificationKey2018` to the `publicKey` section of document and adds an entry to
-  the `authentication` section of document.
-- `enc` adds a `<key algorithm>KeyAgreementKey2019` to the `publicKey` section. This is used to perform a Diffie-Hellman
+- `veriKey` adds a verification key to the `verificationMethod` section of document
+- `sigAuth` adds a verification key to the `verificationMethod` section of document and adds an entry to the
+  `authentication` section of document.
+- `enc` adds a key agreement key to the `verificationMethod` section. This is used to perform a Diffie-Hellman
   key exchange and derive a secret key for encrypting messages to the DID that lists such a key.
 
 > **Note** The `<encoding>` only refers to the key encoding in the resolved DID document.
@@ -390,7 +393,7 @@ The DID resolution result for a deactivated DID has the following shape:
   "didDocument": {
     "@context": "https://www.w3.org/ns/did/v1",
     "id": "<the deactivated DID>",
-    "publicKey": [],
+    "verificationMethod": [],
     "authentication": []
   }
 }

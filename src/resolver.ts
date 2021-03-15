@@ -26,6 +26,7 @@ import {
   identifierMatcher,
   nullAddress,
   DIDOwnerChanged,
+  knownNetworks,
 } from './helpers'
 import { logDecoder } from './logParser'
 
@@ -65,10 +66,13 @@ export class EthrDidResolver {
     identity: string,
     networkId: string,
     blockTag: BlockTag = 'latest'
-  ): Promise<{ controller: string; history: ERC1056Event[]; controllerKey?: string }> {
+  ): Promise<{ controller: string; history: ERC1056Event[]; controllerKey?: string; chainId: number }> {
     const contract = this.contracts[networkId]
     const provider = contract.provider
-
+    const hexChainId = networkId.startsWith('0x') ? networkId : knownNetworks[networkId]
+    //TODO: this can be used to check if the configuration is ok
+    const chainIdFromNetwork = (await provider.getNetwork()).chainId
+    const chainId = hexChainId ? BigNumber.from(hexChainId).toNumber() : chainIdFromNetwork
     const history: ERC1056Event[] = []
     const { address, publicKey } = interpretIdentifier(identity)
     let controllerKey = publicKey
@@ -102,19 +106,20 @@ export class EthrDidResolver {
         }
       }
     }
-    return { controller, history, controllerKey }
+    return { controller, history, controllerKey, chainId }
   }
 
   wrapDidDocument(
     did: string,
     controller: string,
     controllerKey: string | undefined,
-    history: ERC1056Event[]
+    history: ERC1056Event[],
+    chainId: number
   ): { didDocument: DIDDocument; deactivated: boolean } {
     const baseDIDDocument: DIDDocument = {
       '@context': [
         'https://www.w3.org/ns/did/v1',
-        'https://w3c-ccg.github.io/security-vocab/contexts/security-v3-unstable.jsonld',
+        'https://identity.foundation/EcdsaSecp256k1RecoverySignature2020/lds-ecdsa-secp256k1-recovery2020-0.0.jsonld',
       ],
       id: did,
       verificationMethod: [],
@@ -124,19 +129,19 @@ export class EthrDidResolver {
     // const now = new BN(Math.floor(new Date().getTime() / 1000))
     const now = BigNumber.from(Math.floor(new Date().getTime() / 1000))
     // const expired = {}
-    const publicKey: VerificationMethod[] = [
+    const publicKeys: VerificationMethod[] = [
       {
         id: `${did}#controller`,
         type: verificationMethodTypes.EcdsaSecp256k1RecoveryMethod2020,
         controller: did,
-        ethereumAddress: controller,
+        blockchainAccountId: `${controller}@eip155:${chainId}`,
       },
     ]
 
     const authentication = [`${did}#controller`]
 
     if (controllerKey) {
-      publicKey.push({
+      publicKeys.push({
         id: `${did}#controllerKey`,
         type: verificationMethodTypes.EcdsaSecp256k1VerificationKey2019,
         controller: did,
@@ -170,7 +175,7 @@ export class EthrDidResolver {
                 id: `${did}#delegate-${delegateCount}`,
                 type: verificationMethodTypes.EcdsaSecp256k1RecoveryMethod2020,
                 controller: did,
-                ethereumAddress: currentEvent.delegate,
+                blockchainAccountId: `${currentEvent.delegate}@eip155:${chainId}`,
               }
               break
           }
@@ -255,7 +260,7 @@ export class EthrDidResolver {
 
     const doc: DIDDocument = {
       ...baseDIDDocument,
-      verificationMethod: publicKey.concat(Object.values(pks)),
+      verificationMethod: publicKeys.concat(Object.values(pks)),
       authentication: authentication.concat(Object.values(auth)),
     }
     if (Object.values(services).length > 0) {
@@ -283,9 +288,9 @@ export class EthrDidResolver {
     if (!this.contracts[networkId])
       throw new Error(`unknown_network: The DID resolver does not have a configuration for network: ${networkId}`)
 
-    const { controller, history, controllerKey } = await this.changeLog(id, networkId, options.blockTag)
+    const { controller, history, controllerKey, chainId } = await this.changeLog(id, networkId, options.blockTag)
     try {
-      const { didDocument, deactivated } = this.wrapDidDocument(did, controller, controllerKey, history)
+      const { didDocument, deactivated } = this.wrapDidDocument(did, controller, controllerKey, history, chainId)
       const status = deactivated ? { deactivated: true } : {}
       return {
         didDocumentMetadata: { ...status },

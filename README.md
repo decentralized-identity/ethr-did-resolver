@@ -48,22 +48,22 @@ the registry looks like this:
 {
   "@context": [
     "https://www.w3.org/ns/did/v1",
-    "https://w3c-ccg.github.io/security-vocab/contexts/security-v3-unstable.jsonld"
+    "https://identity.foundation/EcdsaSecp256k1RecoverySignature2020/lds-ecdsa-secp256k1-recovery2020-0.0.jsonld"
   ],
   "id": "did:ethr:0xb9c5714089478a327f09197987f16f9e5d936e8a",
-  "publicKey": [
+  "verificationMethod": [
     {
       "id": "did:ethr:0xb9c5714089478a327f09197987f16f9e5d936e8a#controller",
       "type": "EcdsaSecp256k1RecoveryMethod2020",
       "controller": "did:ethr:0xb9c5714089478a327f09197987f16f9e5d936e8a",
-      "ethereumAddress": "0xb9c5714089478a327f09197987f16f9e5d936e8a"
+      "blockchainAccountId": "0xb9c5714089478a327f09197987f16f9e5d936e8a"
     }
   ],
   "authentication": ["did:ethr:0xb9c5714089478a327f09197987f16f9e5d936e8a#controller"]
 }
 ```
 
-Note this uses the `EcdsaSecp256k1RecoveryMethod2020` type and an `ethereumAddress` to represent the default
+Note this uses the `EcdsaSecp256k1RecoveryMethod2020` type and an `blockchainAccountId` to represent the default
 verification method and authentication entry.
 
 ## Building a DID document
@@ -71,15 +71,15 @@ verification method and authentication entry.
 The DID document is built by using read only functions and contract events on
 the [ethr-did-registry](https://github.com/uport-project/ethr-did-registry) Ethereum smart contract.
 
-Any value from the registry that returns an ethereum address will be added to the `publicKey` array of the DID document
-with type `EcdsaSecp256k1RecoveryMethod2020` and an `ethereumAddress` attribute containing the address.
+Any value from the registry that returns an ethereum address will be added to the `verificationMethod` array of the DID document
+with type `EcdsaSecp256k1RecoveryMethod2020` and an `blockchainAccountId` attribute containing the address.
 
 ### Controller Address
 
 Each identity always has a controller address. By default it's the same as the identity address, but check the read only
 contract function `identityOwner(address identity)` on the deployed version of the EthrDIDRegistry contract.
 
-The Identity controller will always have a `publicKey` with the id set as the DID with the fragment `#controller`
+The Identity controller will always have a `verificationMethod` with the id set as the DID with the fragment `#controller`
 appended.
 
 An entry is also added to the `authentication` array of the DID document with the id of the controller publicKey.
@@ -126,9 +126,9 @@ event DIDDelegateChanged(
 
 The only 2 delegateTypes that are currently published in the DID Document are:
 
-- `veriKey` Which adds a `EcdsaSecp256k1RecoveryMethod2020` to the `publicKey` section of document
-- `sigAuth` Which adds a `EcdsaSecp256k1RecoveryMethod2020` to the `publicKey` section of document and then references
-  it in the 'authentication` section of document.
+- `veriKey` Which adds a `EcdsaSecp256k1RecoveryMethod2020` to the `verificationMethod` section of document
+- `sigAuth` Which adds a `EcdsaSecp256k1RecoveryMethod2020` to the `verificationMEthod` section of document and then
+  references it in the 'authentication` section of document.
 
 **Note** The `delegateType` is a `bytes32` type for Ethereum gas efficiency reasons and not a string. This restricts us
 to 32 bytes, which is why we use the short hand versions above.
@@ -169,11 +169,11 @@ The name of the attribute should follow this format:
 
 #### Key purposes
 
-- `veriKey` adds a `<key algorithm>VerificationKey2018` to the `publicKey` section of document
-- `sigAuth` adds a `<key algorithm>VerificationKey2018` to the `publicKey` section of document and adds an entry to
+- `veriKey` adds the corresponding verification key to the `verificationMethod` section of document
+- `sigAuth` adds the corresponding verification key to the `verificationMethod` section of document and adds an entry to
   the `authentication` section of document.
-- `enc` adds a `<key algorithm>KeyAgreementKey2019` to the `publicKey` section. This is used to perform a Diffie-Hellman
-  key exchange and derive a secret key for encrypting messages to the DID that lists such a key.
+- `enc` adds a key agreement key to the `verificationMethod` section. This is used to perform a Diffie-Hellman key
+  exchange and derive a secret key for encrypting messages to the DID that lists such a key.
 
 > **Note** The `<encoding>` only refers to the key encoding in the resolved DID document.
 > Attribute values sent to the ERC1056 registry should always be hex encoded.
@@ -182,7 +182,7 @@ The name of the attribute should follow this format:
 
 A `DIDAttributeChanged` event for the identity `0xf3beac30c498d9e26865f34fcaa57dbb935b0d74` with the name
 `did/pub/Secp256k1/veriKey/hex` and the value of `0x02b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71`
-generates a `PublicKey` entry like this:
+generates a `verificationMethod` entry like this:
 
 ```json
 {
@@ -197,7 +197,7 @@ generates a `PublicKey` entry like this:
 
 A `DIDAttributeChanged` event for the identity `0xf3beac30c498d9e26865f34fcaa57dbb935b0d74` with the name
 `did/pub/Ed25519/veriKey/base64` and the value of
-`0xb97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71` generates a `PublicKey` entry like this:
+`0xb97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71` generates a `verificationMethod` entry like this:
 
 ```javascript
 {
@@ -213,7 +213,7 @@ A `DIDAttributeChanged` event for the identity `0xf3beac30c498d9e26865f34fcaa57d
 A `DIDAttributeChanged` event for the identity `0xf3beac30c498d9e26865f34fcaa57dbb935b0d74` with the name
 `did/pub/X25519/enc/base64` and the value of
 `0x302a300506032b656e032100118557777ffb078774371a52b00fed75561dcf975e61c47553e664a617661052`
-generates a `PublicKey` entry like this:
+generates a `verificationMethod` entry like this:
 
 ```json
 {

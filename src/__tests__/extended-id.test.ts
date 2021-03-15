@@ -4,11 +4,11 @@ describe('pattern matcher', () => {
   const matcher = identifierMatcher
 
   describe('matches', () => {
-    it('ethereumAddress', () => {
+    it('blockchainAccountId:', () => {
       expect(matcher.test('0xd0dbe9d3698738f899ccd8ee27ff2347a7faa4dd')).toBe(true)
     })
 
-    it('ethereumAddress ignoring case', () => {
+    it('blockchainAccountId: ignoring case', () => {
       expect(matcher.test('0x' + 'd0dbe9d3698738f899ccd8ee27ff2347a7faa4dd'.toUpperCase())).toBe(true)
     })
 

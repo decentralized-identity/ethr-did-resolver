@@ -20,7 +20,7 @@ describe('ethrResolver (alt-chains)', () => {
         didDocument: {
           '@context': [
             'https://www.w3.org/ns/did/v1',
-            'https://w3c-ccg.github.io/security-vocab/contexts/security-v3-unstable.jsonld',
+            'https://identity.foundation/EcdsaSecp256k1RecoverySignature2020/lds-ecdsa-secp256k1-recovery2020-0.0.jsonld',
           ],
           id: did,
           verificationMethod: [
@@ -28,7 +28,7 @@ describe('ethrResolver (alt-chains)', () => {
               id: `${did}#controller`,
               type: 'EcdsaSecp256k1RecoveryMethod2020',
               controller: did,
-              ethereumAddress: checksumAddr,
+              blockchainAccountId: `${checksumAddr}@eip155:3`,
             },
           ],
           authentication: [`${did}#controller`],
@@ -48,7 +48,7 @@ describe('ethrResolver (alt-chains)', () => {
         didDocument: {
           '@context': [
             'https://www.w3.org/ns/did/v1',
-            'https://w3c-ccg.github.io/security-vocab/contexts/security-v3-unstable.jsonld',
+            'https://identity.foundation/EcdsaSecp256k1RecoverySignature2020/lds-ecdsa-secp256k1-recovery2020-0.0.jsonld',
           ],
           id: did,
           verificationMethod: [
@@ -56,7 +56,7 @@ describe('ethrResolver (alt-chains)', () => {
               id: `${did}#controller`,
               type: 'EcdsaSecp256k1RecoveryMethod2020',
               controller: did,
-              ethereumAddress: checksumAddr,
+              blockchainAccountId: `${checksumAddr}@eip155:4`,
             },
           ],
           authentication: [`${did}#controller`],
@@ -76,7 +76,7 @@ describe('ethrResolver (alt-chains)', () => {
         didDocument: {
           '@context': [
             'https://www.w3.org/ns/did/v1',
-            'https://w3c-ccg.github.io/security-vocab/contexts/security-v3-unstable.jsonld',
+            'https://identity.foundation/EcdsaSecp256k1RecoverySignature2020/lds-ecdsa-secp256k1-recovery2020-0.0.jsonld',
           ],
           id: did,
           verificationMethod: [
@@ -84,7 +84,7 @@ describe('ethrResolver (alt-chains)', () => {
               id: `${did}#controller`,
               type: 'EcdsaSecp256k1RecoveryMethod2020',
               controller: did,
-              ethereumAddress: checksumAddr,
+              blockchainAccountId: `${checksumAddr}@eip155:42`,
             },
           ],
           authentication: [`${did}#controller`],
@@ -102,7 +102,7 @@ describe('ethrResolver (alt-chains)', () => {
         didDocument: {
           '@context': [
             'https://www.w3.org/ns/did/v1',
-            'https://w3c-ccg.github.io/security-vocab/contexts/security-v3-unstable.jsonld',
+            'https://identity.foundation/EcdsaSecp256k1RecoverySignature2020/lds-ecdsa-secp256k1-recovery2020-0.0.jsonld',
           ],
           id: did,
           verificationMethod: [
@@ -110,7 +110,7 @@ describe('ethrResolver (alt-chains)', () => {
               id: `${did}#controller`,
               type: 'EcdsaSecp256k1RecoveryMethod2020',
               controller: did,
-              ethereumAddress: checksumAddr,
+              blockchainAccountId: `${checksumAddr}@eip155:30`,
             },
           ],
           authentication: [`${did}#controller`],
@@ -128,7 +128,7 @@ describe('ethrResolver (alt-chains)', () => {
         didDocument: {
           '@context': [
             'https://www.w3.org/ns/did/v1',
-            'https://w3c-ccg.github.io/security-vocab/contexts/security-v3-unstable.jsonld',
+            'https://identity.foundation/EcdsaSecp256k1RecoverySignature2020/lds-ecdsa-secp256k1-recovery2020-0.0.jsonld',
           ],
           id: did,
           verificationMethod: [
@@ -136,7 +136,7 @@ describe('ethrResolver (alt-chains)', () => {
               id: `${did}#controller`,
               type: 'EcdsaSecp256k1RecoveryMethod2020',
               controller: did,
-              ethereumAddress: checksumAddr,
+              blockchainAccountId: `${checksumAddr}@eip155:31`,
             },
           ],
           authentication: [`${did}#controller`],
@@ -155,7 +155,7 @@ describe('ethrResolver (alt-chains)', () => {
         didDocument: {
           '@context': [
             'https://www.w3.org/ns/did/v1',
-            'https://w3c-ccg.github.io/security-vocab/contexts/security-v3-unstable.jsonld',
+            'https://identity.foundation/EcdsaSecp256k1RecoverySignature2020/lds-ecdsa-secp256k1-recovery2020-0.0.jsonld',
           ],
           id: did,
           verificationMethod: [
@@ -163,7 +163,7 @@ describe('ethrResolver (alt-chains)', () => {
               id: `${did}#controller`,
               type: 'EcdsaSecp256k1RecoveryMethod2020',
               controller: did,
-              ethereumAddress: '0xF3beAC30C498D9E26865F34fCAa57dBB935b0D74',
+              blockchainAccountId: '0xF3beAC30C498D9E26865F34fCAa57dBB935b0D74@eip155:30',
             },
             {
               id: `${did}#controllerKey`,
