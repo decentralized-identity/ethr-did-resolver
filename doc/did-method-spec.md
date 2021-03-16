@@ -167,7 +167,7 @@ The minimal DID Document for a public key where there are no corresponding TXs t
     }
   ],
   "authentication": [
-    "did:ethr:0xb9c5714089478a327f09197987f16f9e5d936e8a#controller",
+    "did:ethr:0x0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798#controller",
     "did:ethr:0x0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798#controllerKey"
   ]
 }
