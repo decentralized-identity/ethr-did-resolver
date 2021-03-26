@@ -1,3 +1,10 @@
+## [4.0.1](https://github.com/decentralized-identity/ethr-did-resolver/compare/4.0.0...4.0.1) (2021-03-26)
+
+
+### Bug Fixes
+
+* **deps:** use Resolvable type from did-resolver ([d213ae6](https://github.com/decentralized-identity/ethr-did-resolver/commit/d213ae650a7ae706ffad92f3b213c478dd41883c))
+
 # [4.0.0](https://github.com/decentralized-identity/ethr-did-resolver/compare/3.1.0...4.0.0) (2021-03-15)
 
 
