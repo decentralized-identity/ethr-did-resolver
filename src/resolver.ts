@@ -9,7 +9,7 @@ import {
   DIDResolutionResult,
   DIDResolver,
   ParsedDID,
-  Resolver,
+  Resolvable,
   ServiceEndpoint,
   VerificationMethod,
 } from 'did-resolver'
@@ -276,7 +276,7 @@ export class EthrDidResolver {
   async resolve(
     did: string,
     parsed: ParsedDID,
-    _unused: Resolver,
+    _unused: Resolvable,
     options: DIDResolutionOptions
   ): Promise<DIDResolutionResult> {
     const fullId = parsed.id.match(identifierMatcher)

@@ -1,5 +1,5 @@
 import { Contract, ContractFactory } from '@ethersproject/contracts'
-import { Resolver } from 'did-resolver'
+import { Resolvable, Resolver } from 'did-resolver'
 import { getResolver } from '../resolver'
 import { EthrDidController } from '../controller'
 import DidRegistryContract from 'ethr-did-registry'
@@ -18,7 +18,7 @@ describe('ethrResolver', () => {
     delegate1: string,
     delegate2: string,
     keyAgreementController: string,
-    didResolver: Resolver
+    didResolver: Resolvable
 
   const web3Provider = createProvider()
 
