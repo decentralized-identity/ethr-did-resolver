@@ -53,7 +53,7 @@
     "test-with-coverage": "jest --coverage && codecov"
   },
   "devDependencies": {
-    "@babel/core": "7.13.10",
+    "@babel/core": "7.13.13",
     "@babel/preset-env": "7.13.12",
     "@babel/preset-typescript": "7.13.0",
     "@semantic-release/changelog": "5.0.1",
@@ -63,7 +63,7 @@
     "@typescript-eslint/parser": "4.19.0",
     "babel-jest": "26.6.3",
     "codecov": "3.8.1",
-    "eslint": "7.22.0",
+    "eslint": "7.23.0",
     "eslint-config-prettier": "8.1.0",
     "ganache-cli": "6.12.2",
     "jest": "26.6.3",
