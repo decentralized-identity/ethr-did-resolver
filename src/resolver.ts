@@ -124,6 +124,7 @@ export class EthrDidResolver {
       ],
       id: did,
       verificationMethod: [],
+      assertionMethod: [],
       authentication: [],
     }
 
@@ -139,6 +140,7 @@ export class EthrDidResolver {
       },
     ]
 
+    const assertionMethod = [`${did}#controller`];
     const authentication = [`${did}#controller`]
 
     if (controllerKey) {
@@ -148,6 +150,7 @@ export class EthrDidResolver {
         controller: did,
         publicKeyHex: controllerKey,
       })
+      assertionMethod.push(`${did}#controllerKey`)
       authentication.push(`${did}#controllerKey`)
     }
 
@@ -155,6 +158,7 @@ export class EthrDidResolver {
     let delegateCount = 0
     let serviceCount = 0
     const auth: Record<string, string> = {}
+    const ams: Record<string, string> = {}
     const pks: Record<string, VerificationMethod> = {}
     const services: Record<string, ServiceEndpoint> = {}
     for (const event of history) {
@@ -217,6 +221,8 @@ export class EthrDidResolver {
                     pk.value = currentEvent.value
                 }
                 pks[eventIndex] = pk
+                ams[eventIndex] = pk.id
+
                 if (match[4] === 'sigAuth') {
                   auth[eventIndex] = pk.id
                 }
@@ -247,6 +253,7 @@ export class EthrDidResolver {
           serviceCount++
         }
         delete auth[eventIndex]
+        delete ams[eventIndex]
         delete pks[eventIndex]
         delete services[eventIndex]
 
@@ -262,6 +269,7 @@ export class EthrDidResolver {
     const doc: DIDDocument = {
       ...baseDIDDocument,
       verificationMethod: publicKeys.concat(Object.values(pks)),
+      assertionMethod: assertionMethod.concat(Object.values(ams)),
       authentication: authentication.concat(Object.values(auth)),
     }
     if (Object.values(services).length > 0) {
