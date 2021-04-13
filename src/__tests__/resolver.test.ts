@@ -204,7 +204,7 @@ describe('ethrResolver', () => {
         //don't compare against hardcoded timestamps
         delete result.didDocumentMetadata.updated
         expect(result).toEqual({
-          didDocumentMetadata: { versionId: "4"},
+          didDocumentMetadata: { versionId: '4' },
           didResolutionMetadata: { contentType: 'application/did+ld+json' },
           didDocument: {
             '@context': [
@@ -247,7 +247,7 @@ describe('ethrResolver', () => {
         //don't compare against hardcoded timestamps
         delete result.didDocumentMetadata.updated
         expect(result).toEqual({
-          didDocumentMetadata: { versionId: "4"},
+          didDocumentMetadata: { versionId: '4' },
           didResolutionMetadata: { contentType: 'application/did+ld+json' },
           didDocument: {
             '@context': [
@@ -286,7 +286,7 @@ describe('ethrResolver', () => {
         //don't compare against hardcoded timestamps
         delete result.didDocumentMetadata.updated
         expect(result).toEqual({
-          didDocumentMetadata: { versionId: "5"},
+          didDocumentMetadata: { versionId: '5' },
           didResolutionMetadata: { contentType: 'application/did+ld+json' },
           didDocument: {
             '@context': [
@@ -318,7 +318,7 @@ describe('ethrResolver', () => {
         //don't compare against hardcoded timestamps
         delete result.didDocumentMetadata.updated
         expect(result).toEqual({
-          didDocumentMetadata: { versionId: "6"},
+          didDocumentMetadata: { versionId: '6' },
           didResolutionMetadata: { contentType: 'application/did+ld+json' },
           didDocument: {
             '@context': [
@@ -768,8 +768,12 @@ describe('ethrResolver', () => {
       const ethrDid = new EthrDidController(identity, registryContract)
       await stopMining(web3Provider)
       await Promise.all([
-        ethrDid.setAttribute(stringToBytes32('did/svc/TestService'), 'https://test.uport.me', 86406, { from: controller }),
-        ethrDid.setAttribute(stringToBytes32('did/svc/TestService'), 'https://test.uport.me', 86407, { from: controller }),
+        ethrDid.setAttribute(stringToBytes32('did/svc/TestService'), 'https://test.uport.me', 86406, {
+          from: controller,
+        }),
+        ethrDid.setAttribute(stringToBytes32('did/svc/TestService'), 'https://test.uport.me', 86407, {
+          from: controller,
+        }),
         sleep(1).then(() => startMining(web3Provider)),
       ])
     })
@@ -780,7 +784,7 @@ describe('ethrResolver', () => {
       //don't compare against hardcoded timestamps
       delete result.didDocumentMetadata.updated
       expect(result).toEqual({
-        didDocumentMetadata: { versionId: "16"},
+        didDocumentMetadata: { versionId: '16' },
         didResolutionMetadata: {
           contentType: 'application/did+ld+json',
         },
@@ -840,7 +844,7 @@ describe('ethrResolver', () => {
       //don't compare against hardcoded timestamps
       delete result.didDocumentMetadata.updated
       expect(result).toEqual({
-        didDocumentMetadata: { versionId: "18"},
+        didDocumentMetadata: { versionId: '18' },
         didResolutionMetadata: {
           contentType: 'application/did+ld+json',
         },
@@ -951,7 +955,7 @@ describe('ethrResolver', () => {
         //don't compare against hardcoded timestamps
         delete result.didDocumentMetadata.updated
         expect(result).toEqual({
-          didDocumentMetadata: { versionId: "21"},
+          didDocumentMetadata: { versionId: '21' },
           didResolutionMetadata: {
             contentType: 'application/did+ld+json',
           },
@@ -1005,7 +1009,76 @@ describe('ethrResolver', () => {
     })
 
     describe('versioning', () => {
-      it.todo('can resolve did with versionId=latest')
+      it('can resolve virgin DID with versionId=latest', async () => {
+        expect.assertions(1)
+        const identity = '0xce3080168EE293053bA33b235D7116a3263D29f1'
+        const did = `did:ethr:dev:${identity}`
+        const didUrl = `${did}?versionId=latest`
+        const result = await didResolver.resolve(didUrl)
+        expect(result).toEqual({
+          didDocumentMetadata: {},
+          didResolutionMetadata: {
+            contentType: 'application/did+ld+json',
+          },
+          didDocument: {
+            '@context': [
+              'https://www.w3.org/ns/did/v1',
+              'https://identity.foundation/EcdsaSecp256k1RecoverySignature2020/lds-ecdsa-secp256k1-recovery2020-0.0.jsonld',
+            ],
+            id: did,
+            verificationMethod: [
+              {
+                id: `${did}#controller`,
+                type: 'EcdsaSecp256k1RecoveryMethod2020',
+                controller: did,
+                blockchainAccountId: `${identity}@eip155:1337`,
+              },
+            ],
+            authentication: [`${did}#controller`],
+          },
+        })
+      })
+
+      it('can resolve modified did with versionId=latest', async () => {
+        expect.assertions(1)
+        const identity = accounts[3]
+        const did = `did:ethr:dev:${identity}`
+        const didUrl = `${did}?versionId=latest`
+        const publicKeyHex = `b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71`
+        const expectedPublicKeyBase58 = u8a.toString(u8a.fromString(publicKeyHex, 'base16'), 'base58btc')
+        const result = await didResolver.resolve(didUrl)
+        //don't compare against hardcoded timestamps
+        delete result.didDocumentMetadata.updated
+        expect(result).toEqual({
+          didDocumentMetadata: { versionId: '21' },
+          didResolutionMetadata: {
+            contentType: 'application/did+ld+json',
+          },
+          didDocument: {
+            '@context': [
+              'https://www.w3.org/ns/did/v1',
+              'https://identity.foundation/EcdsaSecp256k1RecoverySignature2020/lds-ecdsa-secp256k1-recovery2020-0.0.jsonld',
+            ],
+            id: did,
+            verificationMethod: [
+              {
+                id: `${did}#controller`,
+                type: 'EcdsaSecp256k1RecoveryMethod2020',
+                controller: did,
+                blockchainAccountId: `${identity}@eip155:1337`,
+              },
+              {
+                id: `${did}#delegate-1`,
+                type: 'Ed25519VerificationKey2018',
+                controller: did,
+                publicKeyBase58: expectedPublicKeyBase58,
+              },
+            ],
+            authentication: [`${did}#controller`],
+          },
+        })
+      })
+
       it.todo('can resolve did with versionId before an attribute change')
       it.todo('can resolve did with versionId before an attribute expiration')
       it.todo('can resolve did with versionId before a delegate change')
