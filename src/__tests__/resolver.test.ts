@@ -160,7 +160,7 @@ describe('ethrResolver', () => {
     describe('add signing delegate', () => {
       it('resolves document', async () => {
         expect.assertions(1)
-        await new EthrDidController(identity, registryContract).addDelegate('veriKey', delegate1, 100, {
+        await new EthrDidController(identity, registryContract).addDelegate('veriKey', delegate1, 86401, {
           from: controller,
         })
         const result = await didResolver.resolve(did)
@@ -311,7 +311,7 @@ describe('ethrResolver', () => {
     describe('re-add auth delegate', () => {
       it('resolves document', async () => {
         expect.assertions(1)
-        await new EthrDidController(identity, registryContract).addDelegate('sigAuth', delegate2, 86400, {
+        await new EthrDidController(identity, registryContract).addDelegate('sigAuth', delegate2, 86402, {
           from: controller,
         })
         const result = await didResolver.resolve(did)
@@ -354,7 +354,7 @@ describe('ethrResolver', () => {
         await new EthrDidController(identity, registryContract).setAttribute(
           'did/pub/Secp256k1/veriKey',
           '0x02b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71',
-          10,
+          86401,
           { from: controller }
         )
         const { didDocument } = await didResolver.resolve(did)
@@ -393,7 +393,7 @@ describe('ethrResolver', () => {
         await new EthrDidController(identity, registryContract).setAttribute(
           'did/pub/Ed25519/veriKey/base64',
           '0x02b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71',
-          10,
+          86402,
           { from: controller }
         )
         const { didDocument } = await didResolver.resolve(did)
@@ -441,7 +441,7 @@ describe('ethrResolver', () => {
         await new EthrDidController(identity, registryContract).setAttribute(
           'did/pub/RSA/veriKey/pem',
           '-----BEGIN PUBLIC KEY...END PUBLIC KEY-----\r\n',
-          10,
+          86403,
           { from: controller }
         )
         const { didDocument } = await didResolver.resolve(did)
@@ -496,7 +496,7 @@ describe('ethrResolver', () => {
         await new EthrDidController(keyAgreementController, registryContract).setAttribute(
           'did/pub/X25519/enc/base64',
           `0x${Buffer.from('MCowBQYDK2VuAyEAEYVXd3/7B4d0NxpSsA/tdVYdz5deYcR1U+ZkphdmEFI=', 'base64').toString('hex')}`,
-          86400,
+          86404,
           { from: keyAgreementController }
         )
         const { didDocument } = await didResolver.resolve(keyAgrDid)
@@ -531,7 +531,7 @@ describe('ethrResolver', () => {
         await new EthrDidController(identity, registryContract).setAttribute(
           stringToBytes32('did/svc/HubService'),
           'https://hubs.uport.me',
-          10,
+          86405,
           { from: controller }
         )
         const { didDocument } = await didResolver.resolve(did)
@@ -768,8 +768,8 @@ describe('ethrResolver', () => {
       const ethrDid = new EthrDidController(identity, registryContract)
       await stopMining(web3Provider)
       await Promise.all([
-        ethrDid.setAttribute(stringToBytes32('did/svc/TestService'), 'https://test.uport.me', 10, { from: controller }),
-        ethrDid.setAttribute(stringToBytes32('did/svc/TestService'), 'https://test.uport.me', 10, { from: controller }),
+        ethrDid.setAttribute(stringToBytes32('did/svc/TestService'), 'https://test.uport.me', 86406, { from: controller }),
+        ethrDid.setAttribute(stringToBytes32('did/svc/TestService'), 'https://test.uport.me', 86407, { from: controller }),
         sleep(1).then(() => startMining(web3Provider)),
       ])
     })
@@ -822,7 +822,7 @@ describe('ethrResolver', () => {
       const ethrDid = new EthrDidController(identity, registryContract)
       await stopMining(web3Provider)
       await Promise.all([
-        ethrDid.setAttribute(stringToBytes32('did/svc/TestService2'), 'https://test2.uport.me', 10, {
+        ethrDid.setAttribute(stringToBytes32('did/svc/TestService2'), 'https://test2.uport.me', 86408, {
           from: controller,
         }),
         sleep(1).then(() =>
@@ -887,7 +887,7 @@ describe('ethrResolver', () => {
       await new EthrDidController(lowAddress, registryContract).setAttribute(
         'did/pub/Secp256k1/veriKey/hex',
         '0x02b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71',
-        10,
+        86409,
         { from: lowAddress }
       )
       const didDocumentLow = (await didResolver.resolve(lowDid)).didDocument
@@ -906,7 +906,7 @@ describe('ethrResolver', () => {
       await new EthrDidController(identity, registryContract).setAttribute(
         'did/pub/Ed25519/sigAuth/hex',
         `0x${authPubKey}`,
-        86400,
+        86410,
         { from: identity }
       )
       const { didDocument } = await didResolver.resolve(did)
@@ -944,7 +944,7 @@ describe('ethrResolver', () => {
         await new EthrDidController(identity, registryContract).setAttribute(
           'did/pub/Ed25519/veriKey/base58',
           `0x${publicKeyHex}`,
-          86400,
+          86411,
           { from: identity }
         )
         const result = await didResolver.resolve(did)
@@ -1002,6 +1002,15 @@ describe('ethrResolver', () => {
           },
         })
       })
+    })
+
+    describe('versioning', () => {
+      it.todo('can resolve did with versionId=latest')
+      it.todo('can resolve did with versionId before an attribute change')
+      it.todo('can resolve did with versionId before an attribute expiration')
+      it.todo('can resolve did with versionId before a delegate change')
+      it.todo('can resolve did with versionId before an owner change')
+      it.todo('can resolve did with versionId before deactivation')
     })
   })
 })
