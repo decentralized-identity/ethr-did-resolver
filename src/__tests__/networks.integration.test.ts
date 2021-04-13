@@ -2,6 +2,8 @@ import { Resolver } from 'did-resolver'
 import { getResolver } from '../resolver'
 import { interpretIdentifier } from '../helpers'
 
+jest.setTimeout(30000)
+
 describe('ethrResolver (alt-chains)', () => {
   const addr = '0xd0dbe9d3698738f899ccd8ee27ff2347a7faa4dd'
   const { address } = interpretIdentifier(addr)

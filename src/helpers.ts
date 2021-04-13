@@ -18,6 +18,7 @@ export interface ERC1056Event {
   previousChange: uint256
   validTo?: uint256
   _eventName: string
+  blockNumber: number
 }
 
 export interface DIDOwnerChanged extends ERC1056Event {

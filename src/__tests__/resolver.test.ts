@@ -106,8 +106,10 @@ describe('ethrResolver', () => {
     it('resolves document', async () => {
       expect.assertions(1)
       await new EthrDidController(identity, registryContract).changeOwner(controller, { from: identity })
-      await expect(didResolver.resolve(did)).resolves.toEqual({
-        didDocumentMetadata: {},
+      const result = await didResolver.resolve(did)
+      delete result.didDocumentMetadata.updated
+      expect(result).toEqual({
+        didDocumentMetadata: { versionId: '2' },
         didResolutionMetadata: { contentType: 'application/did+ld+json' },
         didDocument: {
           '@context': [
@@ -161,8 +163,10 @@ describe('ethrResolver', () => {
         await new EthrDidController(identity, registryContract).addDelegate('veriKey', delegate1, 100, {
           from: controller,
         })
-        await expect(didResolver.resolve(did)).resolves.toEqual({
-          didDocumentMetadata: {},
+        const result = await didResolver.resolve(did)
+        delete result.didDocumentMetadata.updated
+        await expect(result).toEqual({
+          didDocumentMetadata: { versionId: '3' },
           didResolutionMetadata: { contentType: 'application/did+ld+json' },
           didDocument: {
             '@context': [
@@ -196,8 +200,11 @@ describe('ethrResolver', () => {
         await new EthrDidController(identity, registryContract).addDelegate('sigAuth', delegate2, 1, {
           from: controller,
         })
-        await expect(didResolver.resolve(did)).resolves.toEqual({
-          didDocumentMetadata: {},
+        const result = await didResolver.resolve(did)
+        //don't compare against hardcoded timestamps
+        delete result.didDocumentMetadata.updated
+        expect(result).toEqual({
+          didDocumentMetadata: { versionId: "4"},
           didResolutionMetadata: { contentType: 'application/did+ld+json' },
           didDocument: {
             '@context': [
@@ -235,9 +242,12 @@ describe('ethrResolver', () => {
       it('resolves document', async () => {
         expect.assertions(1)
         //key validity was set to less than 2 seconds
-        await sleep(3)
-        await expect(didResolver.resolve(did)).resolves.toEqual({
-          didDocumentMetadata: {},
+        await sleep(4)
+        const result = await didResolver.resolve(did)
+        //don't compare against hardcoded timestamps
+        delete result.didDocumentMetadata.updated
+        expect(result).toEqual({
+          didDocumentMetadata: { versionId: "4"},
           didResolutionMetadata: { contentType: 'application/did+ld+json' },
           didDocument: {
             '@context': [
@@ -272,8 +282,11 @@ describe('ethrResolver', () => {
           from: controller,
         })
         await sleep(1)
-        await expect(didResolver.resolve(did)).resolves.toEqual({
-          didDocumentMetadata: {},
+        const result = await didResolver.resolve(did)
+        //don't compare against hardcoded timestamps
+        delete result.didDocumentMetadata.updated
+        expect(result).toEqual({
+          didDocumentMetadata: { versionId: "5"},
           didResolutionMetadata: { contentType: 'application/did+ld+json' },
           didDocument: {
             '@context': [
@@ -301,8 +314,11 @@ describe('ethrResolver', () => {
         await new EthrDidController(identity, registryContract).addDelegate('sigAuth', delegate2, 86400, {
           from: controller,
         })
-        await expect(didResolver.resolve(did)).resolves.toEqual({
-          didDocumentMetadata: {},
+        const result = await didResolver.resolve(did)
+        //don't compare against hardcoded timestamps
+        delete result.didDocumentMetadata.updated
+        expect(result).toEqual({
+          didDocumentMetadata: { versionId: "6"},
           didResolutionMetadata: { contentType: 'application/did+ld+json' },
           didDocument: {
             '@context': [
@@ -760,8 +776,11 @@ describe('ethrResolver', () => {
 
     it('resolves document', async () => {
       expect.assertions(1)
-      expect(await didResolver.resolve(did)).toEqual({
-        didDocumentMetadata: {},
+      const result = await didResolver.resolve(did)
+      //don't compare against hardcoded timestamps
+      delete result.didDocumentMetadata.updated
+      expect(result).toEqual({
+        didDocumentMetadata: { versionId: "16"},
         didResolutionMetadata: {
           contentType: 'application/did+ld+json',
         },
@@ -817,8 +836,11 @@ describe('ethrResolver', () => {
 
     it('resolves document', async () => {
       expect.assertions(1)
-      expect(await didResolver.resolve(did)).toEqual({
-        didDocumentMetadata: {},
+      const result = await didResolver.resolve(did)
+      //don't compare against hardcoded timestamps
+      delete result.didDocumentMetadata.updated
+      expect(result).toEqual({
+        didDocumentMetadata: { versionId: "18"},
         didResolutionMetadata: {
           contentType: 'application/did+ld+json',
         },
@@ -925,8 +947,11 @@ describe('ethrResolver', () => {
           86400,
           { from: identity }
         )
-        await expect(didResolver.resolve(did)).resolves.toEqual({
-          didDocumentMetadata: {},
+        const result = await didResolver.resolve(did)
+        //don't compare against hardcoded timestamps
+        delete result.didDocumentMetadata.updated
+        expect(result).toEqual({
+          didDocumentMetadata: { versionId: "21"},
           didResolutionMetadata: {
             contentType: 'application/did+ld+json',
           },

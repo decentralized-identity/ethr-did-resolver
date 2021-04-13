@@ -1,6 +1,6 @@
 import { Base58 } from '@ethersproject/basex'
 import { BigNumber } from '@ethersproject/bignumber'
-import { BlockTag } from '@ethersproject/providers'
+import { Block, BlockTag } from '@ethersproject/providers'
 import { ConfigurationOptions, ConfiguredNetworks, configureResolverWithNetworks } from './configuration'
 import { EthrDidController } from './controller'
 import {
@@ -30,6 +30,7 @@ import {
   Errors,
 } from './helpers'
 import { logDecoder } from './logParser'
+import * as qs from 'querystring'
 
 export function getResolver(options: ConfigurationOptions): Record<string, DIDResolver> {
   return new EthrDidResolver(options).build()
@@ -61,6 +62,14 @@ export class EthrDidResolver {
     const result = await this.contracts[networkId].functions.changed(address, { blockTag })
     // console.log(`last change result: '${BigNumber.from(result['0'])}'`)
     return BigNumber.from(result['0'])
+  }
+
+  async getBlockMetadata(blockHeight: number, networkId: string): Promise<{ height: string; isoDate: string }> {
+    const block: Block = await this.contracts[networkId].provider.getBlock(blockHeight)
+    return {
+      height: block.number.toString(),
+      isoDate: new Date(block.timestamp * 1000).toISOString(),
+    }
   }
 
   async changeLog(
@@ -115,8 +124,9 @@ export class EthrDidResolver {
     controller: string,
     controllerKey: string | undefined,
     history: ERC1056Event[],
-    chainId: number
-  ): { didDocument: DIDDocument; deactivated: boolean } {
+    chainId: number,
+    versionAtMost: number
+  ): { didDocument: DIDDocument; deactivated: boolean; versionId: number; nextVersionId: number } {
     const baseDIDDocument: DIDDocument = {
       '@context': [
         'https://www.w3.org/ns/did/v1',
@@ -150,7 +160,8 @@ export class EthrDidResolver {
       })
       authentication.push(`${did}#controllerKey`)
     }
-
+    let versionId = 0
+    let nextVersionId = Number.POSITIVE_INFINITY
     let deactivated = false
     let delegateCount = 0
     let serviceCount = 0
@@ -158,6 +169,16 @@ export class EthrDidResolver {
     const pks: Record<string, VerificationMethod> = {}
     const services: Record<string, ServiceEndpoint> = {}
     for (const event of history) {
+      if (versionAtMost !== -1 && event.blockNumber > versionAtMost) {
+        if (nextVersionId > event.blockNumber) {
+          nextVersionId = event.blockNumber
+        }
+        continue
+      } else {
+        if (versionId < event.blockNumber) {
+          versionId = event.blockNumber
+        }
+      }
       const validTo = event.validTo || BigNumber.from(0)
       const eventIndex = `${event._eventName}-${
         (<DIDDelegateChanged>event).delegateType || (<DIDAttributeChanged>event).name
@@ -269,8 +290,13 @@ export class EthrDidResolver {
     }
 
     return deactivated
-      ? { didDocument: { ...baseDIDDocument, '@context': 'https://www.w3.org/ns/did/v1' }, deactivated }
-      : { didDocument: doc, deactivated }
+      ? {
+          didDocument: { ...baseDIDDocument, '@context': 'https://www.w3.org/ns/did/v1' },
+          deactivated,
+          versionId,
+          nextVersionId,
+        }
+      : { didDocument: doc, deactivated, versionId, nextVersionId }
   }
 
   async resolve(
@@ -292,6 +318,19 @@ export class EthrDidResolver {
     }
     const id = fullId[2]
     const networkId = !fullId[1] ? 'mainnet' : fullId[1].slice(0, -1)
+    let blockTag = 'latest'
+    let versionAtMost = -1
+    if (typeof parsed.query === 'string') {
+      const qParams = qs.decode(parsed.query)
+      blockTag = typeof qParams['versionId'] === 'string' ? qParams['versionId'] : blockTag
+      if (blockTag !== 'latest') {
+        try {
+          versionAtMost = BigNumber.from(blockTag).toNumber()
+        } catch (e) {
+          // invalid versionId parameters are ignored
+        }
+      }
+    }
 
     if (!this.contracts[networkId]) {
       return {
@@ -306,10 +345,35 @@ export class EthrDidResolver {
 
     const { controller, history, controllerKey, chainId } = await this.changeLog(id, networkId, options.blockTag)
     try {
-      const { didDocument, deactivated } = this.wrapDidDocument(did, controller, controllerKey, history, chainId)
+      const { didDocument, deactivated, versionId, nextVersionId } = this.wrapDidDocument(
+        did,
+        controller,
+        controllerKey,
+        history,
+        chainId,
+        versionAtMost
+      )
       const status = deactivated ? { deactivated: true } : {}
+      let versionMeta = {}
+      let versionMetaNext = {}
+      if (!deactivated) {
+        if (versionId !== 0) {
+          const block = await this.getBlockMetadata(versionId, networkId)
+          versionMeta = {
+            versionId: block.height,
+            updated: block.isoDate,
+          }
+        }
+        if (nextVersionId !== Number.POSITIVE_INFINITY) {
+          const block = await this.getBlockMetadata(nextVersionId, networkId)
+          versionMetaNext = {
+            nextVersionId: block.height,
+            nextUpdate: block.isoDate,
+          }
+        }
+      }
       return {
-        didDocumentMetadata: { ...status },
+        didDocumentMetadata: { ...status, ...versionMeta, ...versionMetaNext },
         didResolutionMetadata: { contentType: 'application/did+ld+json' },
         didDocument,
       }
