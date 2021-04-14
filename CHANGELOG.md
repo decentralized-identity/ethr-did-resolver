@@ -1,3 +1,10 @@
+# [4.1.0](https://github.com/decentralized-identity/ethr-did-resolver/compare/4.0.1...4.1.0) (2021-04-14)
+
+
+### Features
+
+* export `EthrDidController` helper class ([#120](https://github.com/decentralized-identity/ethr-did-resolver/issues/120)) ([745100d](https://github.com/decentralized-identity/ethr-did-resolver/commit/745100d6cbfd1170af483efb2bdd93784f8fd7a6))
+
 ## [4.0.1](https://github.com/decentralized-identity/ethr-did-resolver/compare/4.0.0...4.0.1) (2021-03-26)
 
 
