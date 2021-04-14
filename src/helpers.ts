@@ -90,11 +90,20 @@ export function stringToBytes32(str: string): string {
   return buffStr + '0'.repeat(66 - buffStr.length)
 }
 
-export function interpretIdentifier(identifier: string): { address: string; publicKey?: string } {
-  if (identifier.length > 42) {
-    return { address: computeAddress(identifier), publicKey: identifier }
+export function interpretIdentifier(identifier: string): { address: string; publicKey?: string; network?: string } {
+  let input = identifier
+  let network = undefined
+  if (input.startsWith('did:ethr')) {
+    const components = input.split(':')
+    input = components[components.length - 1]
+    if (components.length === 4) {
+      network = components[2]
+    }
+  }
+  if (input.length > 42) {
+    return { address: computeAddress(input), publicKey: input, network }
   } else {
-    return { address: getAddress(identifier) } // checksum address
+    return { address: getAddress(input), network } // checksum address
   }
 }
 
