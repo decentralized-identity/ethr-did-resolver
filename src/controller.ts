@@ -1,18 +1,57 @@
 import { Signer } from '@ethersproject/abstract-signer'
 import { CallOverrides, Contract } from '@ethersproject/contracts'
-import { BlockTag, JsonRpcProvider, TransactionReceipt } from '@ethersproject/providers'
-import { address, interpretIdentifier, stringToBytes32 } from './helpers'
+import { BlockTag, JsonRpcProvider, Provider, TransactionReceipt } from '@ethersproject/providers'
+import { getContractForNetwork } from './configuration'
+import { address, DEFAULT_REGISTRY_ADDRESS, interpretIdentifier, stringToBytes32 } from './helpers'
 
+/**
+ * A class that can be used to interact with the ERC1056 contract on behalf of a local controller key-pair
+ */
 export class EthrDidController {
   private contract: Contract
   private signer?: Signer
   private address: string
+  public did: string
 
-  constructor(identifier: string | address, contract: Contract, signer?: Signer) {
-    this.contract = contract
+  /**
+   * Creates an EthrDidController instance.
+   *
+   * @param identifier - required - a `did:ethr` string or a publicKeyHex or an ethereum address
+   * @param signer - optional - a Signer that represents the current controller key (owner) of the identifier. If a 'signer' is not provided, then a 'contract' with an attached signer can be used.
+   * @param contract - optional - a Contract instance representing a ERC1056 contract. At least one of `contract`, `provider`, or `rpcUrl` is required
+   * @param chainNameOrId - optional - the network name or chainID, defaults to 'mainnet'
+   * @param provider - optional - a web3 Provider. At least one of `contract`, `provider`, or `rpcUrl` is required
+   * @param rpcUrl - optional - a JSON-RPC URL that can be used to connect to an ethereum network. At least one of `contract`, `provider`, or `rpcUrl` is required
+   * @param registry - optional - The ERC1056 registry address. Defaults to '0xdca7ef03e98e0dc2b855be647c39abe984fcf21b'. Only used with 'provider' or 'rpcUrl'
+   */
+  constructor(
+    identifier: string | address,
+    contract?: Contract,
+    signer?: Signer,
+    chainNameOrId = 'mainnet',
+    provider?: Provider,
+    rpcUrl?: string,
+    registry: string = DEFAULT_REGISTRY_ADDRESS
+  ) {
+    // initialize identifier
+    const { address, publicKey, network } = interpretIdentifier(identifier)
+    const net = network || chainNameOrId
+    // initialize contract connection
+    if (contract) {
+      this.contract = contract
+    } else if (provider || signer?.provider) {
+      const prov = provider || signer?.provider
+      this.contract = getContractForNetwork({ name: net, provider: prov, registry, rpcUrl })
+    } else {
+      throw new Error(' either a contract instance or a provider or rpcUrl is required to initialize')
+    }
     this.signer = signer
-    const { address } = interpretIdentifier(identifier)
     this.address = address
+    let networkString = net ? `${net}:` : ''
+    if (networkString in ['mainnet:', '0x1:']) {
+      networkString = ''
+    }
+    this.did = publicKey ? `did:ethr:${networkString}${publicKey}` : `did:ethr:${networkString}${address}`
   }
 
   async getOwner(address: address, blockTag?: BlockTag): Promise<string> {

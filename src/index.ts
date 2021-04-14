@@ -1,4 +1,5 @@
 import { getResolver } from './resolver'
+import { EthrDidController } from './controller'
 import {
   bytes32toString,
   DEFAULT_REGISTRY_ADDRESS,
@@ -15,6 +16,7 @@ export {
   getResolver,
   bytes32toString,
   stringToBytes32,
+  EthrDidController,
   /**@deprecated */
   legacyAlgoMap as delegateTypes,
   /**@deprecated */

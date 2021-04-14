@@ -53,7 +53,7 @@ function configureNetworksWithInfura(projectId?: string): ConfiguredNetworks {
   return configureNetworks({ networks })
 }
 
-function getContractForNetwork(conf: ProviderConfiguration): Contract {
+export function getContractForNetwork(conf: ProviderConfiguration): Contract {
   let provider: Provider = conf.provider || conf.web3?.currentProvider
   if (!provider) {
     if (conf.rpcUrl) {
