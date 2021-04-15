@@ -4,6 +4,7 @@ import {
   bytes32toString,
   DEFAULT_REGISTRY_ADDRESS,
   identifierMatcher,
+  interpretIdentifier,
   legacyAlgoMap,
   legacyAttrTypes,
   stringToBytes32,
@@ -23,5 +24,6 @@ export {
   legacyAttrTypes as attrTypes,
   verificationMethodTypes,
   identifierMatcher,
+  interpretIdentifier,
   Errors,
 }

@@ -3,7 +3,6 @@ import { Resolvable, Resolver } from 'did-resolver'
 import { getResolver } from '../resolver'
 import { EthrDidController } from '../controller'
 import DidRegistryContract from 'ethr-did-registry'
-import * as u8a from 'uint8arrays'
 import { interpretIdentifier, stringToBytes32 } from '../helpers'
 import { createProvider, sleep, startMining, stopMining } from './testUtils'
 import { nullAddress } from '../helpers'
@@ -944,7 +943,7 @@ describe('ethrResolver', () => {
         const identity = accounts[3]
         const did = `did:ethr:dev:${identity}`
         const publicKeyHex = `b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71`
-        const expectedPublicKeyBase58 = u8a.toString(u8a.fromString(publicKeyHex, 'base16'), 'base58btc')
+        const expectedPublicKeyBase58 = 'DV4G2kpBKjE6zxKor7Cj21iL9x9qyXb6emqjszBXcuhz'
         await new EthrDidController(identity, registryContract).setAttribute(
           'did/pub/Ed25519/veriKey/base58',
           `0x${publicKeyHex}`,
@@ -1046,8 +1045,6 @@ describe('ethrResolver', () => {
         expect.assertions(2)
         const identity = accounts[3]
         const modifiedDid = `did:ethr:dev:${identity}`
-        const publicKeyHex = `b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71`
-        const expectedPublicKeyBase58 = u8a.toString(u8a.fromString(publicKeyHex, 'base16'), 'base58btc')
         const result = await didResolver.resolve(`${modifiedDid}?versionId=latest`)
         expect(result.didDocumentMetadata.updated).toBeDefined()
         delete result.didDocumentMetadata.updated
@@ -1073,7 +1070,7 @@ describe('ethrResolver', () => {
                 id: `${modifiedDid}#delegate-1`,
                 type: 'Ed25519VerificationKey2018',
                 controller: modifiedDid,
-                publicKeyBase58: expectedPublicKeyBase58,
+                publicKeyBase58: 'DV4G2kpBKjE6zxKor7Cj21iL9x9qyXb6emqjszBXcuhz',
               },
             ],
             authentication: [`${modifiedDid}#controller`],

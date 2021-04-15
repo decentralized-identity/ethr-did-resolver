@@ -85,7 +85,7 @@ export class EthrDidResolver {
     const chainId = hexChainId ? BigNumber.from(hexChainId).toNumber() : chainIdFromNetwork
     const history: ERC1056Event[] = []
     const { address, publicKey } = interpretIdentifier(identity)
-    let controllerKey = publicKey
+    const controllerKey = publicKey
     let previousChange: BigNumber | null = await this.previousChange(address, networkId, blockTag)
     while (previousChange) {
       const blockNumber = previousChange
@@ -294,6 +294,7 @@ export class EthrDidResolver {
   async resolve(
     did: string,
     parsed: ParsedDID,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _unused: Resolvable,
     options: DIDResolutionOptions
   ): Promise<DIDResolutionResult> {
@@ -310,13 +311,13 @@ export class EthrDidResolver {
     }
     const id = fullId[2]
     const networkId = !fullId[1] ? 'mainnet' : fullId[1].slice(0, -1)
-    let blockTag: string | number = 'latest'
+    let blockTag: string | number = options.blockTag || 'latest'
     // let versionAtMost: string | number = -1
     if (typeof parsed.query === 'string') {
       const qParams = qs.decode(parsed.query)
       blockTag = typeof qParams['versionId'] === 'string' ? qParams['versionId'] : blockTag
       try {
-        blockTag = Number.parseInt(blockTag)
+        blockTag = Number.parseInt(<string>blockTag)
       } catch (e) {
         blockTag = 'latest'
         // invalid versionId parameters are ignored
