@@ -76,7 +76,7 @@ export class EthrDidResolver {
     identity: string,
     networkId: string,
     blockTag: BlockTag = 'latest'
-  ): Promise<{ controller: string; history: ERC1056Event[]; controllerKey?: string; chainId: number }> {
+  ): Promise<{ address: string; history: ERC1056Event[]; controllerKey?: string; chainId: number }> {
     const contract = this.contracts[networkId]
     const provider = contract.provider
     const hexChainId = networkId.startsWith('0x') ? networkId : knownNetworks[networkId]
@@ -86,16 +86,7 @@ export class EthrDidResolver {
     const history: ERC1056Event[] = []
     const { address, publicKey } = interpretIdentifier(identity)
     let controllerKey = publicKey
-    let controller = address
     let previousChange: BigNumber | null = await this.previousChange(address, networkId, blockTag)
-    // console.log(`gigel 1 - '${previousChange}' - ${typeof previousChange}`)
-    if (previousChange) {
-      const newController = await this.getOwner(address, networkId, blockTag)
-      if (newController.toLowerCase() !== controller.toLowerCase()) {
-        controllerKey = undefined
-      }
-      controller = newController
-    }
     while (previousChange) {
       const blockNumber = previousChange
       // console.log(`gigel ${previousChange}`)
@@ -116,16 +107,17 @@ export class EthrDidResolver {
         }
       }
     }
-    return { controller, history, controllerKey, chainId }
+    return { address, history, controllerKey, chainId }
   }
 
   wrapDidDocument(
     did: string,
-    controller: string,
+    address: string,
     controllerKey: string | undefined,
     history: ERC1056Event[],
     chainId: number,
-    versionAtMost: number
+    blockHeight: string | number,
+    now: BigNumber
   ): { didDocument: DIDDocument; deactivated: boolean; versionId: number; nextVersionId: number } {
     const baseDIDDocument: DIDDocument = {
       '@context': [
@@ -137,29 +129,10 @@ export class EthrDidResolver {
       authentication: [],
     }
 
-    // const now = new BN(Math.floor(new Date().getTime() / 1000))
-    const now = BigNumber.from(Math.floor(new Date().getTime() / 1000))
-    // const expired = {}
-    const publicKeys: VerificationMethod[] = [
-      {
-        id: `${did}#controller`,
-        type: verificationMethodTypes.EcdsaSecp256k1RecoveryMethod2020,
-        controller: did,
-        blockchainAccountId: `${controller}@eip155:${chainId}`,
-      },
-    ]
+    let controller = address
 
     const authentication = [`${did}#controller`]
 
-    if (controllerKey) {
-      publicKeys.push({
-        id: `${did}#controllerKey`,
-        type: verificationMethodTypes.EcdsaSecp256k1VerificationKey2019,
-        controller: did,
-        publicKeyHex: controllerKey,
-      })
-      authentication.push(`${did}#controllerKey`)
-    }
     let versionId = 0
     let nextVersionId = Number.POSITIVE_INFINITY
     let deactivated = false
@@ -169,7 +142,7 @@ export class EthrDidResolver {
     const pks: Record<string, VerificationMethod> = {}
     const services: Record<string, ServiceEndpoint> = {}
     for (const event of history) {
-      if (versionAtMost !== -1 && event.blockNumber > versionAtMost) {
+      if (blockHeight !== -1 && event.blockNumber > blockHeight) {
         if (nextVersionId > event.blockNumber) {
           nextVersionId = event.blockNumber
         }
@@ -254,6 +227,13 @@ export class EthrDidResolver {
             }
           }
         }
+      } else if (event._eventName === eventNames.DIDOwnerChanged) {
+        const currentEvent = <DIDOwnerChanged>event
+        controller = currentEvent.owner
+        if (currentEvent.owner === nullAddress) {
+          deactivated = true
+          break
+        }
       } else {
         if (
           event._eventName === eventNames.DIDDelegateChanged ||
@@ -270,14 +250,26 @@ export class EthrDidResolver {
         delete auth[eventIndex]
         delete pks[eventIndex]
         delete services[eventIndex]
-
-        if (event._eventName === eventNames.DIDOwnerChanged) {
-          if ((<DIDOwnerChanged>event).owner === nullAddress) {
-            deactivated = true
-            break
-          }
-        }
       }
+    }
+
+    const publicKeys: VerificationMethod[] = [
+      {
+        id: `${did}#controller`,
+        type: verificationMethodTypes.EcdsaSecp256k1RecoveryMethod2020,
+        controller: did,
+        blockchainAccountId: `${controller}@eip155:${chainId}`,
+      },
+    ]
+
+    if (controllerKey && controller == address) {
+      publicKeys.push({
+        id: `${did}#controllerKey`,
+        type: verificationMethodTypes.EcdsaSecp256k1VerificationKey2019,
+        controller: did,
+        publicKeyHex: controllerKey,
+      })
+      authentication.push(`${did}#controllerKey`)
     }
 
     const doc: DIDDocument = {
@@ -318,17 +310,16 @@ export class EthrDidResolver {
     }
     const id = fullId[2]
     const networkId = !fullId[1] ? 'mainnet' : fullId[1].slice(0, -1)
-    let blockTag = 'latest'
-    let versionAtMost = -1
+    let blockTag: string | number = 'latest'
+    // let versionAtMost: string | number = -1
     if (typeof parsed.query === 'string') {
       const qParams = qs.decode(parsed.query)
       blockTag = typeof qParams['versionId'] === 'string' ? qParams['versionId'] : blockTag
-      if (blockTag !== 'latest') {
-        try {
-          versionAtMost = BigNumber.from(blockTag).toNumber()
-        } catch (e) {
-          // invalid versionId parameters are ignored
-        }
+      try {
+        blockTag = Number.parseInt(blockTag)
+      } catch (e) {
+        blockTag = 'latest'
+        // invalid versionId parameters are ignored
       }
     }
 
@@ -343,33 +334,41 @@ export class EthrDidResolver {
       }
     }
 
-    const { controller, history, controllerKey, chainId } = await this.changeLog(id, networkId, options.blockTag)
+    let now = BigNumber.from(Math.floor(new Date().getTime() / 1000))
+
+    if (typeof blockTag === 'number') {
+      const block = await this.getBlockMetadata(blockTag, networkId)
+      now = BigNumber.from(Date.parse(block.isoDate) / 1000)
+    } else {
+      // 'latest'
+    }
+
+    const { address, history, controllerKey, chainId } = await this.changeLog(id, networkId, 'latest')
     try {
       const { didDocument, deactivated, versionId, nextVersionId } = this.wrapDidDocument(
         did,
-        controller,
+        address,
         controllerKey,
         history,
         chainId,
-        versionAtMost
+        blockTag,
+        now
       )
       const status = deactivated ? { deactivated: true } : {}
       let versionMeta = {}
       let versionMetaNext = {}
-      if (!deactivated) {
-        if (versionId !== 0) {
-          const block = await this.getBlockMetadata(versionId, networkId)
-          versionMeta = {
-            versionId: block.height,
-            updated: block.isoDate,
-          }
+      if (versionId !== 0) {
+        const block = await this.getBlockMetadata(versionId, networkId)
+        versionMeta = {
+          versionId: block.height,
+          updated: block.isoDate,
         }
-        if (nextVersionId !== Number.POSITIVE_INFINITY) {
-          const block = await this.getBlockMetadata(nextVersionId, networkId)
-          versionMetaNext = {
-            nextVersionId: block.height,
-            nextUpdate: block.isoDate,
-          }
+      }
+      if (nextVersionId !== Number.POSITIVE_INFINITY) {
+        const block = await this.getBlockMetadata(nextVersionId, networkId)
+        versionMetaNext = {
+          nextVersionId: block.height,
+          nextUpdate: block.isoDate,
         }
       }
       return {
