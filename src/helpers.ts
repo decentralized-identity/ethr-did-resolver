@@ -18,6 +18,7 @@ export interface ERC1056Event {
   previousChange: uint256
   validTo?: uint256
   _eventName: string
+  blockNumber: number
 }
 
 export interface DIDOwnerChanged extends ERC1056Event {
@@ -91,19 +92,19 @@ export function stringToBytes32(str: string): string {
 }
 
 export function interpretIdentifier(identifier: string): { address: string; publicKey?: string; network?: string } {
-  let input = identifier
+  let id = identifier
   let network = undefined
-  if (input.startsWith('did:ethr')) {
-    const components = input.split(':')
-    input = components[components.length - 1]
-    if (components.length === 4) {
-      network = components[2]
+  if (id.startsWith('did:ethr')) {
+    const components = id.split(':')
+    id = components[components.length - 1]
+    if (components.length >= 4) {
+      network = components.splice(2, components.length - 3).join(':')
     }
   }
-  if (input.length > 42) {
-    return { address: computeAddress(input), publicKey: input, network }
+  if (id.length > 42) {
+    return { address: computeAddress(id), publicKey: id, network }
   } else {
-    return { address: getAddress(input), network } // checksum address
+    return { address: getAddress(id), network } // checksum address
   }
 }
 
