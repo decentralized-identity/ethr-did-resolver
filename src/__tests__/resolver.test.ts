@@ -7,6 +7,8 @@ import { interpretIdentifier, stringToBytes32 } from '../helpers'
 import { createProvider, sleep, startMining, stopMining } from './testUtils'
 import { nullAddress } from '../helpers'
 
+jest.setTimeout(30000)
+
 describe('ethrResolver', () => {
   // let registry, accounts, did, identity, controller, delegate1, delegate2, ethr, didResolver
   let registryContract: Contract,
