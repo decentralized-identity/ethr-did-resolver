@@ -1,3 +1,10 @@
+# [4.2.0](https://github.com/decentralized-identity/ethr-did-resolver/compare/4.1.0...4.2.0) (2021-04-16)
+
+
+### Features
+
+* versioning ([#121](https://github.com/decentralized-identity/ethr-did-resolver/issues/121)) ([b794d69](https://github.com/decentralized-identity/ethr-did-resolver/commit/b794d6975cb92ea5c87882546951d5d0771bde4f)), closes [#119](https://github.com/decentralized-identity/ethr-did-resolver/issues/119) [#118](https://github.com/decentralized-identity/ethr-did-resolver/issues/118) [#119](https://github.com/decentralized-identity/ethr-did-resolver/issues/119) [#118](https://github.com/decentralized-identity/ethr-did-resolver/issues/118)
+
 # [4.1.0](https://github.com/decentralized-identity/ethr-did-resolver/compare/4.0.1...4.1.0) (2021-04-14)
 
 
