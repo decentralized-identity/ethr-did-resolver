@@ -34,6 +34,7 @@ describe('ethrResolver (alt-chains)', () => {
             },
           ],
           authentication: [`${did}#controller`],
+          assertionMethod: [`${did}#controller`],
         },
       })
     })
@@ -62,6 +63,7 @@ describe('ethrResolver (alt-chains)', () => {
             },
           ],
           authentication: [`${did}#controller`],
+          assertionMethod: [`${did}#controller`],
         },
       })
     })
@@ -90,6 +92,7 @@ describe('ethrResolver (alt-chains)', () => {
             },
           ],
           authentication: [`${did}#controller`],
+          assertionMethod: [`${did}#controller`],
         },
       })
     })
@@ -116,6 +119,7 @@ describe('ethrResolver (alt-chains)', () => {
             },
           ],
           authentication: [`${did}#controller`],
+          assertionMethod: [`${did}#controller`],
         },
       })
     })
@@ -142,6 +146,7 @@ describe('ethrResolver (alt-chains)', () => {
             },
           ],
           authentication: [`${did}#controller`],
+          assertionMethod: [`${did}#controller`],
         },
       })
     })
@@ -175,6 +180,7 @@ describe('ethrResolver (alt-chains)', () => {
             },
           ],
           authentication: [`${did}#controller`, `${did}#controllerKey`],
+          assertionMethod: [`${did}#controller`, `${did}#controllerKey`],
         },
       })
     })

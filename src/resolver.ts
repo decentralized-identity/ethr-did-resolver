@@ -127,6 +127,7 @@ export class EthrDidResolver {
       id: did,
       verificationMethod: [],
       authentication: [],
+      assertionMethod: [],
     }
 
     let controller = address
@@ -272,14 +273,15 @@ export class EthrDidResolver {
       authentication.push(`${did}#controllerKey`)
     }
 
-    const doc: DIDDocument = {
+    const didDocument: DIDDocument = {
       ...baseDIDDocument,
       verificationMethod: publicKeys.concat(Object.values(pks)),
       authentication: authentication.concat(Object.values(auth)),
     }
     if (Object.values(services).length > 0) {
-      doc.service = Object.values(services)
+      didDocument.service = Object.values(services)
     }
+    didDocument.assertionMethod = [...(didDocument.verificationMethod?.map((pk) => pk.id) || [])]
 
     return deactivated
       ? {
@@ -288,7 +290,7 @@ export class EthrDidResolver {
           versionId,
           nextVersionId,
         }
-      : { didDocument: doc, deactivated, versionId, nextVersionId }
+      : { didDocument, deactivated, versionId, nextVersionId }
   }
 
   async resolve(
@@ -312,7 +314,6 @@ export class EthrDidResolver {
     const id = fullId[2]
     const networkId = !fullId[1] ? 'mainnet' : fullId[1].slice(0, -1)
     let blockTag: string | number = options.blockTag || 'latest'
-    // let versionAtMost: string | number = -1
     if (typeof parsed.query === 'string') {
       const qParams = qs.decode(parsed.query)
       blockTag = typeof qParams['versionId'] === 'string' ? qParams['versionId'] : blockTag
