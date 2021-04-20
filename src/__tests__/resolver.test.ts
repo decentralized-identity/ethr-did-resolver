@@ -66,6 +66,7 @@ describe('ethrResolver', () => {
             },
           ],
           authentication: [`${did}#controller`],
+          assertionMethod: [`${did}#controller`],
         },
       })
     })
@@ -98,6 +99,7 @@ describe('ethrResolver', () => {
             },
           ],
           authentication: [`${pubdid}#controller`, `${pubdid}#controllerKey`],
+          assertionMethod: [`${pubdid}#controller`, `${pubdid}#controllerKey`],
         },
       })
     })
@@ -127,6 +129,7 @@ describe('ethrResolver', () => {
             },
           ],
           authentication: [`${did}#controller`],
+          assertionMethod: [`${did}#controller`],
         },
       })
     })
@@ -151,6 +154,7 @@ describe('ethrResolver', () => {
           },
         ],
         authentication: [`${pubdid}#controller`],
+        assertionMethod: [`${pubdid}#controller`],
       })
       expect(didDocument?.verificationMethod?.length).toBe(1)
       expect(didDocument?.authentication?.length).toBe(1)
@@ -190,6 +194,7 @@ describe('ethrResolver', () => {
               },
             ],
             authentication: [`${did}#controller`],
+            assertionMethod: [`${did}#controller`, `${did}#delegate-1`],
           },
         })
       })
@@ -234,6 +239,7 @@ describe('ethrResolver', () => {
               },
             ],
             authentication: [`${did}#controller`, `${did}#delegate-2`],
+            assertionMethod: [`${did}#controller`, `${did}#delegate-1`, `${did}#delegate-2`],
           },
         })
       })
@@ -271,6 +277,7 @@ describe('ethrResolver', () => {
               },
             ],
             authentication: [`${did}#controller`],
+            assertionMethod: [`${did}#controller`, `${did}#delegate-1`],
           },
         })
       })
@@ -304,6 +311,7 @@ describe('ethrResolver', () => {
               },
             ],
             authentication: [`${did}#controller`],
+            assertionMethod: [`${did}#controller`],
           },
         })
       })
@@ -342,6 +350,7 @@ describe('ethrResolver', () => {
               },
             ],
             authentication: [`${did}#controller`, `${did}#delegate-4`],
+            assertionMethod: [`${did}#controller`, `${did}#delegate-4`],
           },
         })
       })
@@ -386,6 +395,7 @@ describe('ethrResolver', () => {
             },
           ],
           authentication: [`${did}#controller`, `${did}#delegate-4`],
+          assertionMethod: [`${did}#controller`, `${did}#delegate-4`, `${did}#delegate-5`],
         })
       })
 
@@ -434,6 +444,7 @@ describe('ethrResolver', () => {
             },
           ],
           authentication: [`${did}#controller`, `${did}#delegate-4`],
+          assertionMethod: [`${did}#controller`, `${did}#delegate-4`, `${did}#delegate-5`, `${did}#delegate-6`],
         })
       })
 
@@ -488,6 +499,13 @@ describe('ethrResolver', () => {
             },
           ],
           authentication: [`${did}#controller`, `${did}#delegate-4`],
+          assertionMethod: [
+            `${did}#controller`,
+            `${did}#delegate-4`,
+            `${did}#delegate-5`,
+            `${did}#delegate-6`,
+            `${did}#delegate-7`,
+          ],
         })
       })
 
@@ -522,6 +540,7 @@ describe('ethrResolver', () => {
             },
           ],
           authentication: [`${keyAgrDid}#controller`],
+          assertionMethod: [`${keyAgrDid}#controller`, `${keyAgrDid}#delegate-1`],
         })
       })
     })
@@ -578,6 +597,13 @@ describe('ethrResolver', () => {
             },
           ],
           authentication: [`${did}#controller`, `${did}#delegate-4`],
+          assertionMethod: [
+            `${did}#controller`,
+            `${did}#delegate-4`,
+            `${did}#delegate-5`,
+            `${did}#delegate-6`,
+            `${did}#delegate-7`,
+          ],
           service: [
             {
               id: `${did}#service-1`,
@@ -635,6 +661,7 @@ describe('ethrResolver', () => {
           },
         ],
         authentication: [`${did}#controller`, `${did}#delegate-4`],
+        assertionMethod: [`${did}#controller`, `${did}#delegate-4`, `${did}#delegate-6`, `${did}#delegate-7`],
         service: [
           {
             id: `${did}#service-1`,
@@ -680,6 +707,7 @@ describe('ethrResolver', () => {
           },
         ],
         authentication: [`${did}#controller`, `${did}#delegate-4`],
+        assertionMethod: [`${did}#controller`, `${did}#delegate-4`, `${did}#delegate-7`],
         service: [
           {
             id: `${did}#service-1`,
@@ -719,6 +747,7 @@ describe('ethrResolver', () => {
           },
         ],
         authentication: [`${did}#controller`, `${did}#delegate-4`],
+        assertionMethod: [`${did}#controller`, `${did}#delegate-4`],
         service: [
           {
             id: `${did}#service-1`,
@@ -759,6 +788,7 @@ describe('ethrResolver', () => {
             },
           ],
           authentication: [`${did}#controller`, `${did}#delegate-4`],
+          assertionMethod: [`${did}#controller`, `${did}#delegate-4`],
         })
       })
     })
@@ -810,6 +840,7 @@ describe('ethrResolver', () => {
             },
           ],
           authentication: [`${did}#controller`, `${did}#delegate-4`],
+          assertionMethod: [`${did}#controller`, `${did}#delegate-4`],
           service: [
             {
               id: `${did}#service-4`,
@@ -870,6 +901,7 @@ describe('ethrResolver', () => {
             },
           ],
           authentication: [`${did}#controller`, `${did}#delegate-4`],
+          assertionMethod: [`${did}#controller`, `${did}#delegate-4`],
           service: [
             {
               id: `${did}#service-4`,
@@ -936,6 +968,7 @@ describe('ethrResolver', () => {
           },
         ],
         authentication: [`${did}#controller`, `${did}#delegate-1`],
+        assertionMethod: [`${did}#controller`, `${did}#delegate-1`],
       })
     })
 
@@ -981,6 +1014,7 @@ describe('ethrResolver', () => {
               },
             ],
             authentication: [`${did}#controller`],
+            assertionMethod: [`${did}#controller`, `${did}#delegate-1`],
           },
         })
       })
@@ -1008,6 +1042,7 @@ describe('ethrResolver', () => {
             id: did,
             verificationMethod: [],
             authentication: [],
+            assertionMethod: [],
           },
         })
       })
@@ -1039,6 +1074,7 @@ describe('ethrResolver', () => {
               },
             ],
             authentication: [`${virginDID}#controller`],
+            assertionMethod: [`${virginDID}#controller`],
           },
         })
       })
@@ -1076,6 +1112,7 @@ describe('ethrResolver', () => {
               },
             ],
             authentication: [`${modifiedDid}#controller`],
+            assertionMethod: [`${modifiedDid}#controller`, `${modifiedDid}#delegate-1`],
           },
         })
       })
@@ -1111,6 +1148,7 @@ describe('ethrResolver', () => {
               },
             ],
             authentication: [`${did}#controller`, `${did}#delegate-4`],
+            assertionMethod: [`${did}#controller`, `${did}#delegate-4`],
           },
         })
       })
@@ -1140,6 +1178,7 @@ describe('ethrResolver', () => {
               },
             ],
             authentication: [`${did}#controller`],
+            assertionMethod: [`${did}#controller`],
           },
         })
       })
@@ -1169,6 +1208,7 @@ describe('ethrResolver', () => {
               },
             ],
             authentication: [`${did}#controller`],
+            assertionMethod: [`${did}#controller`],
           },
         })
       })
@@ -1199,6 +1239,7 @@ describe('ethrResolver', () => {
               },
             ],
             authentication: [`${deactivatedDid}#controller`],
+            assertionMethod: [`${deactivatedDid}#controller`],
           },
         })
       })
@@ -1239,6 +1280,7 @@ describe('ethrResolver', () => {
               },
             ],
             authentication: [`${did}#controller`, `${did}#delegate-2`],
+            assertionMethod: [`${did}#controller`, `${did}#delegate-1`, `${did}#delegate-2`],
           },
         })
       })
