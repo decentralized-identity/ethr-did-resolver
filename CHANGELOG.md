@@ -1,3 +1,10 @@
+# [4.3.0](https://github.com/decentralized-identity/ethr-did-resolver/compare/4.2.0...4.3.0) (2021-04-20)
+
+
+### Features
+
+* add `assertionMethod` by default to didDocument ([#124](https://github.com/decentralized-identity/ethr-did-resolver/issues/124)) ([11b2096](https://github.com/decentralized-identity/ethr-did-resolver/commit/11b20967fae66b784a527d92c39cd29f6dbe6b10)), closes [#117](https://github.com/decentralized-identity/ethr-did-resolver/issues/117) [#115](https://github.com/decentralized-identity/ethr-did-resolver/issues/115)
+
 # [4.2.0](https://github.com/decentralized-identity/ethr-did-resolver/compare/4.1.0...4.2.0) (2021-04-16)
 
 
