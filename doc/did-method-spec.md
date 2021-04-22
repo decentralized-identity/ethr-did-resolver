@@ -89,8 +89,8 @@ MUST be in lowercase. The remainder of the DID, after the prefix, is specified b
 The method specific identifier is represented as the Hex encoded secp256k1 public key (in compressed form),
 or the corresponding Hex-encoded Ethereum address on the target network, prefixed with `0x`.
 
-    ethr-did = "did:ethr:" ethr-specific-idstring
-    ethr-specific-idstring = [ ethr-network ":" ] ethereum-address / public-key-hex
+    ethr-did = "did:ethr:" ethr-specific-identifier
+    ethr-specific-identifier = [ ethr-network ":" ] ethereum-address / public-key-hex
     ethr-network = "mainnet" / "ropsten" / "rinkeby" / "kovan" / network-chain-id
     network-chain-id = "0x" *HEXDIG
     ethereum-address = "0x" 40*HEXDIG
@@ -113,7 +113,22 @@ If the identifier is a `public-key-hex`:
 - the corresponding `blockchainAccountId` entry is also added to the default DID document, unless the `owner` has been
   changed to a different address.
 - all Read, Update, and Delete operations MUST be made using the corresponding `blockchainAccountId` and MUST originate
-  from the correct `owner` address.
+  from the correct controller (ECR1056 `owner`) address.
+
+## Relationship to ERC1056
+
+The subject of a `did:ethr` is mapped to an `identity` address in the ERC1056 contract. When dealing with public key
+identifiers, the corresponding ethereum address is used.
+
+The controller address of a `did:ethr` is mapped to the `owner` of an `identity` in the ERC1056.
+The controller address is not listed as the [DID `controller`](https://www.w3.org/TR/did-core/#did-controller) property
+in the DID document. This is intentional, to simplify the verification burden required by the DID spec.
+Rather, this address it is a concept specific to ERC1056 and defines the address that is allowed to perform Update and 
+Delete operations on the registry on behalf of the `identity` address.
+This address MUST be listed with the ID `${did}#controller` in the `verificationMethod` section and also referenced
+in all other verification relationships listed in the DID document.
+In addition to this, if the identifier is a public key, this public key MUST be listed with the ID `${did}#controllerKey`
+in all locations where `#controller` appears.
 
 ## CRUD Operation Definitions
 
@@ -142,7 +157,8 @@ transactions to the ERC1056 registry looks like this:
       "blockchainAccountId": "0xb9c5714089478a327f09197987f16f9e5d936e8a@eip155:1"
     }
   ],
-  "authentication": ["did:ethr:0xb9c5714089478a327f09197987f16f9e5d936e8a#controller"]
+  "authentication": ["did:ethr:0xb9c5714089478a327f09197987f16f9e5d936e8a#controller"],
+  "assertionMethod": ["did:ethr:0xb9c5714089478a327f09197987f16f9e5d936e8a#controller"]
 }
 ```
 
@@ -170,6 +186,10 @@ The minimal DID Document for a public key where there are no corresponding TXs t
     }
   ],
   "authentication": [
+    "did:ethr:0x0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798#controller",
+    "did:ethr:0x0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798#controllerKey"
+  ],
+  "assertionMethod": [
     "did:ethr:0x0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798#controller",
     "did:ethr:0x0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798#controllerKey"
   ]
@@ -337,10 +357,10 @@ generates a public key entry like the following:
 }
 ```
 
-###### Example Base64 encoded Ed25519 Verification Key
+###### Example Base58 encoded Ed25519 Verification Key
 
 A `DIDAttributeChanged` event for the identity `0xf3beac30c498d9e26865f34fcaa57dbb935b0d74` with the name
-`did/pub/Ed25519/veriKey/base64` and the value of `0xb97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71`
+`did/pub/Ed25519/veriKey/base58` and the value of `0xb97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71`
 generates a public key entry like this:
 
 ```json
@@ -348,11 +368,11 @@ generates a public key entry like this:
   "id": "did:ethr:0xf3beac30c498d9e26865f34fcaa57dbb935b0d74#delegate-1",
   "type": "Ed25519VerificationKey2018",
   "controller": "did:ethr:0xf3beac30c498d9e26865f34fcaa57dbb935b0d74",
-  "publicKeyBase64": "uXww3nZ/CEzjCAFo7ikwU7ozsjXXEWoyY9KfFFCTa3E="
+  "publicKeyBase58": "DV4G2kpBKjE6zxKor7Cj21iL9x9qyXb6emqjszBXcuhz"
 }
 ```
 
-###### Example base64 encoded X25519 Encryption Key
+###### Example Base64 encoded X25519 Encryption Key
 
 A `DIDAttributeChanged` event for the identity `0xf3beac30c498d9e26865f34fcaa57dbb935b0d74` with the name
 `did/pub/X25519/enc/base64` and the value of
@@ -387,6 +407,27 @@ A `DIDAttributeChanged` event for the identity `0xf3beac30c498d9e26865f34fcaa57d
   "serviceEndpoint": "https://hubs.uport.me"
 }
 ```
+
+#### `id` properties of entries
+
+With the exception of `#controller` and `#controllerKey`, the `id` properties that appear throughout the DID document
+MUST be stable across updates. This means that the same key material will be referenced by the same ID after an update.
+
+* Attribute or delegate changes that result in `verificationMethod` entries MUST set the `id`
+`${did}#delegate-${eventIndex}`.
+* Attributes that result in `service` entries MUST set the `id` to `${did}#service-${eventIndex}`
+
+where `eventIndex` is the index of the event that modifies that section of the DID document.
+
+**Example**
+
+* add key => `#delegate-1` is added
+* add another key => `#delegate-2` is added
+* add delegate => `#delegate-3` is added
+* add service => `#service-1` ia added
+* revoke first key => `#delegate-1` gets removed from the DID document; `#delegate-2` and `#delegte-3` remain.
+* add another delegate => `#delegate-5` is added (earlier revocation is counted as an event)
+* first delegate expires => `delegate-3` is removed, `#delegate-5` remains intact
 
 ### Update
 
@@ -446,8 +487,8 @@ The `resolve` method returns an object with the following properties: `didDocume
 ### DID Document Metadata
 
 When resolving a DID document that has had updates, the latest update MUST be listed in the `didDocumentMetadata`.
-* `versionId` MUST be the block height of the latest update.
-* `updated` MUST be the ISO date string of the block time of the latest update.
+* `versionId` MUST be the block number of the latest update.
+* `updated` MUST be the ISO date string of the block time of the latest update (without sub-second resolution).
 
 Example:
 ```json
@@ -477,16 +518,16 @@ This DID method supports resolving previous versions of the DID document by spec
 
 Example: `did:ethr:0x26bf14321004e770e7a8b080b7a526d8eed8b388?versionId=12090175`
 
-The `versionId` is the block height at which the DID resolution MUST be performed.
-Only ERC1056 events prior to or contained in this block height are to be considered when building the event history.
+The `versionId` is the block number at which the DID resolution MUST be performed.
+Only ERC1056 events prior to or contained in this block number are to be considered when building the event history.
 
 If there are any events after that block that mutate the DID, the earliest of them SHOULD be used to populate the
 properties of the `didDocumentMetadata`:
-* `nextVersionId` MUST be the block height of the next update to the DID document.
-* `nextUpdate` MUST be the ISO date string of the block time of the next update.
+* `nextVersionId` MUST be the block number of the next update to the DID document.
+* `nextUpdate` MUST be the ISO date string of the block time of the next update (without sub-second resolution).
 
-In case the DID has had updates prior to or included in the `versionId` block height, the `updated` and `versionId`
-properties of the `didDocumentMetadata` MUST correspond to the latest block prior to the `versionId` querystring param.
+In case the DID has had updates prior to or included in the `versionId` block number, the `updated` and `versionId`
+properties of the `didDocumentMetadata` MUST correspond to the latest block prior to the `versionId` query string param.
 
 Any timestamp comparisons of `validTo` fields of the event history MUST be done against the `versionId` block timestamp.
 
