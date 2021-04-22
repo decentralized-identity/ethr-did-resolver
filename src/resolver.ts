@@ -68,7 +68,7 @@ export class EthrDidResolver {
     const block: Block = await this.contracts[networkId].provider.getBlock(blockHeight)
     return {
       height: block.number.toString(),
-      isoDate: new Date(block.timestamp * 1000).toISOString(),
+      isoDate: new Date(block.timestamp * 1000).toISOString().replace('.000', ''),
     }
   }
 

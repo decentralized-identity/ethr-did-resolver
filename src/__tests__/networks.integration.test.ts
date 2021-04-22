@@ -16,7 +16,7 @@ describe('ethrResolver (alt-chains)', () => {
       expect(result).toEqual({
         didDocumentMetadata: {
           nextVersionId: '12090175',
-          nextUpdate: '2021-03-22T18:14:29.000Z',
+          nextUpdate: '2021-03-22T18:14:29Z',
         },
         didResolutionMetadata: {
           contentType: 'application/did+ld+json',
