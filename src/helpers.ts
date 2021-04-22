@@ -95,6 +95,7 @@ export function interpretIdentifier(identifier: string): { address: string; publ
   let id = identifier
   let network = undefined
   if (id.startsWith('did:ethr')) {
+    id = id.split('?')[0]
     const components = id.split(':')
     id = components[components.length - 1]
     if (components.length >= 4) {
