@@ -39,7 +39,7 @@ export class EthrDidController {
     // initialize contract connection
     if (contract) {
       this.contract = contract
-    } else if (provider || signer?.provider) {
+    } else if (provider || signer?.provider || rpcUrl) {
       const prov = provider || signer?.provider
       this.contract = getContractForNetwork({ name: net, provider: prov, registry, rpcUrl })
     } else {
