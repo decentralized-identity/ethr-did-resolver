@@ -1,3 +1,10 @@
+## [4.3.2](https://github.com/decentralized-identity/ethr-did-resolver/compare/4.3.1...4.3.2) (2021-04-22)
+
+
+### Bug Fixes
+
+* use rpcUrl in controller config ([#128](https://github.com/decentralized-identity/ethr-did-resolver/issues/128)) ([5302536](https://github.com/decentralized-identity/ethr-did-resolver/commit/53025365030df2d132156c15e6982e81af6d9ef2)), closes [#127](https://github.com/decentralized-identity/ethr-did-resolver/issues/127)
+
 ## [4.3.1](https://github.com/decentralized-identity/ethr-did-resolver/compare/4.3.0...4.3.1) (2021-04-22)
 
 
