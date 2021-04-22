@@ -1,3 +1,10 @@
+## [4.3.1](https://github.com/decentralized-identity/ethr-did-resolver/compare/4.3.0...4.3.1) (2021-04-22)
+
+
+### Bug Fixes
+
+* ignore query string when interpreting identifiers ([#123](https://github.com/decentralized-identity/ethr-did-resolver/issues/123)) ([5508f8a](https://github.com/decentralized-identity/ethr-did-resolver/commit/5508f8a45149417eac44dae0103e6f7edb566c83)), closes [#122](https://github.com/decentralized-identity/ethr-did-resolver/issues/122)
+
 # [4.3.0](https://github.com/decentralized-identity/ethr-did-resolver/compare/4.2.0...4.3.0) (2021-04-20)
 
 

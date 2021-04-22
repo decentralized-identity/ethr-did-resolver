@@ -1,6 +1,6 @@
 {
   "name": "ethr-did-resolver",
-  "version": "4.3.0",
+  "version": "4.3.1",
   "description": "Resolve DID documents around ethereum addresses",
   "main": "lib/index.umd.js",
   "source": "src/index.ts",
