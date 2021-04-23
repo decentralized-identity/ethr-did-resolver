@@ -1,3 +1,10 @@
+## [4.3.3](https://github.com/decentralized-identity/ethr-did-resolver/compare/4.3.2...4.3.3) (2021-04-23)
+
+
+### Bug Fixes
+
+* strip milliseconds from dateTime strings ([#129](https://github.com/decentralized-identity/ethr-did-resolver/issues/129)) ([3e958af](https://github.com/decentralized-identity/ethr-did-resolver/commit/3e958afc37916aa3f6de3c7e7a8cf41e0718df34)), closes [#126](https://github.com/decentralized-identity/ethr-did-resolver/issues/126)
+
 ## [4.3.2](https://github.com/decentralized-identity/ethr-did-resolver/compare/4.3.1...4.3.2) (2021-04-22)
 
 
