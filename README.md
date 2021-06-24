@@ -1,21 +1,14 @@
----
-title: "Ethr DID Resolver"
-index: 7 category: "ethr-did-resolver"
-type: "reference"
-source: "https://github.com/decentralized-identity/ethr-did-resolver/blob/develop/README.md"
----
+[![npm](https://img.shields.io/npm/dt/ethr-did-resolver.svg)](https://www.npmjs.com/package/ethr-did-resolver)
+[![npm](https://img.shields.io/npm/v/ethr-did-resolver.svg)](https://www.npmjs.com/package/ethr-did-resolver)
+[![codecov](https://codecov.io/gh/decentralized-identity/ethr-did-resolver/branch/develop/graph/badge.svg)](https://codecov.io/gh/decentralized-identity/ethr-did-resolver)
 
 # ethr DID Resolver
 
-[![codecov](https://codecov.io/gh/decentralized-identity/ethr-did-resolver/branch/develop/graph/badge.svg)](https://codecov.io/gh/decentralized-identity/ethr-did-resolver)
-[![CircleCI](https://circleci.com/gh/decentralized-identity/ethr-did-resolver.svg?style=svg)](https://circleci.com/gh/decentralized-identity/ethr-did-resolver)
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/7bcde296af8e467787b04c956c2c9f6f)](https://www.codacy.com/manual/uport-project/ethr-did-resolver?utm_source=github.com&utm_medium=referral&utm_content=uport-project/ethr-did-resolver&utm_campaign=Badge_Grade)
-
 This library is intended to use ethereum addresses or secp256k1 publicKeys as fully self-managed
-[Decentralized Identifiers](https://w3c-ccg.github.io/did-spec/#decentralized-identifiers-dids) and wrap them in a
-[DID Document](https://w3c-ccg.github.io/did-spec/#did-documents)
+[Decentralized Identifiers](https://w3c.github.io/did-core/#identifier) and wrap them in a
+[DID Document](https://w3c.github.io/did-core/#did-document-properties)
 
-It supports the proposed [Decentralized Identifiers](https://w3c-ccg.github.io/did-spec/) spec from the
+It supports the proposed [Decentralized Identifiers](https://w3c.github.io/did-core/#identifier) spec from the
 [W3C Credentials Community Group](https://w3c-ccg.github.io).
 
 It requires the `did-resolver` library, which is the primary interface for resolving DIDs.
@@ -38,9 +31,9 @@ represents a distinct identifier than the generic one, with different DID docume
 
 ## DID Document
 
-The did resolver takes the ethereum address, looks at contract events and builds a DID document based on the ERC1056 Events
-corresponding to the address. When an identifier is a full `publicKey`, the corresponding `ethereumAddress` is computed
-and checked in the same manner.
+The did resolver takes the ethereum address, looks at contract events and builds a DID document based on the ERC1056
+Events corresponding to the address. When an identifier is a full `publicKey`, the corresponding `ethereumAddress` is
+computed and checked in the same manner.
 
 The minimal DID document for an ethereum address `0xb9c5714089478a327f09197987f16f9e5d936e8a` with no transactions to
 the registry looks like this:
@@ -60,15 +53,20 @@ the registry looks like this:
       "blockchainAccountId": "0xb9c5714089478a327f09197987f16f9e5d936e8a"
     }
   ],
-  "authentication": ["did:ethr:0xb9c5714089478a327f09197987f16f9e5d936e8a#controller"],
-  "assertionMethod": ["did:ethr:0xb9c5714089478a327f09197987f16f9e5d936e8a#controller"]
+  "authentication": [
+    "did:ethr:0xb9c5714089478a327f09197987f16f9e5d936e8a#controller"
+  ],
+  "assertionMethod": [
+    "did:ethr:0xb9c5714089478a327f09197987f16f9e5d936e8a#controller"
+  ]
 }
 ```
 
-Note this resolver uses the `EcdsaSecp256k1RecoveryMethod2020` type and an `blockchainAccountId` to represent the default
-`verificationMethod`, `assertionMethod`, and `authentication` entry.
-Any value from the registry that returns an ethereum address will be added to the `verificationMethod` array of the DID
-document with type `EcdsaSecp256k1RecoveryMethod2020` and an `blockchainAccountId` attribute containing the address.
+Note this resolver uses the `EcdsaSecp256k1RecoveryMethod2020` type and an `blockchainAccountId` to represent the
+default
+`verificationMethod`, `assertionMethod`, and `authentication` entry. Any value from the registry that returns an
+ethereum address will be added to the `verificationMethod` array of the DID document with
+type `EcdsaSecp256k1RecoveryMethod2020` and an `blockchainAccountId` attribute containing the address.
 
 ## Building a DID document
 
@@ -80,8 +78,8 @@ computed.
 
 ## Resolving a DID document
 
-The library presents a `resolve()` function that returns a `Promise` returning the DID document. It is not meant to
-be used directly but through the [`did-resolver`](https://github.com/decentralized-identity/did-resolver) aggregator.
+The library presents a `resolve()` function that returns a `Promise` returning the DID document. It is not meant to be
+used directly but through the [`did-resolver`](https://github.com/decentralized-identity/did-resolver) aggregator.
 
 You can use the `getResolver(config)` method to produce an entry that can be used with the `Resolver`
 constructor:
