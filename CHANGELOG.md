@@ -1,3 +1,10 @@
+## [4.3.4](https://github.com/decentralized-identity/ethr-did-resolver/compare/4.3.3...4.3.4) (2021-06-24)
+
+
+### Bug Fixes
+
+* maintenance of dependencies, bots and build scripts ([#136](https://github.com/decentralized-identity/ethr-did-resolver/issues/136)) ([0d3fcf7](https://github.com/decentralized-identity/ethr-did-resolver/commit/0d3fcf74630549252605253b51415cc248b6e4d5))
+
 ## [4.3.3](https://github.com/decentralized-identity/ethr-did-resolver/compare/4.3.2...4.3.3) (2021-04-23)
 
 
