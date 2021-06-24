@@ -7,7 +7,7 @@ assignees: ''
 
 ---
 
-Prerequisites
+### Prerequisites
 
 Please answer the following questions for yourself before submitting an issue.
 
@@ -49,7 +49,7 @@ Please provide any relevant information about your setup. This is important in c
 
 Please include any relevant log snippets or files here.
 Create a [GIST](https://gist.github.com) which is a paste of your _full or sanitized_ logs, and link them here.
-Do _NOT_ paste your full logs here, as it will make this issue very long and hard to read!
+Please do _NOT_ paste your full logs here, as it will make this issue very long and hard to read!
 
 #### Alternatives you considered
 
