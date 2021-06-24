@@ -1,36 +1,33 @@
 {
   "name": "ethr-did-resolver",
   "version": "4.3.3",
-  "description": "Resolve DID documents around ethereum addresses",
-  "main": "lib/index.umd.js",
+  "description": "Resolve DID documents for ethereum addresses and public keys",
   "source": "src/index.ts",
-  "module": "lib/index.modern.js",
+  "main": "lib/index.js",
+  "module": "lib/index.module.js",
+  "unpkg": "lib/index.umd.js",
   "types": "lib/index.d.ts",
+  "umd:main": "lib/index.umd.js",
   "repository": {
     "type": "git",
-    "url": "https://github.com/decentralized-identity/ethr-did-resolver.git"
+    "url": "git@github.com:decentralized-identity/ethr-did-resolver.git"
   },
   "files": [
-    "index.d.ts",
-    "dist",
     "lib",
-    "contracts",
     "src",
-    "LICENSE",
-    "babel-preset.js",
-    ".babelrc"
+    "LICENSE"
   ],
-  "author": "Pelle Braendgaard <pelle.braendgaard@consensys.net>",
+  "author": "Pelle Braendgaard",
   "contributors": [
     "Mircea Nistor <mircea.nistor@mesh.xyz>"
   ],
   "license": "Apache-2.0",
   "keywords": [
+    "did:ethr",
     "DID",
     "DID document",
     "PKI",
     "resolver",
-    "resolve",
     "Verifiable Credential",
     "W3C",
     "ethereum",
@@ -39,18 +36,32 @@
     "registry",
     "EIP1056",
     "EcdsaSecp256k1RecoveryMethod2020",
-    "Ed25519VerificationKey2018",
-    "did:ethr"
+    "EcdsaSecp256k1VerificationKey2019",
+    "Ed25519VerificationKey2018"
   ],
   "scripts": {
-    "build": "microbundle",
-    "lint": "eslint \"src/**/*.[jt]s\"",
-    "format": "prettier --write \"src/**/*.[jt]s\"",
-    "prepare": "npm run build",
-    "prepublishOnly": "npm test && npm run build",
-    "release": "semantic-release --debug",
     "test": "jest",
-    "test-with-coverage": "jest --coverage && codecov"
+    "test:ci": "jest --coverage && codecov",
+    "build:js": "microbundle --compress=false",
+    "build": "yarn lint && yarn build:js && yarn test",
+    "format": "prettier --write \"src/**/*.[jt]s\"",
+    "lint": "eslint --ignore-pattern \"src/**/*.test.[jt]s\" \"src/**/*.[jt]s\"",
+    "prepare": "yarn build",
+    "prepublishOnly": "yarn test:ci && yarn format && yarn lint",
+    "release": "semantic-release --debug"
+  },
+  "jest": {
+    "clearMocks": true,
+    "collectCoverageFrom": [
+      "src/**/*.{ts,tsx}",
+      "!src/**/*.d.ts",
+      "!**/node_modules/**",
+      "!**/__tests__/**"
+    ],
+    "testEnvironment": "node",
+    "testMatch": [
+      "**/__tests__/**/*.test.[jt]s"
+    ]
   },
   "devDependencies": {
     "@babel/core": "7.14.6",
@@ -65,6 +76,8 @@
     "codecov": "3.8.2",
     "eslint": "7.29.0",
     "eslint-config-prettier": "8.3.0",
+    "eslint-plugin-jest": "24.3.6",
+    "eslint-plugin-prettier": "3.4.0",
     "ganache-cli": "6.12.2",
     "jest": "27.0.4",
     "microbundle": "0.13.3",

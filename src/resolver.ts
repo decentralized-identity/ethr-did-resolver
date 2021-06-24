@@ -81,8 +81,7 @@ export class EthrDidResolver {
     const provider = contract.provider
     const hexChainId = networkId.startsWith('0x') ? networkId : knownNetworks[networkId]
     //TODO: this can be used to check if the configuration is ok
-    const chainIdFromNetwork = (await provider.getNetwork()).chainId
-    const chainId = hexChainId ? BigNumber.from(hexChainId).toNumber() : chainIdFromNetwork
+    const chainId = hexChainId ? BigNumber.from(hexChainId).toNumber() : (await provider.getNetwork()).chainId
     const history: ERC1056Event[] = []
     const { address, publicKey } = interpretIdentifier(identity)
     const controllerKey = publicKey
