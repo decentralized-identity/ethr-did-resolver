@@ -1,7 +1,7 @@
 {
-  "name": "ethr-did-resolver",
-  "version": "4.3.4",
-  "description": "Resolve DID documents for ethereum addresses and public keys",
+  "name": "ens-did-resolver",
+  "version": "0.1.0",
+  "description": "Resolve DID documents for ENS",
   "source": "src/index.ts",
   "main": "lib/index.js",
   "module": "lib/index.module.js",
@@ -10,17 +10,15 @@
   "umd:main": "lib/index.umd.js",
   "repository": {
     "type": "git",
-    "url": "git@github.com:decentralized-identity/ethr-did-resolver.git"
+    "url": "git@github.com:veramolabs/ens-did-resolver.git"
   },
   "files": [
     "lib",
     "src",
     "LICENSE"
   ],
-  "author": "Pelle Braendgaard",
-  "contributors": [
-    "Mircea Nistor <mircea.nistor@mesh.xyz>"
-  ],
+  "author": "Oliver Terbu <oliver.terbu@mesh.xyz>",
+  "contributors": [],
   "license": "Apache-2.0",
   "keywords": [
     "did:ethr",
@@ -33,11 +31,7 @@
     "ethereum",
     "ethereumAddress",
     "blockchainAccountId",
-    "registry",
-    "EIP1056",
-    "EcdsaSecp256k1RecoveryMethod2020",
-    "EcdsaSecp256k1VerificationKey2019",
-    "Ed25519VerificationKey2018"
+    "ENS"
   ],
   "scripts": {
     "test": "jest",
@@ -86,6 +80,7 @@
     "typescript": "4.3.4"
   },
   "dependencies": {
+    "@ensdomains/ensjs": "^2.0.1",
     "@ethersproject/abi": "^5.1.0",
     "@ethersproject/abstract-signer": "^5.1.0",
     "@ethersproject/address": "^5.1.0",
