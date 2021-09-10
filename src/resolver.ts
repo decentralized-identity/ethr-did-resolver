@@ -54,85 +54,51 @@ export function getResolver(): Record<string, DIDResolver> {
       }
     }
 
-    const services: ServiceEndpoint[] = await ens.name(parsed.id).getText('org.w3c.did.service')      
+    const getEnsRecord = async (ens, ensname: string, name: string): Promise<any> => {
+      let parsed = null
+      const entry = await ens.name(ensname).getText(name)
+      if (entry) {
+        try {
+          parsed = JSON.parse(unescape(entry))
+        } catch(e) {
+          return null
+        }
+      }
+      return parsed
+    }
+
+    const filterValidVerificationMethods = (current: (string | VerificationMethod)[], all: VerificationMethod[]) : (string | VerificationMethod)[] => {
+      return current.filter(e => (typeof e === 'string' || e instanceof String) && e.startsWith('#') && all?.some(b => b.id === e))
+    }
+
+    const services: ServiceEndpoint[] = await getEnsRecord(ens, parsed.id, 'org.w3c.did.service')
     if (services) {
-      console.log('service stuff')
+      if (didDocument) {
+        didDocument.service = didDocument.service?.concat(services)
+      }
+    }
+    
+    const verificationMethods = await getEnsRecord(ens, parsed.id, 'org.w3c.did.verificationMethod')
+    if (verificationMethods) {      
+      if (didDocument) {
+        didDocument.service = didDocument.service?.concat(services)
+      }
     }
 
-    const stuff = await ens.name(parsed.id).getText('org.w3c.did.verificationMethod')
-    console.log('stuff: ' + stuff)
-
-    const verificationMethods: VerificationMethod[] = JSON.parse('{' + stuff + '}')
-    if (verificationMethods) {
-      console.log('verificationMethod:' + JSON.stringify(verificationMethods))
-    }
-
-    const filterValidVerificationMethods = (current: (string | VerificationMethod)[], all: (string | VerificationMethod)[]) : (string | VerificationMethod)[] => {
-      return current.filter(e => (typeof e === 'string' || e instanceof String) && e.startsWith('#') && verificationMethods?.some(all => all.id === e))
-    }
-
-    // let verificationMethod: (string | VerificationMethod)[] = await ens.name(parsed.id).getText('org.w3c.did.authentication')      
-    // if (verificationMethod) {
-    //   verificationMethod = filterValidVerificationMethods(verificationMethod, verificationMethods)
-    //   if (didDocument && verificationMethod) {
-    //     didDocument.authentication = didDocument.authentication?.concat(verificationMethod)
-    //   }
-
-    //   console.log('authentication:' + JSON.stringify(verificationMethod))
-    // }
-
-    let verificationMethod = await ens.name(parsed.id).getText('org.w3c.did.keyAgreement')      
-    if (verificationMethod) {
-      if (typeof verificationMethod[0] === 'string') {
-        console.log('1')
+    const relationships = ['keyAgreement', 'assertionMethod', 'authentication', 'capabilityInvocation', 'capabililtyDelegation']
+    await relationships.reduce(async (memo, varient) => {
+      await memo;
+      try {      
+        const verificationMethod: VerificationMethod[] = await getEnsRecord(ens, parsed.id, `org.w3c.did.${varient}`)
+        if (verificationMethod) {
+          if (didDocument) {
+            didDocument[varient] = didDocument[varient]?.concat(filterValidVerificationMethods(verificationMethod, verificationMethods))
+          }
+        }
+      } catch (e) {
+        console.log('error: ' + e)
       }
-      if (verificationMethod[0] instanceof String) {
-        console.log('2')
-      }
-      if (verificationMethod[0].startsWith('#')) {
-        console.log('3')
-      }
-      if (verificationMethods?.some(item => item.id === verificationMethod[0])) {
-        console.log('4')
-      }      
-
-      verificationMethod = filterValidVerificationMethods(verificationMethod, verificationMethods)
-      if (didDocument && verificationMethod) {
-        didDocument.keyAgreement = didDocument.keyAgreement?.concat(verificationMethod)
-      }
-
-      console.log('keyAgreement:' + JSON.stringify(verificationMethod))
-    }
-
-    // verificationMethod = await ens.name(parsed.id).getText('org.w3c.did.assertionMethod')      
-    // if (verificationMethod) {      
-    //   verificationMethod = filterValidVerificationMethods(verificationMethod, verificationMethods)
-    //   if (didDocument && verificationMethod) {
-    //     didDocument.assertionMethod = didDocument.assertionMethod?.concat(verificationMethod)
-    //   }
-
-    //   console.log('assertionMethod:' + JSON.stringify(verificationMethod))
-    // }
-
-    // verificationMethod = await ens.name(parsed.id).getText('org.w3c.did.capabilityInvocation')      
-    // if (verificationMethod) {
-    //   verificationMethod = filterValidVerificationMethods(verificationMethod, verificationMethods)
-    //   if (didDocument && verificationMethod) {
-    //     didDocument.capabilityInvocation = didDocument.capabilityInvocation?.concat(verificationMethod)
-    //   }
-
-    //   console.log('capabilitiesInvocation:' + JSON.stringify(verificationMethod))
-    // }
-
-    // verificationMethod = await ens.name(parsed.id).getText('org.w3c.did.capabilityDelegation')      
-    // if (verificationMethod) {
-    //   verificationMethod = filterValidVerificationMethods(verificationMethod, verificationMethods)
-    //   if (didDocument && verificationMethod) {
-    //     didDocument.capabilityDelegation = didDocument.capabilityDelegation?.concat(verificationMethod)
-    //   }
-
-    //   console.log('capabilitiesDelegation:' + JSON.stringify(verificationMethod))
-    // }
+    }, Promise.resolve())
 
     const contentType =
       typeof didDocument?.['@context'] !== 'undefined' ? 'application/did+ld+json' : 'application/did+json'
