@@ -1,15 +1,13 @@
 import { BigNumber } from '@ethersproject/bignumber'
-import { Contract, ContractFactory } from '@ethersproject/contracts'
 import { InfuraProvider, JsonRpcProvider, Provider } from '@ethersproject/providers'
-import DidRegistryContract from 'ethr-did-registry'
-import { DEFAULT_REGISTRY_ADDRESS, knownInfuraNetworks, knownNetworks } from './helpers'
+import { knownInfuraNetworks, knownNetworks } from './helpers'
 
 /**
  * A configuration entry for an ethereum network
  * It should contain at least one of `name` or `chainId` AND one of `provider`, `web3`, or `rpcUrl`
  *
  * @example ```js
- * { name: 'development', registry: '0x9af37603e98e0dc2b855be647c39abe984fc2445', rpcUrl: 'http://127.0.0.1:8545/' }
+ * { name: 'development', rpcUrl: 'http://127.0.0.1:8545/' }
  * { name: 'goerli', chainId: 5, provider: new InfuraProvider('goerli') }
  * { name: 'rinkeby', provider: new AlchemyProvider('rinkeby') }
  * { name: 'rsk:testnet', chainId: '0x1f', rpcUrl: 'https://public-node.testnet.rsk.co' }
@@ -19,7 +17,6 @@ export interface ProviderConfiguration {
   name?: string
   provider?: Provider
   rpcUrl?: string
-  registry?: string
   chainId?: string | number
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   web3?: any
@@ -37,7 +34,7 @@ export interface InfuraConfiguration {
 
 export type ConfigurationOptions = MultiProviderConfiguration | InfuraConfiguration
 
-export type ConfiguredNetworks = Record<string, Contract>
+export type ConfiguredNetworks = Record<string, Provider>
 
 function configureNetworksWithInfura(projectId?: string): ConfiguredNetworks {
   if (!projectId) {
@@ -53,7 +50,7 @@ function configureNetworksWithInfura(projectId?: string): ConfiguredNetworks {
   return configureNetworks({ networks })
 }
 
-export function getContractForNetwork(conf: ProviderConfiguration): Contract {
+export function getProviderForNetwork(conf: ProviderConfiguration): Provider {
   let provider: Provider = conf.provider || conf.web3?.currentProvider
   if (!provider) {
     if (conf.rpcUrl) {
@@ -65,10 +62,7 @@ export function getContractForNetwork(conf: ProviderConfiguration): Contract {
       throw new Error(`invalid_config: No web3 provider could be determined for network ${conf.name || conf.chainId}`)
     }
   }
-  const contract: Contract = ContractFactory.fromSolidity(DidRegistryContract)
-    .attach(conf.registry || DEFAULT_REGISTRY_ADDRESS)
-    .connect(provider)
-  return contract
+  return provider
 }
 
 function configureNetwork(net: ProviderConfiguration): ConfiguredNetworks {
@@ -76,12 +70,12 @@ function configureNetwork(net: ProviderConfiguration): ConfiguredNetworks {
   const chainId = net.chainId || knownNetworks[net.name || '']
   if (chainId) {
     if (net.name) {
-      networks[net.name] = getContractForNetwork(net)
+      networks[net.name] = getProviderForNetwork(net)
     }
     const id = typeof chainId === 'number' ? `0x${chainId.toString(16)}` : chainId
-    networks[id] = getContractForNetwork(net)
+    networks[id] = getProviderForNetwork(net)
   } else if (net.provider || net.web3 || net.rpcUrl) {
-    networks[net.name || ''] = getContractForNetwork(net)
+    networks[net.name || ''] = getProviderForNetwork(net)
   }
   return networks
 }
@@ -96,14 +90,14 @@ function configureNetworks(conf: MultiProviderConfiguration): ConfiguredNetworks
 }
 
 /**
- * Generates a configuration that maps ethereum network names and chainIDs to the respective ERC1056 contracts deployed on them.
- * @returns a record of ERC1056 `Contract` instances
+ * Generates a configuration that maps ethereum network names and chainIDs to the respective web3 providers.
+ * @returns a record of providers
  * @param conf configuration options for the resolver. An array of network details.
  * Each network entry should contain at least one of `name` or `chainId` AND one of `provider`, `web3`, or `rpcUrl`
  * For convenience, you can also specify an `infuraProjectId` which will create a mapping for all the networks supported by https://infura.io.
  * @example ```js
  * [
- *   { name: 'development', registry: '0x9af37603e98e0dc2b855be647c39abe984fc2445', rpcUrl: 'http://127.0.0.1:8545/' },
+ *   { name: 'development', rpcUrl: 'http://127.0.0.1:8545/' },
  *   { name: 'goerli', chainId: 5, provider: new InfuraProvider('goerli') },
  *   { name: 'rinkeby', provider: new AlchemyProvider('rinkeby') },
  *   { name: 'rsk:testnet', chainId: '0x1f', rpcUrl: 'https://public-node.testnet.rsk.co' },
