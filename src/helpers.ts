@@ -4,50 +4,6 @@ export const identifierMatcher = /^(.*:)?(.*\.eth)$/
 export const nullAddress = '0x0000000000000000000000000000000000000000'
 export const DEFAULT_JSON_RPC = 'http://127.0.0.1:8545/'
 
-export enum verificationMethodTypes {
-  EcdsaSecp256k1VerificationKey2019 = 'EcdsaSecp256k1VerificationKey2019',
-  EcdsaSecp256k1RecoveryMethod2020 = 'EcdsaSecp256k1RecoveryMethod2020',
-  Ed25519VerificationKey2018 = 'Ed25519VerificationKey2018',
-  RSAVerificationKey2018 = 'RSAVerificationKey2018',
-  X25519KeyAgreementKey2019 = 'X25519KeyAgreementKey2019',
-}
-
-export enum eventNames {
-  DIDOwnerChanged = 'DIDOwnerChanged',
-  DIDAttributeChanged = 'DIDAttributeChanged',
-  DIDDelegateChanged = 'DIDDelegateChanged',
-}
-
-export interface LegacyVerificationMethod extends VerificationMethod {
-  /**@deprecated */
-  publicKeyHex?: string
-  /**@deprecated */
-  publicKeyBase64?: string
-  /**@deprecated */
-  publicKeyPem?: string
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  [x: string]: any
-}
-
-export const legacyAttrTypes: Record<string, string> = {
-  sigAuth: 'SignatureAuthentication2018',
-  veriKey: 'VerificationKey2018',
-  enc: 'KeyAgreementKey2019',
-}
-
-export const legacyAlgoMap: Record<string, string> = {
-  /**@deprecated */
-  Secp256k1VerificationKey2018: verificationMethodTypes.EcdsaSecp256k1VerificationKey2019,
-  /**@deprecated */
-  Ed25519SignatureAuthentication2018: verificationMethodTypes.Ed25519VerificationKey2018,
-  /**@deprecated */
-  Secp256k1SignatureAuthentication2018: verificationMethodTypes.EcdsaSecp256k1VerificationKey2019,
-  //keep legacy mapping
-  RSAVerificationKey2018: verificationMethodTypes.RSAVerificationKey2018,
-  Ed25519VerificationKey2018: verificationMethodTypes.Ed25519VerificationKey2018,
-  X25519KeyAgreementKey2019: verificationMethodTypes.X25519KeyAgreementKey2019,
-}
-
 export const knownInfuraNetworks: Record<string, string> = {
   mainnet: '0x1',
   ropsten: '0x3',
