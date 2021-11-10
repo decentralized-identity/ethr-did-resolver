@@ -73,8 +73,8 @@ describe('ethrResolver', () => {
 
     it('resolves document with publicKey identifier', async () => {
       expect.assertions(1)
-      const pubKey = '0x0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798'
-      const pubdid = `did:ethr:dev:${pubKey}`
+      const pubKey = '0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798'
+      const pubdid = `did:ethr:dev:0x${pubKey}`
       await expect(didResolver.resolve(pubdid)).resolves.toEqual({
         didDocumentMetadata: {},
         didResolutionMetadata: { contentType: 'application/did+ld+json' },
@@ -136,8 +136,8 @@ describe('ethrResolver', () => {
 
     it('changing controller invalidates the publicKey as identifier', async () => {
       expect.assertions(3)
-      const pubKey = '0x0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798'
-      const pubdid = `did:ethr:dev:${pubKey}`
+      const pubKey = '0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798'
+      const pubdid = `did:ethr:dev:0x${pubKey}`
       const { didDocument } = await didResolver.resolve(pubdid)
       expect(didDocument).toEqual({
         '@context': [

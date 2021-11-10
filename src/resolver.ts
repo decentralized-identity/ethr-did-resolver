@@ -28,6 +28,7 @@ import {
   DIDOwnerChanged,
   knownNetworks,
   Errors,
+  strip0x,
 } from './helpers'
 import { logDecoder } from './logParser'
 import * as qs from 'querystring'
@@ -198,7 +199,7 @@ export class EthrDidResolver {
                   case null:
                   case undefined:
                   case 'hex':
-                    pk.publicKeyHex = currentEvent.value.slice(2)
+                    pk.publicKeyHex = strip0x(currentEvent.value)
                     break
                   case 'base64':
                     pk.publicKeyBase64 = Buffer.from(currentEvent.value.slice(2), 'hex').toString('base64')
@@ -210,7 +211,7 @@ export class EthrDidResolver {
                     pk.publicKeyPem = Buffer.from(currentEvent.value.slice(2), 'hex').toString()
                     break
                   default:
-                    pk.value = currentEvent.value
+                    pk.value = strip0x(currentEvent.value)
                 }
                 pks[eventIndex] = pk
                 if (match[4] === 'sigAuth') {
@@ -271,7 +272,7 @@ export class EthrDidResolver {
         id: `${did}#controllerKey`,
         type: verificationMethodTypes.EcdsaSecp256k1VerificationKey2019,
         controller: did,
-        publicKeyHex: controllerKey,
+        publicKeyHex: strip0x(controllerKey),
       })
       authentication.push(`${did}#controllerKey`)
     }
@@ -384,7 +385,8 @@ export class EthrDidResolver {
         didResolutionMetadata: { contentType: 'application/did+ld+json' },
         didDocument,
       }
-    } catch (e) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (e: any) {
       return {
         didResolutionMetadata: {
           error: Errors.notFound,

@@ -81,6 +81,10 @@ export const legacyAlgoMap: Record<string, string> = {
   X25519KeyAgreementKey2019: verificationMethodTypes.X25519KeyAgreementKey2019,
 }
 
+export function strip0x(input: string): string {
+  return input.startsWith('0x') ? input.slice(2) : input
+}
+
 export function bytes32toString(input: bytes32 | Uint8Array): string {
   const buff: Buffer = typeof input === 'string' ? Buffer.from(input.slice(2), 'hex') : Buffer.from(input)
   return buff.toString('utf8').replace(/\0+$/, '')
