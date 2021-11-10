@@ -541,6 +541,7 @@ describe('ethrResolver', () => {
           ],
           authentication: [`${keyAgrDid}#controller`],
           assertionMethod: [`${keyAgrDid}#controller`, `${keyAgrDid}#delegate-1`],
+          keyAgreement: [`${keyAgrDid}#delegate-1`]
         })
       })
     })
