@@ -132,6 +132,7 @@ export class EthrDidResolver {
     let controller = address
 
     const authentication = [`${did}#controller`]
+    const keyAgreement: string[] = []
 
     let versionId = 0
     let nextVersionId = Number.POSITIVE_INFINITY
@@ -139,6 +140,7 @@ export class EthrDidResolver {
     let delegateCount = 0
     let serviceCount = 0
     const auth: Record<string, string> = {}
+    const keyAgreementRefs: Record<string, string> = {}
     const pks: Record<string, VerificationMethod> = {}
     const services: Record<string, ServiceEndpoint> = {}
     for (const event of history) {
@@ -213,6 +215,8 @@ export class EthrDidResolver {
                 pks[eventIndex] = pk
                 if (match[4] === 'sigAuth') {
                   auth[eventIndex] = pk.id
+                } else if (match[4] === 'enc') {
+                  keyAgreementRefs[eventIndex] = pk.id
                 }
                 break
               }
@@ -279,6 +283,9 @@ export class EthrDidResolver {
     }
     if (Object.values(services).length > 0) {
       didDocument.service = Object.values(services)
+    }
+    if (Object.values(keyAgreementRefs).length > 0) {
+      didDocument.keyAgreement = keyAgreement.concat(Object.values(keyAgreementRefs))
     }
     didDocument.assertionMethod = [...(didDocument.verificationMethod?.map((pk) => pk.id) || [])]
 
