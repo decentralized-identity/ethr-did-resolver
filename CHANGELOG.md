@@ -1,3 +1,10 @@
+## [4.3.5](https://github.com/decentralized-identity/ethr-did-resolver/compare/4.3.4...4.3.5) (2021-11-10)
+
+
+### Bug Fixes
+
+* reference /enc/ keys in `keyAgreement` section of DID doc ([#146](https://github.com/decentralized-identity/ethr-did-resolver/issues/146)) ([5d507ef](https://github.com/decentralized-identity/ethr-did-resolver/commit/5d507ef3d31014fb298f33219d1ce9ff71a0b566)), closes [#145](https://github.com/decentralized-identity/ethr-did-resolver/issues/145)
+
 ## [4.3.4](https://github.com/decentralized-identity/ethr-did-resolver/compare/4.3.3...4.3.4) (2021-06-24)
 
 

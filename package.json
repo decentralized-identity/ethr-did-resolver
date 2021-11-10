@@ -1,6 +1,6 @@
 {
   "name": "ethr-did-resolver",
-  "version": "4.3.4",
+  "version": "4.3.5",
   "description": "Resolve DID documents for ethereum addresses and public keys",
   "source": "src/index.ts",
   "main": "lib/index.js",
