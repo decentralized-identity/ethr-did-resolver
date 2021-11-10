@@ -1,3 +1,15 @@
+# [5.0.0](https://github.com/decentralized-identity/ethr-did-resolver/compare/4.3.5...5.0.0) (2021-11-10)
+
+
+### Bug Fixes
+
+* remove 0x prefix from publicKeyHex ([#147](https://github.com/decentralized-identity/ethr-did-resolver/issues/147)) ([063ee67](https://github.com/decentralized-identity/ethr-did-resolver/commit/063ee67a6107f325edff34b7aa89daa26b33a8c5)), closes [#140](https://github.com/decentralized-identity/ethr-did-resolver/issues/140)
+
+
+### BREAKING CHANGES
+
+* `publicKeyHex` values in the DID document no longer contain a `0x` prefix
+
 ## [4.3.5](https://github.com/decentralized-identity/ethr-did-resolver/compare/4.3.4...4.3.5) (2021-11-10)
 
 
