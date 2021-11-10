@@ -1,3 +1,10 @@
+## [5.0.1](https://github.com/decentralized-identity/ethr-did-resolver/compare/5.0.0...5.0.1) (2021-11-10)
+
+
+### Bug Fixes
+
+* **deps:** bump did-resolver to 3.1.3+ ([0ddde4b](https://github.com/decentralized-identity/ethr-did-resolver/commit/0ddde4b7ec3946bee22cc29e42dbba2dedd06585))
+
 # [5.0.0](https://github.com/decentralized-identity/ethr-did-resolver/compare/4.3.5...5.0.0) (2021-11-10)
 
 
