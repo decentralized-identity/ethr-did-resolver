@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: MIT */
+
 pragma solidity ^0.8.6;
 
 contract EthereumDIDRegistry {
@@ -8,7 +10,7 @@ contract EthereumDIDRegistry {
   mapping(address => uint) public nonce;
 
   modifier onlyOwner(address identity, address actor) {
-    require (actor == identityOwner(identity));
+    require (actor == identityOwner(identity), "bad_actor");
     _;
   }
 
@@ -36,7 +38,7 @@ contract EthereumDIDRegistry {
 
   function identityOwner(address identity) public view returns(address) {
      address owner = owners[identity];
-     if (owner != 0x0000000000000000000000000000000000000000) {
+     if (owner != address(0x00)) {
        return owner;
      }
      return identity;
@@ -44,7 +46,7 @@ contract EthereumDIDRegistry {
 
   function checkSignature(address identity, uint8 sigV, bytes32 sigR, bytes32 sigS, bytes32 hash) internal returns(address) {
     address signer = ecrecover(hash, sigV, sigR, sigS);
-    require(signer == identityOwner(identity));
+    require(signer == identityOwner(identity), "bad_signature");
     nonce[signer]++;
     return signer;
   }
@@ -122,8 +124,8 @@ contract EthereumDIDRegistry {
     revokeAttribute(identity, msg.sender, name, value);
   }
 
- function revokeAttributeSigned(address identity, uint8 sigV, bytes32 sigR, bytes32 sigS, bytes32 name, bytes memory value) public {
-    bytes32 hash = keccak256(abi.encodePacked(bytes1(0x19), bytes1(0), this, nonce[identityOwner(identity)], identity, "revokeAttribute", name, value)); 
+  function revokeAttributeSigned(address identity, uint8 sigV, bytes32 sigR, bytes32 sigS, bytes32 name, bytes memory value) public {
+    bytes32 hash = keccak256(abi.encodePacked(bytes1(0x19), bytes1(0), this, nonce[identityOwner(identity)], identity, "revokeAttribute", name, value));
     revokeAttribute(identity, checkSignature(identity, sigV, sigR, sigS, hash), name, value);
   }
 

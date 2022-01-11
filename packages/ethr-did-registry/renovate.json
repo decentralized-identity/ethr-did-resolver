@@ -1,0 +1,13 @@
+{
+  "extends": ["config:base", "group:allNonMajor"],
+  "labels": ["maintenance"],
+  "automergeType": "branch",
+  "automerge": true,
+  "packageRules": [
+    {
+      "matchDepTypes": ["devDependencies"],
+      "groupName": "devDeps",
+      "schedule": ["before 5am on Monday"]
+    }
+  ]
+}
