@@ -1,3 +1,10 @@
+## [5.0.3](https://github.com/decentralized-identity/ethr-did-resolver/compare/5.0.2...5.0.3) (2022-01-13)
+
+
+### Bug Fixes
+
+* **deps:** remove querystring in favor of UrlSearchParams ([cd5e596](https://github.com/decentralized-identity/ethr-did-resolver/commit/cd5e596b688d73c4a47b2f59b19021d66e77679d))
+
 ## [5.0.2](https://github.com/decentralized-identity/ethr-did-resolver/compare/5.0.1...5.0.2) (2021-11-10)
 
 
