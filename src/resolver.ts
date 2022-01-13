@@ -31,7 +31,6 @@ import {
   strip0x,
 } from './helpers'
 import { logDecoder } from './logParser'
-import * as qs from 'querystring'
 
 export function getResolver(options: ConfigurationOptions): Record<string, DIDResolver> {
   return new EthrDidResolver(options).build()
@@ -322,8 +321,8 @@ export class EthrDidResolver {
     const networkId = !fullId[1] ? 'mainnet' : fullId[1].slice(0, -1)
     let blockTag: string | number = options.blockTag || 'latest'
     if (typeof parsed.query === 'string') {
-      const qParams = qs.decode(parsed.query)
-      blockTag = typeof qParams['versionId'] === 'string' ? qParams['versionId'] : blockTag
+      const qParams = new URLSearchParams(parsed.query)
+      blockTag = qParams.get('versionId') ?? blockTag
       try {
         blockTag = Number.parseInt(<string>blockTag)
       } catch (e) {
