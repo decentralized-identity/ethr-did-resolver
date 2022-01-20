@@ -43,10 +43,10 @@
     "test": "jest",
     "test:ci": "jest --coverage && codecov",
     "build:js": "microbundle --compress=false",
-    "build": "yarn lint && yarn build:js && yarn test",
+    "build": "yarn lint && yarn build:js",
     "format": "prettier --write \"src/**/*.[jt]s\"",
     "lint": "eslint --ignore-pattern \"src/**/*.test.[jt]s\" \"src/**/*.[jt]s\"",
-    "prepublishOnly": "yarn build && yarn test:ci && yarn format && yarn lint",
+    "prepublishOnly": "yarn build:js && yarn test:ci && yarn format && yarn lint",
     "release": "semantic-release --debug"
   },
   "jest": {
@@ -77,7 +77,7 @@
     "eslint-config-prettier": "8.3.0",
     "eslint-plugin-jest": "25.3.4",
     "eslint-plugin-prettier": "4.0.0",
-    "ganache-cli": "6.12.2",
+    "ganache": "^7.0.0",
     "jest": "27.4.5",
     "microbundle": "0.14.2",
     "prettier": "2.5.1",

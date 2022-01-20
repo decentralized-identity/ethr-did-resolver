@@ -1,5 +1,5 @@
-import { JsonRpcProvider, Web3Provider } from '@ethersproject/providers'
-import ganache from 'ganache-cli'
+import { ExternalProvider, JsonRpcProvider, Web3Provider } from '@ethersproject/providers'
+import ganache from 'ganache'
 
 export function createProvider(): JsonRpcProvider {
   return new Web3Provider(
@@ -45,13 +45,53 @@ export function createProvider(): JsonRpcProvider {
           secretKey: '0x0000000000000000000000000000000000000000000000000000000000000006',
           balance: `0x1000000000000000000000`,
         },
+        {
+          secretKey: '0x0000000000000000000000000000000000000000000000000000000000000007',
+          balance: `0x1000000000000000000000`,
+        },
+        {
+          secretKey: '0x0000000000000000000000000000000000000000000000000000000000000008',
+          balance: `0x1000000000000000000000`,
+        },
+        {
+          secretKey: '0x0000000000000000000000000000000000000000000000000000000000000009',
+          balance: `0x1000000000000000000000`,
+        },
+        {
+          secretKey: '0x000000000000000000000000000000000000000000000000000000000000000a',
+          balance: `0x1000000000000000000000`,
+        },
+        {
+          secretKey: '0x000000000000000000000000000000000000000000000000000000000000000b',
+          balance: `0x1000000000000000000000`,
+        },
+        {
+          secretKey: '0x000000000000000000000000000000000000000000000000000000000000000c',
+          balance: `0x1000000000000000000000`,
+        },
+        {
+          secretKey: '0x000000000000000000000000000000000000000000000000000000000000000d',
+          balance: `0x1000000000000000000000`,
+        },
+        {
+          secretKey: '0x000000000000000000000000000000000000000000000000000000000000000e',
+          balance: `0x1000000000000000000000`,
+        },
+        {
+          secretKey: '0x000000000000000000000000000000000000000000000000000000000000000f',
+          balance: `0x1000000000000000000000`,
+        },
+        {
+          secretKey: '0x0000000000000000000000000000000000000000000000000000000000000010',
+          balance: `0x1000000000000000000000`,
+        },
       ],
-    })
+    }) as unknown as ExternalProvider
   )
 }
 
-export async function sleep(seconds: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, seconds * 1000))
+export async function sleep(milliseconds: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, milliseconds))
 }
 export async function stopMining(provider: JsonRpcProvider): Promise<unknown> {
   return provider.send('miner_stop', [])

@@ -12,7 +12,7 @@ jest.setTimeout(30000)
 describe('ethrResolver', () => {
   // let registry, accounts, did, identity, controller, delegate1, delegate2, ethr, didResolver
   let registryContract: Contract,
-    accounts,
+    accounts: string[],
     did: string,
     identity: string,
     controller: string,
@@ -108,11 +108,11 @@ describe('ethrResolver', () => {
   describe('controller changed', () => {
     it('resolves document', async () => {
       expect.assertions(1)
+      const blockHeightBeforeChange = (await web3Provider.getBlock('latest')).number
       await new EthrDidController(identity, registryContract).changeOwner(controller, { from: identity })
       const result = await didResolver.resolve(did)
-      delete result.didDocumentMetadata.updated
       expect(result).toEqual({
-        didDocumentMetadata: { versionId: '2' },
+        didDocumentMetadata: { versionId: `${blockHeightBeforeChange + 1}`, updated: expect.anything() },
         didResolutionMetadata: { contentType: 'application/did+ld+json' },
         didDocument: {
           '@context': [
@@ -165,13 +165,13 @@ describe('ethrResolver', () => {
     describe('add signing delegate', () => {
       it('resolves document', async () => {
         expect.assertions(1)
+        const blockHeightBeforeChange = (await web3Provider.getBlock('latest')).number
         await new EthrDidController(identity, registryContract).addDelegate('veriKey', delegate1, 86401, {
           from: controller,
         })
         const result = await didResolver.resolve(did)
-        delete result.didDocumentMetadata.updated
         await expect(result).toEqual({
-          didDocumentMetadata: { versionId: '3' },
+          didDocumentMetadata: { versionId: `${blockHeightBeforeChange + 1}`, updated: expect.anything() },
           didResolutionMetadata: { contentType: 'application/did+ld+json' },
           didDocument: {
             '@context': [
@@ -203,14 +203,13 @@ describe('ethrResolver', () => {
     describe('add auth delegate', () => {
       it('resolves document', async () => {
         expect.assertions(1)
+        const blockHeightBeforeChange = (await web3Provider.getBlock('latest')).number
         await new EthrDidController(identity, registryContract).addDelegate('sigAuth', delegate2, 1, {
           from: controller,
         })
         const result = await didResolver.resolve(did)
-        //don't compare against hardcoded timestamps
-        delete result.didDocumentMetadata.updated
         expect(result).toEqual({
-          didDocumentMetadata: { versionId: '4' },
+          didDocumentMetadata: { versionId: `${blockHeightBeforeChange + 1}`, updated: expect.anything() },
           didResolutionMetadata: { contentType: 'application/did+ld+json' },
           didDocument: {
             '@context': [
@@ -249,18 +248,13 @@ describe('ethrResolver', () => {
       it('resolves document', async () => {
         expect.assertions(1)
         //key validity was set to less than 2 seconds
-        await sleep(4)
+        await sleep(4000)
         const result = await didResolver.resolve(did)
-        //don't compare against hardcoded timestamps
-        delete result.didDocumentMetadata.updated
         expect(result).toEqual({
-          didDocumentMetadata: { versionId: '4' },
-          didResolutionMetadata: { contentType: 'application/did+ld+json' },
+          didDocumentMetadata: expect.anything(),
+          didResolutionMetadata: expect.anything(),
           didDocument: {
-            '@context': [
-              'https://www.w3.org/ns/did/v1',
-              'https://identity.foundation/EcdsaSecp256k1RecoverySignature2020/lds-ecdsa-secp256k1-recovery2020-0.0.jsonld',
-            ],
+            '@context': expect.anything(),
             id: did,
             verificationMethod: [
               {
@@ -286,21 +280,17 @@ describe('ethrResolver', () => {
     describe('revokes delegate', () => {
       it('resolves document', async () => {
         expect.assertions(1)
+        const blockHeightBeforeChange = (await web3Provider.getBlock('latest')).number
         await new EthrDidController(identity, registryContract).revokeDelegate('veriKey', delegate1, {
           from: controller,
         })
-        await sleep(1)
+        await sleep(1000)
         const result = await didResolver.resolve(did)
-        //don't compare against hardcoded timestamps
-        delete result.didDocumentMetadata.updated
         expect(result).toEqual({
-          didDocumentMetadata: { versionId: '5' },
-          didResolutionMetadata: { contentType: 'application/did+ld+json' },
+          didDocumentMetadata: { versionId: `${blockHeightBeforeChange + 1}`, updated: expect.anything() },
+          didResolutionMetadata: expect.anything(),
           didDocument: {
-            '@context': [
-              'https://www.w3.org/ns/did/v1',
-              'https://identity.foundation/EcdsaSecp256k1RecoverySignature2020/lds-ecdsa-secp256k1-recovery2020-0.0.jsonld',
-            ],
+            '@context': expect.anything(),
             id: did,
             verificationMethod: [
               {
@@ -320,20 +310,16 @@ describe('ethrResolver', () => {
     describe('re-add auth delegate', () => {
       it('resolves document', async () => {
         expect.assertions(1)
+        const blockHeightBeforeChange = (await web3Provider.getBlock('latest')).number
         await new EthrDidController(identity, registryContract).addDelegate('sigAuth', delegate2, 86402, {
           from: controller,
         })
         const result = await didResolver.resolve(did)
-        //don't compare against hardcoded timestamps
-        delete result.didDocumentMetadata.updated
         expect(result).toEqual({
-          didDocumentMetadata: { versionId: '6' },
-          didResolutionMetadata: { contentType: 'application/did+ld+json' },
+          didDocumentMetadata: { versionId: `${blockHeightBeforeChange + 1}`, updated: expect.anything() },
+          didResolutionMetadata: expect.anything(),
           didDocument: {
-            '@context': [
-              'https://www.w3.org/ns/did/v1',
-              'https://identity.foundation/EcdsaSecp256k1RecoverySignature2020/lds-ecdsa-secp256k1-recovery2020-0.0.jsonld',
-            ],
+            '@context': expect.anything(),
             id: did,
             verificationMethod: [
               {
@@ -369,10 +355,7 @@ describe('ethrResolver', () => {
         )
         const { didDocument } = await didResolver.resolve(did)
         expect(didDocument).toEqual({
-          '@context': [
-            'https://www.w3.org/ns/did/v1',
-            'https://identity.foundation/EcdsaSecp256k1RecoverySignature2020/lds-ecdsa-secp256k1-recovery2020-0.0.jsonld',
-          ],
+          '@context': expect.anything(),
           id: did,
           verificationMethod: [
             {
@@ -409,10 +392,7 @@ describe('ethrResolver', () => {
         )
         const { didDocument } = await didResolver.resolve(did)
         expect(didDocument).toEqual({
-          '@context': [
-            'https://www.w3.org/ns/did/v1',
-            'https://identity.foundation/EcdsaSecp256k1RecoverySignature2020/lds-ecdsa-secp256k1-recovery2020-0.0.jsonld',
-          ],
+          '@context': expect.anything(),
           id: did,
           verificationMethod: [
             {
@@ -458,10 +438,7 @@ describe('ethrResolver', () => {
         )
         const { didDocument } = await didResolver.resolve(did)
         expect(didDocument).toEqual({
-          '@context': [
-            'https://www.w3.org/ns/did/v1',
-            'https://identity.foundation/EcdsaSecp256k1RecoverySignature2020/lds-ecdsa-secp256k1-recovery2020-0.0.jsonld',
-          ],
+          '@context': expect.anything(),
           id: did,
           verificationMethod: [
             {
@@ -520,10 +497,7 @@ describe('ethrResolver', () => {
         )
         const { didDocument } = await didResolver.resolve(keyAgrDid)
         expect(didDocument).toEqual({
-          '@context': [
-            'https://www.w3.org/ns/did/v1',
-            'https://identity.foundation/EcdsaSecp256k1RecoverySignature2020/lds-ecdsa-secp256k1-recovery2020-0.0.jsonld',
-          ],
+          '@context': expect.anything(),
           id: keyAgrDid,
           verificationMethod: [
             {
@@ -557,10 +531,7 @@ describe('ethrResolver', () => {
         )
         const { didDocument } = await didResolver.resolve(did)
         expect(didDocument).toEqual({
-          '@context': [
-            'https://www.w3.org/ns/did/v1',
-            'https://identity.foundation/EcdsaSecp256k1RecoverySignature2020/lds-ecdsa-secp256k1-recovery2020-0.0.jsonld',
-          ],
+          '@context': expect.anything(),
           id: did,
           verificationMethod: [
             {
@@ -627,10 +598,7 @@ describe('ethrResolver', () => {
       )
       const { didDocument } = await didResolver.resolve(did)
       expect(didDocument).toEqual({
-        '@context': [
-          'https://www.w3.org/ns/did/v1',
-          'https://identity.foundation/EcdsaSecp256k1RecoverySignature2020/lds-ecdsa-secp256k1-recovery2020-0.0.jsonld',
-        ],
+        '@context': expect.anything(),
         id: did,
         verificationMethod: [
           {
@@ -682,10 +650,7 @@ describe('ethrResolver', () => {
       )
       const { didDocument } = await didResolver.resolve(did)
       expect(didDocument).toEqual({
-        '@context': [
-          'https://www.w3.org/ns/did/v1',
-          'https://identity.foundation/EcdsaSecp256k1RecoverySignature2020/lds-ecdsa-secp256k1-recovery2020-0.0.jsonld',
-        ],
+        '@context': expect.anything(),
         id: did,
         verificationMethod: [
           {
@@ -728,10 +693,7 @@ describe('ethrResolver', () => {
       )
       const { didDocument } = await didResolver.resolve(did)
       expect(didDocument).toEqual({
-        '@context': [
-          'https://www.w3.org/ns/did/v1',
-          'https://identity.foundation/EcdsaSecp256k1RecoverySignature2020/lds-ecdsa-secp256k1-recovery2020-0.0.jsonld',
-        ],
+        '@context': expect.anything(),
         id: did,
         verificationMethod: [
           {
@@ -769,10 +731,7 @@ describe('ethrResolver', () => {
         )
         const { didDocument } = await didResolver.resolve(did)
         expect(didDocument).toEqual({
-          '@context': [
-            'https://www.w3.org/ns/did/v1',
-            'https://identity.foundation/EcdsaSecp256k1RecoverySignature2020/lds-ecdsa-secp256k1-recovery2020-0.0.jsonld',
-          ],
+          '@context': expect.anything(),
           id: did,
           verificationMethod: [
             {
@@ -791,126 +750,6 @@ describe('ethrResolver', () => {
           authentication: [`${did}#controller`, `${did}#delegate-4`],
           assertionMethod: [`${did}#controller`, `${did}#delegate-4`],
         })
-      })
-    })
-  })
-
-  describe('multiple events in one block', () => {
-    beforeAll(async () => {
-      const ethrDid = new EthrDidController(identity, registryContract)
-      await stopMining(web3Provider)
-      await Promise.all([
-        ethrDid.setAttribute(stringToBytes32('did/svc/TestService'), 'https://test.uport.me', 86406, {
-          from: controller,
-        }),
-        ethrDid.setAttribute(stringToBytes32('did/svc/TestService'), 'https://test.uport.me', 86407, {
-          from: controller,
-        }),
-        sleep(1).then(() => startMining(web3Provider)),
-      ])
-    })
-
-    it('resolves document', async () => {
-      expect.assertions(1)
-      const result = await didResolver.resolve(did)
-      //don't compare against hardcoded timestamps
-      delete result.didDocumentMetadata.updated
-      expect(result).toEqual({
-        didDocumentMetadata: { versionId: '16' },
-        didResolutionMetadata: {
-          contentType: 'application/did+ld+json',
-        },
-        didDocument: {
-          '@context': [
-            'https://www.w3.org/ns/did/v1',
-            'https://identity.foundation/EcdsaSecp256k1RecoverySignature2020/lds-ecdsa-secp256k1-recovery2020-0.0.jsonld',
-          ],
-          id: did,
-          verificationMethod: [
-            {
-              id: `${did}#controller`,
-              type: 'EcdsaSecp256k1RecoveryMethod2020',
-              controller: did,
-              blockchainAccountId: `${controller}@eip155:1337`,
-            },
-            {
-              id: `${did}#delegate-4`,
-              type: 'EcdsaSecp256k1RecoveryMethod2020',
-              controller: did,
-              blockchainAccountId: `${delegate2}@eip155:1337`,
-            },
-          ],
-          authentication: [`${did}#controller`, `${did}#delegate-4`],
-          assertionMethod: [`${did}#controller`, `${did}#delegate-4`],
-          service: [
-            {
-              id: `${did}#service-4`,
-              type: 'TestService',
-              serviceEndpoint: 'https://test.uport.me',
-            },
-          ],
-        },
-      })
-    })
-  })
-
-  describe('attribute revocation event in same block(-batch) as attribute creation', () => {
-    beforeAll(async () => {
-      const ethrDid = new EthrDidController(identity, registryContract)
-      await stopMining(web3Provider)
-      await Promise.all([
-        ethrDid.setAttribute(stringToBytes32('did/svc/TestService2'), 'https://test2.uport.me', 86408, {
-          from: controller,
-        }),
-        sleep(1).then(() =>
-          ethrDid.revokeAttribute(stringToBytes32('did/svc/TestService2'), 'https://test2.uport.me', {
-            from: controller,
-          })
-        ),
-        sleep(1).then(() => startMining(web3Provider)),
-      ])
-    })
-
-    it('resolves document', async () => {
-      expect.assertions(1)
-      const result = await didResolver.resolve(did)
-      //don't compare against hardcoded timestamps
-      delete result.didDocumentMetadata.updated
-      expect(result).toEqual({
-        didDocumentMetadata: { versionId: '18' },
-        didResolutionMetadata: {
-          contentType: 'application/did+ld+json',
-        },
-        didDocument: {
-          '@context': [
-            'https://www.w3.org/ns/did/v1',
-            'https://identity.foundation/EcdsaSecp256k1RecoverySignature2020/lds-ecdsa-secp256k1-recovery2020-0.0.jsonld',
-          ],
-          id: did,
-          verificationMethod: [
-            {
-              id: `${did}#controller`,
-              type: 'EcdsaSecp256k1RecoveryMethod2020',
-              controller: did,
-              blockchainAccountId: `${controller}@eip155:1337`,
-            },
-            {
-              id: `${did}#delegate-4`,
-              type: 'EcdsaSecp256k1RecoveryMethod2020',
-              controller: did,
-              blockchainAccountId: `${delegate2}@eip155:1337`,
-            },
-          ],
-          authentication: [`${did}#controller`, `${did}#delegate-4`],
-          assertionMethod: [`${did}#controller`, `${did}#delegate-4`],
-          service: [
-            {
-              id: `${did}#service-4`,
-              type: 'TestService',
-              serviceEndpoint: 'https://test.uport.me',
-            },
-          ],
-        },
       })
     })
   })
@@ -938,84 +777,75 @@ describe('ethrResolver', () => {
 
     it('adds sigAuth to authentication section (https://github.com/decentralized-identity/ethr-did-resolver/issues/95)', async () => {
       expect.assertions(1)
-      const identity = accounts[4]
-      const did = `did:ethr:dev:${identity}`
+      const address = accounts[4]
+      const identifier = `did:ethr:dev:${address}`
       const authPubKey = `31303866356238393330623164633235386162353765386630646362363932353963363162316166`
-      await new EthrDidController(identity, registryContract).setAttribute(
+      await new EthrDidController(identifier, registryContract).setAttribute(
         'did/pub/Ed25519/sigAuth/hex',
         `0x${authPubKey}`,
         86410,
-        { from: identity }
+        { from: address }
       )
-      const { didDocument } = await didResolver.resolve(did)
+      const { didDocument } = await didResolver.resolve(identifier)
       expect(didDocument).toEqual({
-        '@context': [
-          'https://www.w3.org/ns/did/v1',
-          'https://identity.foundation/EcdsaSecp256k1RecoverySignature2020/lds-ecdsa-secp256k1-recovery2020-0.0.jsonld',
-        ],
-        id: did,
+        '@context': expect.anything(),
+        id: identifier,
         verificationMethod: [
           {
-            id: `${did}#controller`,
-            controller: did,
+            id: `${identifier}#controller`,
+            controller: identifier,
             type: 'EcdsaSecp256k1RecoveryMethod2020',
-            blockchainAccountId: `${delegate2}@eip155:1337`,
+            blockchainAccountId: `${address}@eip155:1337`,
           },
           {
-            id: `${did}#delegate-1`,
-            controller: did,
+            id: `${identifier}#delegate-1`,
+            controller: identifier,
             type: `Ed25519VerificationKey2018`,
             publicKeyHex: authPubKey,
           },
         ],
-        authentication: [`${did}#controller`, `${did}#delegate-1`],
-        assertionMethod: [`${did}#controller`, `${did}#delegate-1`],
+        authentication: [`${identifier}#controller`, `${identifier}#delegate-1`],
+        assertionMethod: [`${identifier}#controller`, `${identifier}#delegate-1`],
       })
     })
 
     describe('Ed25519VerificationKey2018 in base58 (https://github.com/decentralized-identity/ethr-did-resolver/pull/106)', () => {
       it('resolves document', async () => {
         expect.assertions(1)
-        const identity = accounts[3]
-        const did = `did:ethr:dev:${identity}`
+        const address = accounts[3]
+        const identifier = `did:ethr:dev:${address}`
         const publicKeyHex = `b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71`
         const expectedPublicKeyBase58 = 'DV4G2kpBKjE6zxKor7Cj21iL9x9qyXb6emqjszBXcuhz'
-        await new EthrDidController(identity, registryContract).setAttribute(
+        const blockHeightBeforeChange = (await web3Provider.getBlock('latest')).number
+        await new EthrDidController(identifier, registryContract).setAttribute(
           'did/pub/Ed25519/veriKey/base58',
           `0x${publicKeyHex}`,
           86411,
-          { from: identity }
+          { from: address }
         )
-        const result = await didResolver.resolve(did)
-        //don't compare against hardcoded timestamps
-        delete result.didDocumentMetadata.updated
+        const result = await didResolver.resolve(identifier)
         expect(result).toEqual({
-          didDocumentMetadata: { versionId: '21' },
-          didResolutionMetadata: {
-            contentType: 'application/did+ld+json',
-          },
+          didDocumentMetadata: { versionId: `${blockHeightBeforeChange + 1}`, updated: expect.anything() },
+          didResolutionMetadata: expect.anything(),
           didDocument: {
-            '@context': [
-              'https://www.w3.org/ns/did/v1',
-              'https://identity.foundation/EcdsaSecp256k1RecoverySignature2020/lds-ecdsa-secp256k1-recovery2020-0.0.jsonld',
-            ],
-            id: did,
+            '@context': expect.anything(),
+            id: identifier,
             verificationMethod: [
               {
-                id: `${did}#controller`,
+                id: `${identifier}#controller`,
                 type: 'EcdsaSecp256k1RecoveryMethod2020',
-                controller: did,
-                blockchainAccountId: `${identity}@eip155:1337`,
+                controller: identifier,
+                blockchainAccountId: `${address}@eip155:1337`,
               },
               {
-                id: `${did}#delegate-1`,
+                id: `${identifier}#delegate-1`,
                 type: 'Ed25519VerificationKey2018',
-                controller: did,
+                controller: identifier,
                 publicKeyBase58: expectedPublicKeyBase58,
               },
             ],
-            authentication: [`${did}#controller`],
-            assertionMethod: [`${did}#controller`, `${did}#delegate-1`],
+            authentication: [`${identifier}#controller`],
+            assertionMethod: [`${identifier}#controller`, `${identifier}#delegate-1`],
           },
         })
       })
@@ -1023,24 +853,22 @@ describe('ethrResolver', () => {
 
     describe('can deactivate a DID (https://github.com/decentralized-identity/ethr-did-resolver/issues/83)', () => {
       it('resolves deactivated document', async () => {
-        expect.assertions(2)
-        const identity = accounts[6]
-        const did = `did:ethr:dev:${identity}`
-        await new EthrDidController(identity, registryContract).changeOwner(nullAddress, { from: identity })
-        const result = await didResolver.resolve(did)
-        expect(result.didDocumentMetadata.updated).toBeDefined()
-        delete result.didDocumentMetadata.updated
+        expect.assertions(1)
+        const address = accounts[6]
+        const identifier = `did:ethr:dev:${address}`
+        const blockHeightBeforeChange = (await web3Provider.getBlock('latest')).number
+        await new EthrDidController(identifier, registryContract).changeOwner(nullAddress, { from: address })
+        const result = await didResolver.resolve(identifier)
         expect(result).toEqual({
           didDocumentMetadata: {
             deactivated: true,
-            versionId: '22',
+            updated: expect.anything(),
+            versionId: `${blockHeightBeforeChange + 1}`,
           },
-          didResolutionMetadata: {
-            contentType: 'application/did+ld+json',
-          },
+          didResolutionMetadata: expect.anything(),
           didDocument: {
             '@context': 'https://www.w3.org/ns/did/v1',
-            id: did,
+            id: identifier,
             verificationMethod: [],
             authentication: [],
             assertionMethod: [],
@@ -1080,149 +908,16 @@ describe('ethrResolver', () => {
         })
       })
 
-      it('can resolve modified did with versionId=latest', async () => {
-        expect.assertions(2)
-        const identity = accounts[3]
-        const modifiedDid = `did:ethr:dev:${identity}`
-        const result = await didResolver.resolve(`${modifiedDid}?versionId=latest`)
-        expect(result.didDocumentMetadata.updated).toBeDefined()
-        delete result.didDocumentMetadata.updated
-        expect(result).toEqual({
-          didDocumentMetadata: { versionId: '21' },
-          didResolutionMetadata: {
-            contentType: 'application/did+ld+json',
-          },
-          didDocument: {
-            '@context': [
-              'https://www.w3.org/ns/did/v1',
-              'https://identity.foundation/EcdsaSecp256k1RecoverySignature2020/lds-ecdsa-secp256k1-recovery2020-0.0.jsonld',
-            ],
-            id: modifiedDid,
-            verificationMethod: [
-              {
-                id: `${modifiedDid}#controller`,
-                type: 'EcdsaSecp256k1RecoveryMethod2020',
-                controller: modifiedDid,
-                blockchainAccountId: `${identity}@eip155:1337`,
-              },
-              {
-                id: `${modifiedDid}#delegate-1`,
-                type: 'Ed25519VerificationKey2018',
-                controller: modifiedDid,
-                publicKeyBase58: 'DV4G2kpBKjE6zxKor7Cj21iL9x9qyXb6emqjszBXcuhz',
-              },
-            ],
-            authentication: [`${modifiedDid}#controller`],
-            assertionMethod: [`${modifiedDid}#controller`, `${modifiedDid}#delegate-1`],
-          },
-        })
-      })
-
-      it('can resolve did with versionId before an attribute change', async () => {
-        expect.assertions(3)
-        const result = await didResolver.resolve(`${did}?versionId=6`)
-        expect(result.didDocumentMetadata.updated).toBeDefined()
-        delete result.didDocumentMetadata.updated
-        expect(result.didDocumentMetadata.nextUpdate).toBeDefined()
-        delete result.didDocumentMetadata.nextUpdate
-        expect(result).toEqual({
-          didDocumentMetadata: { versionId: '6', nextVersionId: '7' },
-          didResolutionMetadata: { contentType: 'application/did+ld+json' },
-          didDocument: {
-            '@context': [
-              'https://www.w3.org/ns/did/v1',
-              'https://identity.foundation/EcdsaSecp256k1RecoverySignature2020/lds-ecdsa-secp256k1-recovery2020-0.0.jsonld',
-            ],
-            id: did,
-            verificationMethod: [
-              {
-                id: `${did}#controller`,
-                type: 'EcdsaSecp256k1RecoveryMethod2020',
-                controller: did,
-                blockchainAccountId: `${controller}@eip155:1337`,
-              },
-              {
-                id: `${did}#delegate-4`,
-                type: 'EcdsaSecp256k1RecoveryMethod2020',
-                controller: did,
-                blockchainAccountId: `${delegate2}@eip155:1337`,
-              },
-            ],
-            authentication: [`${did}#controller`, `${did}#delegate-4`],
-            assertionMethod: [`${did}#controller`, `${did}#delegate-4`],
-          },
-        })
-      })
-
-      it('can resolve did with versionId before a delegate change', async () => {
-        expect.assertions(3)
-        const result = await didResolver.resolve(`${did}?versionId=2`)
-        expect(result.didDocumentMetadata.updated).toBeDefined()
-        delete result.didDocumentMetadata.updated
-        expect(result.didDocumentMetadata.nextUpdate).toBeDefined()
-        delete result.didDocumentMetadata.nextUpdate
-        expect(result).toEqual({
-          didDocumentMetadata: { versionId: '2', nextVersionId: '3' },
-          didResolutionMetadata: { contentType: 'application/did+ld+json' },
-          didDocument: {
-            '@context': [
-              'https://www.w3.org/ns/did/v1',
-              'https://identity.foundation/EcdsaSecp256k1RecoverySignature2020/lds-ecdsa-secp256k1-recovery2020-0.0.jsonld',
-            ],
-            id: did,
-            verificationMethod: [
-              {
-                id: `${did}#controller`,
-                type: 'EcdsaSecp256k1RecoveryMethod2020',
-                controller: did,
-                blockchainAccountId: `${controller}@eip155:1337`,
-              },
-            ],
-            authentication: [`${did}#controller`],
-            assertionMethod: [`${did}#controller`],
-          },
-        })
-      })
-
-      it('can resolve did with versionId before an owner change', async () => {
-        expect.assertions(2)
-        const result = await didResolver.resolve(`${did}?versionId=1`)
-        expect(result.didDocumentMetadata.nextUpdate).toBeDefined()
-        delete result.didDocumentMetadata.nextUpdate
-        expect(result).toEqual({
-          didDocumentMetadata: {
-            nextVersionId: '2',
-          },
-          didResolutionMetadata: { contentType: 'application/did+ld+json' },
-          didDocument: {
-            '@context': [
-              'https://www.w3.org/ns/did/v1',
-              'https://identity.foundation/EcdsaSecp256k1RecoverySignature2020/lds-ecdsa-secp256k1-recovery2020-0.0.jsonld',
-            ],
-            id: did,
-            verificationMethod: [
-              {
-                id: `${did}#controller`,
-                type: 'EcdsaSecp256k1RecoveryMethod2020',
-                controller: did,
-                blockchainAccountId: `${identity}@eip155:1337`,
-              },
-            ],
-            authentication: [`${did}#controller`],
-            assertionMethod: [`${did}#controller`],
-          },
-        })
-      })
-
       it('can resolve did with versionId before deactivation', async () => {
-        expect.assertions(2)
+        expect.assertions(1)
         const deactivatedDid = `did:ethr:dev:${accounts[6]}`
-        const result = await didResolver.resolve(`${deactivatedDid}?versionId=21`)
-        expect(result.didDocumentMetadata.nextUpdate).toBeDefined()
-        delete result.didDocumentMetadata.nextUpdate
+        const { didDocumentMetadata } = await didResolver.resolve(deactivatedDid)
+        const deactivationBlock = parseInt(didDocumentMetadata.versionId ?? '')
+        const result = await didResolver.resolve(`${deactivatedDid}?versionId=${deactivationBlock - 1}`)
         expect(result).toEqual({
           didDocumentMetadata: {
-            nextVersionId: '22',
+            nextVersionId: `${deactivationBlock}`,
+            nextUpdate: didDocumentMetadata.updated
           },
           didResolutionMetadata: { contentType: 'application/did+ld+json' },
           didDocument: {
@@ -1245,113 +940,414 @@ describe('ethrResolver', () => {
         })
       })
 
-      it('can resolve did with versionId before an attribute expiration', async () => {
+      it('can resolve modified did with versionId=latest', async () => {
         expect.assertions(1)
-        const result = await didResolver.resolve(`${did}?versionId=4`)
-        //don't compare against hardcoded timestamps
-        delete result.didDocumentMetadata.updated
-        delete result.didDocumentMetadata.nextUpdate
+        const address = accounts[7]
+        const identifier = `did:ethr:dev:${address}`
+        const blockHeightBeforeChange = (await web3Provider.getBlock('latest')).number
+        // change owner to self
+        await new EthrDidController(identifier, registryContract).changeOwner(address, { from: address })
+        const result = await didResolver.resolve(`${identifier}?versionId=latest`)
         expect(result).toEqual({
-          didDocumentMetadata: { versionId: '4', nextVersionId: '5' },
-          didResolutionMetadata: { contentType: 'application/did+ld+json' },
+          didDocumentMetadata: { versionId: `${blockHeightBeforeChange + 1}`, updated: expect.anything() },
+          didResolutionMetadata: expect.anything(),
           didDocument: {
-            '@context': [
-              'https://www.w3.org/ns/did/v1',
-              'https://identity.foundation/EcdsaSecp256k1RecoverySignature2020/lds-ecdsa-secp256k1-recovery2020-0.0.jsonld',
-            ],
-            id: did,
+            '@context': expect.anything(),
+            id: identifier,
             verificationMethod: [
               {
-                id: `${did}#controller`,
+                id: `${identifier}#controller`,
                 type: 'EcdsaSecp256k1RecoveryMethod2020',
-                controller: did,
-                blockchainAccountId: `${controller}@eip155:1337`,
-              },
-              {
-                id: `${did}#delegate-1`,
-                type: 'EcdsaSecp256k1RecoveryMethod2020',
-                controller: did,
-                blockchainAccountId: `${delegate1}@eip155:1337`,
-              },
-              {
-                id: `${did}#delegate-2`,
-                type: 'EcdsaSecp256k1RecoveryMethod2020',
-                controller: did,
-                blockchainAccountId: `${delegate2}@eip155:1337`,
+                controller: identifier,
+                blockchainAccountId: `${address}@eip155:1337`,
               },
             ],
-            authentication: [`${did}#controller`, `${did}#delegate-2`],
-            assertionMethod: [`${did}#controller`, `${did}#delegate-1`, `${did}#delegate-2`],
+            authentication: [`${identifier}#controller`],
+            assertionMethod: [`${identifier}#controller`],
+          },
+        })
+      })
+
+      it('can resolve did with versionId before an attribute change', async () => {
+        expect.assertions(1)
+
+        const address = accounts[8]
+        const identifier = `did:ethr:dev:${address}`
+
+        const blockHeightBeforeChange = (await web3Provider.getBlock('latest')).number
+        const ethrDid = new EthrDidController(identifier, registryContract)
+        await ethrDid.setAttribute(
+          'did/pub/Ed25519/veriKey/hex',
+          `0x11111111`,
+          86411,
+          { from: address }
+        )
+        await ethrDid.setAttribute(
+          'did/pub/Ed25519/veriKey/hex',
+          `0x22222222`,
+          86412,
+          { from: address }
+        )
+
+        const result = await didResolver.resolve(`${identifier}?versionId=${blockHeightBeforeChange + 1}`)
+        expect(result).toEqual({
+          didDocumentMetadata: {
+            versionId: `${blockHeightBeforeChange + 1}`,
+            nextVersionId: `${blockHeightBeforeChange + 2}`,
+            updated: expect.anything(),
+            nextUpdate: expect.anything()
+          },
+          didResolutionMetadata: { contentType: 'application/did+ld+json' },
+          didDocument: {
+            '@context': expect.anything(),
+            id: identifier,
+            verificationMethod: [
+              {
+                id: `${identifier}#controller`,
+                type: 'EcdsaSecp256k1RecoveryMethod2020',
+                controller: identifier,
+                blockchainAccountId: `${address}@eip155:1337`,
+              },
+              {
+                id: `${identifier}#delegate-1`,
+                type: 'Ed25519VerificationKey2018',
+                controller: identifier,
+                publicKeyHex: '11111111',
+              },
+            ],
+            authentication: [`${identifier}#controller`],
+            assertionMethod: [`${identifier}#controller`, `${identifier}#delegate-1`],
+          },
+        })
+      })
+
+      it('can resolve did with versionId before a delegate change', async () => {
+        expect.assertions(1)
+        const delegateAddress1 = '0xde1E9a7e00000000000000000000000000000001'
+        const delegateAddress2 = '0xde1e9a7e00000000000000000000000000000002'
+        const address = accounts[9]
+        const identifier = `did:ethr:dev:${address}`
+
+        const ethrDid = new EthrDidController(identifier, registryContract)
+        const blockHeightBeforeChange = (await web3Provider.getBlock('latest')).number
+        await ethrDid.addDelegate('veriKey', delegateAddress1, 86401, { from: address })
+        await ethrDid.addDelegate('veriKey', delegateAddress2, 86402, { from: address })
+
+        const result = await didResolver.resolve(`${identifier}?versionId=${blockHeightBeforeChange + 1}`)
+        expect(result).toEqual({
+          didDocumentMetadata: {
+            versionId: `${blockHeightBeforeChange + 1}`,
+            nextVersionId: `${blockHeightBeforeChange + 2}`,
+            updated: expect.anything(),
+            nextUpdate: expect.anything()
+          },
+          didResolutionMetadata: expect.anything(),
+          didDocument: {
+            '@context': expect.anything(),
+            id: identifier,
+            verificationMethod: [
+              {
+                id: `${identifier}#controller`,
+                type: 'EcdsaSecp256k1RecoveryMethod2020',
+                controller: identifier,
+                blockchainAccountId: `${address}@eip155:1337`,
+              },
+              {
+                id: `${identifier}#delegate-1`,
+                type: 'EcdsaSecp256k1RecoveryMethod2020',
+                controller: identifier,
+                blockchainAccountId: `${delegateAddress1}@eip155:1337`,
+              },
+            ],
+            authentication: [`${identifier}#controller`],
+            assertionMethod: [`${identifier}#controller`, `${identifier}#delegate-1`],
+          },
+        })
+      })
+
+      it('can resolve did with versionId before an owner change', async () => {
+        expect.assertions(1)
+        const newOwner = '0xde1e9a7e00000000000000000000000000000003'
+        const address = accounts[10]
+        const identifier = `did:ethr:dev:${address}`
+
+        const ethrDid = new EthrDidController(identifier, registryContract)
+        const blockHeightBeforeChange = (await web3Provider.getBlock('latest')).number
+        await ethrDid.changeOwner(address, { from: address })
+        await ethrDid.changeOwner(newOwner, { from: address })
+        const result = await didResolver.resolve(`${identifier}?versionId=${blockHeightBeforeChange + 1}`)
+        expect(result).toEqual({
+          didDocumentMetadata: {
+            versionId: `${blockHeightBeforeChange + 1}`,
+            nextVersionId: `${blockHeightBeforeChange + 2}`,
+            updated: expect.anything(),
+            nextUpdate: expect.anything()
+          },
+          didResolutionMetadata: expect.anything(),
+          didDocument: {
+            '@context': expect.anything(),
+            id: identifier,
+            verificationMethod: [
+              {
+                id: `${identifier}#controller`,
+                type: 'EcdsaSecp256k1RecoveryMethod2020',
+                controller: identifier,
+                blockchainAccountId: `${address}@eip155:1337`,
+              },
+            ],
+            authentication: [`${identifier}#controller`],
+            assertionMethod: [`${identifier}#controller`],
+          },
+        })
+      })
+
+      it('can resolve did with versionId before an attribute expiration', async () => {
+        expect.assertions(3)
+        const delegate = '0xde1E9a7e00000000000000000000000000000001'
+        const address = accounts[11]
+        const identifier = `did:ethr:dev:${address}`
+
+        await new EthrDidController(identifier, registryContract).addDelegate('sigAuth', delegate, 1, {
+          from: address,
+        })
+        let result = await didResolver.resolve(identifier)
+        // confirm delegate exists
+        const versionBeforeExpiry = result.didDocumentMetadata.versionId
+        expect(result?.didDocument?.verificationMethod?.[1]).toEqual({
+          id: `${identifier}#delegate-1`,
+          type: 'EcdsaSecp256k1RecoveryMethod2020',
+          controller: identifier,
+          blockchainAccountId: `${delegate}@eip155:1337`,
+        })
+        // await expiry
+        await sleep(4000)
+        // confirm delegate was removed after expiry
+        result = await didResolver.resolve(identifier)
+        expect(result?.didDocument?.verificationMethod?.length).toEqual(1)
+
+        // resolve DID before expiry
+        result = await didResolver.resolve(`${identifier}?versionId=${versionBeforeExpiry}`)
+        expect(result).toEqual({
+          didDocumentMetadata: { versionId: `${versionBeforeExpiry}`, updated: expect.anything() },
+          didResolutionMetadata: expect.anything(),
+          didDocument: {
+            '@context': expect.anything(),
+            id: identifier,
+            verificationMethod: [
+              {
+                id: `${identifier}#controller`,
+                type: 'EcdsaSecp256k1RecoveryMethod2020',
+                controller: identifier,
+                blockchainAccountId: `${address}@eip155:1337`,
+              },
+              {
+                id: `${identifier}#delegate-1`,
+                type: 'EcdsaSecp256k1RecoveryMethod2020',
+                controller: identifier,
+                blockchainAccountId: `${delegate}@eip155:1337`,
+              },
+            ],
+            authentication: [`${identifier}#controller`, `${identifier}#delegate-1`],
+            assertionMethod: [`${identifier}#controller`, `${identifier}#delegate-1`],
           },
         })
       })
     })
   })
 
-  describe('events in subsequent blocks', () => {
-    beforeAll(async () => {
-      const ethrDid = new EthrDidController(identity, registryContract)
-      await stopMining(web3Provider)
-      await Promise.all([
-        ethrDid.setAttribute(stringToBytes32('did/svc/TestService1'), 'https://test1.uport.me', 86406, {
-          from: controller,
-        }),
-        sleep(1).then(() => startMining(web3Provider)),
-        sleep(1).then(() => stopMining(web3Provider)),
-        ethrDid.setAttribute(stringToBytes32('did/svc/TestService2'), 'https://test2.uport.me', 86407, {
-          from: controller,
-        }),
-        sleep(1).then(() => startMining(web3Provider)),
-      ])
-    })
-
-    it('resolves document', async () => {
+  describe('overlapping events', () => {
+    it('adding the same service in the same block does not result in duplication', async () => {
       expect.assertions(1)
-      const result = await didResolver.resolve(did)
-      //don't compare against hardcoded timestamps
-      delete result.didDocumentMetadata.updated
+
+      const address = accounts[12]
+      const identifier = `did:ethr:dev:${address}`
+
+      const ethrDid = new EthrDidController(identifier, registryContract)
+      const blockHeightBeforeChange = (await web3Provider.getBlock('latest')).number
+      await stopMining(web3Provider)
+      const tx1 = ethrDid.setAttribute(stringToBytes32('did/svc/TestService'), 'https://test.uport.me', 86406, {
+        from: address,
+      })
+      const tx2 = ethrDid.setAttribute(stringToBytes32('did/svc/TestService'), 'https://test.uport.me', 86407, {
+        from: address,
+      })
+      await sleep(1000)
+      await startMining(web3Provider)
+      await tx1
+      await tx2
+
+      const result = await didResolver.resolve(identifier)
       expect(result).toEqual({
-        didDocumentMetadata: { versionId: '23' },
-        didResolutionMetadata: {
-          contentType: 'application/did+ld+json',
-        },
+        didDocumentMetadata: { versionId: `${blockHeightBeforeChange + 1}`, updated: expect.anything() },
+        didResolutionMetadata: expect.anything(),
         didDocument: {
-          '@context': [
-            'https://www.w3.org/ns/did/v1',
-            'https://identity.foundation/EcdsaSecp256k1RecoverySignature2020/lds-ecdsa-secp256k1-recovery2020-0.0.jsonld',
-          ],
-          id: did,
-          verificationMethod: [
-            {
-              id: `${did}#controller`,
-              type: 'EcdsaSecp256k1RecoveryMethod2020',
-              controller: did,
-              blockchainAccountId: `${controller}@eip155:1337`,
-            },
-            {
-              id: `${did}#delegate-4`,
-              type: 'EcdsaSecp256k1RecoveryMethod2020',
-              controller: did,
-              blockchainAccountId: `${delegate2}@eip155:1337`,
-            },
-          ],
-          authentication: [`${did}#controller`, `${did}#delegate-4`],
-          assertionMethod: [`${did}#controller`, `${did}#delegate-4`],
+          '@context': expect.anything(),
+          id: identifier,
+          verificationMethod: expect.anything(),
+          authentication: expect.anything(),
+          assertionMethod: expect.anything(),
           service: [
             {
-              id: `${did}#service-4`,
+              id: `${identifier}#service-2`,
               type: 'TestService',
               serviceEndpoint: 'https://test.uport.me',
             },
+          ],
+        },
+      })
+    })
+
+    it('adding 2 services in 2 consecutive blocks should result in only 2 services appearing in the DID doc (no duplication)', async () => {
+      expect.assertions(2)
+      const address = accounts[13]
+      const identifier = `did:ethr:dev:${address}`
+
+      const ethrDid = new EthrDidController(identifier, registryContract)
+
+      const blockHeightBeforeChange = (await web3Provider.getBlock('latest')).number
+
+      // await stopMining(web3Provider)
+      await ethrDid.setAttribute(stringToBytes32('did/svc/TestService1'), 'https://test1.uport.me', 86406, {
+        from: address,
+      })
+      // await startMining(web3Provider)
+      let result = await didResolver.resolve(identifier)
+      expect(result.didDocumentMetadata.versionId).toEqual(`${blockHeightBeforeChange + 1}`)
+      // await stopMining(web3Provider)
+      await ethrDid.setAttribute(stringToBytes32('did/svc/TestService2'), 'https://test2.uport.me', 86407, {
+        from: address,
+      })
+      // await startMining(web3Provider)
+
+      result = await didResolver.resolve(identifier)
+      expect(result).toEqual({
+        didDocumentMetadata: { versionId: `${blockHeightBeforeChange + 2}`, updated: expect.anything() },
+        didResolutionMetadata: expect.anything(),
+        didDocument: {
+          '@context': expect.anything(),
+          id: identifier,
+          verificationMethod: [expect.anything()],
+          authentication: [expect.anything()],
+          assertionMethod: [expect.anything()],
+          service: [
             {
-              id: `${did}#service-7`,
+              id: `${identifier}#service-1`,
               type: 'TestService1',
               serviceEndpoint: 'https://test1.uport.me',
             },
             {
-              id: `${did}#service-8`,
+              id: `${identifier}#service-2`,
               type: 'TestService2',
               serviceEndpoint: 'https://test2.uport.me',
+            },
+          ],
+        },
+      })
+    })
+
+    it('adding and removing a service in the same block should result in no change to the doc (correct order, same block)', async () => {
+      expect.assertions(2)
+      const address = accounts[14]
+      const identifier = `did:ethr:dev:${address}`
+
+      const ethrDid = new EthrDidController(identifier, registryContract)
+
+      const blockHeightBeforeChange = (await web3Provider.getBlock('latest')).number
+
+      await stopMining(web3Provider)
+      const tx1 = ethrDid.setAttribute(stringToBytes32('did/svc/TestService1'), 'https://test1.uport.me', 86406, {
+        from: address,
+      })
+      let result = await didResolver.resolve(identifier)
+      expect(result.didDocumentMetadata.versionId).not.toBeDefined()
+      const tx2 = ethrDid.revokeAttribute(stringToBytes32('did/svc/TestService1'), 'https://test1.uport.me', {
+        from: address,
+      })
+      await sleep(1000).then(() => startMining(web3Provider))
+      await tx1
+      await tx2
+
+      result = await didResolver.resolve(identifier)
+      expect(result).toEqual({
+        didDocumentMetadata: { versionId: `${blockHeightBeforeChange + 1}`, updated: expect.anything() },
+        didResolutionMetadata: expect.anything(),
+        didDocument: {
+          '@context': expect.anything(),
+          id: identifier,
+          verificationMethod: [expect.anything()],
+          authentication: [expect.anything()],
+          assertionMethod: [expect.anything()],
+          service: undefined,
+        },
+      })
+    })
+
+    it('adding and removing a service in 2 consecutive blocks should result in no change to the doc (correct order 2 blocks).', async () => {
+      expect.assertions(2)
+      const address = accounts[15]
+      const identifier = `did:ethr:dev:${address}`
+
+      const ethrDid = new EthrDidController(identifier, registryContract)
+
+      const blockHeightBeforeChange = (await web3Provider.getBlock('latest')).number
+
+      await ethrDid.setAttribute(stringToBytes32('did/svc/TestService1'), 'https://test1.uport.me', 86406, {
+        from: address,
+      })
+      let result = await didResolver.resolve(identifier)
+      expect(result.didDocumentMetadata.versionId).toEqual(`${blockHeightBeforeChange + 1}`)
+      await ethrDid.revokeAttribute(stringToBytes32('did/svc/TestService1'), 'https://test1.uport.me', {
+        from: address,
+      })
+
+      result = await didResolver.resolve(identifier)
+      expect(result).toEqual({
+        didDocumentMetadata: { versionId: `${blockHeightBeforeChange + 2}`, updated: expect.anything() },
+        didResolutionMetadata: expect.anything(),
+        didDocument: {
+          '@context': expect.anything(),
+          id: identifier,
+          verificationMethod: [expect.anything()],
+          authentication: [expect.anything()],
+          assertionMethod: [expect.anything()],
+          service: undefined,
+        },
+      })
+    })
+
+    it('removing a service and then adding it back in the next block should keep the service visible in the resolved doc (correct order 2 blocks, corner case)', async () => {
+      expect.assertions(2)
+      const address = accounts[16]
+      const identifier = `did:ethr:dev:${address}`
+
+      const ethrDid = new EthrDidController(identifier, registryContract)
+
+      const blockHeightBeforeChange = (await web3Provider.getBlock('latest')).number
+
+      await ethrDid.revokeAttribute(stringToBytes32('did/svc/TestService1'), 'https://test1.uport.me', {
+        from: address,
+      })
+      let result = await didResolver.resolve(identifier)
+      expect(result.didDocumentMetadata.versionId).toEqual(`${blockHeightBeforeChange + 1}`)
+      await ethrDid.setAttribute(stringToBytes32('did/svc/TestService1'), 'https://test1.uport.me', 86406, {
+        from: address,
+      })
+
+      result = await didResolver.resolve(identifier)
+      expect(result).toEqual({
+        didDocumentMetadata: { versionId: `${blockHeightBeforeChange + 2}`, updated: expect.anything() },
+        didResolutionMetadata: expect.anything(),
+        didDocument: {
+          '@context': expect.anything(),
+          id: identifier,
+          verificationMethod: [expect.anything()],
+          authentication: [expect.anything()],
+          assertionMethod: [expect.anything()],
+          service: [
+            {
+              id: `${identifier}#service-2`,
+              type: 'TestService1',
+              serviceEndpoint: 'https://test1.uport.me',
             },
           ],
         },
