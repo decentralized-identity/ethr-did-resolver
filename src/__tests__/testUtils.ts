@@ -1,5 +1,5 @@
 import { ExternalProvider, JsonRpcProvider, Web3Provider } from '@ethersproject/providers'
-import ganache from 'ganache'
+import ganache from 'ganache-cli'
 
 export function createProvider(): JsonRpcProvider {
   return new Web3Provider(
