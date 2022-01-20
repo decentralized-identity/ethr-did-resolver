@@ -1287,4 +1287,75 @@ describe('ethrResolver', () => {
       })
     })
   })
+
+  describe('events in subsequent blocks', () => {
+    beforeAll(async () => {
+      const ethrDid = new EthrDidController(identity, registryContract)
+      await stopMining(web3Provider)
+      await Promise.all([
+        ethrDid.setAttribute(stringToBytes32('did/svc/TestService1'), 'https://test1.uport.me', 86406, {
+          from: controller,
+        }),
+        sleep(1).then(() => startMining(web3Provider)),
+        sleep(1).then(() => stopMining(web3Provider)),
+        ethrDid.setAttribute(stringToBytes32('did/svc/TestService2'), 'https://test2.uport.me', 86407, {
+          from: controller,
+        }),
+        sleep(1).then(() => startMining(web3Provider)),
+      ])
+    })
+
+    it('resolves document', async () => {
+      expect.assertions(1)
+      const result = await didResolver.resolve(did)
+      //don't compare against hardcoded timestamps
+      delete result.didDocumentMetadata.updated
+      expect(result).toEqual({
+        didDocumentMetadata: { versionId: '23' },
+        didResolutionMetadata: {
+          contentType: 'application/did+ld+json',
+        },
+        didDocument: {
+          '@context': [
+            'https://www.w3.org/ns/did/v1',
+            'https://identity.foundation/EcdsaSecp256k1RecoverySignature2020/lds-ecdsa-secp256k1-recovery2020-0.0.jsonld',
+          ],
+          id: did,
+          verificationMethod: [
+            {
+              id: `${did}#controller`,
+              type: 'EcdsaSecp256k1RecoveryMethod2020',
+              controller: did,
+              blockchainAccountId: `${controller}@eip155:1337`,
+            },
+            {
+              id: `${did}#delegate-4`,
+              type: 'EcdsaSecp256k1RecoveryMethod2020',
+              controller: did,
+              blockchainAccountId: `${delegate2}@eip155:1337`,
+            },
+          ],
+          authentication: [`${did}#controller`, `${did}#delegate-4`],
+          assertionMethod: [`${did}#controller`, `${did}#delegate-4`],
+          service: [
+            {
+              id: `${did}#service-4`,
+              type: 'TestService',
+              serviceEndpoint: 'https://test.uport.me',
+            },
+            {
+              id: `${did}#service-7`,
+              type: 'TestService1',
+              serviceEndpoint: 'https://test1.uport.me',
+            },
+            {
+              id: `${did}#service-8`,
+              type: 'TestService2',
+              serviceEndpoint: 'https://test2.uport.me',
+            },
+          ],
+        },
+      })
+    })
+  })
 })
