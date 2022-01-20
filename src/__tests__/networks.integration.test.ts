@@ -220,5 +220,76 @@ describe('ethrResolver (alt-chains)', () => {
         },
       })
     })
+
+    it('resolves public keys and services on aurora when configured', async () => {
+      const did = 'did:ethr:aurora:0x036d148205e34a8591dcdcea34fb7fed760f5f1eca66d254830833f755ff359ef0'
+      const ethr = getResolver({
+        networks: [
+          {
+            name: 'aurora',
+            chainId: 1313161554,
+            rpcUrl: 'https://mainnet.aurora.dev',
+            registry: '0x63eD58B671EeD12Bc1652845ba5b2CDfBff198e0',
+          },
+        ],
+      })
+      const resolver = new Resolver(ethr)
+      const doc = await resolver.resolve(did)
+      return expect(doc).toEqual({
+        didDocumentMetadata: {
+          updated: '2022-01-19T12:19:59Z',
+          versionId: '57702193',
+        },
+        didResolutionMetadata: { contentType: 'application/did+ld+json' },
+        didDocument: {
+          '@context': [
+            'https://www.w3.org/ns/did/v1',
+            'https://identity.foundation/EcdsaSecp256k1RecoverySignature2020/lds-ecdsa-secp256k1-recovery2020-0.0.jsonld',
+          ],
+          id: did,
+          verificationMethod: [
+            {
+              id: `${did}#controller`,
+              type: 'EcdsaSecp256k1RecoveryMethod2020',
+              controller: did,
+              blockchainAccountId: '0x7a988202a04f00436f73972DF4dEfD80c3A6BD13@eip155:1313161554',
+            },
+            {
+              id: `${did}#controllerKey`,
+              type: 'EcdsaSecp256k1VerificationKey2019',
+              controller: did,
+              publicKeyHex: '036d148205e34a8591dcdcea34fb7fed760f5f1eca66d254830833f755ff359ef0',
+            },
+            {
+              controller: did,
+              id: `${did}#delegate-1`,
+              publicKeyHex: 'c4c323b4ba114591579d92591b26e92e59aa5529c6adbebb820da7ca407e9d34',
+              type: 'Ed25519VerificationKey2018',
+            },
+            {
+              controller: did,
+              id: `${did}#delegate-2`,
+              publicKeyHex:
+                '04ebafc30f377af345bb86c9269ed6432d6245b44f01dd410f8c0e73ab1801211c84b76fade77b4d6e27da82d051e3603b35c21072201e1a1c00073ab09d004ee4',
+              type: 'EcdsaSecp256k1VerificationKey2019',
+            },
+          ],
+          authentication: [`${did}#controller`, `${did}#controllerKey`],
+          assertionMethod: [`${did}#controller`, `${did}#controllerKey`, `${did}#delegate-1`, `${did}#delegate-2`],
+          service: [
+            {
+              id: `${did}#service-1`,
+              serviceEndpoint: 'https://example.com/inbox',
+              type: 'DIDCommMessaging',
+            },
+            {
+              id: `${did}#service-2`,
+              serviceEndpoint: 'https://example.com/inbox2',
+              type: 'DIDCommMessaging',
+            },
+          ],
+        },
+      })
+    })
   })
 })
