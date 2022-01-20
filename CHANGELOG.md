@@ -1,3 +1,10 @@
+## [5.0.4](https://github.com/decentralized-identity/ethr-did-resolver/compare/5.0.3...5.0.4) (2022-01-20)
+
+
+### Bug Fixes
+
+* broaden window for event logs processing (fix Aurora) ([#149](https://github.com/decentralized-identity/ethr-did-resolver/issues/149)) ([5ee6bed](https://github.com/decentralized-identity/ethr-did-resolver/commit/5ee6beda7547fdc2dca4a3a2f0f62442c676861f))
+
 ## [5.0.3](https://github.com/decentralized-identity/ethr-did-resolver/compare/5.0.2...5.0.3) (2022-01-13)
 
 
