@@ -29,21 +29,25 @@ off-chain usage.
 ## Contract Deployments
 
 > WARNING
-> These are deployments of version 0.0.3 of the contract and they do not include recent updates.
+> Most of these are deployments of version 0.0.3 of the contract and they do not include recent updates.
 > Join the discussion as to how to adopt these new changes [on our discord](https://discord.gg/MTeTAwSYe7)
 
-| Network                             | Address                                                                                                                                  |
-| ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| Mainnet (id: 1)                     | [0xdca7ef03e98e0dc2b855be647c39abe984fcf21b](https://etherscan.io/address/0xdca7ef03e98e0dc2b855be647c39abe984fcf21b)                    |
-| Ropsten (id: 3)                     | [0xdca7ef03e98e0dc2b855be647c39abe984fcf21b](https://ropsten.etherscan.io/address/0xdca7ef03e98e0dc2b855be647c39abe984fcf21b)            |
-| Rinkeby (id: 4)                     | [0xdca7ef03e98e0dc2b855be647c39abe984fcf21b](https://rinkeby.etherscan.io/address/0xdca7ef03e98e0dc2b855be647c39abe984fcf21b)            |
-| Goerli (id: 5)                     | [0xdca7ef03e98e0dc2b855be647c39abe984fcf21b](https://goerli.etherscan.io/address/0xdca7ef03e98e0dc2b855be647c39abe984fcf21b)             |
-| Kovan (id: 42)                      | [0xdca7ef03e98e0dc2b855be647c39abe984fcf21b](https://kovan.etherscan.io/address/0xdca7ef03e98e0dc2b855be647c39abe984fcf21b)              |
-| RSK (id: 30)                        | [0xdca7ef03e98e0dc2b855be647c39abe984fcf21b](https://explorer.rsk.co/address/0xdca7ef03e98e0dc2b855be647c39abe984fcf21b)                 |
-| RSK Testnet (id: 31)                | [0xdca7ef03e98e0dc2b855be647c39abe984fcf21b](https://explorer.testnet.rsk.co/address/0xdca7ef03e98e0dc2b855be647c39abe984fcf21b)         |
-| Alastria Telsius (id: 83584648538 ) | [0x05cc574b19a3c11308f761b3d7263bd8608bc532](http://blkexplorer0.telsius.alastria.io/account/0x05cc574b19a3c11308f761b3d7263bd8608bc532) |
-| ARTIS tau1 (id: 246785 ) | [0xdca7ef03e98e0dc2b855be647c39abe984fcf21b](https://explorer.tau1.artis.network/address/0xdCa7EF03e98e0DC2B855bE647C39ABe984fcF21B/transactions) |
-| ARTIS sigma1 (id: 246529 ) | [0xdca7ef03e98e0dc2b855be647c39abe984fcf21b](https://explorer.sigma1.artis.network/address/0xdCa7EF03e98e0DC2B855bE647C39ABe984fcF21B/transactions) |
+| Network Name | name     | chainId    | hexChainId | Registry Address                                                                                                                       | Registry version |
+| -------------|----------|------------|------------|----------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------|
+| Mainnet      | mainnet  | 1          | 0x1        | [0xdca7ef03e98e0dc2b855be647c39abe984fcf21b](https://etherscan.io/address/0xdca7ef03e98e0dc2b855be647c39abe984fcf21b)                  | [4278342e](https://github.com/uport-project/ethr-did-registry/commit/4278342e9b1dec0ab4fd63f4bd5536094c4de9f0) |
+| Ropsten      | ropsten  | 3          | 0x3        | [0xdca7ef03e98e0dc2b855be647c39abe984fcf21b](https://ropsten.etherscan.io/address/0xdca7ef03e98e0dc2b855be647c39abe984fcf21b)          | [4278342e](https://github.com/uport-project/ethr-did-registry/commit/4278342e9b1dec0ab4fd63f4bd5536094c4de9f0) |
+| Rinkeby      | rinkeby  | 4          | 0x4        | [0xdca7ef03e98e0dc2b855be647c39abe984fcf21b](https://rinkeby.etherscan.io/address/0xdca7ef03e98e0dc2b855be647c39abe984fcf21b)          | [4278342e](https://github.com/uport-project/ethr-did-registry/commit/4278342e9b1dec0ab4fd63f4bd5536094c4de9f0) |
+| Goerli       | goerli   | 5          | 0x5        | [0xdca7ef03e98e0dc2b855be647c39abe984fcf21b](https://goerli.etherscan.io/address/0xdca7ef03e98e0dc2b855be647c39abe984fcf21b)           | [4278342e](https://github.com/uport-project/ethr-did-registry/commit/4278342e9b1dec0ab4fd63f4bd5536094c4de9f0) |
+| Kovan        | kovan    | 42         | 0x2a       | [0xdca7ef03e98e0dc2b855be647c39abe984fcf21b](https://kovan.etherscan.io/address/0xdca7ef03e98e0dc2b855be647c39abe984fcf21b)            | [4278342e](https://github.com/uport-project/ethr-did-registry/commit/4278342e9b1dec0ab4fd63f4bd5536094c4de9f0) |
+| RSK          | rsk      | 30         | 0x1e       | [0xdca7ef03e98e0dc2b855be647c39abe984fcf21b](https://explorer.rsk.co/address/0xdca7ef03e98e0dc2b855be647c39abe984fcf21b)               | [4278342e](https://github.com/uport-project/ethr-did-registry/commit/4278342e9b1dec0ab4fd63f4bd5536094c4de9f0) |
+| RSK Testnet  |          | 31         | 0x1f       | [0xdca7ef03e98e0dc2b855be647c39abe984fcf21b](https://explorer.testnet.rsk.co/address/0xdca7ef03e98e0dc2b855be647c39abe984fcf21b)       | [4278342e](https://github.com/uport-project/ethr-did-registry/commit/4278342e9b1dec0ab4fd63f4bd5536094c4de9f0) |
+| EnergyWeb    | ewc      | 246        | 0xf6       | [0xe29672f34e92b56c9169f9d485ffc8b9a136bce4](https://explorer.energyweb.org/address/0xE29672f34e92b56C9169f9D485fFc8b9A136BCE4)        | [c9063836](https://github.com/uport-project/ethr-did-registry/commit/c90638361a76d247d61ef4e3eb245a78cf587f91) |
+| EWC Volta    | volta    | 73799      | 0x12047    | [0xc15d5a57a8eb0e1dcbe5d88b8f9a82017e5cc4af](https://volta-explorer.energyweb.org/address/0xC15D5A57A8Eb0e1dCBE5D88B8f9a82017e5Cc4AF)  | [f4e17ee1](https://github.com/uport-project/ethr-did-registry/commit/f4e17ee1eb558c5a006bab1a04108f27d4e3f0d0) |
+| ARTIS tau1   |          | 246785     | 0x3c401    | [0xdca7ef03e98e0dc2b855be647c39abe984fcf21b](https://explorer.tau1.artis.network/address/0xdCa7EF03e98e0DC2B855bE647C39ABe984fcF21B)   | [4278342e](https://github.com/uport-project/ethr-did-registry/commit/4278342e9b1dec0ab4fd63f4bd5536094c4de9f0) |
+| ARTIS sigma1 |          | 246529     | 0x3c301    | [0xdca7ef03e98e0dc2b855be647c39abe984fcf21b](https://explorer.sigma1.artis.network/address/0xdCa7EF03e98e0DC2B855bE647C39ABe984fcF21B) | [4278342e](https://github.com/uport-project/ethr-did-registry/commit/4278342e9b1dec0ab4fd63f4bd5536094c4de9f0) |
+| Polygon      | polygon  | 137        | 0x89       | [0xdca7ef03e98e0dc2b855be647c39abe984fcf21b](https://polygonscan.com/address/0xdca7ef03e98e0dc2b855be647c39abe984fcf21b)               | [4278342e](https://github.com/uport-project/ethr-did-registry/commit/4278342e9b1dec0ab4fd63f4bd5536094c4de9f0) |
+| Polygon test |          | 80001      | 0x13881    | [0xdca7ef03e98e0dc2b855be647c39abe984fcf21b](https://mumbai.polygonscan.com/address/0xdca7ef03e98e0dc2b855be647c39abe984fcf21b)        | [4278342e](https://github.com/uport-project/ethr-did-registry/commit/4278342e9b1dec0ab4fd63f4bd5536094c4de9f0) |
+| Aurora       | aurora   | 1313161554 | 0x4E454152 | [0x63ed58b671eed12bc1652845ba5b2cdfbff198e0](https://explorer.mainnet.aurora.dev/address/0x63eD58B671EeD12Bc1652845ba5b2CDfBff198e0)   | [0ab4f151](https://github.com/uport-project/ethr-did-registry/commit/0ab4f151ddde5b7739b97827c4fb901289f57892) |
 
 ## Using the Registry
 
