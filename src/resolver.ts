@@ -174,7 +174,7 @@ export class EthrDidResolver {
                 id: `${did}#delegate-${delegateCount}`,
                 type: verificationMethodTypes.EcdsaSecp256k1RecoveryMethod2020,
                 controller: did,
-                blockchainAccountId: `${currentEvent.delegate}@eip155:${chainId}`,
+                blockchainAccountId: `eip155:${chainId}:${currentEvent.delegate}`,
               }
               break
           }
@@ -264,7 +264,7 @@ export class EthrDidResolver {
         id: `${did}#controller`,
         type: verificationMethodTypes.EcdsaSecp256k1RecoveryMethod2020,
         controller: did,
-        blockchainAccountId: `${controller}@eip155:${chainId}`,
+        blockchainAccountId: `eip155:${chainId}:${controller}`,
       },
     ]
 
