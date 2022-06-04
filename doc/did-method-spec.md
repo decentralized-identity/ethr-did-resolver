@@ -74,7 +74,7 @@ To enable JSON-LD processing, the `@context` used when constructing DID document
 ```javascript
 "@context": [
   "https://www.w3.org/ns/did/v1",
-  "https://identity.foundation/EcdsaSecp256k1RecoverySignature2020/lds-ecdsa-secp256k1-recovery2020-0.0.jsonld"
+  "https://w3id.org/security/suites/secp256k1recovery-2020/v2"
 ]
 ```
 
@@ -149,7 +149,7 @@ The default DID document for an `did:ethr<Ethereum address>` on mainnet, e.g.
 {
   "@context": [
     "https://www.w3.org/ns/did/v1",
-    "https://identity.foundation/EcdsaSecp256k1RecoverySignature2020/lds-ecdsa-secp256k1-recovery2020-0.0.jsonld"
+    "https://w3id.org/security/suites/secp256k1recovery-2020/v2"
   ],
   "id": "did:ethr:0xb9c5714089478a327f09197987f16f9e5d936e8a",
   "verificationMethod": [
@@ -172,7 +172,7 @@ looks like this:
 {
   "@context": [
     "https://www.w3.org/ns/did/v1",
-    "https://identity.foundation/EcdsaSecp256k1RecoverySignature2020/lds-ecdsa-secp256k1-recovery2020-0.0.jsonld"
+    "https://w3id.org/security/suites/secp256k1recovery-2020/v2"
   ],
   "id": "did:ethr:0x0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798",
   "verificationMethod": [
