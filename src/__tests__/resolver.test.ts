@@ -62,7 +62,7 @@ describe('ethrResolver', () => {
               id: `${did}#controller`,
               type: 'EcdsaSecp256k1RecoveryMethod2020',
               controller: did,
-              blockchainAccountId: `${identity}@eip155:1337`,
+              blockchainAccountId: `eip155:1337:${identity}`,
             },
           ],
           authentication: [`${did}#controller`],
@@ -89,7 +89,7 @@ describe('ethrResolver', () => {
               id: `${pubdid}#controller`,
               type: 'EcdsaSecp256k1RecoveryMethod2020',
               controller: pubdid,
-              blockchainAccountId: `${identity}@eip155:1337`,
+              blockchainAccountId: `eip155:1337:${identity}`,
             },
             {
               id: `${pubdid}#controllerKey`,
@@ -125,7 +125,7 @@ describe('ethrResolver', () => {
               id: `${did}#controller`,
               type: 'EcdsaSecp256k1RecoveryMethod2020',
               controller: did,
-              blockchainAccountId: `${controller}@eip155:1337`,
+              blockchainAccountId: `eip155:1337:${controller}`,
             },
           ],
           authentication: [`${did}#controller`],
@@ -150,7 +150,7 @@ describe('ethrResolver', () => {
             id: `${pubdid}#controller`,
             type: 'EcdsaSecp256k1RecoveryMethod2020',
             controller: pubdid,
-            blockchainAccountId: `${controller}@eip155:1337`,
+            blockchainAccountId: `eip155:1337:${controller}`,
           },
         ],
         authentication: [`${pubdid}#controller`],
@@ -184,13 +184,13 @@ describe('ethrResolver', () => {
                 id: `${did}#controller`,
                 type: 'EcdsaSecp256k1RecoveryMethod2020',
                 controller: did,
-                blockchainAccountId: `${controller}@eip155:1337`,
+                blockchainAccountId: `eip155:1337:${controller}`,
               },
               {
                 id: `${did}#delegate-1`,
                 type: 'EcdsaSecp256k1RecoveryMethod2020',
                 controller: did,
-                blockchainAccountId: `${delegate1}@eip155:1337`,
+                blockchainAccountId: `eip155:1337:${delegate1}`,
               },
             ],
             authentication: [`${did}#controller`],
@@ -222,19 +222,19 @@ describe('ethrResolver', () => {
                 id: `${did}#controller`,
                 type: 'EcdsaSecp256k1RecoveryMethod2020',
                 controller: did,
-                blockchainAccountId: `${controller}@eip155:1337`,
+                blockchainAccountId: `eip155:1337:${controller}`,
               },
               {
                 id: `${did}#delegate-1`,
                 type: 'EcdsaSecp256k1RecoveryMethod2020',
                 controller: did,
-                blockchainAccountId: `${delegate1}@eip155:1337`,
+                blockchainAccountId: `eip155:1337:${delegate1}`,
               },
               {
                 id: `${did}#delegate-2`,
                 type: 'EcdsaSecp256k1RecoveryMethod2020',
                 controller: did,
-                blockchainAccountId: `${delegate2}@eip155:1337`,
+                blockchainAccountId: `eip155:1337:${delegate2}`,
               },
             ],
             authentication: [`${did}#controller`, `${did}#delegate-2`],
@@ -261,13 +261,13 @@ describe('ethrResolver', () => {
                 id: `${did}#controller`,
                 type: 'EcdsaSecp256k1RecoveryMethod2020',
                 controller: did,
-                blockchainAccountId: `${controller}@eip155:1337`,
+                blockchainAccountId: `eip155:1337:${controller}`,
               },
               {
                 id: `${did}#delegate-1`,
                 type: 'EcdsaSecp256k1RecoveryMethod2020',
                 controller: did,
-                blockchainAccountId: `${delegate1}@eip155:1337`,
+                blockchainAccountId: `eip155:1337:${delegate1}`,
               },
             ],
             authentication: [`${did}#controller`],
@@ -297,7 +297,7 @@ describe('ethrResolver', () => {
                 id: `${did}#controller`,
                 type: 'EcdsaSecp256k1RecoveryMethod2020',
                 controller: did,
-                blockchainAccountId: `${controller}@eip155:1337`,
+                blockchainAccountId: `eip155:1337:${controller}`,
               },
             ],
             authentication: [`${did}#controller`],
@@ -326,13 +326,13 @@ describe('ethrResolver', () => {
                 id: `${did}#controller`,
                 type: 'EcdsaSecp256k1RecoveryMethod2020',
                 controller: did,
-                blockchainAccountId: `${controller}@eip155:1337`,
+                blockchainAccountId: `eip155:1337:${controller}`,
               },
               {
                 id: `${did}#delegate-4`,
                 type: 'EcdsaSecp256k1RecoveryMethod2020',
                 controller: did,
-                blockchainAccountId: `${delegate2}@eip155:1337`,
+                blockchainAccountId: `eip155:1337:${delegate2}`,
               },
             ],
             authentication: [`${did}#controller`, `${did}#delegate-4`],
@@ -362,13 +362,13 @@ describe('ethrResolver', () => {
               id: `${did}#controller`,
               type: 'EcdsaSecp256k1RecoveryMethod2020',
               controller: did,
-              blockchainAccountId: `${controller}@eip155:1337`,
+              blockchainAccountId: `eip155:1337:${controller}`,
             },
             {
               id: `${did}#delegate-4`,
               type: 'EcdsaSecp256k1RecoveryMethod2020',
               controller: did,
-              blockchainAccountId: `${delegate2}@eip155:1337`,
+              blockchainAccountId: `eip155:1337:${delegate2}`,
             },
             {
               id: `${did}#delegate-5`,
@@ -399,13 +399,13 @@ describe('ethrResolver', () => {
               id: `${did}#controller`,
               type: 'EcdsaSecp256k1RecoveryMethod2020',
               controller: did,
-              blockchainAccountId: `${controller}@eip155:1337`,
+              blockchainAccountId: `eip155:1337:${controller}`,
             },
             {
               id: `${did}#delegate-4`,
               type: 'EcdsaSecp256k1RecoveryMethod2020',
               controller: did,
-              blockchainAccountId: `${delegate2}@eip155:1337`,
+              blockchainAccountId: `eip155:1337:${delegate2}`,
             },
             {
               id: `${did}#delegate-5`,
@@ -445,13 +445,13 @@ describe('ethrResolver', () => {
               id: `${did}#controller`,
               type: 'EcdsaSecp256k1RecoveryMethod2020',
               controller: did,
-              blockchainAccountId: `${controller}@eip155:1337`,
+              blockchainAccountId: `eip155:1337:${controller}`,
             },
             {
               id: `${did}#delegate-4`,
               type: 'EcdsaSecp256k1RecoveryMethod2020',
               controller: did,
-              blockchainAccountId: `${delegate2}@eip155:1337`,
+              blockchainAccountId: `eip155:1337:${delegate2}`,
             },
             {
               id: `${did}#delegate-5`,
@@ -504,7 +504,7 @@ describe('ethrResolver', () => {
               id: `${keyAgrDid}#controller`,
               type: 'EcdsaSecp256k1RecoveryMethod2020',
               controller: keyAgrDid,
-              blockchainAccountId: `${keyAgreementController}@eip155:1337`,
+              blockchainAccountId: `eip155:1337:${keyAgreementController}`,
             },
             {
               id: `${keyAgrDid}#delegate-1`,
@@ -538,13 +538,13 @@ describe('ethrResolver', () => {
               id: `${did}#controller`,
               type: 'EcdsaSecp256k1RecoveryMethod2020',
               controller: did,
-              blockchainAccountId: `${controller}@eip155:1337`,
+              blockchainAccountId: `eip155:1337:${controller}`,
             },
             {
               id: `${did}#delegate-4`,
               type: 'EcdsaSecp256k1RecoveryMethod2020',
               controller: did,
-              blockchainAccountId: `${delegate2}@eip155:1337`,
+              blockchainAccountId: `eip155:1337:${delegate2}`,
             },
             {
               id: `${did}#delegate-5`,
@@ -605,13 +605,13 @@ describe('ethrResolver', () => {
             id: `${did}#controller`,
             type: 'EcdsaSecp256k1RecoveryMethod2020',
             controller: did,
-            blockchainAccountId: `${controller}@eip155:1337`,
+            blockchainAccountId: `eip155:1337:${controller}`,
           },
           {
             id: `${did}#delegate-4`,
             type: 'EcdsaSecp256k1RecoveryMethod2020',
             controller: did,
-            blockchainAccountId: `${delegate2}@eip155:1337`,
+            blockchainAccountId: `eip155:1337:${delegate2}`,
           },
           {
             id: `${did}#delegate-6`,
@@ -657,13 +657,13 @@ describe('ethrResolver', () => {
             id: `${did}#controller`,
             type: 'EcdsaSecp256k1RecoveryMethod2020',
             controller: did,
-            blockchainAccountId: `${controller}@eip155:1337`,
+            blockchainAccountId: `eip155:1337:${controller}`,
           },
           {
             id: `${did}#delegate-4`,
             type: 'EcdsaSecp256k1RecoveryMethod2020',
             controller: did,
-            blockchainAccountId: `${delegate2}@eip155:1337`,
+            blockchainAccountId: `eip155:1337:${delegate2}`,
           },
           {
             id: `${did}#delegate-7`,
@@ -700,13 +700,13 @@ describe('ethrResolver', () => {
             id: `${did}#controller`,
             type: 'EcdsaSecp256k1RecoveryMethod2020',
             controller: did,
-            blockchainAccountId: `${controller}@eip155:1337`,
+            blockchainAccountId: `eip155:1337:${controller}`,
           },
           {
             id: `${did}#delegate-4`,
             type: 'EcdsaSecp256k1RecoveryMethod2020',
             controller: did,
-            blockchainAccountId: `${delegate2}@eip155:1337`,
+            blockchainAccountId: `eip155:1337:${delegate2}`,
           },
         ],
         authentication: [`${did}#controller`, `${did}#delegate-4`],
@@ -738,13 +738,13 @@ describe('ethrResolver', () => {
               id: `${did}#controller`,
               type: 'EcdsaSecp256k1RecoveryMethod2020',
               controller: did,
-              blockchainAccountId: `${controller}@eip155:1337`,
+              blockchainAccountId: `eip155:1337:${controller}`,
             },
             {
               id: `${did}#delegate-4`,
               type: 'EcdsaSecp256k1RecoveryMethod2020',
               controller: did,
-              blockchainAccountId: `${delegate2}@eip155:1337`,
+              blockchainAccountId: `eip155:1337:${delegate2}`,
             },
           ],
           authentication: [`${did}#controller`, `${did}#delegate-4`],
@@ -795,7 +795,7 @@ describe('ethrResolver', () => {
             id: `${identifier}#controller`,
             controller: identifier,
             type: 'EcdsaSecp256k1RecoveryMethod2020',
-            blockchainAccountId: `${address}@eip155:1337`,
+            blockchainAccountId: `eip155:1337:${address}`,
           },
           {
             id: `${identifier}#delegate-1`,
@@ -835,7 +835,7 @@ describe('ethrResolver', () => {
                 id: `${identifier}#controller`,
                 type: 'EcdsaSecp256k1RecoveryMethod2020',
                 controller: identifier,
-                blockchainAccountId: `${address}@eip155:1337`,
+                blockchainAccountId: `eip155:1337:${address}`,
               },
               {
                 id: `${identifier}#delegate-1`,
@@ -899,7 +899,7 @@ describe('ethrResolver', () => {
                 id: `${virginDID}#controller`,
                 type: 'EcdsaSecp256k1RecoveryMethod2020',
                 controller: virginDID,
-                blockchainAccountId: `${virginAddress}@eip155:1337`,
+                blockchainAccountId: `eip155:1337:${virginAddress}`,
               },
             ],
             authentication: [`${virginDID}#controller`],
@@ -917,7 +917,7 @@ describe('ethrResolver', () => {
         expect(result).toEqual({
           didDocumentMetadata: {
             nextVersionId: `${deactivationBlock}`,
-            nextUpdate: didDocumentMetadata.updated
+            nextUpdate: didDocumentMetadata.updated,
           },
           didResolutionMetadata: { contentType: 'application/did+ld+json' },
           didDocument: {
@@ -931,7 +931,7 @@ describe('ethrResolver', () => {
                 id: `${deactivatedDid}#controller`,
                 type: 'EcdsaSecp256k1RecoveryMethod2020',
                 controller: deactivatedDid,
-                blockchainAccountId: `${accounts[6]}@eip155:1337`,
+                blockchainAccountId: `eip155:1337:${accounts[6]}`,
               },
             ],
             authentication: [`${deactivatedDid}#controller`],
@@ -959,7 +959,7 @@ describe('ethrResolver', () => {
                 id: `${identifier}#controller`,
                 type: 'EcdsaSecp256k1RecoveryMethod2020',
                 controller: identifier,
-                blockchainAccountId: `${address}@eip155:1337`,
+                blockchainAccountId: `eip155:1337:${address}`,
               },
             ],
             authentication: [`${identifier}#controller`],
@@ -976,18 +976,8 @@ describe('ethrResolver', () => {
 
         const blockHeightBeforeChange = (await web3Provider.getBlock('latest')).number
         const ethrDid = new EthrDidController(identifier, registryContract)
-        await ethrDid.setAttribute(
-          'did/pub/Ed25519/veriKey/hex',
-          `0x11111111`,
-          86411,
-          { from: address }
-        )
-        await ethrDid.setAttribute(
-          'did/pub/Ed25519/veriKey/hex',
-          `0x22222222`,
-          86412,
-          { from: address }
-        )
+        await ethrDid.setAttribute('did/pub/Ed25519/veriKey/hex', `0x11111111`, 86411, { from: address })
+        await ethrDid.setAttribute('did/pub/Ed25519/veriKey/hex', `0x22222222`, 86412, { from: address })
 
         const result = await didResolver.resolve(`${identifier}?versionId=${blockHeightBeforeChange + 1}`)
         expect(result).toEqual({
@@ -995,7 +985,7 @@ describe('ethrResolver', () => {
             versionId: `${blockHeightBeforeChange + 1}`,
             nextVersionId: `${blockHeightBeforeChange + 2}`,
             updated: expect.anything(),
-            nextUpdate: expect.anything()
+            nextUpdate: expect.anything(),
           },
           didResolutionMetadata: { contentType: 'application/did+ld+json' },
           didDocument: {
@@ -1006,7 +996,7 @@ describe('ethrResolver', () => {
                 id: `${identifier}#controller`,
                 type: 'EcdsaSecp256k1RecoveryMethod2020',
                 controller: identifier,
-                blockchainAccountId: `${address}@eip155:1337`,
+                blockchainAccountId: `eip155:1337:${address}`,
               },
               {
                 id: `${identifier}#delegate-1`,
@@ -1039,7 +1029,7 @@ describe('ethrResolver', () => {
             versionId: `${blockHeightBeforeChange + 1}`,
             nextVersionId: `${blockHeightBeforeChange + 2}`,
             updated: expect.anything(),
-            nextUpdate: expect.anything()
+            nextUpdate: expect.anything(),
           },
           didResolutionMetadata: expect.anything(),
           didDocument: {
@@ -1050,13 +1040,13 @@ describe('ethrResolver', () => {
                 id: `${identifier}#controller`,
                 type: 'EcdsaSecp256k1RecoveryMethod2020',
                 controller: identifier,
-                blockchainAccountId: `${address}@eip155:1337`,
+                blockchainAccountId: `eip155:1337:${address}`,
               },
               {
                 id: `${identifier}#delegate-1`,
                 type: 'EcdsaSecp256k1RecoveryMethod2020',
                 controller: identifier,
-                blockchainAccountId: `${delegateAddress1}@eip155:1337`,
+                blockchainAccountId: `eip155:1337:${delegateAddress1}`,
               },
             ],
             authentication: [`${identifier}#controller`],
@@ -1081,7 +1071,7 @@ describe('ethrResolver', () => {
             versionId: `${blockHeightBeforeChange + 1}`,
             nextVersionId: `${blockHeightBeforeChange + 2}`,
             updated: expect.anything(),
-            nextUpdate: expect.anything()
+            nextUpdate: expect.anything(),
           },
           didResolutionMetadata: expect.anything(),
           didDocument: {
@@ -1092,7 +1082,7 @@ describe('ethrResolver', () => {
                 id: `${identifier}#controller`,
                 type: 'EcdsaSecp256k1RecoveryMethod2020',
                 controller: identifier,
-                blockchainAccountId: `${address}@eip155:1337`,
+                blockchainAccountId: `eip155:1337:${address}`,
               },
             ],
             authentication: [`${identifier}#controller`],
@@ -1117,7 +1107,7 @@ describe('ethrResolver', () => {
           id: `${identifier}#delegate-1`,
           type: 'EcdsaSecp256k1RecoveryMethod2020',
           controller: identifier,
-          blockchainAccountId: `${delegate}@eip155:1337`,
+          blockchainAccountId: `eip155:1337:${delegate}`,
         })
         // await expiry
         await sleep(4000)
@@ -1138,13 +1128,13 @@ describe('ethrResolver', () => {
                 id: `${identifier}#controller`,
                 type: 'EcdsaSecp256k1RecoveryMethod2020',
                 controller: identifier,
-                blockchainAccountId: `${address}@eip155:1337`,
+                blockchainAccountId: `eip155:1337:${address}`,
               },
               {
                 id: `${identifier}#delegate-1`,
                 type: 'EcdsaSecp256k1RecoveryMethod2020',
                 controller: identifier,
-                blockchainAccountId: `${delegate}@eip155:1337`,
+                blockchainAccountId: `eip155:1337:${delegate}`,
               },
             ],
             authentication: [`${identifier}#controller`, `${identifier}#delegate-1`],
