@@ -50,7 +50,7 @@ the registry looks like this:
       "id": "did:ethr:0xb9c5714089478a327f09197987f16f9e5d936e8a#controller",
       "type": "EcdsaSecp256k1RecoveryMethod2020",
       "controller": "did:ethr:0xb9c5714089478a327f09197987f16f9e5d936e8a",
-      "blockchainAccountId": "0xb9c5714089478a327f09197987f16f9e5d936e8a"
+      "blockchainAccountId": "eip155:1:0xb9c5714089478a327f09197987f16f9e5d936e8a"
     }
   ],
   "authentication": [
