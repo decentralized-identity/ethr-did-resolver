@@ -121,10 +121,7 @@ export class EthrDidResolver {
     now: BigNumber
   ): { didDocument: DIDDocument; deactivated: boolean; versionId: number; nextVersionId: number } {
     const baseDIDDocument: DIDDocument = {
-      '@context': [
-        'https://www.w3.org/ns/did/v1',
-        'https://identity.foundation/EcdsaSecp256k1RecoverySignature2020/lds-ecdsa-secp256k1-recovery2020-0.0.jsonld',
-      ],
+      '@context': ['https://www.w3.org/ns/did/v1', 'https://w3id.org/security/suites/secp256k1recovery-2020/v2'],
       id: did,
       verificationMethod: [],
       authentication: [],

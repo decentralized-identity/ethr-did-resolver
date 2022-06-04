@@ -54,7 +54,7 @@ describe('ethrResolver', () => {
         didDocument: {
           '@context': [
             'https://www.w3.org/ns/did/v1',
-            'https://identity.foundation/EcdsaSecp256k1RecoverySignature2020/lds-ecdsa-secp256k1-recovery2020-0.0.jsonld',
+            'https://w3id.org/security/suites/secp256k1recovery-2020/v2',
           ],
           id: did,
           verificationMethod: [
@@ -81,7 +81,7 @@ describe('ethrResolver', () => {
         didDocument: {
           '@context': [
             'https://www.w3.org/ns/did/v1',
-            'https://identity.foundation/EcdsaSecp256k1RecoverySignature2020/lds-ecdsa-secp256k1-recovery2020-0.0.jsonld',
+            'https://w3id.org/security/suites/secp256k1recovery-2020/v2',
           ],
           id: pubdid,
           verificationMethod: [
@@ -117,7 +117,7 @@ describe('ethrResolver', () => {
         didDocument: {
           '@context': [
             'https://www.w3.org/ns/did/v1',
-            'https://identity.foundation/EcdsaSecp256k1RecoverySignature2020/lds-ecdsa-secp256k1-recovery2020-0.0.jsonld',
+            'https://w3id.org/security/suites/secp256k1recovery-2020/v2',
           ],
           id: did,
           verificationMethod: [
@@ -142,7 +142,7 @@ describe('ethrResolver', () => {
       expect(didDocument).toEqual({
         '@context': [
           'https://www.w3.org/ns/did/v1',
-          'https://identity.foundation/EcdsaSecp256k1RecoverySignature2020/lds-ecdsa-secp256k1-recovery2020-0.0.jsonld',
+          'https://w3id.org/security/suites/secp256k1recovery-2020/v2',
         ],
         id: pubdid,
         verificationMethod: [
@@ -176,7 +176,7 @@ describe('ethrResolver', () => {
           didDocument: {
             '@context': [
               'https://www.w3.org/ns/did/v1',
-              'https://identity.foundation/EcdsaSecp256k1RecoverySignature2020/lds-ecdsa-secp256k1-recovery2020-0.0.jsonld',
+              'https://w3id.org/security/suites/secp256k1recovery-2020/v2',
             ],
             id: did,
             verificationMethod: [
@@ -214,7 +214,7 @@ describe('ethrResolver', () => {
           didDocument: {
             '@context': [
               'https://www.w3.org/ns/did/v1',
-              'https://identity.foundation/EcdsaSecp256k1RecoverySignature2020/lds-ecdsa-secp256k1-recovery2020-0.0.jsonld',
+              'https://w3id.org/security/suites/secp256k1recovery-2020/v2',
             ],
             id: did,
             verificationMethod: [
@@ -891,7 +891,7 @@ describe('ethrResolver', () => {
           didDocument: {
             '@context': [
               'https://www.w3.org/ns/did/v1',
-              'https://identity.foundation/EcdsaSecp256k1RecoverySignature2020/lds-ecdsa-secp256k1-recovery2020-0.0.jsonld',
+              'https://w3id.org/security/suites/secp256k1recovery-2020/v2',
             ],
             id: virginDID,
             verificationMethod: [
@@ -923,7 +923,7 @@ describe('ethrResolver', () => {
           didDocument: {
             '@context': [
               'https://www.w3.org/ns/did/v1',
-              'https://identity.foundation/EcdsaSecp256k1RecoverySignature2020/lds-ecdsa-secp256k1-recovery2020-0.0.jsonld',
+              'https://w3id.org/security/suites/secp256k1recovery-2020/v2',
             ],
             id: deactivatedDid,
             verificationMethod: [

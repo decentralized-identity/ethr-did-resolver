@@ -24,7 +24,7 @@ describe('ethrResolver (alt-chains)', () => {
         didDocument: {
           '@context': [
             'https://www.w3.org/ns/did/v1',
-            'https://identity.foundation/EcdsaSecp256k1RecoverySignature2020/lds-ecdsa-secp256k1-recovery2020-0.0.jsonld',
+            'https://w3id.org/security/suites/secp256k1recovery-2020/v2',
           ],
           id: 'did:ethr:0x26bf14321004e770e7a8b080b7a526d8eed8b388',
           verificationMethod: [
@@ -54,7 +54,7 @@ describe('ethrResolver (alt-chains)', () => {
         didDocument: {
           '@context': [
             'https://www.w3.org/ns/did/v1',
-            'https://identity.foundation/EcdsaSecp256k1RecoverySignature2020/lds-ecdsa-secp256k1-recovery2020-0.0.jsonld',
+            'https://w3id.org/security/suites/secp256k1recovery-2020/v2',
           ],
           id: did,
           verificationMethod: [
@@ -84,7 +84,7 @@ describe('ethrResolver (alt-chains)', () => {
         didDocument: {
           '@context': [
             'https://www.w3.org/ns/did/v1',
-            'https://identity.foundation/EcdsaSecp256k1RecoverySignature2020/lds-ecdsa-secp256k1-recovery2020-0.0.jsonld',
+            'https://w3id.org/security/suites/secp256k1recovery-2020/v2',
           ],
           id: did,
           verificationMethod: [
@@ -114,7 +114,7 @@ describe('ethrResolver (alt-chains)', () => {
         didDocument: {
           '@context': [
             'https://www.w3.org/ns/did/v1',
-            'https://identity.foundation/EcdsaSecp256k1RecoverySignature2020/lds-ecdsa-secp256k1-recovery2020-0.0.jsonld',
+            'https://w3id.org/security/suites/secp256k1recovery-2020/v2',
           ],
           id: did,
           verificationMethod: [
@@ -142,7 +142,7 @@ describe('ethrResolver (alt-chains)', () => {
         didDocument: {
           '@context': [
             'https://www.w3.org/ns/did/v1',
-            'https://identity.foundation/EcdsaSecp256k1RecoverySignature2020/lds-ecdsa-secp256k1-recovery2020-0.0.jsonld',
+            'https://w3id.org/security/suites/secp256k1recovery-2020/v2',
           ],
           id: did,
           verificationMethod: [
@@ -170,7 +170,7 @@ describe('ethrResolver (alt-chains)', () => {
         didDocument: {
           '@context': [
             'https://www.w3.org/ns/did/v1',
-            'https://identity.foundation/EcdsaSecp256k1RecoverySignature2020/lds-ecdsa-secp256k1-recovery2020-0.0.jsonld',
+            'https://w3id.org/security/suites/secp256k1recovery-2020/v2',
           ],
           id: did,
           verificationMethod: [
@@ -198,7 +198,7 @@ describe('ethrResolver (alt-chains)', () => {
         didDocument: {
           '@context': [
             'https://www.w3.org/ns/did/v1',
-            'https://identity.foundation/EcdsaSecp256k1RecoverySignature2020/lds-ecdsa-secp256k1-recovery2020-0.0.jsonld',
+            'https://w3id.org/security/suites/secp256k1recovery-2020/v2',
           ],
           id: did,
           verificationMethod: [
@@ -244,7 +244,7 @@ describe('ethrResolver (alt-chains)', () => {
         didDocument: {
           '@context': [
             'https://www.w3.org/ns/did/v1',
-            'https://identity.foundation/EcdsaSecp256k1RecoverySignature2020/lds-ecdsa-secp256k1-recovery2020-0.0.jsonld',
+            'https://w3id.org/security/suites/secp256k1recovery-2020/v2',
           ],
           id: did,
           verificationMethod: [
