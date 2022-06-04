@@ -157,7 +157,7 @@ The default DID document for an `did:ethr<Ethereum address>` on mainnet, e.g.
       "id": "did:ethr:0xb9c5714089478a327f09197987f16f9e5d936e8a#controller",
       "type": "EcdsaSecp256k1RecoveryMethod2020",
       "controller": "did:ethr:0xb9c5714089478a327f09197987f16f9e5d936e8a",
-      "blockchainAccountId": "0xb9c5714089478a327f09197987f16f9e5d936e8a@eip155:1"
+      "blockchainAccountId": "eip155:1:0xb9c5714089478a327f09197987f16f9e5d936e8a"
     }
   ],
   "authentication": ["did:ethr:0xb9c5714089478a327f09197987f16f9e5d936e8a#controller"],
@@ -180,7 +180,7 @@ looks like this:
       "id": "did:ethr:0x0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798#controller",
       "type": "EcdsaSecp256k1RecoveryMethod2020",
       "controller": "did:ethr:0x0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798",
-      "blockchainAccountId": "0xb9c5714089478a327f09197987f16f9e5d936e8a@eip155:1"
+      "blockchainAccountId": "eip155:1:0xb9c5714089478a327f09197987f16f9e5d936e8a"
     },
     {
       "id": "did:ethr:0x0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798#controllerKey",
@@ -205,7 +205,8 @@ looks like this:
 The DID document is built by using read only functions and contract events on the ERC1056 registry.
 
 Any value from the registry that returns an Ethereum address will be added to the `verificationMethod` array of the
-DID document with type `EcdsaSecp256k1RecoveryMethod2020` and an `blockchainAccountId` attribute containing the address.
+DID document with type `EcdsaSecp256k1RecoveryMethod2020` and an `blockchainAccountId` attribute containing the address using [CAIP10 Format](https://github.com/ChainAgnostic/CAIPs/blob/master/CAIPs/caip-10.md).
+
 Other verification relationships and service entries are added or removed by enumerating contract events (see below).
 
 #### Controller Address
@@ -291,7 +292,7 @@ document. When resolving an older version (using `versionId` in the didURL query
 compared to the timestamp of the block of `versionId` height.
 
 Such valid delegates MUST be added to the `verificationMethod` array as `EcdsaSecp256k1RecoveryMethod2020` entries, with
-`delegate` listed under `blockchainAccountId` and suffixed with `@eip155:<chainId>`
+`delegate` listed under `blockchainAccountId` and prefixed with `eip155:<chainId>:`, according to [CAIP10](https://github.com/ChainAgnostic/CAIPs/blob/master/CAIPs/caip-10.md)
 
 Example:
 ```json
@@ -299,7 +300,7 @@ Example:
   "id": "did:ethr:0xf3beac30c498d9e26865f34fcaa57dbb935b0d74#delegate-1",
   "type": "EcdsaSecp256k1RecoveryMethod2020",
   "controller": "did:ethr:0xf3beac30c498d9e26865f34fcaa57dbb935b0d74",
-  "blockchainAccountId": "0x12345678c498d9e26865f34fcaa57dbb935b0d74@eip155:1"
+  "blockchainAccountId": "eip155:1:0x12345678c498d9e26865f34fcaa57dbb935b0d74"
 }
 ```
 
