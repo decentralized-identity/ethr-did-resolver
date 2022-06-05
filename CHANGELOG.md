@@ -1,3 +1,18 @@
+# [6.0.0](https://github.com/decentralized-identity/ethr-did-resolver/compare/5.0.4...6.0.0) (2022-06-05)
+
+
+### Bug Fixes
+
+* **doc:** update LD [@context](https://github.com/context) ([#154](https://github.com/decentralized-identity/ethr-did-resolver/issues/154)) ([29c196a](https://github.com/decentralized-identity/ethr-did-resolver/commit/29c196a507f086e24113c7254e082cccd4978af3)), closes [#151](https://github.com/decentralized-identity/ethr-did-resolver/issues/151)
+* **doc:** update spec to use new CAIP10 format ([77a4f67](https://github.com/decentralized-identity/ethr-did-resolver/commit/77a4f670859da3e7bbbd5f0c9d39cf490579fd79))
+* update blockchainAccountId to the new CAIP10 format ([#153](https://github.com/decentralized-identity/ethr-did-resolver/issues/153)) ([9c3f401](https://github.com/decentralized-identity/ethr-did-resolver/commit/9c3f4011d525f0b7295cb3e0226a423513e3460f)), closes [#152](https://github.com/decentralized-identity/ethr-did-resolver/issues/152)
+
+
+### BREAKING CHANGES
+
+* **doc:** Since the context definitions most often have to be embedded in apps, this requires apps to download the new definition.
+* Apps have to update their processing of `blockchainAccountId` to use the [new CAIP10 format](https://github.com/ChainAgnostic/CAIPs/blob/master/CAIPs/caip-10.md)
+
 ## [5.0.4](https://github.com/decentralized-identity/ethr-did-resolver/compare/5.0.3...5.0.4) (2022-01-20)
 
 
