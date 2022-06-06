@@ -52,10 +52,7 @@ describe('ethrResolver', () => {
         didDocumentMetadata: {},
         didResolutionMetadata: { contentType: 'application/did+ld+json' },
         didDocument: {
-          '@context': [
-            'https://www.w3.org/ns/did/v1',
-            'https://w3id.org/security/suites/secp256k1recovery-2020/v2',
-          ],
+          '@context': ['https://www.w3.org/ns/did/v1', 'https://w3id.org/security/suites/secp256k1recovery-2020/v2'],
           id: did,
           verificationMethod: [
             {
@@ -79,10 +76,7 @@ describe('ethrResolver', () => {
         didDocumentMetadata: {},
         didResolutionMetadata: { contentType: 'application/did+ld+json' },
         didDocument: {
-          '@context': [
-            'https://www.w3.org/ns/did/v1',
-            'https://w3id.org/security/suites/secp256k1recovery-2020/v2',
-          ],
+          '@context': ['https://www.w3.org/ns/did/v1', 'https://w3id.org/security/suites/secp256k1recovery-2020/v2'],
           id: pubdid,
           verificationMethod: [
             {
@@ -115,10 +109,7 @@ describe('ethrResolver', () => {
         didDocumentMetadata: { versionId: `${blockHeightBeforeChange + 1}`, updated: expect.anything() },
         didResolutionMetadata: { contentType: 'application/did+ld+json' },
         didDocument: {
-          '@context': [
-            'https://www.w3.org/ns/did/v1',
-            'https://w3id.org/security/suites/secp256k1recovery-2020/v2',
-          ],
+          '@context': ['https://www.w3.org/ns/did/v1', 'https://w3id.org/security/suites/secp256k1recovery-2020/v2'],
           id: did,
           verificationMethod: [
             {
@@ -140,10 +131,7 @@ describe('ethrResolver', () => {
       const pubdid = `did:ethr:dev:0x${pubKey}`
       const { didDocument } = await didResolver.resolve(pubdid)
       expect(didDocument).toEqual({
-        '@context': [
-          'https://www.w3.org/ns/did/v1',
-          'https://w3id.org/security/suites/secp256k1recovery-2020/v2',
-        ],
+        '@context': ['https://www.w3.org/ns/did/v1', 'https://w3id.org/security/suites/secp256k1recovery-2020/v2'],
         id: pubdid,
         verificationMethod: [
           {
@@ -174,10 +162,7 @@ describe('ethrResolver', () => {
           didDocumentMetadata: { versionId: `${blockHeightBeforeChange + 1}`, updated: expect.anything() },
           didResolutionMetadata: { contentType: 'application/did+ld+json' },
           didDocument: {
-            '@context': [
-              'https://www.w3.org/ns/did/v1',
-              'https://w3id.org/security/suites/secp256k1recovery-2020/v2',
-            ],
+            '@context': ['https://www.w3.org/ns/did/v1', 'https://w3id.org/security/suites/secp256k1recovery-2020/v2'],
             id: did,
             verificationMethod: [
               {
@@ -212,10 +197,7 @@ describe('ethrResolver', () => {
           didDocumentMetadata: { versionId: `${blockHeightBeforeChange + 1}`, updated: expect.anything() },
           didResolutionMetadata: { contentType: 'application/did+ld+json' },
           didDocument: {
-            '@context': [
-              'https://www.w3.org/ns/did/v1',
-              'https://w3id.org/security/suites/secp256k1recovery-2020/v2',
-            ],
+            '@context': ['https://www.w3.org/ns/did/v1', 'https://w3id.org/security/suites/secp256k1recovery-2020/v2'],
             id: did,
             verificationMethod: [
               {
@@ -889,10 +871,7 @@ describe('ethrResolver', () => {
             contentType: 'application/did+ld+json',
           },
           didDocument: {
-            '@context': [
-              'https://www.w3.org/ns/did/v1',
-              'https://w3id.org/security/suites/secp256k1recovery-2020/v2',
-            ],
+            '@context': ['https://www.w3.org/ns/did/v1', 'https://w3id.org/security/suites/secp256k1recovery-2020/v2'],
             id: virginDID,
             verificationMethod: [
               {
@@ -921,10 +900,7 @@ describe('ethrResolver', () => {
           },
           didResolutionMetadata: { contentType: 'application/did+ld+json' },
           didDocument: {
-            '@context': [
-              'https://www.w3.org/ns/did/v1',
-              'https://w3id.org/security/suites/secp256k1recovery-2020/v2',
-            ],
+            '@context': ['https://www.w3.org/ns/did/v1', 'https://w3id.org/security/suites/secp256k1recovery-2020/v2'],
             id: deactivatedDid,
             verificationMethod: [
               {

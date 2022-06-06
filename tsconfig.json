@@ -25,5 +25,8 @@
     "**/__tests__/*",
     "node_modules",
     "lib"
+  ],
+  "include": [
+    "src"
   ]
 }
