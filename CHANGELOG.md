@@ -1,3 +1,10 @@
+## [6.0.1](https://github.com/decentralized-identity/ethr-did-resolver/compare/6.0.0...6.0.1) (2022-06-06)
+
+
+### Bug Fixes
+
+* **ci:** groom the build scripts and dependencies ([#156](https://github.com/decentralized-identity/ethr-did-resolver/issues/156)) ([9a53958](https://github.com/decentralized-identity/ethr-did-resolver/commit/9a53958e3a711d50416594f78a9b2a86ad5e9f93))
+
 # [6.0.0](https://github.com/decentralized-identity/ethr-did-resolver/compare/5.0.4...6.0.0) (2022-06-05)
 
 
