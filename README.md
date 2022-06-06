@@ -114,9 +114,9 @@ network. An example configuration for multi-network DID resolving would look lik
 const providerConfig = {
   networks: [
     { name: "mainnet", provider: web3.currentProvider },
-    { name: "0x4", rpcUrl: "https://rinkeby.infura.io/v3/<YOUR PROJECT ID>" }
-    { name: "rsk:testnet", chainId: "0x1f", rpcUrl: "https://did.testnet.rsk.co:4444" }
-    { name: "development", rpcUrl: "http://localhost:7545", registry: "0xdca7ef03e98e0dc2b855be647c39abe984fcf21b" }
+    { name: "0x4", rpcUrl: "https://rinkeby.infura.io/v3/<YOUR PROJECT ID>" },
+    { name: "rsk:testnet", chainId: "0x1f", rpcUrl: "https://did.testnet.rsk.co:4444" },
+    { name: "development", rpcUrl: "http://localhost:7545", registry: "0xdca7ef03e98e0dc2b855be647c39abe984fcf21b" },
     { name: "myprivatenet", chainId: 123456, rpcUrl: "https://my.private.net.json.rpc.url" }
   ]
 }
