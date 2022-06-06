@@ -48,12 +48,11 @@
   ],
   "scripts": {
     "test": "jest",
-    "test:ci": "jest --coverage && codecov",
-    "build:js": "microbundle --compress=false",
-    "build": "yarn lint && yarn build:js",
+    "test:ci": "jest --coverage",
+    "build": "microbundle --compress=false",
     "format": "prettier --write \"src/**/*.[jt]s\"",
     "lint": "eslint --ignore-pattern \"src/**/*.test.[jt]s\" \"src/**/*.[jt]s\"",
-    "prepublishOnly": "yarn build:js && yarn test:ci && yarn format && yarn lint",
+    "prepublishOnly": "yarn test:ci && yarn format && yarn lint",
     "release": "semantic-release --debug"
   },
   "jest": {
@@ -79,7 +78,6 @@
     "@typescript-eslint/eslint-plugin": "5.27.0",
     "@typescript-eslint/parser": "5.27.0",
     "babel-jest": "28.1.0",
-    "codecov": "3.8.3",
     "eslint": "8.17.0",
     "eslint-config-prettier": "8.5.0",
     "eslint-plugin-jest": "26.5.1",
