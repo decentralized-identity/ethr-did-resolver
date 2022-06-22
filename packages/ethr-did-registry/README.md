@@ -312,10 +312,14 @@ First run,
 $ scripts/generateDeployTxs.js
 ```
 
-You will get the data needed to deploy as an output from this command. Copy the `senderAddress` and send `cost` amount
-of ether to that address on the Ethereum network you wish to deploy to. Once this tx is confirmed, simply send
-the `rawTx` to the same network. `contractAddress` is the address of the deployed contract. This will be the same on all
-networks it's deployed to.
+You will get the data needed to deploy as an output from this command.
+
+Copy the `senderAddress` and send `cost` amount of ether to that address on the Ethereum network you wish to deploy to. 
+
+Once this funding transaction is confirmed, simply send the `rawTx` to the same network.
+`contractAddress` is the address of the deployed contract.
+
+`chainId` is intentionally not used in the transaction to make it simpler to deploy to the same address on all networks.
 
 ## Testing the Contracts
 
