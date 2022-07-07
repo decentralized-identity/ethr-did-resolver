@@ -57,7 +57,9 @@
     "lint:js": "npx eslint '**/*.{js,ts}' --fix",
     "lint:sol": "npx solhint 'contracts/**/*.sol' --fix",
     "lint": "yarn lint:sol && yarn lint:js",
-    "prettier": "prettier -w '**/*.{ts,js,json,md}'"
+    "format": "prettier -w '**/*.{ts,js,json,md}'",
+    "prepublishOnly": "yarn test && yarn format && yarn lint",
+    "release": "semantic-release --debug"
   },
   "author": "Pelle Braendgaard",
   "contributors": [

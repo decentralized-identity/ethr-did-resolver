@@ -7,5 +7,5 @@
     "declaration": true,
     "esModuleInterop": true,
     "resolveJsonModule": true
-  },
+  }
 }

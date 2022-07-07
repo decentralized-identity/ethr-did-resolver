@@ -13,5 +13,5 @@
     }],
     "@semantic-release/github"
   ],
-  "branches": ["develop", "master"]
+  "branches": ["master"]
 }
