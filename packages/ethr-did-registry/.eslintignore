@@ -1,0 +1,8 @@
+node_modules
+**/artifacts
+**/dist
+**/cache
+**/coverage
+**/build
+**/lib
+**/__tests__

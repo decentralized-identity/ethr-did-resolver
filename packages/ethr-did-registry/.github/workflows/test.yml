@@ -1,0 +1,19 @@
+name: Build and Test NODE
+on: [pull_request, push, workflow_dispatch]
+jobs:
+  build-test:
+    runs-on: ubuntu-18.04
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: "setup node with cache"
+        uses: actions/setup-node@v3
+        with:
+          node-version: 14
+          cache: 'yarn'
+
+      - run: yarn install --frozen-lockfile
+      - run: yarn build
+      - run: yarn test
+      - run: yarn lint
