@@ -2,7 +2,7 @@
   "name": "ethr-did-registry",
   "version": "0.0.4",
   "description": "A repository storing keys and other data about Ethereum Decentralized Identifiers (DIDs)",
-  "main": "artifacts/contracts/EthereumDIDRegistry.sol/EthereumDIDRegistry.json",
+  "main": "./dist/index.js",
   "dependencies": {},
   "devDependencies": {
     "@babel/core": "7.16.0",
@@ -11,6 +11,8 @@
     "@nomiclabs/hardhat-ethers": "^2.0.0",
     "@nomiclabs/hardhat-etherscan": "^2.1.3",
     "@nomiclabs/hardhat-waffle": "^2.0.0",
+    "@semantic-release/changelog": "6.0.1",
+    "@semantic-release/git": "10.0.1",
     "@typechain/ethers-v5": "^7.0.1",
     "@typechain/hardhat": "^2.3.0",
     "@types/chai": "^4.2.21",
@@ -39,6 +41,7 @@
     "ls": "^0.2.1",
     "prettier": "^2.3.2",
     "prettier-plugin-solidity": "^1.0.0-beta.13",
+    "semantic-release": "19.0.3",
     "solhint": "^3.3.6",
     "solidity-coverage": "^0.7.16",
     "ts-node": "^10.1.0",
@@ -56,7 +59,7 @@
     "lint": "yarn lint:sol && yarn lint:js",
     "prettier": "prettier -w '**/*.{ts,js,json,md}'"
   },
-  "author": "Pelle Braendgaard <pelle.braendgaard@consensys.net>",
+  "author": "Pelle Braendgaard",
   "contributors": [
     "Mircea Nistor <mirceanis@gmail.com>"
   ],
