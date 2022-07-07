@@ -4,6 +4,7 @@ export type EthrDidRegistryDeployment = {
   name?: string
   description?: string
   rpcUrl?: string
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [x: string]: any
 }
 

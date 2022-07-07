@@ -23,7 +23,7 @@ import {
   DIDDelegateChangedEvent,
   DIDOwnerChangedEvent,
   EthereumDIDRegistry,
-} from '../typechain/EthereumDIDRegistry'
+} from '../typechain-types/EthereumDIDRegistry'
 
 chai.use(chaiAsPromised)
 

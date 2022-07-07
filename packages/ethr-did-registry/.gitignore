@@ -10,8 +10,8 @@
 .idea/
 lib/
 build/
-.env
 typechain/
+typechain-types/
 artifacts/
 cache/
 

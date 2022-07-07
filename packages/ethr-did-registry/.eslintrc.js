@@ -14,7 +14,4 @@ module.exports = {
     'plugin:@typescript-eslint/recommended',
   ],
   parser: '@typescript-eslint/parser',
-  rules: {
-    'node/no-unsupported-features/es-syntax': ['error', { ignores: ['modules'] }],
-  },
 }
