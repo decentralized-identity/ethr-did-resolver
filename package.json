@@ -99,6 +99,6 @@
     "@ethersproject/providers": "^5.6.8",
     "@ethersproject/transactions": "^5.6.2",
     "did-resolver": "^3.2.2",
-    "ethr-did-registry": "^0.0.3"
+    "ethr-did-registry": "^1.0.0"
   }
 }
