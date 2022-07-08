@@ -67,7 +67,7 @@
     "@typescript-eslint/eslint-plugin": "4.28.0",
     "@typescript-eslint/parser": "4.28.0",
     "babel-jest": "27.0.5",
-    "codecov": "3.8.2",
+    "codecov": "3.8.3",
     "eslint": "7.29.0",
     "eslint-config-prettier": "8.3.0",
     "eslint-plugin-jest": "24.3.6",
@@ -82,6 +82,7 @@
   "dependencies": {
     "@ethersproject/bignumber": "^5.1.0",
     "@ethersproject/providers": "^5.1.0",
-    "did-resolver": "^3.1.2"
+    "did-resolver": "^3.1.2",
+    "teeny-request": "8.0.0"
   }
 }
