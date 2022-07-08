@@ -96,11 +96,13 @@ function configureNetworks(conf: MultiProviderConfiguration): ConfiguredNetworks
 }
 
 /**
- * Generates a configuration that maps ethereum network names and chainIDs to the respective ERC1056 contracts deployed on them.
+ * Generates a configuration that maps ethereum network names and chainIDs to the respective ERC1056 contracts deployed
+ * on them.
  * @returns a record of ERC1056 `Contract` instances
  * @param conf configuration options for the resolver. An array of network details.
  * Each network entry should contain at least one of `name` or `chainId` AND one of `provider`, `web3`, or `rpcUrl`
- * For convenience, you can also specify an `infuraProjectId` which will create a mapping for all the networks supported by https://infura.io.
+ * For convenience, you can also specify an `infuraProjectId` which will create a mapping for all the networks
+ *   supported by https://infura.io.
  * @example ```js
  * [
  *   { name: 'development', registry: '0x9af37603e98e0dc2b855be647c39abe984fc2445', rpcUrl: 'http://127.0.0.1:8545/' },
