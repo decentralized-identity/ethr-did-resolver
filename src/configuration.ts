@@ -47,14 +47,16 @@ function configureNetworksWithInfura(projectId?: string): ConfiguredNetworks {
     return {}
   }
 
-  const networks = knownInfuraNames.map((n) => {
-    const existingDeployment = deployments.find((d) => d.name === n)
-    if (existingDeployment && existingDeployment.name) {
-      const infuraName = infuraNames[existingDeployment.name] || existingDeployment.name
-      const rpcUrl = `https://${infuraName}.infura.io/v3/${projectId}`
-      return { ...existingDeployment, rpcUrl }
-    }
-  }).filter(conf => !!conf) as ProviderConfiguration[]
+  const networks = knownInfuraNames
+    .map((n) => {
+      const existingDeployment = deployments.find((d) => d.name === n)
+      if (existingDeployment && existingDeployment.name) {
+        const infuraName = infuraNames[existingDeployment.name] || existingDeployment.name
+        const rpcUrl = `https://${infuraName}.infura.io/v3/${projectId}`
+        return { ...existingDeployment, rpcUrl }
+      }
+    })
+    .filter((conf) => !!conf) as ProviderConfiguration[]
 
   return configureNetworks({ networks })
 }
@@ -67,7 +69,7 @@ export function getContractForNetwork(conf: ProviderConfiguration): Contract {
       const chainId = chainIdRaw ? BigNumber.from(chainIdRaw).toNumber() : chainIdRaw
       provider = new JsonRpcProvider(conf.rpcUrl, chainId || 'any')
     } else {
-      throw new Error(`invalid_config: No web3 provider could be determined for network ${conf.name || conf.chainId}, ${JSON.stringify(conf)}`)
+      throw new Error(`invalid_config: No web3 provider could be determined for network ${conf.name || conf.chainId}`)
     }
   }
   const contract: Contract = ContractFactory.fromSolidity(EthereumDIDRegistry)
@@ -78,7 +80,8 @@ export function getContractForNetwork(conf: ProviderConfiguration): Contract {
 
 function configureNetwork(net: ProviderConfiguration): ConfiguredNetworks {
   const networks: ConfiguredNetworks = {}
-  const chainId = net.chainId || deployments.find((d) => (net.name && (d.name === net.name || d.description === net.name)))?.chainId
+  const chainId =
+    net.chainId || deployments.find((d) => net.name && (d.name === net.name || d.description === net.name))?.chainId
   if (chainId) {
     if (net.name) {
       networks[net.name] = getContractForNetwork(net)
