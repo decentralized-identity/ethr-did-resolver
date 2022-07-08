@@ -113,24 +113,6 @@ export function interpretIdentifier(identifier: string): { address: string; publ
   }
 }
 
-export const knownInfuraNetworks: Record<string, string> = {
-  mainnet: '0x1',
-  ropsten: '0x3',
-  rinkeby: '0x4',
-  goerli: '0x5',
-  kovan: '0x2a',
-}
-
-export const knownNetworks: Record<string, string> = {
-  ...knownInfuraNetworks,
-  rsk: '0x1e',
-  'rsk:testnet': '0x1f',
-  artis_t1: '0x03c401',
-  artis_s1: '0x03c301',
-  matic: '0x89',
-  maticmum: '0x13881',
-}
-
 export enum Errors {
   /**
    * The resolver has failed to construct the DID document.

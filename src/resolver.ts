@@ -26,7 +26,6 @@ import {
   identifierMatcher,
   nullAddress,
   DIDOwnerChanged,
-  knownNetworks,
   Errors,
   strip0x,
 } from './helpers'
@@ -79,7 +78,7 @@ export class EthrDidResolver {
   ): Promise<{ address: string; history: ERC1056Event[]; controllerKey?: string; chainId: number }> {
     const contract = this.contracts[networkId]
     const provider = contract.provider
-    const hexChainId = networkId.startsWith('0x') ? networkId : knownNetworks[networkId]
+    const hexChainId = networkId.startsWith('0x') ? networkId : undefined
     //TODO: this can be used to check if the configuration is ok
     const chainId = hexChainId ? BigNumber.from(hexChainId).toNumber() : (await provider.getNetwork()).chainId
     const history: ERC1056Event[] = []
@@ -88,14 +87,11 @@ export class EthrDidResolver {
     let previousChange: BigNumber | null = await this.previousChange(address, networkId, blockTag)
     while (previousChange) {
       const blockNumber = previousChange
-      // console.log(`gigel ${previousChange}`)
-      const fromBlock =
-        previousChange.toHexString() !== '0x00' ? previousChange.sub(1).toHexString() : previousChange.toHexString()
       const logs = await provider.getLogs({
         address: contract.address, // networks[networkId].registryAddress,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         topics: [null as any, `0x000000000000000000000000${address.slice(2)}`],
-        fromBlock,
+        fromBlock: previousChange.toHexString(),
         toBlock: previousChange.toHexString(),
       })
       const events: ERC1056Event[] = logDecoder(contract, logs)

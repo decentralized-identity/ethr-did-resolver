@@ -216,8 +216,8 @@ describe('ethrResolver (alt-chains)', () => {
       const doc = await resolver.resolve(did)
       return expect(doc).toEqual({
         didDocumentMetadata: {
-          updated: '2022-01-19T12:19:59Z',
-          versionId: '57702193',
+          updated: '2022-01-19T12:20:00Z',
+          versionId: '57702194',
         },
         didResolutionMetadata: { contentType: 'application/did+ld+json' },
         didDocument: {
