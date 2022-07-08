@@ -26,7 +26,6 @@ import {
   identifierMatcher,
   nullAddress,
   DIDOwnerChanged,
-  knownNetworks,
   Errors,
   strip0x,
 } from './helpers'
@@ -79,7 +78,7 @@ export class EthrDidResolver {
   ): Promise<{ address: string; history: ERC1056Event[]; controllerKey?: string; chainId: number }> {
     const contract = this.contracts[networkId]
     const provider = contract.provider
-    const hexChainId = networkId.startsWith('0x') ? networkId : knownNetworks[networkId]
+    const hexChainId = networkId.startsWith('0x') ? networkId : undefined
     //TODO: this can be used to check if the configuration is ok
     const chainId = hexChainId ? BigNumber.from(hexChainId).toNumber() : (await provider.getNetwork()).chainId
     const history: ERC1056Event[] = []

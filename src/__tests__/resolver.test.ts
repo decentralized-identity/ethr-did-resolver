@@ -2,7 +2,7 @@ import { Contract, ContractFactory } from '@ethersproject/contracts'
 import { Resolvable, Resolver } from 'did-resolver'
 import { getResolver } from '../resolver'
 import { EthrDidController } from '../controller'
-import DidRegistryContract from 'ethr-did-registry'
+import { EthereumDIDRegistry } from 'ethr-did-registry'
 import { interpretIdentifier, stringToBytes32 } from '../helpers'
 import { createProvider, sleep, startMining, stopMining } from './testUtils'
 import { nullAddress } from '../helpers'
@@ -24,7 +24,7 @@ describe('ethrResolver', () => {
   const web3Provider = createProvider()
 
   beforeAll(async () => {
-    const factory = ContractFactory.fromSolidity(DidRegistryContract).connect(web3Provider.getSigner(0))
+    const factory = ContractFactory.fromSolidity(EthereumDIDRegistry).connect(web3Provider.getSigner(0))
 
     registryContract = await factory.deploy()
     registryContract = await registryContract.deployed()
