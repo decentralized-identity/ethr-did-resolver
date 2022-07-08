@@ -1,3 +1,10 @@
+## [6.0.2](https://github.com/decentralized-identity/ethr-did-resolver/compare/6.0.1...6.0.2) (2022-07-08)
+
+
+### Bug Fixes
+
+* revert aurora tweaks and use known deployments in config ([#161](https://github.com/decentralized-identity/ethr-did-resolver/issues/161)) ([e238a9f](https://github.com/decentralized-identity/ethr-did-resolver/commit/e238a9f6c081e4c898391d3c80c2d4ab52f93677))
+
 ## [6.0.1](https://github.com/decentralized-identity/ethr-did-resolver/compare/6.0.0...6.0.1) (2022-06-06)
 
 
