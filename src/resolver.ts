@@ -134,6 +134,7 @@ export class EthrDidResolver {
     let deactivated = false
     let delegateCount = 0
     let serviceCount = 0
+    let endpoint = ""
     const auth: Record<string, string> = {}
     const keyAgreementRefs: Record<string, string> = {}
     const pks: Record<string, VerificationMethod> = {}
@@ -217,11 +218,11 @@ export class EthrDidResolver {
               }
               case 'svc':
                 serviceCount++
-                let endpoint = Buffer.from(currentEvent.value.slice(2), 'hex').toString()
                 try {
                   endpoint = JSON.parse(Buffer.from(currentEvent.value.slice(2), 'hex').toString())
-                } catch { }
-                
+                } catch {
+                  endpoint = Buffer.from(currentEvent.value.slice(2), 'hex').toString()
+                }
                 services[eventIndex] = {
                   id: `${did}#service-${serviceCount}`,
                   type: algorithm,
