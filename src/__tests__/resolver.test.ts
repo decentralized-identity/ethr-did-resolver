@@ -568,6 +568,165 @@ describe('ethrResolver', () => {
         })
       })
     })
+
+    describe('add expanded service endpoints', () => {
+      it('resolves document', async () => {
+        expect.assertions(1)
+
+        await new EthrDidController(identity, registryContract).setAttribute(
+          stringToBytes32('did/svc/HubService'),
+          JSON.stringify({uri: 'https://hubs.uport.me', transportType: 'http'}),
+          86405,
+          { from: controller }
+        )
+        const { didDocument } = await didResolver.resolve(did)
+        expect(didDocument).toEqual({
+          '@context': expect.anything(),
+          id: did,
+          verificationMethod: [
+            {
+              id: `${did}#controller`,
+              type: 'EcdsaSecp256k1RecoveryMethod2020',
+              controller: did,
+              blockchainAccountId: `eip155:1337:${controller}`,
+            },
+            {
+              id: `${did}#delegate-4`,
+              type: 'EcdsaSecp256k1RecoveryMethod2020',
+              controller: did,
+              blockchainAccountId: `eip155:1337:${delegate2}`,
+            },
+            {
+              id: `${did}#delegate-5`,
+              type: 'EcdsaSecp256k1VerificationKey2019',
+              controller: did,
+              publicKeyHex: '02b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71',
+            },
+            {
+              id: `${did}#delegate-6`,
+              type: 'Ed25519VerificationKey2018',
+              controller: did,
+              publicKeyBase64: Buffer.from(
+                '02b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71',
+                'hex'
+              ).toString('base64'),
+            },
+            {
+              id: `${did}#delegate-7`,
+              type: 'RSAVerificationKey2018',
+              controller: did,
+              publicKeyPem: '-----BEGIN PUBLIC KEY...END PUBLIC KEY-----\r\n',
+            },
+          ],
+          authentication: [`${did}#controller`, `${did}#delegate-4`],
+          assertionMethod: [
+            `${did}#controller`,
+            `${did}#delegate-4`,
+            `${did}#delegate-5`,
+            `${did}#delegate-6`,
+            `${did}#delegate-7`,
+          ],
+          service: [
+            {
+              id: `${did}#service-1`,
+              type: 'HubService',
+              serviceEndpoint: 'https://hubs.uport.me',
+            },
+            {
+              id: `${did}#service-2`,
+              type: 'HubService',
+              serviceEndpoint: { uri: 'https://hubs.uport.me', transportType: 'http' },
+            },
+          ],
+        })
+
+        await new EthrDidController(identity, registryContract).setAttribute(
+          stringToBytes32('did/svc/HubService'),
+          JSON.stringify([{uri: 'https://hubs.uport.me', transportType: 'http'}, {uri: 'libp2p.star/123', transportType: 'libp2p'}]),
+          86405,
+          { from: controller }
+        )
+        const { didDocument: updatedDidDocument } = await didResolver.resolve(did)
+        expect(updatedDidDocument).toEqual({
+          '@context': expect.anything(),
+          id: did,
+          verificationMethod: [
+            {
+              id: `${did}#controller`,
+              type: 'EcdsaSecp256k1RecoveryMethod2020',
+              controller: did,
+              blockchainAccountId: `eip155:1337:${controller}`,
+            },
+            {
+              id: `${did}#delegate-4`,
+              type: 'EcdsaSecp256k1RecoveryMethod2020',
+              controller: did,
+              blockchainAccountId: `eip155:1337:${delegate2}`,
+            },
+            {
+              id: `${did}#delegate-5`,
+              type: 'EcdsaSecp256k1VerificationKey2019',
+              controller: did,
+              publicKeyHex: '02b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71',
+            },
+            {
+              id: `${did}#delegate-6`,
+              type: 'Ed25519VerificationKey2018',
+              controller: did,
+              publicKeyBase64: Buffer.from(
+                '02b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71',
+                'hex'
+              ).toString('base64'),
+            },
+            {
+              id: `${did}#delegate-7`,
+              type: 'RSAVerificationKey2018',
+              controller: did,
+              publicKeyPem: '-----BEGIN PUBLIC KEY...END PUBLIC KEY-----\r\n',
+            },
+          ],
+          authentication: [`${did}#controller`, `${did}#delegate-4`],
+          assertionMethod: [
+            `${did}#controller`,
+            `${did}#delegate-4`,
+            `${did}#delegate-5`,
+            `${did}#delegate-6`,
+            `${did}#delegate-7`,
+          ],
+          service: [
+            {
+              id: `${did}#service-1`,
+              type: 'HubService',
+              serviceEndpoint: 'https://hubs.uport.me',
+            },
+            {
+              id: `${did}#service-2`,
+              type: 'HubService',
+              serviceEndpoint: { uri: 'https://hubs.uport.me', transportType: 'http' },
+            },
+            {
+              id: `${did}#service-3`,
+              type: 'HubService',
+              serviceEndpoint: [{uri: 'https://hubs.uport.me', transportType: 'http'}, {uri: 'libp2p.star/123', transportType: 'libp2p'}],
+            },
+          ],
+        })
+
+        // undo side effects of this test
+        await new EthrDidController(identity, registryContract).revokeAttribute(
+          stringToBytes32('did/svc/HubService'),
+          JSON.stringify([{uri: 'https://hubs.uport.me', transportType: 'http'}, {uri: 'libp2p.star/123', transportType: 'libp2p'}]),
+          { from: controller }
+        )
+
+        // undo side effects of this test
+        await new EthrDidController(identity, registryContract).revokeAttribute(
+          stringToBytes32('did/svc/HubService'),
+          JSON.stringify({uri: 'https://hubs.uport.me', transportType: 'http'}),
+          { from: controller }
+        )
+      })
+    })
   })
 
   describe('revoke publicKey', () => {

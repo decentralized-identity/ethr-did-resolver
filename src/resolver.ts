@@ -10,7 +10,7 @@ import {
   DIDResolver,
   ParsedDID,
   Resolvable,
-  ServiceEndpoint,
+  Service,
   VerificationMethod,
 } from 'did-resolver'
 import {
@@ -116,6 +116,7 @@ export class EthrDidResolver {
     blockHeight: string | number,
     now: BigNumber
   ): { didDocument: DIDDocument; deactivated: boolean; versionId: number; nextVersionId: number } {
+    // console.log("history: ", history)
     const baseDIDDocument: DIDDocument = {
       '@context': ['https://www.w3.org/ns/did/v1', 'https://w3id.org/security/suites/secp256k1recovery-2020/v2'],
       id: did,
@@ -137,7 +138,7 @@ export class EthrDidResolver {
     const auth: Record<string, string> = {}
     const keyAgreementRefs: Record<string, string> = {}
     const pks: Record<string, VerificationMethod> = {}
-    const services: Record<string, ServiceEndpoint> = {}
+    const services: Record<string, Service> = {}
     for (const event of history) {
       if (blockHeight !== -1 && event.blockNumber > blockHeight) {
         if (nextVersionId > event.blockNumber) {
@@ -217,10 +218,16 @@ export class EthrDidResolver {
               }
               case 'svc':
                 serviceCount++
+                let endpoint
+                try {
+                  endpoint = JSON.parse(Buffer.from(currentEvent.value.slice(2), 'hex').toString())
+                } catch {
+                  endpoint = Buffer.from(currentEvent.value.slice(2), 'hex').toString()
+                }
                 services[eventIndex] = {
                   id: `${did}#service-${serviceCount}`,
                   type: algorithm,
-                  serviceEndpoint: Buffer.from(currentEvent.value.slice(2), 'hex').toString(),
+                  serviceEndpoint: endpoint,
                 }
                 break
             }
@@ -277,6 +284,7 @@ export class EthrDidResolver {
       authentication: authentication.concat(Object.values(auth)),
     }
     if (Object.values(services).length > 0) {
+      console.log("services: ", services)
       didDocument.service = Object.values(services)
     }
     if (Object.values(keyAgreementRefs).length > 0) {
