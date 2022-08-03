@@ -116,7 +116,6 @@ export class EthrDidResolver {
     blockHeight: string | number,
     now: BigNumber
   ): { didDocument: DIDDocument; deactivated: boolean; versionId: number; nextVersionId: number } {
-    // console.log("history: ", history)
     const baseDIDDocument: DIDDocument = {
       '@context': ['https://www.w3.org/ns/did/v1', 'https://w3id.org/security/suites/secp256k1recovery-2020/v2'],
       id: did,
@@ -284,7 +283,6 @@ export class EthrDidResolver {
       authentication: authentication.concat(Object.values(auth)),
     }
     if (Object.values(services).length > 0) {
-      console.log("services: ", services)
       didDocument.service = Object.values(services)
     }
     if (Object.values(keyAgreementRefs).length > 0) {
