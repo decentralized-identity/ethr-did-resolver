@@ -134,7 +134,7 @@ export class EthrDidResolver {
     let deactivated = false
     let delegateCount = 0
     let serviceCount = 0
-    let endpoint = ""
+    let endpoint = ''
     const auth: Record<string, string> = {}
     const keyAgreementRefs: Record<string, string> = {}
     const pks: Record<string, VerificationMethod> = {}
