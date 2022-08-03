@@ -571,7 +571,7 @@ describe('ethrResolver', () => {
 
     describe('add expanded service endpoints', () => {
       it('resolves document', async () => {
-        expect.assertions(1)
+        expect.assertions(2)
 
         await new EthrDidController(identity, registryContract).setAttribute(
           stringToBytes32('did/svc/HubService'),

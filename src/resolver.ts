@@ -217,12 +217,11 @@ export class EthrDidResolver {
               }
               case 'svc':
                 serviceCount++
-                let endpoint
+                let endpoint = Buffer.from(currentEvent.value.slice(2), 'hex').toString()
                 try {
                   endpoint = JSON.parse(Buffer.from(currentEvent.value.slice(2), 'hex').toString())
-                } catch {
-                  endpoint = Buffer.from(currentEvent.value.slice(2), 'hex').toString()
-                }
+                } catch { }
+                
                 services[eventIndex] = {
                   id: `${did}#service-${serviceCount}`,
                   type: algorithm,
