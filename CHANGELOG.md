@@ -1,3 +1,10 @@
+# [6.1.0](https://github.com/decentralized-identity/ethr-did-resolver/compare/6.0.2...6.1.0) (2022-08-04)
+
+
+### Features
+
+* add experimental support for ServiceEndpoint objects ([#163](https://github.com/decentralized-identity/ethr-did-resolver/issues/163)) ([3919a25](https://github.com/decentralized-identity/ethr-did-resolver/commit/3919a25746d68d42ed79c3437a7e0734aa19b46c))
+
 ## [6.0.2](https://github.com/decentralized-identity/ethr-did-resolver/compare/6.0.1...6.0.2) (2022-07-08)
 
 
