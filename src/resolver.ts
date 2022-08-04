@@ -10,7 +10,7 @@ import {
   DIDResolver,
   ParsedDID,
   Resolvable,
-  ServiceEndpoint,
+  Service,
   VerificationMethod,
 } from 'did-resolver'
 import {
@@ -134,10 +134,11 @@ export class EthrDidResolver {
     let deactivated = false
     let delegateCount = 0
     let serviceCount = 0
+    let endpoint = ''
     const auth: Record<string, string> = {}
     const keyAgreementRefs: Record<string, string> = {}
     const pks: Record<string, VerificationMethod> = {}
-    const services: Record<string, ServiceEndpoint> = {}
+    const services: Record<string, Service> = {}
     for (const event of history) {
       if (blockHeight !== -1 && event.blockNumber > blockHeight) {
         if (nextVersionId > event.blockNumber) {
@@ -217,10 +218,15 @@ export class EthrDidResolver {
               }
               case 'svc':
                 serviceCount++
+                try {
+                  endpoint = JSON.parse(Buffer.from(currentEvent.value.slice(2), 'hex').toString())
+                } catch {
+                  endpoint = Buffer.from(currentEvent.value.slice(2), 'hex').toString()
+                }
                 services[eventIndex] = {
                   id: `${did}#service-${serviceCount}`,
                   type: algorithm,
-                  serviceEndpoint: Buffer.from(currentEvent.value.slice(2), 'hex').toString(),
+                  serviceEndpoint: endpoint,
                 }
                 break
             }
