@@ -2,6 +2,8 @@ import { getAddress } from '@ethersproject/address'
 import { BigNumber } from '@ethersproject/bignumber'
 import { computeAddress } from '@ethersproject/transactions'
 import { VerificationMethod } from 'did-resolver'
+import { arrayify, hexConcat, keccak256, zeroPad, SigningKey } from 'ethers/lib/utils'
+import { Contract } from '@ethersproject/contracts'
 
 export const identifierMatcher = /^(.*)?(0x[0-9a-fA-F]{40}|0x[0-9a-fA-F]{66})$/
 export const nullAddress = '0x0000000000000000000000000000000000000000'
@@ -10,6 +12,7 @@ export const DEFAULT_JSON_RPC = 'http://127.0.0.1:8545/'
 
 export type address = string
 export type uint256 = BigNumber
+export type uint8 = Uint8Array
 export type bytes32 = string
 export type bytes = string
 
@@ -62,6 +65,13 @@ export interface LegacyVerificationMethod extends VerificationMethod {
   [x: string]: any
 }
 
+// See https://eips.ethereum.org/EIPS/eip-1056
+export interface MetaSignature {
+  sigV: number
+  sigR: bytes32
+  sigS: bytes32
+}
+
 export const legacyAttrTypes: Record<string, string> = {
   sigAuth: 'SignatureAuthentication2018',
   veriKey: 'VerificationKey2018',
@@ -111,6 +121,20 @@ export function interpretIdentifier(identifier: string): { address: string; publ
   } else {
     return { address: getAddress(id), network } // checksum address
   }
+}
+
+export async function signData(
+  identity: string,
+  signerAddress: string,
+  privateKeyBytes: Uint8Array,
+  dataBytes: Uint8Array,
+  didReg: Contract
+) {
+  const nonce = await didReg.nonce(signerAddress)
+  const paddedNonce = zeroPad(arrayify(nonce), 32)
+  const dataToSign = hexConcat(['0x1900', didReg.address, paddedNonce, identity, dataBytes])
+  const hash = keccak256(dataToSign)
+  return new SigningKey(privateKeyBytes).signDigest(hash)
 }
 
 export enum Errors {

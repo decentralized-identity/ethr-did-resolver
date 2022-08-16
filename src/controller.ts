@@ -2,7 +2,7 @@ import { Signer } from '@ethersproject/abstract-signer'
 import { CallOverrides, Contract } from '@ethersproject/contracts'
 import { BlockTag, JsonRpcProvider, Provider, TransactionReceipt } from '@ethersproject/providers'
 import { getContractForNetwork } from './configuration'
-import { address, DEFAULT_REGISTRY_ADDRESS, interpretIdentifier, stringToBytes32 } from './helpers'
+import { address, DEFAULT_REGISTRY_ADDRESS, interpretIdentifier, MetaSignature, stringToBytes32 } from "./helpers";
 
 /**
  * A class that can be used to interact with the ERC1056 contract on behalf of a local controller key-pair
@@ -79,6 +79,31 @@ export class EthrDidController {
     delete overrides.from
 
     const ownerChange = await contract.functions.changeOwner(this.address, newOwner, overrides)
+    return await ownerChange.wait()
+  }
+
+  async changeOwnerSigned(
+    newOwner: address,
+    metaSignature: MetaSignature,
+    options: CallOverrides = {}
+  ): Promise<TransactionReceipt> {
+    const overrides = {
+      gasLimit: 123456,
+      gasPrice: 1000000000,
+      ...options,
+    }
+
+    const contract = await this.attachContract(overrides.from)
+    delete overrides.from
+
+    const ownerChange = await contract.functions.changeOwnerSigned(
+      this.address,
+      metaSignature.sigV,
+      metaSignature.sigR,
+      metaSignature.sigS,
+      newOwner,
+      overrides
+    )
     return await ownerChange.wait()
   }
 

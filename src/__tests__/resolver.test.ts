@@ -3,9 +3,10 @@ import { Resolvable, Resolver } from 'did-resolver'
 import { getResolver } from '../resolver'
 import { EthrDidController } from '../controller'
 import { EthereumDIDRegistry } from 'ethr-did-registry'
-import { interpretIdentifier, stringToBytes32 } from '../helpers'
+import { interpretIdentifier, signData, stringToBytes32 } from '../helpers'
 import { createProvider, sleep, startMining, stopMining } from './testUtils'
 import { nullAddress } from '../helpers'
+import { arrayify, concat, toUtf8Bytes } from 'ethers/lib/utils'
 
 jest.setTimeout(30000)
 
@@ -575,7 +576,7 @@ describe('ethrResolver', () => {
 
         await new EthrDidController(identity, registryContract).setAttribute(
           stringToBytes32('did/svc/HubService'),
-          JSON.stringify({uri: 'https://hubs.uport.me', transportType: 'http'}),
+          JSON.stringify({ uri: 'https://hubs.uport.me', transportType: 'http' }),
           86405,
           { from: controller }
         )
@@ -642,7 +643,10 @@ describe('ethrResolver', () => {
 
         await new EthrDidController(identity, registryContract).setAttribute(
           stringToBytes32('did/svc/HubService'),
-          JSON.stringify([{uri: 'https://hubs.uport.me', transportType: 'http'}, {uri: 'libp2p.star/123', transportType: 'libp2p'}]),
+          JSON.stringify([
+            { uri: 'https://hubs.uport.me', transportType: 'http' },
+            { uri: 'libp2p.star/123', transportType: 'libp2p' },
+          ]),
           86405,
           { from: controller }
         )
@@ -707,7 +711,10 @@ describe('ethrResolver', () => {
             {
               id: `${did}#service-3`,
               type: 'HubService',
-              serviceEndpoint: [{uri: 'https://hubs.uport.me', transportType: 'http'}, {uri: 'libp2p.star/123', transportType: 'libp2p'}],
+              serviceEndpoint: [
+                { uri: 'https://hubs.uport.me', transportType: 'http' },
+                { uri: 'libp2p.star/123', transportType: 'libp2p' },
+              ],
             },
           ],
         })
@@ -715,14 +722,17 @@ describe('ethrResolver', () => {
         // undo side effects of this test
         await new EthrDidController(identity, registryContract).revokeAttribute(
           stringToBytes32('did/svc/HubService'),
-          JSON.stringify([{uri: 'https://hubs.uport.me', transportType: 'http'}, {uri: 'libp2p.star/123', transportType: 'libp2p'}]),
+          JSON.stringify([
+            { uri: 'https://hubs.uport.me', transportType: 'http' },
+            { uri: 'libp2p.star/123', transportType: 'libp2p' },
+          ]),
           { from: controller }
         )
 
         // undo side effects of this test
         await new EthrDidController(identity, registryContract).revokeAttribute(
           stringToBytes32('did/svc/HubService'),
-          JSON.stringify({uri: 'https://hubs.uport.me', transportType: 'http'}),
+          JSON.stringify({ uri: 'https://hubs.uport.me', transportType: 'http' }),
           { from: controller }
         )
       })
@@ -1475,6 +1485,57 @@ describe('ethrResolver', () => {
               serviceEndpoint: 'https://test1.uport.me',
             },
           ],
+        },
+      })
+    })
+  })
+
+  describe('meta transactions', () => {
+    it('change owner', async () => {
+      const signer = accounts[1]
+      const currentOwner = accounts[2]
+      const nextOwner = accounts[3]
+
+      const identifier = `did:ethr:dev:${currentOwner}`
+
+      const currentOwnerPrivateKey = arrayify('0x0000000000000000000000000000000000000000000000000000000000000002')
+
+      const signature = await signData(
+        currentOwner,
+        currentOwner,
+        currentOwnerPrivateKey,
+        concat([toUtf8Bytes('changeOwner'), nextOwner]),
+        registryContract
+      )
+
+      const blockHeightBeforeChange = (await web3Provider.getBlock('latest')).number
+
+      await new EthrDidController(identifier, registryContract, web3Provider.getSigner(signer)).changeOwnerSigned(
+        nextOwner,
+        {
+          sigV: signature.v,
+          sigR: signature.r,
+          sigS: signature.s,
+        }
+      )
+
+      const result = await didResolver.resolve(identifier)
+      expect(result).toEqual({
+        didDocumentMetadata: { versionId: `${blockHeightBeforeChange + 1}`, updated: expect.anything() },
+        didResolutionMetadata: expect.anything(),
+        didDocument: {
+          '@context': expect.anything(),
+          id: identifier,
+          verificationMethod: [
+            {
+              id: expect.anything(),
+              type: expect.anything(),
+              controller: expect.anything(),
+              blockchainAccountId: `eip155:1337:${nextOwner}`,
+            },
+          ],
+          authentication: [expect.anything()],
+          assertionMethod: [expect.anything()],
         },
       })
     })
