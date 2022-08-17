@@ -3,10 +3,10 @@ import { Resolvable, Resolver } from 'did-resolver'
 import { getResolver } from '../resolver'
 import { EthrDidController } from '../controller'
 import { EthereumDIDRegistry } from 'ethr-did-registry'
-import { interpretIdentifier, signData, stringToBytes32 } from '../helpers'
+import { interpretIdentifier, signMetaTxData, stringToBytes32 } from '../helpers'
 import { createProvider, sleep, startMining, stopMining } from './testUtils'
 import { nullAddress } from '../helpers'
-import { arrayify, concat, toUtf8Bytes } from 'ethers/lib/utils'
+import { arrayify, concat, formatBytes32String, hexlify, toUtf8Bytes, zeroPad } from 'ethers/lib/utils'
 
 jest.setTimeout(30000)
 
@@ -1491,16 +1491,19 @@ describe('ethrResolver', () => {
   })
 
   describe('meta transactions', () => {
-    it('change owner', async () => {
+    it('change owner signed', async () => {
+      // Wallet signing the transaction
       const signer = accounts[1]
+      // Current Owner of the Identity
       const currentOwner = accounts[2]
+      // New owner of the Identity after change
       const nextOwner = accounts[3]
 
       const identifier = `did:ethr:dev:${currentOwner}`
 
       const currentOwnerPrivateKey = arrayify('0x0000000000000000000000000000000000000000000000000000000000000002')
 
-      const signature = await signData(
+      const signature = await signMetaTxData(
         currentOwner,
         currentOwner,
         currentOwnerPrivateKey,
@@ -1534,6 +1537,243 @@ describe('ethrResolver', () => {
               blockchainAccountId: `eip155:1337:${nextOwner}`,
             },
           ],
+          authentication: [expect.anything()],
+          assertionMethod: [expect.anything()],
+        },
+      })
+    })
+
+    it('add delegate signed', async () => {
+      // Wallet signing the transaction
+      const signer = accounts[1]
+      // Current Owner of the Identity
+      const currentOwner = accounts[2]
+      // Delegate to add
+      const delegate = accounts[3]
+
+      const identifier = `did:ethr:dev:${currentOwner}`
+
+      const currentOwnerPrivateKey = arrayify('0x0000000000000000000000000000000000000000000000000000000000000002')
+
+      const signature = await signMetaTxData(
+        currentOwner,
+        currentOwner,
+        currentOwnerPrivateKey,
+        concat([toUtf8Bytes('addDelegate'), formatBytes32String('sigAuth'), delegate, zeroPad(hexlify(86400), 32)]),
+        registryContract
+      )
+
+      const blockHeightBeforeChange = (await web3Provider.getBlock('latest')).number
+
+      await new EthrDidController(identifier, registryContract, web3Provider.getSigner(signer)).addDelegateSigned(
+        'sigAuth',
+        delegate,
+        86400,
+        {
+          sigV: signature.v,
+          sigR: signature.r,
+          sigS: signature.s,
+        }
+      )
+
+      const result = await didResolver.resolve(identifier)
+      expect(result).toEqual({
+        didDocumentMetadata: { versionId: `${blockHeightBeforeChange + 1}`, updated: expect.anything() },
+        didResolutionMetadata: expect.anything(),
+        didDocument: {
+          '@context': expect.anything(),
+          id: identifier,
+          verificationMethod: [
+            {
+              id: expect.anything(),
+              type: expect.anything(),
+              controller: expect.anything(),
+              blockchainAccountId: `eip155:1337:${currentOwner}`,
+            },
+            {
+              id: expect.anything(),
+              type: expect.anything(),
+              controller: expect.anything(),
+              blockchainAccountId: `eip155:1337:${delegate}`,
+            },
+          ],
+          authentication: expect.anything(),
+          assertionMethod: expect.anything(),
+        },
+      })
+    })
+
+    it('revoke delegate signed', async () => {
+      // Wallet signing the transaction
+      const signer = accounts[1]
+      // Current Owner of the Identity
+      const currentOwner = accounts[2]
+      // Delegate to add
+      const delegate = accounts[3]
+
+      const identifier = `did:ethr:dev:${currentOwner}`
+
+      const currentOwnerPrivateKey = arrayify('0x0000000000000000000000000000000000000000000000000000000000000002')
+
+      const blockHeightBeforeChanges = (await web3Provider.getBlock('latest')).number
+
+      await new EthrDidController(identifier, registryContract).addDelegate('sigAuth', delegate, 86402)
+
+      const signature = await signMetaTxData(
+        currentOwner,
+        currentOwner,
+        currentOwnerPrivateKey,
+        concat([toUtf8Bytes('revokeDelegate'), formatBytes32String('sigAuth'), delegate]),
+        registryContract
+      )
+
+      await new EthrDidController(identifier, registryContract, web3Provider.getSigner(signer)).revokeDelegateSigned(
+        'sigAuth',
+        delegate,
+        {
+          sigV: signature.v,
+          sigR: signature.r,
+          sigS: signature.s,
+        }
+      )
+      await sleep(1000)
+
+      const result = await didResolver.resolve(identifier)
+      expect(result).toEqual({
+        didDocumentMetadata: { versionId: `${blockHeightBeforeChanges + 2}`, updated: expect.anything() },
+        didResolutionMetadata: expect.anything(),
+        didDocument: {
+          '@context': expect.anything(),
+          id: identifier,
+          verificationMethod: [
+            {
+              id: expect.anything(),
+              type: expect.anything(),
+              controller: expect.anything(),
+              blockchainAccountId: `eip155:1337:${currentOwner}`,
+            },
+          ],
+          authentication: expect.anything(),
+          assertionMethod: expect.anything(),
+        },
+      })
+    })
+
+    it('set attribute signed', async () => {
+      const signer = accounts[1]
+      const currentOwner = accounts[2]
+
+      const serviceEndpointParams = { uri: 'https://didcomm.example.com', transportType: 'http' }
+      const attributeName = 'did/svc/testService'
+      const attributeValue = JSON.stringify(serviceEndpointParams)
+      const attributeExpiration = 86400
+
+      const identifier = `did:ethr:dev:${currentOwner}`
+
+      const currentOwnerPrivateKey = arrayify('0x0000000000000000000000000000000000000000000000000000000000000002')
+
+      const signature = await signMetaTxData(
+        currentOwner,
+        currentOwner,
+        currentOwnerPrivateKey,
+        concat([
+          toUtf8Bytes('setAttribute'),
+          formatBytes32String(attributeName),
+          toUtf8Bytes(attributeValue),
+          zeroPad(hexlify(attributeExpiration), 32),
+        ]),
+        registryContract
+      )
+
+      const blockHeightBeforeChange = (await web3Provider.getBlock('latest')).number
+
+      await new EthrDidController(identifier, registryContract, web3Provider.getSigner(signer)).setAttributeSigned(
+        attributeName,
+        attributeValue,
+        attributeExpiration,
+        {
+          sigV: signature.v,
+          sigR: signature.r,
+          sigS: signature.s,
+        }
+      )
+      // Wait for the event to be emitted
+      await sleep(1000)
+
+      const result = await didResolver.resolve(identifier)
+      expect(result).toEqual({
+        didDocumentMetadata: { versionId: `${blockHeightBeforeChange + 1}`, updated: expect.anything() },
+        didResolutionMetadata: expect.anything(),
+        didDocument: {
+          '@context': expect.anything(),
+          id: identifier,
+          verificationMethod: expect.anything(),
+          authentication: [expect.anything()],
+          assertionMethod: [expect.anything()],
+          service: [
+            {
+              id: expect.anything(),
+              type: 'testService',
+              serviceEndpoint: {
+                uri: serviceEndpointParams.uri,
+                transportType: serviceEndpointParams.transportType,
+              },
+            },
+          ],
+        },
+      })
+    })
+
+    it('revoke attribute signed', async () => {
+      const signer = accounts[1]
+      const currentOwner = accounts[2]
+
+      const serviceEndpointParams = { uri: 'https://didcomm.example.com', transportType: 'http' }
+      const attributeName = 'did/svc/testService'
+      const attributeValue = JSON.stringify(serviceEndpointParams)
+      const attributeExpiration = 86400
+
+      const identifier = `did:ethr:dev:${currentOwner}`
+
+      const currentOwnerPrivateKey = arrayify('0x0000000000000000000000000000000000000000000000000000000000000002')
+
+      await new EthrDidController(identity, registryContract).setAttribute(
+        attributeName,
+        attributeValue,
+        attributeExpiration
+      )
+
+      const signature = await signMetaTxData(
+        currentOwner,
+        currentOwner,
+        currentOwnerPrivateKey,
+        concat([toUtf8Bytes('revokeAttribute'), formatBytes32String(attributeName), toUtf8Bytes(attributeValue)]),
+        registryContract
+      )
+
+      const blockHeightBeforeChange = (await web3Provider.getBlock('latest')).number
+
+      await new EthrDidController(identifier, registryContract, web3Provider.getSigner(signer)).revokeAttributeSigned(
+        attributeName,
+        attributeValue,
+        {
+          sigV: signature.v,
+          sigR: signature.r,
+          sigS: signature.s,
+        }
+      )
+
+      // Wait for the event to be emitted
+      await sleep(1000)
+
+      const result = await didResolver.resolve(identifier)
+      expect(result).toEqual({
+        didDocumentMetadata: { versionId: `${blockHeightBeforeChange + 1}`, updated: expect.anything() },
+        didResolutionMetadata: expect.anything(),
+        didDocument: {
+          '@context': expect.anything(),
+          id: identifier,
+          verificationMethod: expect.anything(),
           authentication: [expect.anything()],
           assertionMethod: [expect.anything()],
         },

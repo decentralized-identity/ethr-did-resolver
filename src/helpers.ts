@@ -65,7 +65,7 @@ export interface LegacyVerificationMethod extends VerificationMethod {
   [x: string]: any
 }
 
-// See https://eips.ethereum.org/EIPS/eip-1056
+// Interface for transporting v, r, s signature parameters used in meta transactions
 export interface MetaSignature {
   sigV: number
   sigR: bytes32
@@ -123,7 +123,7 @@ export function interpretIdentifier(identifier: string): { address: string; publ
   }
 }
 
-export async function signData(
+export async function signMetaTxData(
   identity: string,
   signerAddress: string,
   privateKeyBytes: Uint8Array,
