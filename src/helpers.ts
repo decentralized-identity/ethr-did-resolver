@@ -2,8 +2,10 @@ import { getAddress } from '@ethersproject/address'
 import { BigNumber } from '@ethersproject/bignumber'
 import { computeAddress } from '@ethersproject/transactions'
 import { VerificationMethod } from 'did-resolver'
-import { arrayify, hexConcat, keccak256, zeroPad, SigningKey } from 'ethers/lib/utils'
 import { Contract } from '@ethersproject/contracts'
+import { keccak256 } from '@ethersproject/keccak256'
+import { arrayify, hexConcat, zeroPad } from '@ethersproject/bytes'
+import { SigningKey } from '@ethersproject/signing-key'
 
 export const identifierMatcher = /^(.*)?(0x[0-9a-fA-F]{40}|0x[0-9a-fA-F]{66})$/
 export const nullAddress = '0x0000000000000000000000000000000000000000'
