@@ -1491,58 +1491,6 @@ describe('ethrResolver', () => {
   })
 
   describe('meta transactions', () => {
-    it('change owner signed', async () => {
-      // Wallet signing the transaction
-      const signer = accounts[1]
-      // Current Owner of the Identity
-      const currentOwner = accounts[2]
-      // New owner of the Identity after change
-      const nextOwner = accounts[3]
-
-      const identifier = `did:ethr:dev:${currentOwner}`
-
-      const currentOwnerPrivateKey = arrayify('0x0000000000000000000000000000000000000000000000000000000000000002')
-
-      const signature = await signMetaTxData(
-        currentOwner,
-        currentOwner,
-        currentOwnerPrivateKey,
-        concat([toUtf8Bytes('changeOwner'), nextOwner]),
-        registryContract
-      )
-
-      const blockHeightBeforeChange = (await web3Provider.getBlock('latest')).number
-
-      await new EthrDidController(identifier, registryContract, web3Provider.getSigner(signer)).changeOwnerSigned(
-        nextOwner,
-        {
-          sigV: signature.v,
-          sigR: signature.r,
-          sigS: signature.s,
-        }
-      )
-
-      const result = await didResolver.resolve(identifier)
-      expect(result).toEqual({
-        didDocumentMetadata: { versionId: `${blockHeightBeforeChange + 1}`, updated: expect.anything() },
-        didResolutionMetadata: expect.anything(),
-        didDocument: {
-          '@context': expect.anything(),
-          id: identifier,
-          verificationMethod: [
-            {
-              id: expect.anything(),
-              type: expect.anything(),
-              controller: expect.anything(),
-              blockchainAccountId: `eip155:1337:${nextOwner}`,
-            },
-          ],
-          authentication: [expect.anything()],
-          assertionMethod: [expect.anything()],
-        },
-      })
-    })
-
     it('add delegate signed', async () => {
       // Wallet signing the transaction
       const signer = accounts[1]
@@ -1774,6 +1722,58 @@ describe('ethrResolver', () => {
           '@context': expect.anything(),
           id: identifier,
           verificationMethod: expect.anything(),
+          authentication: [expect.anything()],
+          assertionMethod: [expect.anything()],
+        },
+      })
+    })
+
+    it('change owner signed', async () => {
+      // Wallet signing the transaction
+      const signer = accounts[1]
+      // Current Owner of the Identity
+      const currentOwner = accounts[2]
+      // New owner of the Identity after change
+      const nextOwner = accounts[3]
+
+      const identifier = `did:ethr:dev:${currentOwner}`
+
+      const currentOwnerPrivateKey = arrayify('0x0000000000000000000000000000000000000000000000000000000000000002')
+
+      const signature = await signMetaTxData(
+        currentOwner,
+        currentOwner,
+        currentOwnerPrivateKey,
+        concat([toUtf8Bytes('changeOwner'), nextOwner]),
+        registryContract
+      )
+
+      const blockHeightBeforeChange = (await web3Provider.getBlock('latest')).number
+
+      await new EthrDidController(identifier, registryContract, web3Provider.getSigner(signer)).changeOwnerSigned(
+        nextOwner,
+        {
+          sigV: signature.v,
+          sigR: signature.r,
+          sigS: signature.s,
+        }
+      )
+
+      const result = await didResolver.resolve(identifier)
+      expect(result).toEqual({
+        didDocumentMetadata: { versionId: `${blockHeightBeforeChange + 1}`, updated: expect.anything() },
+        didResolutionMetadata: expect.anything(),
+        didDocument: {
+          '@context': expect.anything(),
+          id: identifier,
+          verificationMethod: [
+            {
+              id: expect.anything(),
+              type: expect.anything(),
+              controller: expect.anything(),
+              blockchainAccountId: `eip155:1337:${nextOwner}`,
+            },
+          ],
           authentication: [expect.anything()],
           assertionMethod: [expect.anything()],
         },

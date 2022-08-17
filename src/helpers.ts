@@ -12,7 +12,6 @@ export const DEFAULT_JSON_RPC = 'http://127.0.0.1:8545/'
 
 export type address = string
 export type uint256 = BigNumber
-export type uint8 = Uint8Array
 export type bytes32 = string
 export type bytes = string
 
