@@ -6,8 +6,8 @@ import { EthereumDIDRegistry } from 'ethr-did-registry'
 import { interpretIdentifier, signMetaTxData, stringToBytes32 } from '../helpers'
 import { createProvider, sleep, startMining, stopMining } from './testUtils'
 import { nullAddress } from '../helpers'
-import { arrayify, concat } from '@ethersproject/bytes'
-import { toUtf8Bytes } from '@ethersproject/strings'
+import { arrayify, concat, hexlify, zeroPad } from '@ethersproject/bytes'
+import { formatBytes32String, toUtf8Bytes } from '@ethersproject/strings'
 
 jest.setTimeout(30000)
 
