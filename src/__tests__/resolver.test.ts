@@ -3,11 +3,9 @@ import { Resolvable, Resolver } from 'did-resolver'
 import { getResolver } from '../resolver'
 import { EthrDidController } from '../controller'
 import { EthereumDIDRegistry } from 'ethr-did-registry'
-import { interpretIdentifier, signMetaTxData, stringToBytes32 } from '../helpers'
+import { interpretIdentifier, nullAddress, stringToBytes32 } from '../helpers'
 import { createProvider, sleep, startMining, stopMining } from './testUtils'
-import { nullAddress } from '../helpers'
-import { arrayify, concat, hexlify, zeroPad } from '@ethersproject/bytes'
-import { formatBytes32String, toUtf8Bytes } from '@ethersproject/strings'
+import { arrayify } from '@ethersproject/bytes'
 import { SigningKey } from '@ethersproject/signing-key'
 
 jest.setTimeout(30000)
