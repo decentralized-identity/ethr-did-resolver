@@ -11,6 +11,7 @@ export const identifierMatcher = /^(.*)?(0x[0-9a-fA-F]{40}|0x[0-9a-fA-F]{66})$/
 export const nullAddress = '0x0000000000000000000000000000000000000000'
 export const DEFAULT_REGISTRY_ADDRESS = '0xdca7ef03e98e0dc2b855be647c39abe984fcf21b'
 export const DEFAULT_JSON_RPC = 'http://127.0.0.1:8545/'
+export const MESSAGE_PREFIX = '0x1900'
 
 export type address = string
 export type uint256 = BigNumber

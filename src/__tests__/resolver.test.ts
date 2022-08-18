@@ -8,6 +8,7 @@ import { createProvider, sleep, startMining, stopMining } from './testUtils'
 import { nullAddress } from '../helpers'
 import { arrayify, concat, hexlify, zeroPad } from '@ethersproject/bytes'
 import { formatBytes32String, toUtf8Bytes } from '@ethersproject/strings'
+import { SigningKey } from '@ethersproject/signing-key'
 
 jest.setTimeout(30000)
 
@@ -1504,13 +1505,12 @@ describe('ethrResolver', () => {
 
       const currentOwnerPrivateKey = arrayify('0x0000000000000000000000000000000000000000000000000000000000000002')
 
-      const signature = await signMetaTxData(
-        currentOwner,
-        currentOwner,
-        currentOwnerPrivateKey,
-        concat([toUtf8Bytes('addDelegate'), formatBytes32String('sigAuth'), delegate, zeroPad(hexlify(86400), 32)]),
-        registryContract
+      const hash = await new EthrDidController(identifier, registryContract).createAddDelegateHash(
+        'sigAuth',
+        delegate,
+        86400
       )
+      const signature = new SigningKey(currentOwnerPrivateKey).signDigest(hash)
 
       const blockHeightBeforeChange = (await web3Provider.getBlock('latest')).number
 
@@ -1568,13 +1568,11 @@ describe('ethrResolver', () => {
 
       await new EthrDidController(identifier, registryContract).addDelegate('sigAuth', delegate, 86402)
 
-      const signature = await signMetaTxData(
-        currentOwner,
-        currentOwner,
-        currentOwnerPrivateKey,
-        concat([toUtf8Bytes('revokeDelegate'), formatBytes32String('sigAuth'), delegate]),
-        registryContract
+      const hash = await new EthrDidController(identifier, registryContract).createRevokeDelegateHash(
+        'sigAuth',
+        delegate
       )
+      const signature = new SigningKey(currentOwnerPrivateKey).signDigest(hash)
 
       await new EthrDidController(identifier, registryContract, web3Provider.getSigner(signer)).revokeDelegateSigned(
         'sigAuth',
@@ -1621,18 +1619,12 @@ describe('ethrResolver', () => {
 
       const currentOwnerPrivateKey = arrayify('0x0000000000000000000000000000000000000000000000000000000000000002')
 
-      const signature = await signMetaTxData(
-        currentOwner,
-        currentOwner,
-        currentOwnerPrivateKey,
-        concat([
-          toUtf8Bytes('setAttribute'),
-          formatBytes32String(attributeName),
-          toUtf8Bytes(attributeValue),
-          zeroPad(hexlify(attributeExpiration), 32),
-        ]),
-        registryContract
+      const hash = await new EthrDidController(identifier, registryContract).createSetAttributeHash(
+        attributeName,
+        attributeValue,
+        attributeExpiration
       )
+      const signature = new SigningKey(currentOwnerPrivateKey).signDigest(hash)
 
       const blockHeightBeforeChange = (await web3Provider.getBlock('latest')).number
 
@@ -1692,13 +1684,11 @@ describe('ethrResolver', () => {
         attributeExpiration
       )
 
-      const signature = await signMetaTxData(
-        currentOwner,
-        currentOwner,
-        currentOwnerPrivateKey,
-        concat([toUtf8Bytes('revokeAttribute'), formatBytes32String(attributeName), toUtf8Bytes(attributeValue)]),
-        registryContract
+      const hash = await new EthrDidController(identifier, registryContract).createRevokeAttributeHash(
+        attributeName,
+        attributeValue
       )
+      const signature = new SigningKey(currentOwnerPrivateKey).signDigest(hash)
 
       const blockHeightBeforeChange = (await web3Provider.getBlock('latest')).number
 
@@ -1741,13 +1731,8 @@ describe('ethrResolver', () => {
 
       const currentOwnerPrivateKey = arrayify('0x0000000000000000000000000000000000000000000000000000000000000002')
 
-      const signature = await signMetaTxData(
-        currentOwner,
-        currentOwner,
-        currentOwnerPrivateKey,
-        concat([toUtf8Bytes('changeOwner'), nextOwner]),
-        registryContract
-      )
+      const hash = await new EthrDidController(identifier, registryContract).createChangeOwnerHash(nextOwner)
+      const signature = new SigningKey(currentOwnerPrivateKey).signDigest(hash)
 
       const blockHeightBeforeChange = (await web3Provider.getBlock('latest')).number
 

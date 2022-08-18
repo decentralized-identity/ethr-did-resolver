@@ -2,7 +2,17 @@ import { Signer } from '@ethersproject/abstract-signer'
 import { CallOverrides, Contract } from '@ethersproject/contracts'
 import { BlockTag, JsonRpcProvider, Provider, TransactionReceipt } from '@ethersproject/providers'
 import { getContractForNetwork } from './configuration'
-import { address, DEFAULT_REGISTRY_ADDRESS, interpretIdentifier, MetaSignature, stringToBytes32 } from './helpers'
+import {
+  address,
+  DEFAULT_REGISTRY_ADDRESS,
+  interpretIdentifier,
+  MESSAGE_PREFIX,
+  MetaSignature,
+  stringToBytes32,
+} from './helpers'
+import { arrayify, concat, hexConcat, hexlify, zeroPad } from '@ethersproject/bytes'
+import { keccak256 } from '@ethersproject/keccak256'
+import { formatBytes32String, toUtf8Bytes } from '@ethersproject/strings'
 
 /**
  * A class that can be used to interact with the ERC1056 contract on behalf of a local controller key-pair
@@ -82,6 +92,19 @@ export class EthrDidController {
     return await ownerChange.wait()
   }
 
+  async createChangeOwnerHash(newOwner: address) {
+    const paddedNonce = await this.getPaddedNonce()
+
+    const dataToHash = hexConcat([
+      MESSAGE_PREFIX,
+      this.contract.address,
+      paddedNonce,
+      this.address,
+      concat([toUtf8Bytes('changeOwner'), newOwner]),
+    ])
+    return keccak256(dataToHash)
+  }
+
   async changeOwnerSigned(
     newOwner: address,
     metaSignature: MetaSignature,
@@ -131,6 +154,24 @@ export class EthrDidController {
     )
     addDelegateTx
     return await addDelegateTx.wait()
+  }
+
+  async createAddDelegateHash(delegateType: string, delegateAddress: address, exp: number) {
+    const paddedNonce = await this.getPaddedNonce()
+
+    const dataToHash = hexConcat([
+      MESSAGE_PREFIX,
+      this.contract.address,
+      paddedNonce,
+      this.address,
+      concat([
+        toUtf8Bytes('addDelegate'),
+        formatBytes32String(delegateType),
+        delegateAddress,
+        zeroPad(hexlify(exp), 32),
+      ]),
+    ])
+    return keccak256(dataToHash)
   }
 
   async addDelegateSigned(
@@ -185,6 +226,19 @@ export class EthrDidController {
     return await addDelegateTx.wait()
   }
 
+  async createRevokeDelegateHash(delegateType: string, delegateAddress: address) {
+    const paddedNonce = await this.getPaddedNonce()
+
+    const dataToHash = hexConcat([
+      MESSAGE_PREFIX,
+      this.contract.address,
+      paddedNonce,
+      this.address,
+      concat([toUtf8Bytes('revokeDelegate'), formatBytes32String(delegateType), delegateAddress]),
+    ])
+    return keccak256(dataToHash)
+  }
+
   async revokeDelegateSigned(
     delegateType: string,
     delegateAddress: address,
@@ -231,6 +285,24 @@ export class EthrDidController {
     return await setAttrTx.wait()
   }
 
+  async createSetAttributeHash(attrName: string, attrValue: string, exp: number) {
+    const paddedNonce = await this.getPaddedNonce()
+
+    const dataToHash = hexConcat([
+      MESSAGE_PREFIX,
+      this.contract.address,
+      paddedNonce,
+      this.address,
+      concat([
+        toUtf8Bytes('setAttribute'),
+        formatBytes32String(attrName),
+        toUtf8Bytes(attrValue),
+        zeroPad(hexlify(exp), 32),
+      ]),
+    ])
+    return keccak256(dataToHash)
+  }
+
   async setAttributeSigned(
     attrName: string,
     attrValue: string,
@@ -274,6 +346,25 @@ export class EthrDidController {
     delete overrides.from
     const revokeAttributeTX = await contract.functions.revokeAttribute(this.address, attrName, attrValue, overrides)
     return await revokeAttributeTX.wait()
+  }
+
+  async createRevokeAttributeHash(attrName: string, attrValue: string) {
+    const paddedNonce = await this.getPaddedNonce()
+
+    const dataToHash = hexConcat([
+      MESSAGE_PREFIX,
+      this.contract.address,
+      paddedNonce,
+      this.address,
+      concat([toUtf8Bytes('revokeAttribute'), formatBytes32String(attrName), toUtf8Bytes(attrValue)]),
+    ])
+    return keccak256(dataToHash)
+  }
+
+  private async getPaddedNonce() {
+    const currentOwner = await this.getOwner(this.address)
+    const nonce = await this.contract.nonce(currentOwner)
+    return zeroPad(arrayify(nonce), 32)
   }
 
   async revokeAttributeSigned(
