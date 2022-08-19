@@ -22,7 +22,7 @@ export class EthrDidController {
   private signer?: Signer
   private address: string
   public did: string
-  private legacy: boolean
+  private legacyNonce: boolean
 
   /**
    * Creates an EthrDidController instance.
@@ -34,7 +34,7 @@ export class EthrDidController {
    * @param provider - optional - a web3 Provider. At least one of `contract`, `provider`, or `rpcUrl` is required
    * @param rpcUrl - optional - a JSON-RPC URL that can be used to connect to an ethereum network. At least one of `contract`, `provider`, or `rpcUrl` is required
    * @param registry - optional - The ERC1056 registry address. Defaults to '0xdca7ef03e98e0dc2b855be647c39abe984fcf21b'. Only used with 'provider' or 'rpcUrl'
-   * @param legacy - optional - Blub
+   * @param legacyNonce - optional - If the legacy nonce tracking method should be accounted for. If lesser version of did-ethr-registry contract v1.0.0 is used then this should be true.
    */
   constructor(
     identifier: string | address,
@@ -44,9 +44,9 @@ export class EthrDidController {
     provider?: Provider,
     rpcUrl?: string,
     registry: string = DEFAULT_REGISTRY_ADDRESS,
-    legacy = true
+    legacyNonce = true
   ) {
-    this.legacy = legacy
+    this.legacyNonce = legacyNonce
     // initialize identifier
     const { address, publicKey, network } = interpretIdentifier(identifier)
     const net = network || chainNameOrId
@@ -373,7 +373,7 @@ export class EthrDidController {
   */
   private async getPaddedNonceCompatability() {
     let nonce
-    if (this.legacy) {
+    if (this.legacyNonce) {
       const currentOwner = await this.getOwner(this.address)
       nonce = await this.contract.nonce(currentOwner)
       return zeroPad(arrayify(nonce), 32)
