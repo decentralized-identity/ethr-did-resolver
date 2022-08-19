@@ -22,6 +22,7 @@ export class EthrDidController {
   private signer?: Signer
   private address: string
   public did: string
+  private legacy: boolean
 
   /**
    * Creates an EthrDidController instance.
@@ -33,6 +34,7 @@ export class EthrDidController {
    * @param provider - optional - a web3 Provider. At least one of `contract`, `provider`, or `rpcUrl` is required
    * @param rpcUrl - optional - a JSON-RPC URL that can be used to connect to an ethereum network. At least one of `contract`, `provider`, or `rpcUrl` is required
    * @param registry - optional - The ERC1056 registry address. Defaults to '0xdca7ef03e98e0dc2b855be647c39abe984fcf21b'. Only used with 'provider' or 'rpcUrl'
+   * @param legacy - optional - Blub
    */
   constructor(
     identifier: string | address,
@@ -41,8 +43,10 @@ export class EthrDidController {
     chainNameOrId = 'mainnet',
     provider?: Provider,
     rpcUrl?: string,
-    registry: string = DEFAULT_REGISTRY_ADDRESS
+    registry: string = DEFAULT_REGISTRY_ADDRESS,
+    legacy = true
   ) {
+    this.legacy = legacy
     // initialize identifier
     const { address, publicKey, network } = interpretIdentifier(identifier)
     const net = network || chainNameOrId
@@ -93,7 +97,7 @@ export class EthrDidController {
   }
 
   async createChangeOwnerHash(newOwner: address) {
-    const paddedNonce = await this.getPaddedNonce()
+    const paddedNonce = await this.getPaddedNonceCompatability()
 
     const dataToHash = hexConcat([
       MESSAGE_PREFIX,
@@ -157,7 +161,7 @@ export class EthrDidController {
   }
 
   async createAddDelegateHash(delegateType: string, delegateAddress: address, exp: number) {
-    const paddedNonce = await this.getPaddedNonce()
+    const paddedNonce = await this.getPaddedNonceCompatability()
 
     const dataToHash = hexConcat([
       MESSAGE_PREFIX,
@@ -227,7 +231,7 @@ export class EthrDidController {
   }
 
   async createRevokeDelegateHash(delegateType: string, delegateAddress: address) {
-    const paddedNonce = await this.getPaddedNonce()
+    const paddedNonce = await this.getPaddedNonceCompatability()
 
     const dataToHash = hexConcat([
       MESSAGE_PREFIX,
@@ -361,9 +365,25 @@ export class EthrDidController {
     return keccak256(dataToHash)
   }
 
+  /*
+     The current version of the ethr-did-registry contract tracks the nonce as a property
+     of the original owner, and not as a property of the signer (current owner).
+     That's why we need to differentiate between deployments here, or otherwise our signature will be
+     computed wrong resulting in a failed TX
+  */
+  private async getPaddedNonceCompatability() {
+    let nonce
+    if (this.legacy) {
+      const currentOwner = await this.getOwner(this.address)
+      nonce = await this.contract.nonce(currentOwner)
+      return zeroPad(arrayify(nonce), 32)
+    } else {
+      return this.getPaddedNonce()
+    }
+  }
+
   private async getPaddedNonce() {
-    const currentOwner = await this.getOwner(this.address)
-    const nonce = await this.contract.nonce(currentOwner)
+    const nonce = await this.contract.nonce(this.address)
     return zeroPad(arrayify(nonce), 32)
   }
 
