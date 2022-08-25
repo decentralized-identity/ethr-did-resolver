@@ -1,8 +1,9 @@
 import { BigNumber } from '@ethersproject/bignumber'
 import { Contract, ContractFactory } from '@ethersproject/contracts'
 import { JsonRpcProvider, Provider } from '@ethersproject/providers'
-import { EthereumDIDRegistry, deployments, EthrDidRegistryDeployment } from 'ethr-did-registry'
 import { DEFAULT_REGISTRY_ADDRESS } from './helpers'
+import { deployments, EthrDidRegistryDeployment } from './config/deployments'
+import { default as EthereumDIDRegistry } from './config/EthereumDIDRegistry.json'
 
 const infuraNames: Record<string, string> = {
   polygon: 'matic',
