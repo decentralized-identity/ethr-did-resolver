@@ -4,7 +4,7 @@
   "description": "Resolve DID documents for ethereum addresses and public keys",
   "type": "module",
   "source": "src/index.ts",
-  "main": "lib/index.cjs",
+  "main": "./lib/index.cjs",
   "module": "./lib/index.module.js",
   "unpkg": "./lib/index.umd.js",
   "types": "./lib/index.d.ts",
