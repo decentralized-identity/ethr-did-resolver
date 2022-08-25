@@ -1,8 +1,8 @@
 import { BigNumber } from '@ethersproject/bignumber'
 import { Contract, ContractFactory } from '@ethersproject/contracts'
 import { JsonRpcProvider, Provider } from '@ethersproject/providers'
-import ethrDidRegistry from "ethr-did-registry"
-const { deployments, EthereumDIDRegistry } = ethrDidRegistry;
+import ethrDidRegistry from 'ethr-did-registry'
+const { deployments, EthereumDIDRegistry } = ethrDidRegistry
 
 import { DEFAULT_REGISTRY_ADDRESS } from './helpers'
 
