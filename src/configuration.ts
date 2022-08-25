@@ -1,7 +1,9 @@
 import { BigNumber } from '@ethersproject/bignumber'
 import { Contract, ContractFactory } from '@ethersproject/contracts'
 import { JsonRpcProvider, Provider } from '@ethersproject/providers'
-import { EthereumDIDRegistry, deployments, EthrDidRegistryDeployment } from 'ethr-did-registry'
+import ethrDidRegistry from "ethr-did-registry"
+const { deployments, EthereumDIDRegistry } = ethrDidRegistry;
+
 import { DEFAULT_REGISTRY_ADDRESS } from './helpers'
 
 const infuraNames: Record<string, string> = {
@@ -23,7 +25,7 @@ const knownInfuraNames = ['mainnet', 'ropsten', 'rinkeby', 'goerli', 'kovan', 'a
  * { name: 'rsk:testnet', chainId: '0x1f', rpcUrl: 'https://public-node.testnet.rsk.co' }
  * ```
  */
-export interface ProviderConfiguration extends Omit<EthrDidRegistryDeployment, 'chainId'> {
+export interface ProviderConfiguration extends Omit<ethrDidRegistry.EthrDidRegistryDeployment, 'chainId'> {
   provider?: Provider
   chainId?: string | number
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -4,15 +4,16 @@
   "description": "Resolve DID documents for ethereum addresses and public keys",
   "type": "module",
   "source": "src/index.ts",
-  "main": "./lib/index.cjs",
+  "main": "lib/index.cjs",
   "module": "./lib/index.module.js",
   "unpkg": "./lib/index.umd.js",
   "types": "./lib/index.d.ts",
   "umd:main": "./lib/index.umd.js",
-  "exports": {
-    ".": {
-      "require": "./lib/index.cjs",
-      "import": "./lib/index.module.js"
+  "exports": "./lib/index.modern.js",
+  "typesVersions": {
+    "*": { 
+      "lib/index.d.ts": ["lib/index.d.ts"],
+      "*": ["./lib/index.d.js"]
     }
   },
   "repository": {
@@ -99,6 +100,6 @@
     "@ethersproject/providers": "^5.6.8",
     "@ethersproject/transactions": "^5.6.2",
     "did-resolver": "^4.0.0",
-    "ethr-did-registry": "^1.0.0"
+    "ethr-did-registry": "^1.0.1"
   }
 }
