@@ -1,3 +1,10 @@
+## [1.0.1](https://github.com/uport-project/ethr-did-registry/compare/1.0.0...1.0.1) (2022-08-25)
+
+
+### Bug Fixes
+
+* add exports and typesVersions to package.json ([#54](https://github.com/uport-project/ethr-did-registry/issues/54)) ([12bf0c1](https://github.com/uport-project/ethr-did-registry/commit/12bf0c1f355d08c55471859edef4e9246ec88b4b))
+
 # [1.0.0](https://github.com/uport-project/ethr-did-registry/compare/v0.0.3...1.0.0) (2022-07-07)
 
 

@@ -1,13 +1,17 @@
 {
   "name": "ethr-did-registry",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A repository storing keys and other data about Ethereum Decentralized Identifiers (DIDs)",
   "main": "./dist/index.js",
   "exports": "./dist/index.js",
   "typesVersions": {
-    "*": { 
-      "dist/index.d.ts": ["dist/index.d.ts"],
-      "*": ["./dist/index.d.js"]
+    "*": {
+      "dist/index.d.ts": [
+        "dist/index.d.ts"
+      ],
+      "*": [
+        "./dist/index.d.js"
+      ]
     }
   },
   "dependencies": {},
