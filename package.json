@@ -8,8 +8,13 @@
   "module": "./lib/index.module.js",
   "unpkg": "./lib/index.umd.js",
   "types": "./lib/index.d.ts",
-  "umd:main": "./lib/index.umd.js",
-  "exports": "./lib/index.modern.js",
+  "umd:main": "./lib/index.umd.js",  
+  "exports": {
+    ".": {
+      "require": "./lib/index.cjs",
+      "import": "./lib/index.modern.js"
+    }
+  },
   "typesVersions": {
     "*": { 
       "lib/index.d.ts": ["lib/index.d.ts"],
