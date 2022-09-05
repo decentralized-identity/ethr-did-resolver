@@ -1,3 +1,10 @@
+# [6.2.0](https://github.com/decentralized-identity/ethr-did-resolver/compare/6.1.0...6.2.0) (2022-09-05)
+
+
+### Features
+
+* add controller support for meta/signed transactions ([#164](https://github.com/decentralized-identity/ethr-did-resolver/issues/164)) ([ce93e70](https://github.com/decentralized-identity/ethr-did-resolver/commit/ce93e703415ed7ea120cdb95bd1f32951e3b062a))
+
 # [6.1.0](https://github.com/decentralized-identity/ethr-did-resolver/compare/6.0.2...6.1.0) (2022-08-04)
 
 
