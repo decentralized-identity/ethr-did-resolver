@@ -375,7 +375,7 @@ export class EthrDidController {
    *
    * Not only that, but the nonce is loaded differently for [set/revoke]AttributeSigned methods.
    */
-  private async getPaddedNonceCompatibility(attribute: boolean = false) {
+  private async getPaddedNonceCompatibility(attribute = false) {
     let nonceKey
     if (this.legacyNonce && attribute) {
       nonceKey = this.address
