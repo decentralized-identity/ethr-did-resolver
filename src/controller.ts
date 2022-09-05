@@ -19,22 +19,27 @@ import { formatBytes32String, toUtf8Bytes } from '@ethersproject/strings'
  */
 export class EthrDidController {
   private contract: Contract
-  private signer?: Signer
-  private address: string
-  public did: string
-  private legacyNonce: boolean
+  private readonly signer?: Signer
+  private readonly address: string
+  public readonly did: string
+  private readonly legacyNonce: boolean
 
   /**
    * Creates an EthrDidController instance.
    *
    * @param identifier - required - a `did:ethr` string or a publicKeyHex or an ethereum address
-   * @param signer - optional - a Signer that represents the current controller key (owner) of the identifier. If a 'signer' is not provided, then a 'contract' with an attached signer can be used.
-   * @param contract - optional - a Contract instance representing a ERC1056 contract. At least one of `contract`, `provider`, or `rpcUrl` is required
+   * @param signer - optional - a Signer that represents the current controller key (owner) of the identifier. If a
+   *   'signer' is not provided, then a 'contract' with an attached signer can be used.
+   * @param contract - optional - a Contract instance representing a ERC1056 contract. At least one of `contract`,
+   *   `provider`, or `rpcUrl` is required
    * @param chainNameOrId - optional - the network name or chainID, defaults to 'mainnet'
    * @param provider - optional - a web3 Provider. At least one of `contract`, `provider`, or `rpcUrl` is required
-   * @param rpcUrl - optional - a JSON-RPC URL that can be used to connect to an ethereum network. At least one of `contract`, `provider`, or `rpcUrl` is required
-   * @param registry - optional - The ERC1056 registry address. Defaults to '0xdca7ef03e98e0dc2b855be647c39abe984fcf21b'. Only used with 'provider' or 'rpcUrl'
-   * @param legacyNonce - optional - If the legacy nonce tracking method should be accounted for. If lesser version of did-ethr-registry contract v1.0.0 is used then this should be true.
+   * @param rpcUrl - optional - a JSON-RPC URL that can be used to connect to an ethereum network. At least one of
+   *   `contract`, `provider`, or `rpcUrl` is required
+   * @param registry - optional - The ERC1056 registry address. Defaults to
+   *   '0xdca7ef03e98e0dc2b855be647c39abe984fcf21b'. Only used with 'provider' or 'rpcUrl'
+   * @param legacyNonce - optional - If the legacy nonce tracking method should be accounted for. If lesser version of
+   *   did-ethr-registry contract v1.0.0 is used then this should be true.
    */
   constructor(
     identifier: string | address,
@@ -97,7 +102,7 @@ export class EthrDidController {
   }
 
   async createChangeOwnerHash(newOwner: address) {
-    const paddedNonce = await this.getPaddedNonceCompatability()
+    const paddedNonce = await this.getPaddedNonceCompatibility()
 
     const dataToHash = hexConcat([
       MESSAGE_PREFIX,
@@ -156,12 +161,11 @@ export class EthrDidController {
       exp,
       overrides
     )
-    addDelegateTx
     return await addDelegateTx.wait()
   }
 
   async createAddDelegateHash(delegateType: string, delegateAddress: address, exp: number) {
-    const paddedNonce = await this.getPaddedNonceCompatability()
+    const paddedNonce = await this.getPaddedNonceCompatibility()
 
     const dataToHash = hexConcat([
       MESSAGE_PREFIX,
@@ -204,7 +208,6 @@ export class EthrDidController {
       exp,
       overrides
     )
-    addDelegateTx
     return await addDelegateTx.wait()
   }
 
@@ -231,7 +234,7 @@ export class EthrDidController {
   }
 
   async createRevokeDelegateHash(delegateType: string, delegateAddress: address) {
-    const paddedNonce = await this.getPaddedNonceCompatability()
+    const paddedNonce = await this.getPaddedNonceCompatibility()
 
     const dataToHash = hexConcat([
       MESSAGE_PREFIX,
@@ -290,7 +293,7 @@ export class EthrDidController {
   }
 
   async createSetAttributeHash(attrName: string, attrValue: string, exp: number) {
-    const paddedNonce = await this.getPaddedNonce()
+    const paddedNonce = await this.getPaddedNonceCompatibility(true)
 
     const dataToHash = hexConcat([
       MESSAGE_PREFIX,
@@ -353,7 +356,7 @@ export class EthrDidController {
   }
 
   async createRevokeAttributeHash(attrName: string, attrValue: string) {
-    const paddedNonce = await this.getPaddedNonce()
+    const paddedNonce = await this.getPaddedNonceCompatibility(true)
 
     const dataToHash = hexConcat([
       MESSAGE_PREFIX,
@@ -365,26 +368,21 @@ export class EthrDidController {
     return keccak256(dataToHash)
   }
 
-  /*
-     The current version of the ethr-did-registry contract tracks the nonce as a property
-     of the original owner, and not as a property of the signer (current owner).
-     That's why we need to differentiate between deployments here, or otherwise our signature will be
-     computed wrong resulting in a failed TX
-  */
-  private async getPaddedNonceCompatability() {
-    let nonce
-    if (this.legacyNonce) {
-      const currentOwner = await this.getOwner(this.address)
-      nonce = await this.contract.nonce(currentOwner)
-      return zeroPad(arrayify(nonce), 32)
+  /**
+   * The legacy version of the ethr-did-registry contract tracks the nonce as a property of the original owner, and not
+   * as a property of the signer (current owner). That's why we need to differentiate between deployments here, or
+   * otherwise our signature will be computed wrong resulting in a failed TX.
+   *
+   * Not only that, but the nonce is loaded differently for [set/revoke]AttributeSigned methods.
+   */
+  private async getPaddedNonceCompatibility(attribute: boolean = false) {
+    let nonceKey
+    if (this.legacyNonce && attribute) {
+      nonceKey = this.address
     } else {
-      return this.getPaddedNonce()
+      nonceKey = await this.getOwner(this.address)
     }
-  }
-
-  private async getPaddedNonce() {
-    const nonce = await this.contract.nonce(this.address)
-    return zeroPad(arrayify(nonce), 32)
+    return zeroPad(arrayify(await this.contract.nonce(nonceKey)), 32)
   }
 
   async revokeAttributeSigned(

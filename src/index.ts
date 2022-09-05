@@ -3,14 +3,16 @@ import { EthrDidController } from './controller'
 import {
   bytes32toString,
   DEFAULT_REGISTRY_ADDRESS,
+  Errors,
   identifierMatcher,
   interpretIdentifier,
   legacyAlgoMap,
   legacyAttrTypes,
   stringToBytes32,
   verificationMethodTypes,
-  Errors,
 } from './helpers'
+
+import { default as EthereumDIDRegistry } from './config/EthereumDIDRegistry.json'
 
 export {
   DEFAULT_REGISTRY_ADDRESS as REGISTRY,
@@ -26,4 +28,7 @@ export {
   identifierMatcher,
   interpretIdentifier,
   Errors,
+  EthereumDIDRegistry,
 }
+
+export { deployments, EthrDidRegistryDeployment } from './config/deployments'
