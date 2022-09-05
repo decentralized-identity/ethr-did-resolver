@@ -2,11 +2,16 @@ import { getAddress } from '@ethersproject/address'
 import { BigNumber } from '@ethersproject/bignumber'
 import { computeAddress } from '@ethersproject/transactions'
 import { VerificationMethod } from 'did-resolver'
+import { Contract } from '@ethersproject/contracts'
+import { keccak256 } from '@ethersproject/keccak256'
+import { arrayify, hexConcat, zeroPad } from '@ethersproject/bytes'
+import { SigningKey } from '@ethersproject/signing-key'
 
 export const identifierMatcher = /^(.*)?(0x[0-9a-fA-F]{40}|0x[0-9a-fA-F]{66})$/
 export const nullAddress = '0x0000000000000000000000000000000000000000'
 export const DEFAULT_REGISTRY_ADDRESS = '0xdca7ef03e98e0dc2b855be647c39abe984fcf21b'
 export const DEFAULT_JSON_RPC = 'http://127.0.0.1:8545/'
+export const MESSAGE_PREFIX = '0x1900'
 
 export type address = string
 export type uint256 = BigNumber
@@ -62,6 +67,13 @@ export interface LegacyVerificationMethod extends VerificationMethod {
   [x: string]: any
 }
 
+// Interface for transporting v, r, s signature parameters used in meta transactions
+export interface MetaSignature {
+  sigV: number
+  sigR: bytes32
+  sigS: bytes32
+}
+
 export const legacyAttrTypes: Record<string, string> = {
   sigAuth: 'SignatureAuthentication2018',
   veriKey: 'VerificationKey2018',
@@ -111,6 +123,20 @@ export function interpretIdentifier(identifier: string): { address: string; publ
   } else {
     return { address: getAddress(id), network } // checksum address
   }
+}
+
+export async function signMetaTxData(
+  identity: string,
+  signerAddress: string,
+  privateKeyBytes: Uint8Array,
+  dataBytes: Uint8Array,
+  didReg: Contract
+) {
+  const nonce = await didReg.nonce(signerAddress)
+  const paddedNonce = zeroPad(arrayify(nonce), 32)
+  const dataToSign = hexConcat(['0x1900', didReg.address, paddedNonce, identity, dataBytes])
+  const hash = keccak256(dataToSign)
+  return new SigningKey(privateKeyBytes).signDigest(hash)
 }
 
 export enum Errors {
