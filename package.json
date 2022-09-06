@@ -12,7 +12,17 @@
   "exports": {
     ".": {
       "require": "./lib/index.cjs",
-      "import": "./lib/index.module.js"
+      "import": "./lib/index.modern.js"
+    }
+  },
+  "typesVersions": {
+    "*": {
+      "lib/index.d.ts": [
+        "lib/index.d.ts"
+      ],
+      "*": [
+        "./lib/index.d.js"
+      ]
     }
   },
   "repository": {
@@ -102,7 +112,6 @@
     "@ethersproject/providers": "^5.6.8",
     "@ethersproject/signing-key": "^5.6.2",
     "@ethersproject/transactions": "^5.6.2",
-    "did-resolver": "^4.0.0",
-    "ethr-did-registry": "^1.0.0"
+    "did-resolver": "^4.0.0"
   }
 }
