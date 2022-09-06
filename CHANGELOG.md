@@ -1,3 +1,10 @@
+## [6.2.1](https://github.com/decentralized-identity/ethr-did-resolver/compare/6.2.0...6.2.1) (2022-09-06)
+
+
+### Bug Fixes
+
+* track legacy deployments, fix nonce calculation, export contract ([#167](https://github.com/decentralized-identity/ethr-did-resolver/issues/167)) ([c0d0366](https://github.com/decentralized-identity/ethr-did-resolver/commit/c0d036618fd17f46053a6dd736e72d1aca91f358)), closes [#165](https://github.com/decentralized-identity/ethr-did-resolver/issues/165) [#166](https://github.com/decentralized-identity/ethr-did-resolver/issues/166)
+
 # [6.2.0](https://github.com/decentralized-identity/ethr-did-resolver/compare/6.1.0...6.2.0) (2022-09-05)
 
 
