@@ -10,6 +10,7 @@ import {
   legacyAttrTypes,
   stringToBytes32,
   verificationMethodTypes,
+  MetaSignature,
 } from './helpers'
 
 import { default as EthereumDIDRegistry } from './config/EthereumDIDRegistry.json'
@@ -29,6 +30,7 @@ export {
   interpretIdentifier,
   Errors,
   EthereumDIDRegistry,
+  MetaSignature,
 }
 
 export { deployments, EthrDidRegistryDeployment } from './config/deployments'

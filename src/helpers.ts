@@ -67,7 +67,9 @@ export interface LegacyVerificationMethod extends VerificationMethod {
   [x: string]: any
 }
 
-// Interface for transporting v, r, s signature parameters used in meta transactions
+/**
+ * Interface for transporting v, r, s signature parameters used in meta transactions
+ */
 export interface MetaSignature {
   sigV: number
   sigR: bytes32
