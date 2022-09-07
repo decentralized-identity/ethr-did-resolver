@@ -1,3 +1,10 @@
+## [6.2.2](https://github.com/decentralized-identity/ethr-did-resolver/compare/6.2.1...6.2.2) (2022-09-07)
+
+
+### Bug Fixes
+
+* export MetaSignature type ([62f250a](https://github.com/decentralized-identity/ethr-did-resolver/commit/62f250a16067761ebbefefe01af59306d27cffe7))
+
 ## [6.2.1](https://github.com/decentralized-identity/ethr-did-resolver/compare/6.2.0...6.2.1) (2022-09-06)
 
 
