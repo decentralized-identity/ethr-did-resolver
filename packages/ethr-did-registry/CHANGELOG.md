@@ -1,3 +1,10 @@
+# [1.1.0](https://github.com/uport-project/ethr-did-registry/compare/1.0.1...1.1.0) (2022-10-11)
+
+
+### Features
+
+* add arbitrum:goerli deployment ([#55](https://github.com/uport-project/ethr-did-registry/issues/55)) ([ebabeee](https://github.com/uport-project/ethr-did-registry/commit/ebabeee54a0e33110f3516364178910761466ec7))
+
 ## [1.0.1](https://github.com/uport-project/ethr-did-registry/compare/1.0.0...1.0.1) (2022-08-25)
 
 
