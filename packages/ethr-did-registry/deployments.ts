@@ -33,4 +33,5 @@ export const deployments: EthrDidRegistryDeployment[] = [
   { chainId: 137, registry: '0xdca7ef03e98e0dc2b855be647c39abe984fcf21b', name: 'polygon' },
   { chainId: 80001, registry: '0xdca7ef03e98e0dc2b855be647c39abe984fcf21b', description: 'polygon:test' },
   { chainId: 1313161554, registry: '0x63eD58B671EeD12Bc1652845ba5b2CDfBff198e0', name: 'aurora' },
+  { chainId: 421613, registry: '0x8FFfcD6a85D29E9C33517aaf60b16FE4548f517E', name: 'arbitrum:goerli'}
 ]
