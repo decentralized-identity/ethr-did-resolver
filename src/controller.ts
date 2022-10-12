@@ -10,7 +10,7 @@ import {
   MetaSignature,
   stringToBytes32,
 } from './helpers'
-import { arrayify, concat, hexConcat, hexlify, zeroPad } from '@ethersproject/bytes'
+import { arrayify, concat, hexConcat, hexlify, isHexString, zeroPad } from '@ethersproject/bytes'
 import { keccak256 } from '@ethersproject/keccak256'
 import { formatBytes32String, toUtf8Bytes } from '@ethersproject/strings'
 
@@ -295,17 +295,15 @@ export class EthrDidController {
   async createSetAttributeHash(attrName: string, attrValue: string, exp: number) {
     const paddedNonce = await this.getPaddedNonceCompatibility(true)
 
+    // The incoming attribute value may be a hex encoded key, or an utf8 encoded string (like service endpoints)
+    const encodedValue = isHexString(attrValue) ? attrValue : toUtf8Bytes(attrValue)
+
     const dataToHash = hexConcat([
       MESSAGE_PREFIX,
       this.contract.address,
       paddedNonce,
       this.address,
-      concat([
-        toUtf8Bytes('setAttribute'),
-        formatBytes32String(attrName),
-        toUtf8Bytes(attrValue),
-        zeroPad(hexlify(exp), 32),
-      ]),
+      concat([toUtf8Bytes('setAttribute'), formatBytes32String(attrName), encodedValue, zeroPad(hexlify(exp), 32)]),
     ])
     return keccak256(dataToHash)
   }

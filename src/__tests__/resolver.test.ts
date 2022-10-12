@@ -1763,5 +1763,48 @@ describe('ethrResolver', () => {
         },
       })
     })
+
+    it('set attribute signed (key)', async () => {
+      const signer = accounts[1]
+      const currentOwner = accounts[3]
+
+      const attributeName = 'did/pub/Secp256k1/veriKey/hex'
+      const attributeValue =
+        '0x0482c58dd8c94c08e3255394567bbae9a397a29ca1410e488364bb8c0701fb9eb2e448bbf95ac16dba9ab33e34fe59f80e9ddf519ddcc9fc1be9b65f9c645db558'
+      const attributeExpiration = 86400
+
+      const identifier = `did:ethr:dev:${currentOwner}`
+
+      const currentOwnerPrivateKey = arrayify('0x0000000000000000000000000000000000000000000000000000000000000003')
+
+      const hash = await new EthrDidController(identifier, registryContract).createSetAttributeHash(
+        attributeName,
+        attributeValue,
+        attributeExpiration
+      )
+      const signature = new SigningKey(currentOwnerPrivateKey).signDigest(hash)
+
+      await new EthrDidController(identifier, registryContract, web3Provider.getSigner(signer)).setAttributeSigned(
+        attributeName,
+        attributeValue,
+        attributeExpiration,
+        {
+          sigV: signature.v,
+          sigR: signature.r,
+          sigS: signature.s,
+        }
+      )
+      // Wait for the event to be emitted
+      await sleep(1000)
+
+      const result = await didResolver.resolve(identifier)
+      expect(result).toBeTruthy()
+      expect(result?.didDocument?.verificationMethod?.[2]).toEqual({
+        controller: expect.anything(),
+        id: expect.anything(),
+        publicKeyHex: attributeValue.slice(2),
+        type: 'EcdsaSecp256k1VerificationKey2019',
+      })
+    })
   })
 })
