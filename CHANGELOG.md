@@ -1,3 +1,11 @@
+## [6.2.3](https://github.com/decentralized-identity/ethr-did-resolver/compare/6.2.2...6.2.3) (2022-10-12)
+
+
+### Bug Fixes
+
+* e2e tests with deprecated ethr test networks ([0fd9915](https://github.com/decentralized-identity/ethr-did-resolver/commit/0fd99151303182b8ee659bcbd72a8e7211702a1d))
+* hex values getting wrongly encoded to utf8 for setAttributeSigned ([c5c8989](https://github.com/decentralized-identity/ethr-did-resolver/commit/c5c8989289d8f4db7716eec8e4bb3979485c3394))
+
 ## [6.2.2](https://github.com/decentralized-identity/ethr-did-resolver/compare/6.2.1...6.2.2) (2022-09-07)
 
 
