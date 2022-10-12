@@ -38,10 +38,10 @@ describe('ethrResolver (alt-chains)', () => {
       })
     })
 
-    it('resolves on ropsten when configured', async () => {
-      const did = 'did:ethr:ropsten:' + addr
+    it('resolves on goerli when configured', async () => {
+      const did = 'did:ethr:goerli:' + addr
       const ethr = getResolver({
-        networks: [{ name: 'ropsten', rpcUrl: 'https://ropsten.infura.io/v3/6b734e0b04454df8a6ce234023c04f26' }],
+        networks: [{ name: 'goerli', rpcUrl: 'https://goerli.infura.io/v3/6b734e0b04454df8a6ce234023c04f26' }],
       })
       const resolver = new Resolver(ethr)
       const result = await resolver.resolve(did)
@@ -56,61 +56,7 @@ describe('ethrResolver (alt-chains)', () => {
               id: `${did}#controller`,
               type: 'EcdsaSecp256k1RecoveryMethod2020',
               controller: did,
-              blockchainAccountId: `eip155:3:${checksumAddr}`,
-            },
-          ],
-          authentication: [`${did}#controller`],
-          assertionMethod: [`${did}#controller`],
-        },
-      })
-    })
-
-    it('resolves on rinkeby when configured', async () => {
-      const did = 'did:ethr:rinkeby:' + addr
-      const ethr = getResolver({
-        networks: [{ name: 'rinkeby', rpcUrl: 'https://rinkeby.infura.io/v3/6b734e0b04454df8a6ce234023c04f26' }],
-      })
-      const resolver = new Resolver(ethr)
-      const result = await resolver.resolve(did)
-      expect(result).toEqual({
-        didDocumentMetadata: {},
-        didResolutionMetadata: { contentType: 'application/did+ld+json' },
-        didDocument: {
-          '@context': ['https://www.w3.org/ns/did/v1', 'https://w3id.org/security/suites/secp256k1recovery-2020/v2'],
-          id: did,
-          verificationMethod: [
-            {
-              id: `${did}#controller`,
-              type: 'EcdsaSecp256k1RecoveryMethod2020',
-              controller: did,
-              blockchainAccountId: `eip155:4:${checksumAddr}`,
-            },
-          ],
-          authentication: [`${did}#controller`],
-          assertionMethod: [`${did}#controller`],
-        },
-      })
-    })
-
-    it('resolves on kovan when configured', async () => {
-      const did = 'did:ethr:kovan:' + addr
-      const ethr = getResolver({
-        networks: [{ name: 'kovan', rpcUrl: 'https://kovan.infura.io/v3/6b734e0b04454df8a6ce234023c04f26' }],
-      })
-      const resolver = new Resolver(ethr)
-      const result = await resolver.resolve(did)
-      expect(result).toEqual({
-        didDocumentMetadata: {},
-        didResolutionMetadata: { contentType: 'application/did+ld+json' },
-        didDocument: {
-          '@context': ['https://www.w3.org/ns/did/v1', 'https://w3id.org/security/suites/secp256k1recovery-2020/v2'],
-          id: did,
-          verificationMethod: [
-            {
-              id: `${did}#controller`,
-              type: 'EcdsaSecp256k1RecoveryMethod2020',
-              controller: did,
-              blockchainAccountId: `eip155:42:${checksumAddr}`,
+              blockchainAccountId: `eip155:5:${checksumAddr}`,
             },
           ],
           authentication: [`${did}#controller`],
