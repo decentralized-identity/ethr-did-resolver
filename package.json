@@ -12,7 +12,8 @@
   "exports": {
     ".": {
       "require": "./lib/index.cjs",
-      "import": "./lib/index.modern.js"
+      "import": "./lib/index.modern.js",
+      "types": "./lib/index.d.ts"
     }
   },
   "typesVersions": {
