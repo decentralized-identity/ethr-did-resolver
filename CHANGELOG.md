@@ -1,3 +1,10 @@
+## [6.2.4-alpha.1](https://github.com/decentralized-identity/ethr-did-resolver/compare/6.2.3...6.2.4-alpha.1) (2022-10-13)
+
+
+### Bug Fixes
+
+* create alpha release ([1d5d5f2](https://github.com/decentralized-identity/ethr-did-resolver/commit/1d5d5f21e3d9f13500faf1acfdef89819589606c))
+
 ## [6.2.3](https://github.com/decentralized-identity/ethr-did-resolver/compare/6.2.2...6.2.3) (2022-10-12)
 
 

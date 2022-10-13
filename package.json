@@ -1,6 +1,6 @@
 {
   "name": "ethr-did-resolver",
-  "version": "6.2.3",
+  "version": "6.2.4-alpha.1",
   "description": "Resolve DID documents for ethereum addresses and public keys",
   "type": "module",
   "source": "src/index.ts",
