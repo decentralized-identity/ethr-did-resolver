@@ -1,3 +1,15 @@
+# [7.0.0-alpha.1](https://github.com/decentralized-identity/ethr-did-resolver/compare/6.2.4-alpha.1...7.0.0-alpha.1) (2022-10-13)
+
+
+### Bug Fixes
+
+* add esm wrapper instead of double transpile ([d2bbeaf](https://github.com/decentralized-identity/ethr-did-resolver/commit/d2bbeafbd2d77308f12d73f952b0b9940431dd83))
+
+
+### BREAKING CHANGES
+
+* ESM is only supported through a wrapper
+
 ## [6.2.4-alpha.1](https://github.com/decentralized-identity/ethr-did-resolver/compare/6.2.3...6.2.4-alpha.1) (2022-10-13)
 
 
