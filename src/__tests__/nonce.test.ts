@@ -87,26 +87,20 @@ describe('nonce tracking', () => {
       const hash = await ethrController.createChangeOwnerHash(nextOwner)
       const signature = new SigningKey(originalOwnerPrivateKey).signDigest(hash)
 
-      await ethrController.changeOwnerSigned(
-        nextOwner,
-        {
-          sigV: signature.v,
-          sigR: signature.r,
-          sigS: signature.s,
-        }
-      )
+      await ethrController.changeOwnerSigned(nextOwner, {
+        sigV: signature.v,
+        sigR: signature.r,
+        sigS: signature.s,
+      })
 
       const hash2 = await ethrController.createChangeOwnerHash(finalOwner)
       const signature2 = new SigningKey(nextOwnerPrivateKey).signDigest(hash2)
 
-      await ethrController.changeOwnerSigned(
-        finalOwner,
-        {
-          sigV: signature2.v,
-          sigR: signature2.r,
-          sigS: signature2.s,
-        }
-      )
+      await ethrController.changeOwnerSigned(finalOwner, {
+        sigV: signature2.v,
+        sigR: signature2.r,
+        sigS: signature2.s,
+      })
 
       const originalNonce = await registryContract.functions.nonce(originalOwner)
       const signerNonce = await registryContract.functions.nonce(nextOwner)
@@ -143,32 +137,20 @@ describe('nonce tracking', () => {
       const hash = await ethrController.createChangeOwnerHash(nextOwner)
       const signature = new SigningKey(originalOwnerPrivateKey).signDigest(hash)
 
-      await ethrController.changeOwnerSigned(
-        nextOwner,
-        {
-          sigV: signature.v,
-          sigR: signature.r,
-          sigS: signature.s,
-        }
-      )
+      await ethrController.changeOwnerSigned(nextOwner, {
+        sigV: signature.v,
+        sigR: signature.r,
+        sigS: signature.s,
+      })
 
-      const hash2 = await ethrController.createSetAttributeHash(
-        attributeName,
-        attributeValue,
-        attributeExpiration
-      )
+      const hash2 = await ethrController.createSetAttributeHash(attributeName, attributeValue, attributeExpiration)
       const signature2 = new SigningKey(nextOwnerPrivateKey).signDigest(hash2)
 
-      await ethrController.setAttributeSigned(
-        attributeName,
-        attributeValue,
-        attributeExpiration,
-        {
-          sigV: signature2.v,
-          sigR: signature2.r,
-          sigS: signature2.s,
-        }
-      )
+      await ethrController.setAttributeSigned(attributeName, attributeValue, attributeExpiration, {
+        sigV: signature2.v,
+        sigR: signature2.r,
+        sigS: signature2.s,
+      })
 
       const originalNonce = await registryContract.functions.nonce(originalOwner)
       const signerNonce = await registryContract.functions.nonce(nextOwner)
