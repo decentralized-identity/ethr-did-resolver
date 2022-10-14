@@ -1,3 +1,11 @@
+# [7.0.0-alpha.3](https://github.com/decentralized-identity/ethr-did-resolver/compare/7.0.0-alpha.2...7.0.0-alpha.3) (2022-10-14)
+
+
+### Bug Fixes
+
+* **build:** use commonjs module in tsconfig ([e66d054](https://github.com/decentralized-identity/ethr-did-resolver/commit/e66d054e8c6af9f90bcd55389786488f16ed1ce4))
+* **ci:** run tests on a matrix of node versions ([3825ac0](https://github.com/decentralized-identity/ethr-did-resolver/commit/3825ac04889ec0fc2564cc82c8b94b51a521ef85))
+
 # [7.0.0-alpha.2](https://github.com/decentralized-identity/ethr-did-resolver/compare/7.0.0-alpha.1...7.0.0-alpha.2) (2022-10-14)
 
 
