@@ -1,3 +1,10 @@
+# [7.0.0-alpha.2](https://github.com/decentralized-identity/ethr-did-resolver/compare/7.0.0-alpha.1...7.0.0-alpha.2) (2022-10-14)
+
+
+### Bug Fixes
+
+* **build:** build commonjs and also expose esm wrapper ([522c199](https://github.com/decentralized-identity/ethr-did-resolver/commit/522c1999877c26dd3b1959111cd9d155987ada19))
+
 # [7.0.0-alpha.1](https://github.com/decentralized-identity/ethr-did-resolver/compare/6.2.4-alpha.1...7.0.0-alpha.1) (2022-10-13)
 
 
