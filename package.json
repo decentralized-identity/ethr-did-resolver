@@ -1,18 +1,17 @@
 {
   "name": "ethr-did-resolver",
-  "version": "6.2.3",
+  "version": "7.0.0-alpha.3",
   "description": "Resolve DID documents for ethereum addresses and public keys",
-  "type": "module",
-  "source": "src/index.ts",
-  "main": "./lib/index.cjs",
-  "module": "./lib/index.module.js",
-  "unpkg": "./lib/index.umd.js",
+  "type": "commonjs",
+  "source": "./src/index.ts",
+  "main": "./lib/index.js",
+  "module": "./esm/index.js",
   "types": "./lib/index.d.ts",
-  "umd:main": "./lib/index.umd.js",
   "exports": {
     ".": {
-      "require": "./lib/index.cjs",
-      "import": "./lib/index.modern.js"
+      "types": "./lib/index.d.ts",
+      "import": "./esm/index.js",
+      "require": "./lib/index.js"
     }
   },
   "typesVersions": {
@@ -31,6 +30,7 @@
   },
   "files": [
     "lib",
+    "esm",
     "src",
     "LICENSE"
   ],
@@ -59,7 +59,8 @@
   "scripts": {
     "test": "jest",
     "test:ci": "jest --coverage",
-    "build": "microbundle --compress=false",
+    "build": "tsc",
+    "clean": "rm -rf ./lib",
     "format": "prettier --write \"src/**/*.[jt]s\"",
     "lint": "eslint --ignore-pattern \"src/**/*.test.[jt]s\" \"src/**/*.[jt]s\"",
     "prepublishOnly": "yarn test:ci && yarn format && yarn lint",

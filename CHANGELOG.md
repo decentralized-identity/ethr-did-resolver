@@ -1,3 +1,37 @@
+# [7.0.0-alpha.3](https://github.com/decentralized-identity/ethr-did-resolver/compare/7.0.0-alpha.2...7.0.0-alpha.3) (2022-10-14)
+
+
+### Bug Fixes
+
+* **build:** use commonjs module in tsconfig ([e66d054](https://github.com/decentralized-identity/ethr-did-resolver/commit/e66d054e8c6af9f90bcd55389786488f16ed1ce4))
+* **ci:** run tests on a matrix of node versions ([3825ac0](https://github.com/decentralized-identity/ethr-did-resolver/commit/3825ac04889ec0fc2564cc82c8b94b51a521ef85))
+
+# [7.0.0-alpha.2](https://github.com/decentralized-identity/ethr-did-resolver/compare/7.0.0-alpha.1...7.0.0-alpha.2) (2022-10-14)
+
+
+### Bug Fixes
+
+* **build:** build commonjs and also expose esm wrapper ([522c199](https://github.com/decentralized-identity/ethr-did-resolver/commit/522c1999877c26dd3b1959111cd9d155987ada19))
+
+# [7.0.0-alpha.1](https://github.com/decentralized-identity/ethr-did-resolver/compare/6.2.4-alpha.1...7.0.0-alpha.1) (2022-10-13)
+
+
+### Bug Fixes
+
+* add esm wrapper instead of double transpile ([d2bbeaf](https://github.com/decentralized-identity/ethr-did-resolver/commit/d2bbeafbd2d77308f12d73f952b0b9940431dd83))
+
+
+### BREAKING CHANGES
+
+* ESM is only supported through a wrapper
+
+## [6.2.4-alpha.1](https://github.com/decentralized-identity/ethr-did-resolver/compare/6.2.3...6.2.4-alpha.1) (2022-10-13)
+
+
+### Bug Fixes
+
+* create alpha release ([1d5d5f2](https://github.com/decentralized-identity/ethr-did-resolver/commit/1d5d5f21e3d9f13500faf1acfdef89819589606c))
+
 ## [6.2.3](https://github.com/decentralized-identity/ethr-did-resolver/compare/6.2.2...6.2.3) (2022-10-12)
 
 
