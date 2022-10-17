@@ -1,3 +1,10 @@
+## [7.0.1](https://github.com/decentralized-identity/ethr-did-resolver/compare/7.0.0...7.0.1) (2022-10-17)
+
+
+### Bug Fixes
+
+* **deps:** update did-resolver to 4.0.1 ([#172](https://github.com/decentralized-identity/ethr-did-resolver/issues/172)) ([ce38d01](https://github.com/decentralized-identity/ethr-did-resolver/commit/ce38d01802344db76eae7f753a067fba4fd759de))
+
 # [7.0.0](https://github.com/decentralized-identity/ethr-did-resolver/compare/6.2.3...7.0.0) (2022-10-17)
 
 
