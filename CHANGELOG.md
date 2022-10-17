@@ -1,3 +1,17 @@
+# [7.0.0](https://github.com/decentralized-identity/ethr-did-resolver/compare/6.2.3...7.0.0) (2022-10-17)
+
+
+### Bug Fixes
+
+* **build:** transpile for commonjs, use wrapper for esm ([#170](https://github.com/decentralized-identity/ethr-did-resolver/issues/170)) ([5eba679](https://github.com/decentralized-identity/ethr-did-resolver/commit/5eba679b159fc88cef6e4ac8a59e0c3553747443))
+
+
+### BREAKING CHANGES
+
+* **build:** previous versions (<7.0.0) would be transpiled twice by microbundle, but this seems to be [anti-pattern](https://redfin.engineering/node-modules-at-war-why-commonjs-and-es-modules-cant-get-along-9617135eeca1)
+
+Please raise an issue on https://github.com/decentralized-identity/ethr-did-resolver if this change is incompatible with your tech stack and there are no workarounds.
+
 # [7.0.0-alpha.3](https://github.com/decentralized-identity/ethr-did-resolver/compare/7.0.0-alpha.2...7.0.0-alpha.3) (2022-10-14)
 
 
