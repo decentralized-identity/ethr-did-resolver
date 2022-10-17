@@ -26,7 +26,7 @@ eg:
 Multi-network DIDs are also supported, if the proper configuration is provided during setup.
 
 For example:
-`did:ethr:0x4:0xf3beac30c498d9e26865f34fcaa57dbb935b0d74` gets resolved on the rinkeby testnet (chainID=0x4), and
+`did:ethr:0x5:0xf3beac30c498d9e26865f34fcaa57dbb935b0d74` gets resolved on the goerli testnet (chainID=0x5), and
 represents a distinct identifier than the generic one, with different DID documents and different key rotation history.
 
 ## DID Document
@@ -114,7 +114,7 @@ network. An example configuration for multi-network DID resolving would look lik
 const providerConfig = {
   networks: [
     { name: "mainnet", provider: web3.currentProvider },
-    { name: "0x4", rpcUrl: "https://rinkeby.infura.io/v3/<YOUR PROJECT ID>" },
+    { name: "0x5", rpcUrl: "https://goerli.infura.io/v3/<YOUR PROJECT ID>" },
     { name: "rsk:testnet", chainId: "0x1f", rpcUrl: "https://did.testnet.rsk.co:4444" },
     { name: "development", rpcUrl: "http://localhost:7545", registry: "0xdca7ef03e98e0dc2b855be647c39abe984fcf21b" },
     { name: "myprivatenet", chainId: 123456, rpcUrl: "https://my.private.net.json.rpc.url" }
@@ -128,7 +128,7 @@ The configuration from above allows you to resolve ethr-did's of the following f
 
 - `did:ethr:mainnet:0xabcabc03e98e0dc2b855be647c39abe984193675`
 - `did:ethr:0xabcabc03e98e0dc2b855be647c39abe984193675` (defaults to mainnet configuration)
-- `did:ethr:0x4:0xabcabc03e98e0dc2b855be647c39abe984193675` (refer to the rinkeby network by chainID)
+- `did:ethr:0x5:0xabcabc03e98e0dc2b855be647c39abe984193675` (refer to the goerli network by chainID)
 - `did:ethr:rsk:testnet:0xabcabc03e98e0dc2b855be647c39abe984193675`
 - `did:ethr:0x1f:0xabcabc03e98e0dc2b855be647c39abe984193675` (refer to the rsk:testnet by chainID)
 - `did:ethr:development:0xabcabc03e98e0dc2b855be647c39abe984193675`
