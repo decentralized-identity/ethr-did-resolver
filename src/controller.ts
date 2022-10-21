@@ -90,7 +90,6 @@ export class EthrDidController {
     // console.log(`changing owner for ${oldOwner} on registry at ${registryContract.address}`)
     const overrides = {
       gasLimit: 123456,
-      gasPrice: 1000000000,
       ...options,
     }
 
@@ -121,7 +120,6 @@ export class EthrDidController {
   ): Promise<TransactionReceipt> {
     const overrides = {
       gasLimit: 123456,
-      gasPrice: 1000000000,
       ...options,
     }
 
@@ -147,7 +145,6 @@ export class EthrDidController {
   ): Promise<TransactionReceipt> {
     const overrides = {
       gasLimit: 123456,
-      gasPrice: 1000000000,
       ...options,
     }
     const contract = await this.attachContract(overrides.from)
@@ -191,7 +188,6 @@ export class EthrDidController {
   ): Promise<TransactionReceipt> {
     const overrides = {
       gasLimit: 123456,
-      gasPrice: 1000000000,
       ...options,
     }
     const contract = await this.attachContract(overrides.from)
@@ -218,7 +214,6 @@ export class EthrDidController {
   ): Promise<TransactionReceipt> {
     const overrides = {
       gasLimit: 123456,
-      gasPrice: 1000000000,
       ...options,
     }
     delegateType = delegateType.startsWith('0x') ? delegateType : stringToBytes32(delegateType)
@@ -254,7 +249,6 @@ export class EthrDidController {
   ): Promise<TransactionReceipt> {
     const overrides = {
       gasLimit: 123456,
-      gasPrice: 1000000000,
       ...options,
     }
     delegateType = delegateType.startsWith('0x') ? delegateType : stringToBytes32(delegateType)
@@ -280,7 +274,6 @@ export class EthrDidController {
   ): Promise<TransactionReceipt> {
     const overrides = {
       gasLimit: 123456,
-      gasPrice: 1000000000,
       controller: undefined,
       ...options,
     }
@@ -317,7 +310,6 @@ export class EthrDidController {
   ): Promise<TransactionReceipt> {
     const overrides = {
       gasLimit: 123456,
-      gasPrice: 1000000000,
       controller: undefined,
       ...options,
     }
@@ -342,7 +334,6 @@ export class EthrDidController {
     // console.log(`revoking attribute ${attrName}(${attrValue}) for ${identity}`)
     const overrides = {
       gasLimit: 123456,
-      gasPrice: 1000000000,
       ...options,
     }
     attrName = attrName.startsWith('0x') ? attrName : stringToBytes32(attrName)
@@ -392,7 +383,6 @@ export class EthrDidController {
     // console.log(`revoking attribute ${attrName}(${attrValue}) for ${identity}`)
     const overrides = {
       gasLimit: 123456,
-      gasPrice: 1000000000,
       ...options,
     }
     attrName = attrName.startsWith('0x') ? attrName : stringToBytes32(attrName)
