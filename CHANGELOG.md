@@ -1,3 +1,10 @@
+## [7.0.2](https://github.com/decentralized-identity/ethr-did-resolver/compare/7.0.1...7.0.2) (2022-10-24)
+
+
+### Bug Fixes
+
+* **build:** add named exports to esm wrapper ([#176](https://github.com/decentralized-identity/ethr-did-resolver/issues/176)) ([725ed25](https://github.com/decentralized-identity/ethr-did-resolver/commit/725ed250074f19e5d18d8e2b55454391102d5401)), closes [#175](https://github.com/decentralized-identity/ethr-did-resolver/issues/175)
+
 ## [7.0.1](https://github.com/decentralized-identity/ethr-did-resolver/compare/7.0.0...7.0.1) (2022-10-17)
 
 
