@@ -14,13 +14,13 @@ the [DID Primer](https://github.com/WebOfTrustInfo/rebooting-the-web-of-trust-fa
 ## Abstract
 
 Decentralized Identifiers (DIDs, see [1]) are designed to be compatible with any distributed ledger or network. In the
-Ethereum community, a pattern known as ERC1056 (see [2]) utilizes a smart contract for a lightweight identifier management
-system intended explicitly for off-chain usage.
+Ethereum community, a pattern known as ERC1056 (see [2]) utilizes a smart contract for a lightweight identifier
+management system intended explicitly for off-chain usage.
 
 The described DID method allows any Ethereum smart contract or key pair account, or any secp256k1 public key to become
 a valid identifier. Such an identifier needs no registration. In case that key management or additional attributes such
-as "service endpoints" are required, they are resolved using ERC1056 smart contracts deployed on the networks listed in the
-[registry repository](https://github.com/uport-project/ethr-did-registry#contract-deployments).
+as "service endpoints" are required, they are resolved using ERC1056 smart contracts deployed on the networks listed in
+the [registry repository](https://github.com/uport-project/ethr-did-registry#contract-deployments).
 
 Most networks use the default registry address: `0xdca7ef03e98e0dc2b855be647c39abe984fcf21b`.
 
@@ -36,19 +36,16 @@ For a reference implementation of this DID method specification see [3].
 
 ### Identifier Controller
 
-By default, each identifier is controlled by itself, or by its corresponding Ethereum address in case the identifier
-is a public key. Each identifier can only be controlled by a single account at any given time. The controller can replace
-themselves with any other Ethereum address, including contracts to allow more advanced models such as multi-signature
-controllership.
+By default, each identifier is controlled by itself, or rather by its corresponding Ethereum address. Each identifier
+can only be controlled by a single ethereum address at any given time. The controller can replace themselves with any
+other Ethereum address, including contracts to allow more advanced models such as multi-signature control.
 
 ## Target System
 
 The target system is the Ethereum network where the ERC1056 is deployed. This could either be:
 
 - Mainnet
-- Ropsten
-- Rinkeby
-- Kovan
+- Goerli
 - other EVM-compliant blockchains such as private chains, side-chains, or consortium chains.
 
 ### Advantages
@@ -57,7 +54,7 @@ The target system is the Ethereum network where the ERC1056 is deployed. This co
 - Identifier creation is private
 - Uses Ethereum's built-in account abstraction
 - Supports multi-sig (or proxy) wallet for account controller
-- Supports secp256k1 public keys as identifiers (on the same infrastructure)  
+- Supports secp256k1 public keys as identifiers (on the same infrastructure)
 - Decoupling claims data from the underlying identifier
 - Supports decoupling Ethereum interaction from the underlying identifier
 - Flexibility to use key management
@@ -71,7 +68,7 @@ Since this DID method still supports `publicKeyHex` and `publicKeyBase64` encodi
 requires a valid JSON-LD context for those entries.
 To enable JSON-LD processing, the `@context` used when constructing DID documents for `did:ethr` should be:
 
-```javascript
+```
 "@context": [
   "https://www.w3.org/ns/did/v1",
   "https://w3id.org/security/suites/secp256k1recovery-2020/v2"
@@ -94,13 +91,14 @@ or the corresponding HEX-encoded Ethereum address on the target network, prefixe
 
     ethr-did = "did:ethr:" ethr-specific-identifier
     ethr-specific-identifier = [ ethr-network ":" ] ethereum-address / public-key-hex
-    ethr-network = "mainnet" / "ropsten" / "rinkeby" / "kovan" / network-chain-id
+    ethr-network = "mainnet" / "goerli" / network-chain-id
     network-chain-id = "0x" *HEXDIG
     ethereum-address = "0x" 40*HEXDIG
     public-key-hex = "0x" 66*HEXDIG
 
 The `ethereum-address` or `public-key-hex` are case-insensitive, however, the corresponding `blockchainAccountId`
-MAY be represented using the [mixed case checksum representation described in EIP55](https://github.com/ethereum/EIPs/blob/master/EIPS/eip-55.md)
+MAY be represented using
+the [mixed case checksum representation described in EIP55](https://github.com/ethereum/EIPs/blob/master/EIPS/eip-55.md)
 in the resulting DID document.
 
 Note, if no public Ethereum network was specified, it is assumed that the DID is anchored on the Ethereum mainnet by
@@ -120,18 +118,18 @@ If the identifier is a `public-key-hex`:
 
 ## Relationship to ERC1056
 
-The subject of a `did:ethr` is mapped to an `identity` Ethereum address in the ERC1056 contract. When dealing with public
-key identifiers, the Ethereum address corresponding to that public key is used to represent the controller.
+The subject of a `did:ethr` is mapped to an `identity` Ethereum address in the ERC1056 contract. When dealing with
+public key identifiers, the Ethereum address corresponding to that public key is used to represent the controller.
 
 The controller address of a `did:ethr` is mapped to the `owner` of an `identity` in the ERC1056.
 The controller address is not listed as the [DID `controller`](https://www.w3.org/TR/did-core/#did-controller) property
 in the DID document. This is intentional, to simplify the verification burden required by the DID spec.
-Rather, this address it is a concept specific to ERC1056 and defines the address that is allowed to perform Update and 
+Rather, this address it is a concept specific to ERC1056 and defines the address that is allowed to perform Update and
 Delete operations on the registry on behalf of the `identity` address.
 This address MUST be listed with the ID `${did}#controller` in the `verificationMethod` section and also referenced
 in all other verification relationships listed in the DID document.
-In addition to this, if the identifier is a public key, this public key MUST be listed with the ID `${did}#controllerKey`
-in all locations where `#controller` appears.
+In addition to this, if the identifier is a public key, this public key MUST be listed with the
+ID `${did}#controllerKey` in all locations where `#controller` appears.
 
 ## CRUD Operation Definitions
 
@@ -160,8 +158,12 @@ The default DID document for an `did:ethr<Ethereum address>` on mainnet, e.g.
       "blockchainAccountId": "eip155:1:0xb9c5714089478a327f09197987f16f9e5d936e8a"
     }
   ],
-  "authentication": ["did:ethr:0xb9c5714089478a327f09197987f16f9e5d936e8a#controller"],
-  "assertionMethod": ["did:ethr:0xb9c5714089478a327f09197987f16f9e5d936e8a#controller"]
+  "authentication": [
+    "did:ethr:0xb9c5714089478a327f09197987f16f9e5d936e8a#controller"
+  ],
+  "assertionMethod": [
+    "did:ethr:0xb9c5714089478a327f09197987f16f9e5d936e8a#controller"
+  ]
 }
 ```
 
@@ -205,18 +207,19 @@ looks like this:
 The DID document is built by using read only functions and contract events on the ERC1056 registry.
 
 Any value from the registry that returns an Ethereum address will be added to the `verificationMethod` array of the
-DID document with type `EcdsaSecp256k1RecoveryMethod2020` and an `blockchainAccountId` attribute containing the address using [CAIP10 Format](https://github.com/ChainAgnostic/CAIPs/blob/master/CAIPs/caip-10.md).
+DID document with type `EcdsaSecp256k1RecoveryMethod2020` and a `blockchainAccountId` attribute containing the address
+using [CAIP10 Format](https://github.com/ChainAgnostic/CAIPs/blob/master/CAIPs/caip-10.md).
 
 Other verification relationships and service entries are added or removed by enumerating contract events (see below).
 
 #### Controller Address
 
 Each identifier always has a controller address. By default, it is the same as the identifier address, but the resolver
-must check the read only contract function `identityOwner(address identity)` on the deployed ERC1056 contract.
+MUST check the read only contract function `identityOwner(address identity)` on the deployed ERC1056 contract.
 
-This controller address must be represented in the DID document as a `verificationMethod` entry with the `id` set as the
+This controller address MUST be represented in the DID document as a `verificationMethod` entry with the `id` set as the
 DID being resolved and with the fragment `#controller` appended to it.
-A reference to it must also be added to the `authentication` and `assertionMethod` arrays of the DID document.
+A reference to it MUST also be added to the `authentication` and `assertionMethod` arrays of the DID document.
 
 #### Enumerating Contract Events to build the DID Document
 
@@ -240,7 +243,7 @@ To see all changes in history for an address use the following pseudo-code:
 3. Filter for events for all the above types with the contracts address on the specified block.
 4. If event has a previous change then go to 3
 
-After building the history of events for an address, interpret each event to build the DID document like so: 
+After building the history of events for an address, interpret each event to build the DID document like so:
 
 ##### Controller changes (`DIDOwnerChanged`)
 
@@ -255,8 +258,8 @@ event DIDOwnerChanged(
 ```
 
 The event data MUST be used to update the `#controller` entry in the `verificationMethod` array.
-When resolving DIDs with publicKey identifiers, if the controller (`owner`) address is different from the corresponding 
-address of the publicKey, then the `#controllerKey` entry in the `verificationMethod` array MUST be omitted.  
+When resolving DIDs with publicKey identifiers, if the controller (`owner`) address is different from the corresponding
+address of the publicKey, then the `#controllerKey` entry in the `verificationMethod` array MUST be omitted.
 
 ##### Delegate Keys (`DIDDelegateChanged`)
 
@@ -280,21 +283,24 @@ event DIDDelegateChanged(
 The only 2 `delegateTypes` that are currently published in the DID document are:
 
 - `veriKey` which adds a `EcdsaSecp256k1RecoveryMethod2020` to the `verificationMethod` section of the DID document with
-  the `blockchainAccountId`(`ethereumAddress`) of the delegate.
+  the `blockchainAccountId`(`ethereumAddress`) of the delegate, and adds a reference to it in the `assertionMethod`
+  section.
 - `sigAuth` which adds a `EcdsaSecp256k1RecoveryMethod2020` to the `verificationMethod` section of document and a
-  corresponding entry to the `authentication` section.
+  reference to it in the `authentication` section.
 
 Note, the `delegateType` is a `bytes32` type for Ethereum gas efficiency reasons and not a `string`. This restricts us
-to 32 bytes, which is why we use the short-hand versions above.
+to 32 bytes, which is why we use the shorthand versions above.
 
 Only events with a `validTo` (measured in seconds) greater or equal to the current time should be included in the DID
 document. When resolving an older version (using `versionId` in the didURL query string), the `validTo` entry MUST be
 compared to the timestamp of the block of `versionId` height.
 
 Such valid delegates MUST be added to the `verificationMethod` array as `EcdsaSecp256k1RecoveryMethod2020` entries, with
-`delegate` listed under `blockchainAccountId` and prefixed with `eip155:<chainId>:`, according to [CAIP10](https://github.com/ChainAgnostic/CAIPs/blob/master/CAIPs/caip-10.md)
+the `delegate` address listed in the `blockchainAccountId` property and prefixed with `eip155:<chainId>:`, according
+to [CAIP10](https://github.com/ChainAgnostic/CAIPs/blob/master/CAIPs/caip-10.md)
 
 Example:
+
 ```json
 {
   "id": "did:ethr:0xf3beac30c498d9e26865f34fcaa57dbb935b0d74#delegate-1",
@@ -320,13 +326,15 @@ event DIDAttributeChanged(
 ```
 
 Note, the name is a `bytes32` type for Ethereum gas efficiency reasons and not a `string`. This restricts us to 32
-bytes, which is why we use the short-hand attribute versions explained below.
+bytes, which is why we use the shorthand attribute versions explained below.
 
-While any attribute can be stored, for the DID document we currently support adding to each of these sections of the DID
-document:
+While any attribute can be stored, for the DID document we support adding to each of these sections of the DID document:
 
 - Public Keys (Verification Methods)
 - Service Endpoints
+
+This design decision is meant to discourage the use of custom attributes in DID documents as they would be too easy to
+misuse for storing personal user information on-chain.
 
 ###### Public Keys
 
@@ -339,10 +347,12 @@ versions of the spec and reference resolver.
 
 ###### Key purposes
 
-- `veriKey` adds a verification key to the `verificationMethod` section of document
-- `sigAuth` adds a verification key to the `verificationMethod` section of document and adds an entry to the
-  `authentication` section of document.
-- `enc` adds a key agreement key to the `verificationMethod` section and a corresponding entry to the `keyAgreement` section.
+- `veriKey` adds a verification key to the `verificationMethod` section of document and adds a reference to it in
+  the `assertionMethod` section of document.
+- `sigAuth` adds a verification key to the `verificationMethod` section of document and adds a reference to it in
+  the `authentication` section of document.
+- `enc` adds a key agreement key to the `verificationMethod` section and a corresponding entry to the `keyAgreement`
+  section.
   This is used to perform a Diffie-Hellman key exchange and derive a secret key for encrypting messages to the DID that
   lists such a key.
 
@@ -353,7 +363,7 @@ versions of the spec and reference resolver.
 
 A `DIDAttributeChanged` event for the account `0xf3beac30c498d9e26865f34fcaa57dbb935b0d74` with the name
 `did/pub/Secp256k1/veriKey/hex` and the value of `0x02b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71`
-generates a public key entry like the following:
+generates a verification method entry like the following:
 
 ```json
 {
@@ -368,7 +378,7 @@ generates a public key entry like the following:
 
 A `DIDAttributeChanged` event for the account `0xf3beac30c498d9e26865f34fcaa57dbb935b0d74` with the name
 `did/pub/Ed25519/veriKey/base58` and the value of `0xb97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71`
-generates a public key entry like this:
+generates a verification method entry like this:
 
 ```json
 {
@@ -384,7 +394,7 @@ generates a public key entry like this:
 A `DIDAttributeChanged` event for the account `0xf3beac30c498d9e26865f34fcaa57dbb935b0d74` with the name
 `did/pub/X25519/enc/base64` and the value of
 `0x302a300506032b656e032100118557777ffb078774371a52b00fed75561dcf975e61c47553e664a617661052`
-generates a public key entry like this:
+generates a verification method entry like this:
 
 ```json
 {
@@ -421,7 +431,7 @@ With the exception of `#controller` and `#controllerKey`, the `id` properties th
 MUST be stable across updates. This means that the same key material will be referenced by the same ID after an update.
 
 * Attribute or delegate changes that result in `verificationMethod` entries MUST set the `id`
-`${did}#delegate-${eventIndex}`.
+  `${did}#delegate-${eventIndex}`.
 * Attributes that result in `service` entries MUST set the `id` to `${did}#service-${eventIndex}`
 
 where `eventIndex` is the index of the event that modifies that section of the DID document.
@@ -454,18 +464,13 @@ in [Enumerating Contract Events to build the DID Document](#Enumerating-Contract
 
 ### Delete (Revoke)
 
-Two cases need to be distinguished:
+The `owner` property of the identifier MUST be set to `0x0`. Although, `0x0` is a valid Ethereum address, this will
+indicate the account has no owner which is a common approach for invalidation, e.g., tokens. To detect if the `owner` is
+the `null` address, one MUST get the logs of the last change to the account and inspect if the `owner` was set to the
+null address (`0x0000000000000000000000000000000000000000`). It is impossible to make any other changes to the DID
+document after such a change, therefore all preexisting keys and services MUST be considered revoked.
 
-- In case no changes were written to ERC1056, nothing needs to be done, and the private key which belongs to the
-  Ethereum address needs to be deleted from the storage medium used to protect the keys, e.g., mobile device.
-- In case ERC1056 was utilized, the owner of the smart contract needs to be set to `0x0`. Although, `0x0`is a valid
-  Ethereum address, this will indicate the account has no owner which is a common approach for invalidation, e.g.,
-  tokens. To detect if the `owner` is the null address, one must get the logs of the last change to the account and
-  inspect if the `owner` was set to the null address (`0x0000000000000000000000000000000000000000`). It is impossible
-  to make any other changes to the DID document after such a change, therefore all preexisting keys and services are
-  considered revoked.
-  
-If the intention is to revoke all the signatures corresponding to the DID, the second option MUST be used.
+If the intention is to revoke all the signatures corresponding to the DID, this option MUST be used.
 
 The DID resolution result for a deactivated DID has the following shape:
 
@@ -481,6 +486,7 @@ The DID resolution result for a deactivated DID has the following shape:
     "@context": "https://www.w3.org/ns/did/v1",
     "id": "<the deactivated DID>",
     "verificationMethod": [],
+    "assertionMethod": [],
     "authentication": []
   }
 }
@@ -494,10 +500,12 @@ The `resolve` method returns an object with the following properties: `didDocume
 ### DID Document Metadata
 
 When resolving a DID document that has had updates, the latest update MUST be listed in the `didDocumentMetadata`.
+
 * `versionId` MUST be the block number of the latest update.
 * `updated` MUST be the ISO date string of the block time of the latest update (without sub-second resolution).
 
 Example:
+
 ```json
 {
   "didDocumentMetadata": {
@@ -530,6 +538,7 @@ Only ERC1056 events prior to or contained in this block number are to be conside
 
 If there are any events after that block that mutate the DID, the earliest of them SHOULD be used to populate the
 properties of the `didDocumentMetadata`:
+
 * `nextVersionId` MUST be the block number of the next update to the DID document.
 * `nextUpdate` MUST be the ISO date string of the block time of the next update (without sub-second resolution).
 
@@ -540,6 +549,7 @@ Any timestamp comparisons of `validTo` fields of the event history MUST be done 
 
 Example:
 `?versionId=12101682`
+
 ```json
 {
   "didDocumentMetadata": {
@@ -553,12 +563,13 @@ Example:
 
 #### Security considerations of DID versioning
 
-Applications must take precautions when using versioned DID URIs.
+Applications MUST take precautions when using versioned DID URIs.
 If a key is compromised and revoked then it can still be used to issue signatures on behalf of the "older" DID URI.
 The use of versioned DID URIs is only recommended in some limited situations where the timestamp of signatures can also
 be verified, where malicious signatures can be easily revoked, and where applications can afford to check for these
 explicit revocations of either keys or signatures.
-Wherever versioned DIDs are in use, it SHOULD be made obvious to users that they are dealing with potentially revoked data.
+Wherever versioned DIDs are in use, it SHOULD be made obvious to users that they are dealing with potentially revoked
+data.
 
 ### `initial-state` query string parameter
 
