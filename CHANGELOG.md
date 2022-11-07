@@ -1,3 +1,15 @@
+# [8.0.0](https://github.com/decentralized-identity/ethr-did-resolver/compare/7.0.2...8.0.0) (2022-11-07)
+
+
+### Bug Fixes
+
+* **spec:** remove ambiguity around deletion ([#178](https://github.com/decentralized-identity/ethr-did-resolver/issues/178)) ([da8e22e](https://github.com/decentralized-identity/ethr-did-resolver/commit/da8e22e74449f81e18bf5b23202f9e2f98627f23)), closes [#177](https://github.com/decentralized-identity/ethr-did-resolver/issues/177)
+
+
+### BREAKING CHANGES
+
+* **spec:** This is a breaking change of the spec as "soft deletion" of non-updated DIDs is no longer considered valid.
+
 ## [7.0.2](https://github.com/decentralized-identity/ethr-did-resolver/compare/7.0.1...7.0.2) (2022-10-24)
 
 
