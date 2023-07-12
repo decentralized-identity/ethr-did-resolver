@@ -18,6 +18,8 @@ describe('configuration', () => {
     expect(contracts['kovan']).toBeDefined()
     expect(contracts['0x2a']).toBeDefined()
     expect(contracts['dev']).toBeDefined()
+    expect(contracts['linea:goerli']).toBeDefined()
+    expect(contracts['0xe704']).toBeDefined()
   })
 
   it('works with infuraProjectId and overrides', () => {

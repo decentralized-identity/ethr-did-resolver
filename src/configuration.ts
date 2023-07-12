@@ -9,9 +9,10 @@ const infuraNames: Record<string, string> = {
   polygon: 'matic',
   'polygon:test': 'maticmum',
   aurora: 'aurora-mainnet',
+  'linea:goerli': 'linea-goerli',
 }
 
-const knownInfuraNames = ['mainnet', 'ropsten', 'rinkeby', 'goerli', 'kovan', 'aurora']
+const knownInfuraNames = ['mainnet', 'ropsten', 'rinkeby', 'goerli', 'kovan', 'aurora', 'linea:goerli']
 
 /**
  * A configuration entry for an ethereum network
