@@ -66,4 +66,5 @@ export const deployments: EthrDidRegistryDeployment[] = [
   { chainId: 137, registry: '0xdca7ef03e98e0dc2b855be647c39abe984fcf21b', name: 'polygon', legacyNonce: true },
   { chainId: 80001, registry: '0xdca7ef03e98e0dc2b855be647c39abe984fcf21b', name: 'polygon:test', legacyNonce: true },
   { chainId: 1313161554, registry: '0x63eD58B671EeD12Bc1652845ba5b2CDfBff198e0', name: 'aurora', legacyNonce: true },
+  { chainId: 59140, registry: '0x03d5003bf0e79C5F5223588F347ebA39AfbC3818', name: 'linea:goerli', legacyNonce: false },
 ]
