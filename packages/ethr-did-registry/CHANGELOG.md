@@ -1,3 +1,10 @@
+# [1.2.0](https://github.com/uport-project/ethr-did-registry/compare/1.1.0...1.2.0) (2023-07-12)
+
+
+### Features
+
+* add linea:goerli deployment ([#59](https://github.com/uport-project/ethr-did-registry/issues/59)) ([7a9db49](https://github.com/uport-project/ethr-did-registry/commit/7a9db49f82e4629832612af49e0099aeab05f9e5))
+
 # [1.1.0](https://github.com/uport-project/ethr-did-registry/compare/1.0.1...1.1.0) (2022-10-11)
 
 
