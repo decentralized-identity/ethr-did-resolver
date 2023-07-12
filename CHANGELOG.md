@@ -1,3 +1,10 @@
+# [8.1.0](https://github.com/decentralized-identity/ethr-did-resolver/compare/8.0.0...8.1.0) (2023-07-12)
+
+
+### Features
+
+* add linea:goerli deployment ([b7a36b3](https://github.com/decentralized-identity/ethr-did-resolver/commit/b7a36b3b4bc16f9d502ce2bec43b7d6f7dc1b4cc))
+
 # [8.0.0](https://github.com/decentralized-identity/ethr-did-resolver/compare/7.0.2...8.0.0) (2022-11-07)
 
 
