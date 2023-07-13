@@ -1,3 +1,10 @@
+## [8.1.2](https://github.com/decentralized-identity/ethr-did-resolver/compare/8.1.1...8.1.2) (2023-07-13)
+
+
+### Bug Fixes
+
+* **deps:** update all non-major dependencies ([5d1be47](https://github.com/decentralized-identity/ethr-did-resolver/commit/5d1be475b6597c60e24bf0d6efa80cb058d68667))
+
 ## [8.1.1](https://github.com/decentralized-identity/ethr-did-resolver/compare/8.1.0...8.1.1) (2023-07-12)
 
 
