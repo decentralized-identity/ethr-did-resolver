@@ -10,7 +10,9 @@ import {
   toBeHex,
   isHexString,
   zeroPadValue,
-  zeroPadBytes
+  toUtf8Bytes,
+  keccak256,
+  encodeBytes32String,
 } from 'ethers'
 import { getContractForNetwork } from './configuration'
 import {
@@ -21,9 +23,6 @@ import {
   MetaSignature,
   stringToBytes32,
 } from './helpers'
-import { keccak256 } from '@ethersproject/keccak256'
-import { formatBytes32String, toUtf8Bytes } from '@ethersproject/strings'
-import {zeroPad} from "@ethersproject/bytes";
 
 /**
  * A class that can be used to interact with the ERC1056 contract on behalf of a local controller key-pair
@@ -172,7 +171,7 @@ export class EthrDidController {
       this.address,
       concat([
         toUtf8Bytes('addDelegate'),
-        formatBytes32String(delegateType),
+        encodeBytes32String(delegateType),
         delegateAddress,
         zeroPadValue(toBeHex(exp), 32),
       ]),
@@ -228,7 +227,7 @@ export class EthrDidController {
       await this.contract.getAddress(),
       paddedNonce,
       this.address,
-      getBytes(concat([toUtf8Bytes('revokeDelegate'), formatBytes32String(delegateType), delegateAddress])),
+      getBytes(concat([toUtf8Bytes('revokeDelegate'), encodeBytes32String(delegateType), delegateAddress])),
     ])
     return keccak256(dataToHash)
   }
@@ -285,7 +284,7 @@ export class EthrDidController {
       this.address,
       concat([
         toUtf8Bytes('setAttribute'),
-        formatBytes32String(attrName),
+        encodeBytes32String(attrName),
         encodedValue,
         zeroPadValue(toBeHex(exp), 32),
       ]),
@@ -344,7 +343,7 @@ export class EthrDidController {
       await this.contract.getAddress(),
       paddedNonce,
       this.address,
-      getBytes(concat([toUtf8Bytes('revokeAttribute'), formatBytes32String(attrName), toUtf8Bytes(attrValue)])),
+      getBytes(concat([toUtf8Bytes('revokeAttribute'), encodeBytes32String(attrName), toUtf8Bytes(attrValue)])),
     ])
     return keccak256(dataToHash)
   }

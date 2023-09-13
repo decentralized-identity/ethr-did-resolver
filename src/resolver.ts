@@ -1,5 +1,4 @@
-import { Base58 } from '@ethersproject/basex'
-import { Block, BlockTag } from 'ethers'
+import { BlockTag, encodeBase58 } from 'ethers'
 import { ConfigurationOptions, ConfiguredNetworks, configureResolverWithNetworks } from './configuration'
 import { EthrDidController } from './controller'
 import {
@@ -208,7 +207,7 @@ export class EthrDidResolver {
                     pk.publicKeyBase64 = Buffer.from(currentEvent.value.slice(2), 'hex').toString('base64')
                     break
                   case 'base58':
-                    pk.publicKeyBase58 = Base58.encode(Buffer.from(currentEvent.value.slice(2), 'hex'))
+                    pk.publicKeyBase58 = encodeBase58(Buffer.from(currentEvent.value.slice(2), 'hex'))
                     break
                   case 'pem':
                     pk.publicKeyPem = Buffer.from(currentEvent.value.slice(2), 'hex').toString()

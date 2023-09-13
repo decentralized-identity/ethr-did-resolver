@@ -1,12 +1,10 @@
-import { Contract, ContractFactory } from 'ethers'
+import { Contract, ContractFactory, getBytes, SigningKey } from 'ethers'
 import { Resolvable, Resolver } from 'did-resolver'
 import { getResolver } from '../resolver'
 import { EthrDidController } from '../controller'
 import { default as EthereumDIDRegistry } from '../config/EthereumDIDRegistry.json'
 import { interpretIdentifier, nullAddress, stringToBytes32 } from '../helpers'
 import { createProvider, sleep, startMining, stopMining } from './testUtils'
-import { arrayify } from '@ethersproject/bytes'
-import { SigningKey } from '@ethersproject/signing-key'
 
 jest.setTimeout(999999999)
 
@@ -1500,14 +1498,14 @@ describe('ethrResolver', () => {
 
       const identifier = `did:ethr:dev:${currentOwner}`
 
-      const currentOwnerPrivateKey = arrayify('0x0000000000000000000000000000000000000000000000000000000000000002')
+      const currentOwnerPrivateKey = getBytes('0x0000000000000000000000000000000000000000000000000000000000000002')
 
       const hash = await new EthrDidController(identifier, registryContract).createAddDelegateHash(
         'sigAuth',
         delegate,
         86400
       )
-      const signature = new SigningKey(currentOwnerPrivateKey).signDigest(hash)
+      const signature = new SigningKey(currentOwnerPrivateKey).sign(hash)
 
       const blockHeightBeforeChange = (await browserProvider.getBlock('latest'))!.number
 
@@ -1558,7 +1556,7 @@ describe('ethrResolver', () => {
 
       const identifier = `did:ethr:dev:${currentOwner}`
 
-      const currentOwnerPrivateKey = arrayify('0x0000000000000000000000000000000000000000000000000000000000000002')
+      const currentOwnerPrivateKey = getBytes('0x0000000000000000000000000000000000000000000000000000000000000002')
 
       const blockHeightBeforeChanges = (await browserProvider.getBlock('latest'))!.number
 
@@ -1568,7 +1566,7 @@ describe('ethrResolver', () => {
         'sigAuth',
         delegate
       )
-      const signature = new SigningKey(currentOwnerPrivateKey).signDigest(hash)
+      const signature = new SigningKey(currentOwnerPrivateKey).sign(hash)
 
       await new EthrDidController(
         identifier,
@@ -1613,14 +1611,14 @@ describe('ethrResolver', () => {
 
       const identifier = `did:ethr:dev:${currentOwner}`
 
-      const currentOwnerPrivateKey = arrayify('0x0000000000000000000000000000000000000000000000000000000000000002')
+      const currentOwnerPrivateKey = getBytes('0x0000000000000000000000000000000000000000000000000000000000000002')
 
       const hash = await new EthrDidController(identifier, registryContract).createSetAttributeHash(
         attributeName,
         attributeValue,
         attributeExpiration
       )
-      const signature = new SigningKey(currentOwnerPrivateKey).signDigest(hash)
+      const signature = new SigningKey(currentOwnerPrivateKey).sign(hash)
 
       const blockHeightBeforeChange = (await browserProvider.getBlock('latest'))!.number
 
@@ -1671,7 +1669,7 @@ describe('ethrResolver', () => {
 
       const identifier = `did:ethr:dev:${currentOwner}`
 
-      const currentOwnerPrivateKey = arrayify('0x0000000000000000000000000000000000000000000000000000000000000002')
+      const currentOwnerPrivateKey = getBytes('0x0000000000000000000000000000000000000000000000000000000000000002')
 
       await new EthrDidController(identity, registryContract).setAttribute(
         attributeName,
@@ -1683,7 +1681,7 @@ describe('ethrResolver', () => {
         attributeName,
         attributeValue
       )
-      const signature = new SigningKey(currentOwnerPrivateKey).signDigest(hash)
+      const signature = new SigningKey(currentOwnerPrivateKey).sign(hash)
 
       const blockHeightBeforeChange = (await browserProvider.getBlock('latest'))!.number
 
@@ -1724,10 +1722,10 @@ describe('ethrResolver', () => {
 
       const identifier = `did:ethr:dev:${currentOwner}`
 
-      const currentOwnerPrivateKey = arrayify('0x0000000000000000000000000000000000000000000000000000000000000002')
+      const currentOwnerPrivateKey = getBytes('0x0000000000000000000000000000000000000000000000000000000000000002')
 
       const hash = await new EthrDidController(identifier, registryContract).createChangeOwnerHash(nextOwner)
-      const signature = new SigningKey(currentOwnerPrivateKey).signDigest(hash)
+      const signature = new SigningKey(currentOwnerPrivateKey).sign(hash)
 
       const blockHeightBeforeChange = (await browserProvider.getBlock('latest'))!.number
 
@@ -1773,14 +1771,14 @@ describe('ethrResolver', () => {
 
       const identifier = `did:ethr:dev:${currentOwner}`
 
-      const currentOwnerPrivateKey = arrayify('0x0000000000000000000000000000000000000000000000000000000000000003')
+      const currentOwnerPrivateKey = getBytes('0x0000000000000000000000000000000000000000000000000000000000000003')
 
       const hash = await new EthrDidController(identifier, registryContract).createSetAttributeHash(
         attributeName,
         attributeValue,
         attributeExpiration
       )
-      const signature = new SigningKey(currentOwnerPrivateKey).signDigest(hash)
+      const signature = new SigningKey(currentOwnerPrivateKey).sign(hash)
 
       await new EthrDidController(
         identifier,
