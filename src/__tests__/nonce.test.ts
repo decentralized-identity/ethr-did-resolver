@@ -1,4 +1,4 @@
-import { Contract, ContractFactory } from '@ethersproject/contracts'
+import { BrowserProvider, Contract, ContractFactory } from 'ethers'
 import { Resolvable, Resolver } from 'did-resolver'
 import { getResolver } from '../resolver'
 import { EthrDidController } from '../controller'
@@ -24,21 +24,23 @@ describe('nonce tracking', () => {
     keyAgreementController: string,
     didResolver: Resolvable
 
-  const web3Provider = createProvider()
+  let browserProvider: BrowserProvider
 
   beforeAll(async () => {
-    const legacyFactory = ContractFactory.fromSolidity(LegacyEthereumDIDRegistry).connect(web3Provider.getSigner(0))
+    browserProvider = createProvider()
+    const legacyFactory = ContractFactory.fromSolidity(LegacyEthereumDIDRegistry).connect(
+      await browserProvider.getSigner(0)
+    )
     legacyRegistryContract = await legacyFactory.deploy()
-    legacyRegistryContract = await legacyRegistryContract.deployed()
-    await legacyRegistryContract.deployTransaction.wait()
-    const legacyRegistryAddress = legacyRegistryContract.address
+    legacyRegistryContract = await legacyRegistryContract.waitForDeployment()
+    const legacyRegistryAddress = await legacyRegistryContract.getAddress()
 
-    const factory = ContractFactory.fromSolidity(EthereumDIDRegistry).connect(web3Provider.getSigner(0))
-    registryContract = await (await factory.deploy()).deployed()
-    await registryContract.deployTransaction.wait()
-    const registryAddress = registryContract.address
+    const factory = ContractFactory.fromSolidity(EthereumDIDRegistry).connect(await browserProvider.getSigner(0))
+    registryContract = await (await factory.deploy()).waitForDeployment()
+    const registryAddress = await registryContract.getAddress()
 
-    accounts = await web3Provider.listAccounts()
+    const accountSigners = await browserProvider.listAccounts()
+    accounts = accountSigners.map((signer) => signer.address)
 
     identity = accounts[1]
     controller = accounts[2]
@@ -51,8 +53,8 @@ describe('nonce tracking', () => {
     didResolver = new Resolver(
       getResolver({
         networks: [
-          { name: 'legacy', provider: web3Provider, registry: legacyRegistryAddress },
-          { name: 'dev', provider: web3Provider, registry: registryAddress },
+          { name: 'legacy', provider: browserProvider, registry: legacyRegistryAddress },
+          { name: 'dev', provider: browserProvider, registry: registryAddress },
         ],
       })
     )
@@ -76,7 +78,7 @@ describe('nonce tracking', () => {
       const ethrController = new EthrDidController(
         identifier,
         registryContract,
-        web3Provider.getSigner(signer),
+        await browserProvider.getSigner(signer),
         undefined,
         undefined,
         undefined,
@@ -102,10 +104,10 @@ describe('nonce tracking', () => {
         sigS: signature2.s,
       })
 
-      const originalNonce = await registryContract.functions.nonce(originalOwner)
-      const signerNonce = await registryContract.functions.nonce(nextOwner)
-      expect(originalNonce[0]._hex).toEqual('0x01')
-      expect(signerNonce[0]._hex).toEqual('0x01')
+      const originalNonce: bigint = await registryContract.nonce(originalOwner)
+      const signerNonce: bigint = await registryContract.nonce(nextOwner)
+      expect(originalNonce).toEqual(1n)
+      expect(signerNonce).toEqual(1n)
     })
 
     it('set attribute after owner change should result in original owner wallet nonce increase', async () => {
@@ -126,7 +128,7 @@ describe('nonce tracking', () => {
       const ethrController = new EthrDidController(
         identifier,
         registryContract,
-        web3Provider.getSigner(signer),
+        await browserProvider.getSigner(signer),
         undefined,
         undefined,
         undefined,
@@ -152,10 +154,10 @@ describe('nonce tracking', () => {
         sigS: signature2.s,
       })
 
-      const originalNonce = await registryContract.functions.nonce(originalOwner)
-      const signerNonce = await registryContract.functions.nonce(nextOwner)
-      expect(originalNonce[0]._hex).toEqual('0x01')
-      expect(signerNonce[0]._hex).toEqual('0x01')
+      const originalNonce = await registryContract.nonce(originalOwner)
+      const signerNonce = await registryContract.nonce(nextOwner)
+      expect(originalNonce).toEqual(1n)
+      expect(signerNonce).toEqual(1n)
     })
   })
   describe('legacy contract', () => {
@@ -177,33 +179,35 @@ describe('nonce tracking', () => {
       const hash = await new EthrDidController(identifier, legacyRegistryContract).createChangeOwnerHash(nextOwner)
       const signature = new SigningKey(originalOwnerPrivateKey).signDigest(hash)
 
-      await new EthrDidController(identifier, legacyRegistryContract, web3Provider.getSigner(signer)).changeOwnerSigned(
-        nextOwner,
-        {
-          sigV: signature.v,
-          sigR: signature.r,
-          sigS: signature.s,
-        }
-      )
+      await new EthrDidController(
+        identifier,
+        legacyRegistryContract,
+        await browserProvider.getSigner(signer)
+      ).changeOwnerSigned(nextOwner, {
+        sigV: signature.v,
+        sigR: signature.r,
+        sigS: signature.s,
+      })
 
       const hash2 = await new EthrDidController(identifier, legacyRegistryContract).createChangeOwnerHash(finalOwner)
       const signature2 = new SigningKey(nextOwnerPrivateKey).signDigest(hash2)
 
-      await new EthrDidController(identifier, legacyRegistryContract, web3Provider.getSigner(signer)).changeOwnerSigned(
-        finalOwner,
-        {
-          sigV: signature2.v,
-          sigR: signature2.r,
-          sigS: signature2.s,
-        }
-      )
+      await new EthrDidController(
+        identifier,
+        legacyRegistryContract,
+        await browserProvider.getSigner(signer)
+      ).changeOwnerSigned(finalOwner, {
+        sigV: signature2.v,
+        sigR: signature2.r,
+        sigS: signature2.s,
+      })
 
       // Expect the nonce of the original identity to equal 2 as the nonce tracking in the legacy contract is
       // done on an identity basis
-      const originalNonce = await legacyRegistryContract.functions.nonce(originalOwner)
-      const signerNonce = await legacyRegistryContract.functions.nonce(nextOwner)
-      expect(originalNonce[0]._hex).toEqual('0x02')
-      expect(signerNonce[0]._hex).toEqual('0x00')
+      const originalNonce = await legacyRegistryContract.nonce(originalOwner)
+      const signerNonce = await legacyRegistryContract.nonce(nextOwner)
+      expect(originalNonce).toEqual(2n)
+      expect(signerNonce).toEqual(0n)
     })
 
     it('set attribute after owner change should result in original owner wallet nonce increase', async () => {
@@ -224,14 +228,15 @@ describe('nonce tracking', () => {
       const hash = await new EthrDidController(identifier, legacyRegistryContract).createChangeOwnerHash(nextOwner)
       const signature = new SigningKey(originalOwnerPrivateKey).signDigest(hash)
 
-      await new EthrDidController(identifier, legacyRegistryContract, web3Provider.getSigner(signer)).changeOwnerSigned(
-        nextOwner,
-        {
-          sigV: signature.v,
-          sigR: signature.r,
-          sigS: signature.s,
-        }
-      )
+      await new EthrDidController(
+        identifier,
+        legacyRegistryContract,
+        await browserProvider.getSigner(signer)
+      ).changeOwnerSigned(nextOwner, {
+        sigV: signature.v,
+        sigR: signature.r,
+        sigS: signature.s,
+      })
 
       const hash2 = await new EthrDidController(identifier, legacyRegistryContract).createSetAttributeHash(
         attributeName,
@@ -243,16 +248,16 @@ describe('nonce tracking', () => {
       await new EthrDidController(
         identifier,
         legacyRegistryContract,
-        web3Provider.getSigner(signer)
+        await browserProvider.getSigner(signer)
       ).setAttributeSigned(attributeName, attributeValue, attributeExpiration, {
         sigV: signature2.v,
         sigR: signature2.r,
         sigS: signature2.s,
       })
 
-      const nonce = await legacyRegistryContract.functions.nonce(originalOwner)
+      const nonce = await legacyRegistryContract.nonce(originalOwner)
 
-      expect(nonce[0]._hex).toEqual('0x02')
+      expect(nonce).toEqual(2n)
     })
   })
 })

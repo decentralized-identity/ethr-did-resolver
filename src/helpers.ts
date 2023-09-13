@@ -14,14 +14,14 @@ export const DEFAULT_JSON_RPC = 'http://127.0.0.1:8545/'
 export const MESSAGE_PREFIX = '0x1900'
 
 export type address = string
-export type uint256 = BigNumber
+export type uint256 = bigint
 export type bytes32 = string
 export type bytes = string
 
 export interface ERC1056Event {
   identity: address
   previousChange: uint256
-  validTo?: uint256
+  validTo?: bigint
   _eventName: string
   blockNumber: number
 }

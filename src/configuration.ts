@@ -1,6 +1,4 @@
-import { BigNumber } from '@ethersproject/bignumber'
-import { Contract, ContractFactory } from '@ethersproject/contracts'
-import { JsonRpcProvider, Provider } from '@ethersproject/providers'
+import { Contract, ContractFactory, JsonRpcProvider, Provider } from 'ethers'
 import { DEFAULT_REGISTRY_ADDRESS } from './helpers'
 import { deployments, EthrDidRegistryDeployment } from './config/deployments'
 import { default as EthereumDIDRegistry } from './config/EthereumDIDRegistry.json'
@@ -26,7 +24,7 @@ const knownInfuraNames = ['mainnet', 'ropsten', 'rinkeby', 'goerli', 'kovan', 'a
  * ```
  */
 export interface ProviderConfiguration extends Omit<EthrDidRegistryDeployment, 'chainId'> {
-  provider?: Provider
+  provider?: Provider | null
   chainId?: string | number
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   web3?: any
@@ -68,16 +66,16 @@ export function getContractForNetwork(conf: ProviderConfiguration): Contract {
   if (!provider) {
     if (conf.rpcUrl) {
       const chainIdRaw = conf.chainId ? conf.chainId : deployments.find((d) => d.name === conf.name)?.chainId
-      const chainId = chainIdRaw ? BigNumber.from(chainIdRaw).toNumber() : chainIdRaw
+      const chainId = chainIdRaw ? BigInt(chainIdRaw) : chainIdRaw
       provider = new JsonRpcProvider(conf.rpcUrl, chainId || 'any')
     } else {
       throw new Error(`invalid_config: No web3 provider could be determined for network ${conf.name || conf.chainId}`)
     }
   }
-  const contract: Contract = ContractFactory.fromSolidity(EthereumDIDRegistry)
+  const contract = ContractFactory.fromSolidity(EthereumDIDRegistry)
     .attach(conf.registry || DEFAULT_REGISTRY_ADDRESS)
     .connect(provider)
-  return contract
+  return contract as Contract
 }
 
 function configureNetwork(net: ProviderConfiguration): ConfiguredNetworks {

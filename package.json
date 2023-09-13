@@ -113,6 +113,7 @@
     "@ethersproject/providers": "^5.6.8",
     "@ethersproject/signing-key": "^5.6.2",
     "@ethersproject/transactions": "^5.6.2",
-    "did-resolver": "^4.0.1"
+    "did-resolver": "^4.0.1",
+    "ethers": "6.7.1"
   }
 }

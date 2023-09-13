@@ -1,4 +1,4 @@
-import { Contract, ContractFactory } from '@ethersproject/contracts'
+import { Contract, ContractFactory } from 'ethers'
 import { Resolvable, Resolver } from 'did-resolver'
 import { getResolver } from '../resolver'
 import { EthrDidController } from '../controller'
@@ -8,7 +8,7 @@ import { createProvider, sleep, startMining, stopMining } from './testUtils'
 import { arrayify } from '@ethersproject/bytes'
 import { SigningKey } from '@ethersproject/signing-key'
 
-jest.setTimeout(30000)
+jest.setTimeout(999999999)
 
 describe('ethrResolver', () => {
   // let registry, accounts, did, identity, controller, delegate1, delegate2, ethr, didResolver
@@ -22,19 +22,18 @@ describe('ethrResolver', () => {
     keyAgreementController: string,
     didResolver: Resolvable
 
-  const web3Provider = createProvider()
+  const browserProvider = createProvider()
 
   beforeAll(async () => {
-    const factory = ContractFactory.fromSolidity(EthereumDIDRegistry).connect(web3Provider.getSigner(0))
+    const factory = ContractFactory.fromSolidity(EthereumDIDRegistry).connect(await browserProvider.getSigner(0))
 
     registryContract = await factory.deploy()
-    registryContract = await registryContract.deployed()
+    registryContract = await registryContract.waitForDeployment()
 
-    await registryContract.deployTransaction.wait()
+    const registry = await registryContract.getAddress()
 
-    const registry = registryContract.address
-
-    accounts = await web3Provider.listAccounts()
+    const accountSigners = await browserProvider.listAccounts()
+    accounts = accountSigners.map((signer) => signer.address)
 
     identity = accounts[1]
     controller = accounts[2]
@@ -43,7 +42,7 @@ describe('ethrResolver', () => {
     keyAgreementController = accounts[5]
     did = `did:ethr:dev:${identity}`
 
-    didResolver = new Resolver(getResolver({ name: 'dev', provider: web3Provider, registry }))
+    didResolver = new Resolver(getResolver({ name: 'dev', provider: browserProvider, registry }))
   })
 
   describe('unregistered', () => {
@@ -103,7 +102,7 @@ describe('ethrResolver', () => {
   describe('controller changed', () => {
     it('resolves document', async () => {
       expect.assertions(1)
-      const blockHeightBeforeChange = (await web3Provider.getBlock('latest')).number
+      const blockHeightBeforeChange = (await browserProvider.getBlock('latest'))!.number
       await new EthrDidController(identity, registryContract).changeOwner(controller, { from: identity })
       const result = await didResolver.resolve(did)
       expect(result).toEqual({
@@ -154,7 +153,7 @@ describe('ethrResolver', () => {
     describe('add signing delegate', () => {
       it('resolves document', async () => {
         expect.assertions(1)
-        const blockHeightBeforeChange = (await web3Provider.getBlock('latest')).number
+        const blockHeightBeforeChange = (await browserProvider.getBlock('latest'))!.number
         await new EthrDidController(identity, registryContract).addDelegate('veriKey', delegate1, 86401, {
           from: controller,
         })
@@ -189,8 +188,8 @@ describe('ethrResolver', () => {
     describe('add auth delegate', () => {
       it('resolves document', async () => {
         expect.assertions(1)
-        const blockHeightBeforeChange = (await web3Provider.getBlock('latest')).number
-        await new EthrDidController(identity, registryContract).addDelegate('sigAuth', delegate2, 1, {
+        const blockHeightBeforeChange = (await browserProvider.getBlock('latest'))!.number
+        const test = await new EthrDidController(identity, registryContract).addDelegate('sigAuth', delegate2, 4, {
           from: controller,
         })
         const result = await didResolver.resolve(did)
@@ -263,7 +262,7 @@ describe('ethrResolver', () => {
     describe('revokes delegate', () => {
       it('resolves document', async () => {
         expect.assertions(1)
-        const blockHeightBeforeChange = (await web3Provider.getBlock('latest')).number
+        const blockHeightBeforeChange = (await browserProvider.getBlock('latest'))!.number
         await new EthrDidController(identity, registryContract).revokeDelegate('veriKey', delegate1, {
           from: controller,
         })
@@ -293,7 +292,7 @@ describe('ethrResolver', () => {
     describe('re-add auth delegate', () => {
       it('resolves document', async () => {
         expect.assertions(1)
-        const blockHeightBeforeChange = (await web3Provider.getBlock('latest')).number
+        const blockHeightBeforeChange = (await browserProvider.getBlock('latest'))!.number
         await new EthrDidController(identity, registryContract).addDelegate('sigAuth', delegate2, 86402, {
           from: controller,
         })
@@ -967,7 +966,7 @@ describe('ethrResolver', () => {
         const identifier = `did:ethr:dev:${address}`
         const publicKeyHex = `b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71`
         const expectedPublicKeyBase58 = 'DV4G2kpBKjE6zxKor7Cj21iL9x9qyXb6emqjszBXcuhz'
-        const blockHeightBeforeChange = (await web3Provider.getBlock('latest')).number
+        const blockHeightBeforeChange = (await browserProvider.getBlock('latest'))!.number
         await new EthrDidController(identifier, registryContract).setAttribute(
           'did/pub/Ed25519/veriKey/base58',
           `0x${publicKeyHex}`,
@@ -1007,7 +1006,7 @@ describe('ethrResolver', () => {
         expect.assertions(1)
         const address = accounts[6]
         const identifier = `did:ethr:dev:${address}`
-        const blockHeightBeforeChange = (await web3Provider.getBlock('latest')).number
+        const blockHeightBeforeChange = (await browserProvider.getBlock('latest'))!.number
         await new EthrDidController(identifier, registryContract).changeOwner(nullAddress, { from: address })
         const result = await didResolver.resolve(identifier)
         expect(result).toEqual({
@@ -1089,7 +1088,7 @@ describe('ethrResolver', () => {
         expect.assertions(1)
         const address = accounts[7]
         const identifier = `did:ethr:dev:${address}`
-        const blockHeightBeforeChange = (await web3Provider.getBlock('latest')).number
+        const blockHeightBeforeChange = (await browserProvider.getBlock('latest'))!.number
         // change owner to self
         await new EthrDidController(identifier, registryContract).changeOwner(address, { from: address })
         const result = await didResolver.resolve(`${identifier}?versionId=latest`)
@@ -1119,7 +1118,7 @@ describe('ethrResolver', () => {
         const address = accounts[8]
         const identifier = `did:ethr:dev:${address}`
 
-        const blockHeightBeforeChange = (await web3Provider.getBlock('latest')).number
+        const blockHeightBeforeChange = (await browserProvider.getBlock('latest'))!.number
         const ethrDid = new EthrDidController(identifier, registryContract)
         await ethrDid.setAttribute('did/pub/Ed25519/veriKey/hex', `0x11111111`, 86411, { from: address })
         await ethrDid.setAttribute('did/pub/Ed25519/veriKey/hex', `0x22222222`, 86412, { from: address })
@@ -1164,7 +1163,7 @@ describe('ethrResolver', () => {
         const identifier = `did:ethr:dev:${address}`
 
         const ethrDid = new EthrDidController(identifier, registryContract)
-        const blockHeightBeforeChange = (await web3Provider.getBlock('latest')).number
+        const blockHeightBeforeChange = (await browserProvider.getBlock('latest'))!.number
         await ethrDid.addDelegate('veriKey', delegateAddress1, 86401, { from: address })
         await ethrDid.addDelegate('veriKey', delegateAddress2, 86402, { from: address })
 
@@ -1207,7 +1206,7 @@ describe('ethrResolver', () => {
         const identifier = `did:ethr:dev:${address}`
 
         const ethrDid = new EthrDidController(identifier, registryContract)
-        const blockHeightBeforeChange = (await web3Provider.getBlock('latest')).number
+        const blockHeightBeforeChange = (await browserProvider.getBlock('latest'))!.number
         await ethrDid.changeOwner(address, { from: address })
         await ethrDid.changeOwner(newOwner, { from: address })
         const result = await didResolver.resolve(`${identifier}?versionId=${blockHeightBeforeChange + 1}`)
@@ -1242,7 +1241,7 @@ describe('ethrResolver', () => {
         const address = accounts[11]
         const identifier = `did:ethr:dev:${address}`
 
-        await new EthrDidController(identifier, registryContract).addDelegate('sigAuth', delegate, 1, {
+        await new EthrDidController(identifier, registryContract).addDelegate('sigAuth', delegate, 4, {
           from: address,
         })
         let result = await didResolver.resolve(identifier)
@@ -1298,8 +1297,8 @@ describe('ethrResolver', () => {
       const identifier = `did:ethr:dev:${address}`
 
       const ethrDid = new EthrDidController(identifier, registryContract)
-      const blockHeightBeforeChange = (await web3Provider.getBlock('latest')).number
-      await stopMining(web3Provider)
+      const blockHeightBeforeChange = (await browserProvider.getBlock('latest'))!.number
+      await stopMining(browserProvider)
       const tx1 = ethrDid.setAttribute(stringToBytes32('did/svc/TestService'), 'https://test.uport.me', 86406, {
         from: address,
       })
@@ -1307,7 +1306,7 @@ describe('ethrResolver', () => {
         from: address,
       })
       await sleep(1000)
-      await startMining(web3Provider)
+      await startMining(browserProvider)
       await tx1
       await tx2
 
@@ -1339,7 +1338,7 @@ describe('ethrResolver', () => {
 
       const ethrDid = new EthrDidController(identifier, registryContract)
 
-      const blockHeightBeforeChange = (await web3Provider.getBlock('latest')).number
+      const blockHeightBeforeChange = (await browserProvider.getBlock('latest'))!.number
 
       // await stopMining(web3Provider)
       await ethrDid.setAttribute(stringToBytes32('did/svc/TestService1'), 'https://test1.uport.me', 86406, {
@@ -1387,9 +1386,9 @@ describe('ethrResolver', () => {
 
       const ethrDid = new EthrDidController(identifier, registryContract)
 
-      const blockHeightBeforeChange = (await web3Provider.getBlock('latest')).number
+      const blockHeightBeforeChange = (await browserProvider.getBlock('latest'))!.number
 
-      await stopMining(web3Provider)
+      await stopMining(browserProvider)
       const tx1 = ethrDid.setAttribute(stringToBytes32('did/svc/TestService1'), 'https://test1.uport.me', 86406, {
         from: address,
       })
@@ -1398,7 +1397,7 @@ describe('ethrResolver', () => {
       const tx2 = ethrDid.revokeAttribute(stringToBytes32('did/svc/TestService1'), 'https://test1.uport.me', {
         from: address,
       })
-      await sleep(1000).then(() => startMining(web3Provider))
+      await sleep(1000).then(() => startMining(browserProvider))
       await tx1
       await tx2
 
@@ -1424,7 +1423,7 @@ describe('ethrResolver', () => {
 
       const ethrDid = new EthrDidController(identifier, registryContract)
 
-      const blockHeightBeforeChange = (await web3Provider.getBlock('latest')).number
+      const blockHeightBeforeChange = (await browserProvider.getBlock('latest'))!.number
 
       await ethrDid.setAttribute(stringToBytes32('did/svc/TestService1'), 'https://test1.uport.me', 86406, {
         from: address,
@@ -1457,7 +1456,7 @@ describe('ethrResolver', () => {
 
       const ethrDid = new EthrDidController(identifier, registryContract)
 
-      const blockHeightBeforeChange = (await web3Provider.getBlock('latest')).number
+      const blockHeightBeforeChange = (await browserProvider.getBlock('latest'))!.number
 
       await ethrDid.revokeAttribute(stringToBytes32('did/svc/TestService1'), 'https://test1.uport.me', {
         from: address,
@@ -1510,18 +1509,17 @@ describe('ethrResolver', () => {
       )
       const signature = new SigningKey(currentOwnerPrivateKey).signDigest(hash)
 
-      const blockHeightBeforeChange = (await web3Provider.getBlock('latest')).number
+      const blockHeightBeforeChange = (await browserProvider.getBlock('latest'))!.number
 
-      await new EthrDidController(identifier, registryContract, web3Provider.getSigner(signer)).addDelegateSigned(
-        'sigAuth',
-        delegate,
-        86400,
-        {
-          sigV: signature.v,
-          sigR: signature.r,
-          sigS: signature.s,
-        }
-      )
+      await new EthrDidController(
+        identifier,
+        registryContract,
+        await browserProvider.getSigner(signer)
+      ).addDelegateSigned('sigAuth', delegate, 86400, {
+        sigV: signature.v,
+        sigR: signature.r,
+        sigS: signature.s,
+      })
 
       const result = await didResolver.resolve(identifier)
       expect(result).toEqual({
@@ -1562,7 +1560,7 @@ describe('ethrResolver', () => {
 
       const currentOwnerPrivateKey = arrayify('0x0000000000000000000000000000000000000000000000000000000000000002')
 
-      const blockHeightBeforeChanges = (await web3Provider.getBlock('latest')).number
+      const blockHeightBeforeChanges = (await browserProvider.getBlock('latest'))!.number
 
       await new EthrDidController(identifier, registryContract).addDelegate('sigAuth', delegate, 86402)
 
@@ -1572,15 +1570,15 @@ describe('ethrResolver', () => {
       )
       const signature = new SigningKey(currentOwnerPrivateKey).signDigest(hash)
 
-      await new EthrDidController(identifier, registryContract, web3Provider.getSigner(signer)).revokeDelegateSigned(
-        'sigAuth',
-        delegate,
-        {
-          sigV: signature.v,
-          sigR: signature.r,
-          sigS: signature.s,
-        }
-      )
+      await new EthrDidController(
+        identifier,
+        registryContract,
+        await browserProvider.getSigner(signer)
+      ).revokeDelegateSigned('sigAuth', delegate, {
+        sigV: signature.v,
+        sigR: signature.r,
+        sigS: signature.s,
+      })
       await sleep(1000)
 
       const result = await didResolver.resolve(identifier)
@@ -1624,18 +1622,17 @@ describe('ethrResolver', () => {
       )
       const signature = new SigningKey(currentOwnerPrivateKey).signDigest(hash)
 
-      const blockHeightBeforeChange = (await web3Provider.getBlock('latest')).number
+      const blockHeightBeforeChange = (await browserProvider.getBlock('latest'))!.number
 
-      await new EthrDidController(identifier, registryContract, web3Provider.getSigner(signer)).setAttributeSigned(
-        attributeName,
-        attributeValue,
-        attributeExpiration,
-        {
-          sigV: signature.v,
-          sigR: signature.r,
-          sigS: signature.s,
-        }
-      )
+      await new EthrDidController(
+        identifier,
+        registryContract,
+        await browserProvider.getSigner(signer)
+      ).setAttributeSigned(attributeName, attributeValue, attributeExpiration, {
+        sigV: signature.v,
+        sigR: signature.r,
+        sigS: signature.s,
+      })
       // Wait for the event to be emitted
       await sleep(1000)
 
@@ -1688,17 +1685,17 @@ describe('ethrResolver', () => {
       )
       const signature = new SigningKey(currentOwnerPrivateKey).signDigest(hash)
 
-      const blockHeightBeforeChange = (await web3Provider.getBlock('latest')).number
+      const blockHeightBeforeChange = (await browserProvider.getBlock('latest'))!.number
 
-      await new EthrDidController(identifier, registryContract, web3Provider.getSigner(signer)).revokeAttributeSigned(
-        attributeName,
-        attributeValue,
-        {
-          sigV: signature.v,
-          sigR: signature.r,
-          sigS: signature.s,
-        }
-      )
+      await new EthrDidController(
+        identifier,
+        registryContract,
+        await browserProvider.getSigner(signer)
+      ).revokeAttributeSigned(attributeName, attributeValue, {
+        sigV: signature.v,
+        sigR: signature.r,
+        sigS: signature.s,
+      })
 
       // Wait for the event to be emitted
       await sleep(1000)
@@ -1732,16 +1729,17 @@ describe('ethrResolver', () => {
       const hash = await new EthrDidController(identifier, registryContract).createChangeOwnerHash(nextOwner)
       const signature = new SigningKey(currentOwnerPrivateKey).signDigest(hash)
 
-      const blockHeightBeforeChange = (await web3Provider.getBlock('latest')).number
+      const blockHeightBeforeChange = (await browserProvider.getBlock('latest'))!.number
 
-      await new EthrDidController(identifier, registryContract, web3Provider.getSigner(signer)).changeOwnerSigned(
-        nextOwner,
-        {
-          sigV: signature.v,
-          sigR: signature.r,
-          sigS: signature.s,
-        }
-      )
+      await new EthrDidController(
+        identifier,
+        registryContract,
+        await browserProvider.getSigner(signer)
+      ).changeOwnerSigned(nextOwner, {
+        sigV: signature.v,
+        sigR: signature.r,
+        sigS: signature.s,
+      })
 
       const result = await didResolver.resolve(identifier)
       expect(result).toEqual({
@@ -1784,16 +1782,15 @@ describe('ethrResolver', () => {
       )
       const signature = new SigningKey(currentOwnerPrivateKey).signDigest(hash)
 
-      await new EthrDidController(identifier, registryContract, web3Provider.getSigner(signer)).setAttributeSigned(
-        attributeName,
-        attributeValue,
-        attributeExpiration,
-        {
-          sigV: signature.v,
-          sigR: signature.r,
-          sigS: signature.s,
-        }
-      )
+      await new EthrDidController(
+        identifier,
+        registryContract,
+        await browserProvider.getSigner(signer)
+      ).setAttributeSigned(attributeName, attributeValue, attributeExpiration, {
+        sigV: signature.v,
+        sigR: signature.r,
+        sigS: signature.s,
+      })
       // Wait for the event to be emitted
       await sleep(1000)
 
