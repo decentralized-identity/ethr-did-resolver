@@ -63,17 +63,15 @@ export class EthrDidResolver {
 
   async getBlockMetadata(blockHeight: number, networkId: string): Promise<{ height: string; isoDate: string }> {
     const networkContract = this.contracts[networkId]
-    //TODO: Null check on runner & provider
     if (!networkContract) throw new Error(`No contract configured for network ${networkId}`)
     if (!networkContract.runner) throw new Error(`No runner configured for contract with network ${networkId}`)
     if (!networkContract.runner.provider)
       throw new Error(`No provider configured for runner in contract with network ${networkId}`)
     const block = await networkContract.runner.provider.getBlock(blockHeight)
-    if (!block) Error(`Block at height ${blockHeight} not found`)
+    if (!block) throw new Error(`Block at height ${blockHeight} not found`)
     return {
-      //TODO: Why does TypeScript not understand that block has been null checked?
-      height: block!.number.toString(),
-      isoDate: new Date(block!.timestamp * 1000).toISOString().replace('.000', ''),
+      height: block.number.toString(),
+      isoDate: new Date(block.timestamp * 1000).toISOString().replace('.000', ''),
     }
   }
 
@@ -83,18 +81,21 @@ export class EthrDidResolver {
     blockTag: BlockTag = 'latest'
   ): Promise<{ address: string; history: ERC1056Event[]; controllerKey?: string; chainId: bigint }> {
     const contract = this.contracts[networkId]
-    //TODO: null check on runner
-    const provider = contract.runner!.provider
+    if (!contract) throw new Error(`No contract configured for network ${networkId}`)
+    if (!contract.runner) throw new Error(`No runner configured for contract with network ${networkId}`)
+    if (!contract.runner.provider)
+      throw new Error(`No provider configured for runner in contract with network ${networkId}`)
+    const provider = contract.runner.provider
     const hexChainId = networkId.startsWith('0x') ? networkId : undefined
     //TODO: this can be used to check if the configuration is ok
-    const chainId = hexChainId ? BigInt(hexChainId) : (await provider!.getNetwork()).chainId
+    const chainId = hexChainId ? BigInt(hexChainId) : (await provider.getNetwork()).chainId
     const history: ERC1056Event[] = []
     const { address, publicKey } = interpretIdentifier(identity)
     const controllerKey = publicKey
     let previousChange: bigint | null = await this.previousChange(address, networkId, blockTag)
     while (previousChange) {
       const blockNumber = previousChange
-      const logs = await provider!.getLogs({
+      const logs = await provider.getLogs({
         address: await contract.getAddress(), // networks[networkId].registryAddress,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         topics: [null as any, `0x000000000000000000000000${address.slice(2)}`],

@@ -89,10 +89,16 @@ export class EthrDidController {
 
   async attachContract(controller?: address | Promise<address>): Promise<Contract> {
     const currentOwner = controller ? await controller : await this.getOwner(this.address, 'latest')
-    const signer = this.signer
-      ? this.signer
-      : (await (<JsonRpcProvider>this.contract.runner!.provider).getSigner(currentOwner)) || this.contract.signer
-    // TODO: Check if runner is undefined up top
+    let signer
+    if (this.signer) {
+      signer = this.signer
+    } else {
+      if (!this.contract) throw new Error(`No contract configured`)
+      if (!this.contract.runner) throw new Error(`No runner configured for contract`)
+      if (!this.contract.runner.provider)
+        throw new Error(`No provider configured for runner in contract`)
+      signer = (await (<JsonRpcProvider>this.contract.runner.provider).getSigner(currentOwner)) || this.contract.signer
+    }
     return this.contract.connect(signer) as Contract // Needed because ethers attach returns a BaseContract
   }
 
