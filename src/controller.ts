@@ -13,6 +13,9 @@ import {
   toUtf8Bytes,
   keccak256,
   encodeBytes32String,
+  Overrides,
+  AddressLike,
+  Addressable,
 } from 'ethers'
 import { getContractForNetwork } from './configuration'
 import {
@@ -87,29 +90,28 @@ export class EthrDidController {
     return this.contract.identityOwner(address, { blockTag })
   }
 
-  async attachContract(controller?: address | Promise<address>): Promise<Contract> {
-    const currentOwner = controller ? await controller : await this.getOwner(this.address, 'latest')
+  async attachContract(controller?: AddressLike): Promise<Contract> {
+    let currentOwner = controller ? await controller : await this.getOwner(this.address, 'latest')
+    if (typeof currentOwner !== 'string') currentOwner = await (controller as Addressable).getAddress()
     let signer
     if (this.signer) {
       signer = this.signer
     } else {
       if (!this.contract) throw new Error(`No contract configured`)
       if (!this.contract.runner) throw new Error(`No runner configured for contract`)
-      if (!this.contract.runner.provider)
-        throw new Error(`No provider configured for runner in contract`)
+      if (!this.contract.runner.provider) throw new Error(`No provider configured for runner in contract`)
       signer = (await (<JsonRpcProvider>this.contract.runner.provider).getSigner(currentOwner)) || this.contract.signer
     }
     return this.contract.connect(signer) as Contract // Needed because ethers attach returns a BaseContract
   }
 
-  async changeOwner(newOwner: address, options = {}): Promise<TransactionReceipt> {
+  async changeOwner(newOwner: address, options: Overrides = {}): Promise<TransactionReceipt> {
     // console.log(`changing owner for ${oldOwner} on registry at ${registryContract.address}`)
     const overrides = {
       gasLimit: 123456,
       ...options,
-    } as any
-
-    const contract = await this.attachContract(overrides.from)
+    } as Overrides
+    const contract = await this.attachContract(overrides.from ?? undefined)
     delete overrides.from
 
     const ownerChange = await contract.changeOwner(this.address, newOwner, overrides)
