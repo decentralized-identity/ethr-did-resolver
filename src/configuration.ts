@@ -25,7 +25,7 @@ const knownInfuraNames = ['mainnet', 'ropsten', 'rinkeby', 'goerli', 'kovan', 'a
  */
 export interface ProviderConfiguration extends Omit<EthrDidRegistryDeployment, 'chainId'> {
   provider?: Provider | null
-  chainId?: string | number
+  chainId?: string | bigint
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   web3?: any
 }
@@ -86,7 +86,7 @@ function configureNetwork(net: ProviderConfiguration): ConfiguredNetworks {
     if (net.name) {
       networks[net.name] = getContractForNetwork(net)
     }
-    const id = typeof chainId === 'number' ? `0x${chainId.toString(16)}` : chainId
+    const id = typeof chainId === 'bigint' ? `0x${chainId.toString(16)}` : chainId
     networks[id] = getContractForNetwork(net)
   } else if (net.provider || net.web3 || net.rpcUrl) {
     networks[net.name || ''] = getContractForNetwork(net)

@@ -65,7 +65,7 @@ describe('configuration', () => {
   it('works with rpc and numbered chainId', async () => {
     const contracts = configureResolverWithNetworks({
       rpcUrl: 'some rinkeby JSONRPC URL',
-      chainId: 1,
+      chainId: BigInt(1),
     })
     expect(contracts['0x1']).toBeDefined()
   })
