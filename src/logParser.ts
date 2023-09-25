@@ -1,4 +1,4 @@
-import {Log, LogDescription, Contract} from 'ethers'
+import { Log, LogDescription, Contract } from 'ethers'
 import { bytes32toString, ERC1056Event } from './helpers'
 
 function populateEventMetaClass(logResult: LogDescription, blockNumber: number): ERC1056Event {
