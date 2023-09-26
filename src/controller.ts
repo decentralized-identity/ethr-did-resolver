@@ -131,13 +131,17 @@ export class EthrDidController {
     return keccak256(dataToHash)
   }
 
-  async changeOwnerSigned(newOwner: address, metaSignature: MetaSignature, options = {}): Promise<TransactionReceipt> {
+  async changeOwnerSigned(
+    newOwner: address,
+    metaSignature: MetaSignature,
+    options: Overrides = {}
+  ): Promise<TransactionReceipt> {
     const overrides = {
       gasLimit: 123456,
       ...options,
-    } as any
+    }
 
-    const contract = await this.attachContract(overrides.from)
+    const contract = await this.attachContract(overrides.from ?? undefined)
     delete overrides.from
 
     const ownerChange = await contract.changeOwnerSigned(
@@ -155,13 +159,13 @@ export class EthrDidController {
     delegateType: string,
     delegateAddress: address,
     exp: number,
-    options = {}
+    options: Overrides = {}
   ): Promise<TransactionReceipt> {
     const overrides = {
       gasLimit: 123456,
       ...options,
-    } as any
-    const contract = await this.attachContract(overrides.from)
+    }
+    const contract = await this.attachContract(overrides.from ?? undefined)
     delete overrides.from
 
     const delegateTypeBytes = stringToBytes32(delegateType)
@@ -192,13 +196,13 @@ export class EthrDidController {
     delegateAddress: address,
     exp: number,
     metaSignature: MetaSignature,
-    options = {}
+    options: Overrides = {}
   ): Promise<TransactionReceipt> {
     const overrides = {
       gasLimit: 123456,
       ...options,
-    } as any
-    const contract = await this.attachContract(overrides.from)
+    }
+    const contract = await this.attachContract(overrides.from ?? undefined)
     delete overrides.from
 
     const delegateTypeBytes = stringToBytes32(delegateType)
@@ -215,13 +219,17 @@ export class EthrDidController {
     return await addDelegateTx.wait()
   }
 
-  async revokeDelegate(delegateType: string, delegateAddress: address, options = {}): Promise<TransactionReceipt> {
+  async revokeDelegate(
+    delegateType: string,
+    delegateAddress: address,
+    options: Overrides = {}
+  ): Promise<TransactionReceipt> {
     const overrides = {
       gasLimit: 123456,
       ...options,
-    } as any
+    }
     delegateType = delegateType.startsWith('0x') ? delegateType : stringToBytes32(delegateType)
-    const contract = await this.attachContract(overrides.from)
+    const contract = await this.attachContract(overrides.from ?? undefined)
     delete overrides.from
     const addDelegateTx = await contract.revokeDelegate(this.address, delegateType, delegateAddress, overrides)
     return await addDelegateTx.wait()
@@ -244,14 +252,14 @@ export class EthrDidController {
     delegateType: string,
     delegateAddress: address,
     metaSignature: MetaSignature,
-    options = {}
+    options: Overrides = {}
   ): Promise<TransactionReceipt> {
     const overrides = {
       gasLimit: 123456,
       ...options,
-    } as any
+    }
     delegateType = delegateType.startsWith('0x') ? delegateType : stringToBytes32(delegateType)
-    const contract = await this.attachContract(overrides.from)
+    const contract = await this.attachContract(overrides.from ?? undefined)
     delete overrides.from
     const addDelegateTx = await contract.revokeDelegateSigned(
       this.address,
@@ -265,15 +273,20 @@ export class EthrDidController {
     return await addDelegateTx.wait()
   }
 
-  async setAttribute(attrName: string, attrValue: string, exp: number, options = {}): Promise<TransactionReceipt> {
+  async setAttribute(
+    attrName: string,
+    attrValue: string,
+    exp: number,
+    options: Overrides = {}
+  ): Promise<TransactionReceipt> {
     const overrides = {
       gasLimit: 123456,
       controller: undefined,
       ...options,
-    } as any
+    }
     attrName = attrName.startsWith('0x') ? attrName : stringToBytes32(attrName)
     attrValue = attrValue.startsWith('0x') ? attrValue : '0x' + Buffer.from(attrValue, 'utf-8').toString('hex')
-    const contract = await this.attachContract(overrides.from)
+    const contract = await this.attachContract(overrides.from ?? undefined)
     delete overrides.from
     const setAttrTx = await contract.setAttribute(this.address, attrName, attrValue, exp, overrides)
     return await setAttrTx.wait()
@@ -305,16 +318,16 @@ export class EthrDidController {
     attrValue: string,
     exp: number,
     metaSignature: MetaSignature,
-    options = {}
+    options: Overrides = {}
   ): Promise<TransactionReceipt> {
     const overrides = {
       gasLimit: 123456,
       controller: undefined,
       ...options,
-    } as any
+    }
     attrName = attrName.startsWith('0x') ? attrName : stringToBytes32(attrName)
     attrValue = attrValue.startsWith('0x') ? attrValue : '0x' + Buffer.from(attrValue, 'utf-8').toString('hex')
-    const contract = await this.attachContract(overrides.from)
+    const contract = await this.attachContract(overrides.from ?? undefined)
     delete overrides.from
     const setAttrTx = await contract.setAttributeSigned(
       this.address,
@@ -329,15 +342,15 @@ export class EthrDidController {
     return await setAttrTx.wait()
   }
 
-  async revokeAttribute(attrName: string, attrValue: string, options = {}): Promise<TransactionReceipt> {
+  async revokeAttribute(attrName: string, attrValue: string, options: Overrides = {}): Promise<TransactionReceipt> {
     // console.log(`revoking attribute ${attrName}(${attrValue}) for ${identity}`)
     const overrides = {
       gasLimit: 123456,
       ...options,
-    } as any
+    }
     attrName = attrName.startsWith('0x') ? attrName : stringToBytes32(attrName)
     attrValue = attrValue.startsWith('0x') ? attrValue : '0x' + Buffer.from(attrValue, 'utf-8').toString('hex')
-    const contract = await this.attachContract(overrides.from)
+    const contract = await this.attachContract(overrides.from ?? undefined)
     delete overrides.from
     const revokeAttributeTX = await contract.revokeAttribute(this.address, attrName, attrValue, overrides)
     return await revokeAttributeTX.wait()
@@ -377,16 +390,16 @@ export class EthrDidController {
     attrName: string,
     attrValue: string,
     metaSignature: MetaSignature,
-    options = {}
+    options: Overrides = {}
   ): Promise<TransactionReceipt> {
     // console.log(`revoking attribute ${attrName}(${attrValue}) for ${identity}`)
     const overrides = {
       gasLimit: 123456,
       ...options,
-    } as any
+    }
     attrName = attrName.startsWith('0x') ? attrName : stringToBytes32(attrName)
     attrValue = attrValue.startsWith('0x') ? attrValue : '0x' + Buffer.from(attrValue, 'utf-8').toString('hex')
-    const contract = await this.attachContract(overrides.from)
+    const contract = await this.attachContract(overrides.from ?? undefined)
     delete overrides.from
     const revokeAttributeTX = await contract.revokeAttributeSigned(
       this.address,
