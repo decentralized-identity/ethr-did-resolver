@@ -1,5 +1,5 @@
-import { JsonRpcProvider, BrowserProvider } from 'ethers'
-import ganache, { EthereumProvider } from 'ganache'
+import { BrowserProvider } from 'ethers'
+import ganache from 'ganache'
 
 export function createProvider() {
   return new BrowserProvider(

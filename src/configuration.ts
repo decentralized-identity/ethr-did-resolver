@@ -25,7 +25,7 @@ const knownInfuraNames = ['mainnet', 'ropsten', 'rinkeby', 'goerli', 'kovan', 'a
  */
 export interface ProviderConfiguration extends Omit<EthrDidRegistryDeployment, 'chainId'> {
   provider?: Provider | null
-  chainId?: string | bigint
+  chainId?: string | number | bigint
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   web3?: any
 }
