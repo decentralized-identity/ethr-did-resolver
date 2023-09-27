@@ -1,3 +1,15 @@
+# [9.0.0](https://github.com/decentralized-identity/ethr-did-resolver/compare/8.1.2...9.0.0) (2023-09-27)
+
+
+### Bug Fixes
+
+* **deps:** update ethers to v6 ([#188](https://github.com/decentralized-identity/ethr-did-resolver/issues/188)) ([2785e61](https://github.com/decentralized-identity/ethr-did-resolver/commit/2785e615594a73693dcbec86506af666424184cd))
+
+
+### BREAKING CHANGES
+
+* **deps:** this update uses ethers v6 which has a sufficiently different API from v5 that will likely need attention. While the API of this library hasn't changed, it is likely that an update will need attention so this is marked as a breaking change and a new major version is released.
+
 ## [8.1.2](https://github.com/decentralized-identity/ethr-did-resolver/compare/8.1.1...8.1.2) (2023-07-13)
 
 
