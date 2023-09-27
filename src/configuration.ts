@@ -86,7 +86,7 @@ function configureNetwork(net: ProviderConfiguration): ConfiguredNetworks {
     if (net.name) {
       networks[net.name] = getContractForNetwork(net)
     }
-    const id = typeof chainId === 'bigint' ? `0x${chainId.toString(16)}` : chainId
+    const id = typeof chainId === 'bigint' || typeof chainId === 'number' ? `0x${chainId.toString(16)}` : chainId
     networks[id] = getContractForNetwork(net)
   } else if (net.provider || net.web3 || net.rpcUrl) {
     networks[net.name || ''] = getContractForNetwork(net)
