@@ -1,6 +1,4 @@
-import { Base58 } from '@ethersproject/basex'
-import { BigNumber } from '@ethersproject/bignumber'
-import { Block, BlockTag } from '@ethersproject/providers'
+import { BlockTag, encodeBase58 } from 'ethers'
 import { ConfigurationOptions, ConfiguredNetworks, configureResolverWithNetworks } from './configuration'
 import { EthrDidController } from './controller'
 import {
@@ -57,14 +55,20 @@ export class EthrDidResolver {
    *
    * @param address
    */
-  async previousChange(address: string, networkId: string, blockTag?: BlockTag): Promise<BigNumber> {
-    const result = await this.contracts[networkId].functions.changed(address, { blockTag })
+  async previousChange(address: string, networkId: string, blockTag?: BlockTag): Promise<bigint> {
+    const result = await this.contracts[networkId].changed(address, { blockTag })
     // console.log(`last change result: '${BigNumber.from(result['0'])}'`)
-    return BigNumber.from(result['0'])
+    return result
   }
 
   async getBlockMetadata(blockHeight: number, networkId: string): Promise<{ height: string; isoDate: string }> {
-    const block: Block = await this.contracts[networkId].provider.getBlock(blockHeight)
+    const networkContract = this.contracts[networkId]
+    if (!networkContract) throw new Error(`No contract configured for network ${networkId}`)
+    if (!networkContract.runner) throw new Error(`No runner configured for contract with network ${networkId}`)
+    if (!networkContract.runner.provider)
+      throw new Error(`No provider configured for runner in contract with network ${networkId}`)
+    const block = await networkContract.runner.provider.getBlock(blockHeight)
+    if (!block) throw new Error(`Block at height ${blockHeight} not found`)
     return {
       height: block.number.toString(),
       isoDate: new Date(block.timestamp * 1000).toISOString().replace('.000', ''),
@@ -75,31 +79,35 @@ export class EthrDidResolver {
     identity: string,
     networkId: string,
     blockTag: BlockTag = 'latest'
-  ): Promise<{ address: string; history: ERC1056Event[]; controllerKey?: string; chainId: number }> {
+  ): Promise<{ address: string; history: ERC1056Event[]; controllerKey?: string; chainId: bigint }> {
     const contract = this.contracts[networkId]
-    const provider = contract.provider
+    if (!contract) throw new Error(`No contract configured for network ${networkId}`)
+    if (!contract.runner) throw new Error(`No runner configured for contract with network ${networkId}`)
+    if (!contract.runner.provider)
+      throw new Error(`No provider configured for runner in contract with network ${networkId}`)
+    const provider = contract.runner.provider
     const hexChainId = networkId.startsWith('0x') ? networkId : undefined
     //TODO: this can be used to check if the configuration is ok
-    const chainId = hexChainId ? BigNumber.from(hexChainId).toNumber() : (await provider.getNetwork()).chainId
+    const chainId = hexChainId ? BigInt(hexChainId) : (await provider.getNetwork()).chainId
     const history: ERC1056Event[] = []
     const { address, publicKey } = interpretIdentifier(identity)
     const controllerKey = publicKey
-    let previousChange: BigNumber | null = await this.previousChange(address, networkId, blockTag)
+    let previousChange: bigint | null = await this.previousChange(address, networkId, blockTag)
     while (previousChange) {
       const blockNumber = previousChange
       const logs = await provider.getLogs({
-        address: contract.address, // networks[networkId].registryAddress,
+        address: await contract.getAddress(), // networks[networkId].registryAddress,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         topics: [null as any, `0x000000000000000000000000${address.slice(2)}`],
-        fromBlock: previousChange.toHexString(),
-        toBlock: previousChange.toHexString(),
+        fromBlock: previousChange,
+        toBlock: previousChange,
       })
       const events: ERC1056Event[] = logDecoder(contract, logs)
       events.reverse()
       previousChange = null
       for (const event of events) {
         history.unshift(event)
-        if (event.previousChange.lt(blockNumber)) {
+        if (event.previousChange < blockNumber) {
           previousChange = event.previousChange
         }
       }
@@ -112,9 +120,9 @@ export class EthrDidResolver {
     address: string,
     controllerKey: string | undefined,
     history: ERC1056Event[],
-    chainId: number,
+    chainId: bigint,
     blockHeight: string | number,
-    now: BigNumber
+    now: bigint
   ): { didDocument: DIDDocument; deactivated: boolean; versionId: number; nextVersionId: number } {
     const baseDIDDocument: DIDDocument = {
       '@context': ['https://www.w3.org/ns/did/v1', 'https://w3id.org/security/suites/secp256k1recovery-2020/v2'],
@@ -150,11 +158,11 @@ export class EthrDidResolver {
           versionId = event.blockNumber
         }
       }
-      const validTo = event.validTo || BigNumber.from(0)
+      const validTo = event.validTo || BigInt(0)
       const eventIndex = `${event._eventName}-${
         (<DIDDelegateChanged>event).delegateType || (<DIDAttributeChanged>event).name
       }-${(<DIDDelegateChanged>event).delegate || (<DIDAttributeChanged>event).value}`
-      if (validTo && validTo.gte(now)) {
+      if (validTo && validTo >= now) {
         if (event._eventName === eventNames.DIDDelegateChanged) {
           const currentEvent = <DIDDelegateChanged>event
           delegateCount++
@@ -200,7 +208,7 @@ export class EthrDidResolver {
                     pk.publicKeyBase64 = Buffer.from(currentEvent.value.slice(2), 'hex').toString('base64')
                     break
                   case 'base58':
-                    pk.publicKeyBase58 = Base58.encode(Buffer.from(currentEvent.value.slice(2), 'hex'))
+                    pk.publicKeyBase58 = encodeBase58(Buffer.from(currentEvent.value.slice(2), 'hex'))
                     break
                   case 'pem':
                     pk.publicKeyPem = Buffer.from(currentEvent.value.slice(2), 'hex').toString()
@@ -324,11 +332,11 @@ export class EthrDidResolver {
     if (typeof parsed.query === 'string') {
       const qParams = new URLSearchParams(parsed.query)
       blockTag = qParams.get('versionId') ?? blockTag
-      try {
-        blockTag = Number.parseInt(<string>blockTag)
-      } catch (e) {
+      const parsedBlockTag = Number.parseInt(blockTag as string)
+      if (!Number.isNaN(parsedBlockTag)) {
+        blockTag = parsedBlockTag
+      } else {
         blockTag = 'latest'
-        // invalid versionId parameters are ignored
       }
     }
 
@@ -343,11 +351,11 @@ export class EthrDidResolver {
       }
     }
 
-    let now = BigNumber.from(Math.floor(new Date().getTime() / 1000))
+    let now = BigInt(Math.floor(new Date().getTime() / 1000))
 
     if (typeof blockTag === 'number') {
       const block = await this.getBlockMetadata(blockTag, networkId)
-      now = BigNumber.from(Date.parse(block.isoDate) / 1000)
+      now = BigInt(Date.parse(block.isoDate) / 1000)
     } else {
       // 'latest'
     }

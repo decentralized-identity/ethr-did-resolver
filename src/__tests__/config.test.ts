@@ -1,4 +1,4 @@
-import { InfuraProvider, JsonRpcProvider } from '@ethersproject/providers'
+import { InfuraProvider, JsonRpcProvider } from 'ethers'
 import { configureResolverWithNetworks } from '../configuration'
 
 describe('configuration', () => {
@@ -27,8 +27,8 @@ describe('configuration', () => {
       infuraProjectId: 'blabla',
       networks: [{ name: 'mainnet', rpcUrl: 'redefine me' }],
     })
-    expect((<InfuraProvider>contracts['mainnet'].provider).projectId).not.toBeDefined()
-    expect((<JsonRpcProvider>contracts['mainnet'].provider).connection.url).toBe('redefine me')
+    expect((<InfuraProvider>contracts['mainnet'].runner!.provider).projectId).not.toBeDefined()
+    expect((<JsonRpcProvider>contracts['mainnet'].runner!.provider)._getConnection().url).toBe('redefine me')
   })
 
   it('works with named network', async () => {
@@ -65,7 +65,7 @@ describe('configuration', () => {
   it('works with rpc and numbered chainId', async () => {
     const contracts = configureResolverWithNetworks({
       rpcUrl: 'some rinkeby JSONRPC URL',
-      chainId: 1,
+      chainId: BigInt(1),
     })
     expect(contracts['0x1']).toBeDefined()
   })

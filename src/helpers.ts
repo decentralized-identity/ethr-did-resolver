@@ -1,11 +1,5 @@
-import { getAddress } from '@ethersproject/address'
-import { BigNumber } from '@ethersproject/bignumber'
-import { computeAddress } from '@ethersproject/transactions'
 import { VerificationMethod } from 'did-resolver'
-import { Contract } from '@ethersproject/contracts'
-import { keccak256 } from '@ethersproject/keccak256'
-import { arrayify, hexConcat, zeroPad } from '@ethersproject/bytes'
-import { SigningKey } from '@ethersproject/signing-key'
+import { keccak256, getAddress, computeAddress, Contract, SigningKey, concat, toBeHex, zeroPadValue } from 'ethers'
 
 export const identifierMatcher = /^(.*)?(0x[0-9a-fA-F]{40}|0x[0-9a-fA-F]{66})$/
 export const nullAddress = '0x0000000000000000000000000000000000000000'
@@ -14,14 +8,14 @@ export const DEFAULT_JSON_RPC = 'http://127.0.0.1:8545/'
 export const MESSAGE_PREFIX = '0x1900'
 
 export type address = string
-export type uint256 = BigNumber
+export type uint256 = bigint
 export type bytes32 = string
 export type bytes = string
 
 export interface ERC1056Event {
   identity: address
   previousChange: uint256
-  validTo?: uint256
+  validTo?: bigint
   _eventName: string
   blockNumber: number
 }
@@ -135,10 +129,10 @@ export async function signMetaTxData(
   didReg: Contract
 ) {
   const nonce = await didReg.nonce(signerAddress)
-  const paddedNonce = zeroPad(arrayify(nonce), 32)
-  const dataToSign = hexConcat(['0x1900', didReg.address, paddedNonce, identity, dataBytes])
+  const paddedNonce = zeroPadValue(toBeHex(nonce), 32)
+  const dataToSign = concat(['0x1900', await didReg.getAddress(), paddedNonce, identity, dataBytes])
   const hash = keccak256(dataToSign)
-  return new SigningKey(privateKeyBytes).signDigest(hash)
+  return new SigningKey(privateKeyBytes).sign(hash)
 }
 
 export enum Errors {

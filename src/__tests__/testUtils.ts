@@ -1,8 +1,8 @@
-import { ExternalProvider, JsonRpcProvider, Web3Provider } from '@ethersproject/providers'
+import { BrowserProvider } from 'ethers'
 import ganache from 'ganache'
 
-export function createProvider(): JsonRpcProvider {
-  return new Web3Provider(
+export function createProvider() {
+  return new BrowserProvider(
     ganache.provider({
       logging: { quiet: true },
       accounts: [
@@ -87,16 +87,16 @@ export function createProvider(): JsonRpcProvider {
           balance: `0x1000000000000000000000`,
         },
       ],
-    }) as unknown as ExternalProvider
+    })
   )
 }
 
 export async function sleep(milliseconds: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, milliseconds))
 }
-export async function stopMining(provider: JsonRpcProvider): Promise<unknown> {
+export async function stopMining(provider: BrowserProvider): Promise<unknown> {
   return provider.send('miner_stop', [])
 }
-export async function startMining(provider: JsonRpcProvider): Promise<unknown> {
+export async function startMining(provider: BrowserProvider): Promise<unknown> {
   return provider.send('miner_start', [1])
 }
