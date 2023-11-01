@@ -102,6 +102,6 @@
   },
   "dependencies": {
     "did-resolver": "^4.0.1",
-    "ethers": "6.7.1"
+    "ethers": "6.8.1"
   }
 }
