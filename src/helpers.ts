@@ -152,4 +152,9 @@ export enum Errors {
    * The resolver is misconfigured or is being asked to resolve a DID anchored on an unknown network
    */
   unknownNetwork = 'unknownNetwork',
+
+  /**
+   * The resolver does not supported 'accept' format for {@link did-resolver#DIDResolutionOptions}
+   */
+  unsupportedFormat = 'unsupportedFormat',
 }

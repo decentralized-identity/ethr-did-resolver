@@ -83,6 +83,7 @@
     "@babel/core": "7.20.2",
     "@babel/preset-env": "7.20.2",
     "@babel/preset-typescript": "7.18.6",
+    "@ethers-ext/provider-ganache": "^6.0.0-beta.2",
     "@semantic-release/changelog": "6.0.1",
     "@semantic-release/git": "10.0.1",
     "@types/jest": "29.2.2",
@@ -93,7 +94,6 @@
     "eslint-config-prettier": "8.5.0",
     "eslint-plugin-jest": "27.1.4",
     "eslint-plugin-prettier": "4.2.1",
-    "ganache": "7.5.0",
     "jest": "29.2.2",
     "microbundle": "0.15.1",
     "prettier": "2.7.1",
@@ -101,7 +101,7 @@
     "typescript": "4.8.4"
   },
   "dependencies": {
-    "did-resolver": "^4.0.1",
-    "ethers": "6.7.1"
+    "did-resolver": "^4.1.0",
+    "ethers": "6.8.1"
   }
 }
