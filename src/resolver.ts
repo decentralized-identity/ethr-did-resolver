@@ -44,6 +44,8 @@ export class EthrDidResolver {
    * returns the current owner of a DID (represented by an address or public key)
    *
    * @param address
+   *
+   * @deprecated
    */
   async getOwner(address: string, networkId: string, blockTag?: BlockTag): Promise<string> {
     //TODO: check if address or public key
@@ -125,7 +127,6 @@ export class EthrDidResolver {
     now: bigint
   ): { didDocument: DIDDocument; deactivated: boolean; versionId: number; nextVersionId: number } {
     const baseDIDDocument: DIDDocument = {
-      '@context': ['https://www.w3.org/ns/did/v1', 'https://w3id.org/security/suites/secp256k1recovery-2020/v2'],
       id: did,
       verificationMethod: [],
       authentication: [],
@@ -135,7 +136,7 @@ export class EthrDidResolver {
     let controller = address
 
     const authentication = [`${did}#controller`]
-    const keyAgreement: string[] = []
+    // const keyAgreement: string[] = []
 
     let versionId = 0
     let nextVersionId = Number.POSITIVE_INFINITY
@@ -147,6 +148,10 @@ export class EthrDidResolver {
     const keyAgreementRefs: Record<string, string> = {}
     const pks: Record<string, VerificationMethod> = {}
     const services: Record<string, Service> = {}
+    // if (typeof blockHeight === 'string') {
+    //   // latest
+    //   blockHeight = -1
+    // }
     for (const event of history) {
       if (blockHeight !== -1 && event.blockNumber > blockHeight) {
         if (nextVersionId > event.blockNumber) {
@@ -294,13 +299,13 @@ export class EthrDidResolver {
       didDocument.service = Object.values(services)
     }
     if (Object.values(keyAgreementRefs).length > 0) {
-      didDocument.keyAgreement = keyAgreement.concat(Object.values(keyAgreementRefs))
+      didDocument.keyAgreement = Object.values(keyAgreementRefs)
     }
     didDocument.assertionMethod = [...(didDocument.verificationMethod?.map((pk) => pk.id) || [])]
 
     return deactivated
       ? {
-          didDocument: { ...baseDIDDocument, '@context': 'https://www.w3.org/ns/did/v1' },
+          didDocument: baseDIDDocument,
           deactivated,
           versionId,
           nextVersionId,
@@ -315,6 +320,32 @@ export class EthrDidResolver {
     _unused: Resolvable,
     options: DIDResolutionOptions
   ): Promise<DIDResolutionResult> {
+    let ldContext = {}
+    if (options.accept === 'application/did+json') {
+      ldContext = {}
+    } else if (options.accept === 'application/did+ld+json' || typeof options.accept !== 'string') {
+      ldContext = {
+        '@context': [
+          'https://www.w3.org/ns/did/v1',
+
+          // defines EcdsaSecp256k1RecoveryMethod2020 & blockchainAccountId
+          'https://w3id.org/security/suites/secp256k1recovery-2020/v2',
+
+          // defines publicKeyHex & EcdsaSecp256k1VerificationKey2019; v2 does not define publicKeyHex
+          'https://w3id.org/security/v3-unstable',
+        ],
+      }
+    } else {
+      return {
+        didResolutionMetadata: {
+          error: Errors.unsupportedFormat,
+          message: `The DID resolver does not support the requested 'accept' format: ${options.accept}`,
+        },
+        didDocumentMetadata: {},
+        didDocument: null,
+      }
+    }
+
     const fullId = parsed.id.match(identifierMatcher)
     if (!fullId) {
       return {
@@ -388,10 +419,14 @@ export class EthrDidResolver {
           nextUpdate: block.isoDate,
         }
       }
+
       return {
         didDocumentMetadata: { ...status, ...versionMeta, ...versionMetaNext },
-        didResolutionMetadata: { contentType: 'application/did+ld+json' },
-        didDocument,
+        didResolutionMetadata: { contentType: options.accept ?? 'application/did+ld+json' },
+        didDocument: {
+          ...didDocument,
+          ...ldContext,
+        },
       }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {

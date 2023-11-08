@@ -33,4 +33,21 @@ describe('error handling', () => {
       },
     })
   })
+
+  it('rejects resolution using unsupported `accept` option', async () => {
+    expect.assertions(1)
+    const accept = 'application/did+cbor'
+    await expect(
+      didResolver.resolve('did:ethr:example:0x03fdd57adec3d438ea237fe46b33ee1e016eda6b585c3e27ea66686c2ea5358479', {
+        accept,
+      })
+    ).resolves.toEqual({
+      didDocument: null,
+      didDocumentMetadata: {},
+      didResolutionMetadata: {
+        error: 'unsupportedFormat',
+        message: `The DID resolver does not support the requested 'accept' format: ${accept}`,
+      },
+    })
+  })
 })

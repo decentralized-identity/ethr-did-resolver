@@ -9,14 +9,8 @@ describe('configuration', () => {
     })
     expect(contracts['mainnet']).toBeDefined()
     expect(contracts['0x1']).toBeDefined()
-    expect(contracts['ropsten']).toBeDefined()
-    expect(contracts['0x3']).toBeDefined()
-    expect(contracts['rinkeby']).toBeDefined()
-    expect(contracts['0x4']).toBeDefined()
     expect(contracts['goerli']).toBeDefined()
     expect(contracts['0x5']).toBeDefined()
-    expect(contracts['kovan']).toBeDefined()
-    expect(contracts['0x2a']).toBeDefined()
     expect(contracts['dev']).toBeDefined()
     expect(contracts['linea:goerli']).toBeDefined()
     expect(contracts['0xe704']).toBeDefined()
@@ -33,19 +27,19 @@ describe('configuration', () => {
 
   it('works with named network', async () => {
     const contracts = configureResolverWithNetworks({
-      networks: [{ name: 'rinkeby', provider: new JsonRpcProvider('some rinkeby JSONRPC URL') }],
+      networks: [{ name: 'goerli', provider: new JsonRpcProvider('some goerli JSONRPC URL') }],
     })
-    expect(contracts['rinkeby']).toBeDefined()
-    expect(contracts['0x4']).toBeDefined()
+    expect(contracts['goerli']).toBeDefined()
+    expect(contracts['0x5']).toBeDefined()
   })
 
   it('works with single network', async () => {
     const contracts = configureResolverWithNetworks({
-      name: 'rinkeby',
-      provider: new JsonRpcProvider('some rinkeby JSONRPC URL'),
+      name: 'goerli',
+      provider: new JsonRpcProvider('some goerli JSONRPC URL'),
     })
-    expect(contracts['rinkeby']).toBeDefined()
-    expect(contracts['0x4']).toBeDefined()
+    expect(contracts['goerli']).toBeDefined()
+    expect(contracts['0x5']).toBeDefined()
   })
 
   it('works with single provider', async () => {
