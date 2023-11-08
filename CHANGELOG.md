@@ -1,3 +1,10 @@
+## [9.1.1](https://github.com/decentralized-identity/ethr-did-resolver/compare/9.1.0...9.1.1) (2023-11-08)
+
+
+### Bug Fixes
+
+* **deps:** bump dependencies and adapt code ([#193](https://github.com/decentralized-identity/ethr-did-resolver/issues/193)) ([0a8da00](https://github.com/decentralized-identity/ethr-did-resolver/commit/0a8da00c248b89abcb644a4aa6b5f1d8c895cc02))
+
 # [9.1.0](https://github.com/decentralized-identity/ethr-did-resolver/compare/9.0.0...9.1.0) (2023-11-08)
 
 
