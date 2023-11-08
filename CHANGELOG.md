@@ -1,3 +1,15 @@
+# [10.0.0](https://github.com/decentralized-identity/ethr-did-resolver/compare/9.1.1...10.0.0) (2023-11-08)
+
+
+### Features
+
+* track signing keys independently ([#194](https://github.com/decentralized-identity/ethr-did-resolver/issues/194)) ([cc44100](https://github.com/decentralized-identity/ethr-did-resolver/commit/cc441006b617abb26325ac41ef6d93d2a34b1046)), closes [#184](https://github.com/decentralized-identity/ethr-did-resolver/issues/184)
+
+
+### BREAKING CHANGES
+
+* the keys in the `verificationMethod` array are no longer all referenced in the `assertionMethod` array. Only authentication (`sigAuth`) or signing keys (`veriKey`) are added.
+
 ## [9.1.1](https://github.com/decentralized-identity/ethr-did-resolver/compare/9.1.0...9.1.1) (2023-11-08)
 
 
