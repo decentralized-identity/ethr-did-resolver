@@ -1,5 +1,5 @@
-import { Log, LogDescription, Contract } from 'ethers'
-import { bytes32toString, ERC1056Event } from './helpers'
+import { Contract, Log, LogDescription } from 'ethers'
+import { bytes32toString, ERC1056Event, isDefined } from './helpers'
 
 function populateEventMetaClass(logResult: LogDescription, blockNumber: number): ERC1056Event {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -23,15 +23,11 @@ function populateEventMetaClass(logResult: LogDescription, blockNumber: number):
 }
 
 export function logDecoder(contract: Contract, logs: Log[]): ERC1056Event[] {
-  const results: (ERC1056Event | undefined)[] = logs.map((log: Log) => {
-    const res = contract.interface.parseLog({ topics: [...log.topics], data: log.data })
-    if (!res) return
-    const event = populateEventMetaClass(res, log.blockNumber)
-    return event
-  })
-  const cleanResults: (ERC1056Event | undefined)[] = results.filter((result) => result !== undefined)
-  // THIS IS THE GIGA HACK JUST TO REMOVE THE POSSIBLE UNDEFINED FROM THE ARRAY
-  // THAT IS INTRODUCED BY THE .MAP ABOVE
-  type cleanResult = Exclude<typeof results[0], undefined>
-  return cleanResults as Array<cleanResult>
+  return logs
+    .map((log: Log) => {
+      const res = contract.interface.parseLog({ topics: [...log.topics], data: log.data })
+      if (!res) return null
+      return populateEventMetaClass(res, log.blockNumber)
+    })
+    .filter(isDefined)
 }
