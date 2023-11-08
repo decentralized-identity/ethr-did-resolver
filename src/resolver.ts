@@ -123,7 +123,7 @@ export class EthrDidResolver {
     let controller = address
 
     const authentication = [`${did}#controller`]
-    // const keyAgreement: string[] = []
+    const assertionMethod = [`${did}#controller`]
 
     let versionId = 0
     let nextVersionId = Number.POSITIVE_INFINITY
@@ -133,6 +133,7 @@ export class EthrDidResolver {
     let endpoint = ''
     const auth: Record<string, string> = {}
     const keyAgreementRefs: Record<string, string> = {}
+    const signingRefs: Record<string, string> = {}
     const pks: Record<string, VerificationMethod> = {}
     const services: Record<string, Service> = {}
     if (typeof blockHeight === 'string') {
@@ -162,6 +163,7 @@ export class EthrDidResolver {
           switch (delegateType) {
             case 'sigAuth':
               auth[eventIndex] = `${did}#delegate-${delegateCount}`
+              signingRefs[eventIndex] = `${did}#delegate-${delegateCount}`
             // eslint-disable-next-line no-fallthrough
             case 'veriKey':
               pks[eventIndex] = {
@@ -170,6 +172,7 @@ export class EthrDidResolver {
                 controller: did,
                 blockchainAccountId: `eip155:${chainId}:${currentEvent.delegate}`,
               }
+              signingRefs[eventIndex] = `${did}#delegate-${delegateCount}`
               break
           }
         } else if (event._eventName === eventNames.DIDAttributeChanged) {
@@ -211,8 +214,11 @@ export class EthrDidResolver {
                 pks[eventIndex] = pk
                 if (match[4] === 'sigAuth') {
                   auth[eventIndex] = pk.id
+                  signingRefs[eventIndex] = pk.id
                 } else if (match[4] === 'enc') {
                   keyAgreementRefs[eventIndex] = pk.id
+                } else {
+                  signingRefs[eventIndex] = pk.id
                 }
                 break
               }
@@ -255,6 +261,7 @@ export class EthrDidResolver {
           serviceCount++
         }
         delete auth[eventIndex]
+        delete signingRefs[eventIndex]
         delete pks[eventIndex]
         delete services[eventIndex]
       }
@@ -277,12 +284,14 @@ export class EthrDidResolver {
         publicKeyHex: strip0x(controllerKey),
       })
       authentication.push(`${did}#controllerKey`)
+      assertionMethod.push(`${did}#controllerKey`)
     }
 
     const didDocument: DIDDocument = {
       ...baseDIDDocument,
       verificationMethod: publicKeys.concat(Object.values(pks)),
       authentication: authentication.concat(Object.values(auth)),
+      assertionMethod: assertionMethod.concat(Object.values(signingRefs)),
     }
     if (Object.values(services).length > 0) {
       didDocument.service = Object.values(services)
@@ -290,7 +299,6 @@ export class EthrDidResolver {
     if (Object.values(keyAgreementRefs).length > 0) {
       didDocument.keyAgreement = Object.values(keyAgreementRefs)
     }
-    didDocument.assertionMethod = [...(didDocument.verificationMethod?.map((pk) => pk.id) || [])]
 
     return deactivated
       ? {

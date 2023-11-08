@@ -142,8 +142,7 @@ describe('attributes', () => {
           },
         ],
         authentication: [`${did}#controller`],
-        // This is a bug. Encryption keys should not be added to assertionMethod See #184
-        assertionMethod: [`${did}#controller`, `${did}#delegate-1`],
+        assertionMethod: [`${did}#controller`],
         keyAgreement: [`${did}#delegate-1`],
       })
     })
