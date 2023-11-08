@@ -1,5 +1,5 @@
 import { VerificationMethod } from 'did-resolver'
-import { computeAddress, getAddress } from 'ethers'
+import { computeAddress, getAddress, toUtf8Bytes, toUtf8String, zeroPadBytes } from 'ethers'
 
 export const identifierMatcher = /^(.*)?(0x[0-9a-fA-F]{40}|0x[0-9a-fA-F]{66})$/
 export const nullAddress = '0x0000000000000000000000000000000000000000'
@@ -95,13 +95,12 @@ export function strip0x(input: string): string {
 }
 
 export function bytes32toString(input: bytes32 | Uint8Array): string {
-  const buff: Buffer = typeof input === 'string' ? Buffer.from(input.slice(2), 'hex') : Buffer.from(input)
-  return buff.toString('utf8').replace(/\0+$/, '')
+  return toUtf8String(input).replace(/\0+$/, '')
 }
 
 export function stringToBytes32(str: string): string {
-  const buffStr = '0x' + Buffer.from(str).slice(0, 32).toString('hex')
-  return buffStr + '0'.repeat(66 - buffStr.length)
+  const bytes = toUtf8Bytes(str)
+  return zeroPadBytes(bytes.slice(0, 32), 32)
 }
 
 export function interpretIdentifier(identifier: string): { address: string; publicKey?: string; network?: string } {
