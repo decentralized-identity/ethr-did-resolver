@@ -1,21 +1,22 @@
 import {
-  Signer,
-  Contract,
-  BlockTag,
-  JsonRpcProvider,
-  Provider,
-  TransactionReceipt,
-  getBytes,
-  concat,
-  toBeHex,
-  isHexString,
-  zeroPadValue,
-  toUtf8Bytes,
-  keccak256,
-  encodeBytes32String,
-  Overrides,
-  AddressLike,
   Addressable,
+  AddressLike,
+  BlockTag,
+  concat,
+  Contract,
+  encodeBytes32String,
+  getBytes,
+  hexlify,
+  isHexString,
+  JsonRpcProvider,
+  keccak256,
+  Overrides,
+  Provider,
+  Signer,
+  toBeHex,
+  toUtf8Bytes,
+  TransactionReceipt,
+  zeroPadValue,
 } from 'ethers'
 import { getContractForNetwork } from './configuration'
 import {
@@ -285,7 +286,7 @@ export class EthrDidController {
       ...options,
     }
     attrName = attrName.startsWith('0x') ? attrName : stringToBytes32(attrName)
-    attrValue = attrValue.startsWith('0x') ? attrValue : '0x' + Buffer.from(attrValue, 'utf-8').toString('hex')
+    attrValue = attrValue.startsWith('0x') ? attrValue : hexlify(toUtf8Bytes(attrValue))
     const contract = await this.attachContract(overrides.from ?? undefined)
     delete overrides.from
     const setAttrTx = await contract.setAttribute(this.address, attrName, attrValue, exp, overrides)
@@ -326,7 +327,7 @@ export class EthrDidController {
       ...options,
     }
     attrName = attrName.startsWith('0x') ? attrName : stringToBytes32(attrName)
-    attrValue = attrValue.startsWith('0x') ? attrValue : '0x' + Buffer.from(attrValue, 'utf-8').toString('hex')
+    attrValue = attrValue.startsWith('0x') ? attrValue : hexlify(toUtf8Bytes(attrValue))
     const contract = await this.attachContract(overrides.from ?? undefined)
     delete overrides.from
     const setAttrTx = await contract.setAttributeSigned(
@@ -349,7 +350,7 @@ export class EthrDidController {
       ...options,
     }
     attrName = attrName.startsWith('0x') ? attrName : stringToBytes32(attrName)
-    attrValue = attrValue.startsWith('0x') ? attrValue : '0x' + Buffer.from(attrValue, 'utf-8').toString('hex')
+    attrValue = attrValue.startsWith('0x') ? attrValue : hexlify(toUtf8Bytes(attrValue))
     const contract = await this.attachContract(overrides.from ?? undefined)
     delete overrides.from
     const revokeAttributeTX = await contract.revokeAttribute(this.address, attrName, attrValue, overrides)
@@ -398,7 +399,7 @@ export class EthrDidController {
       ...options,
     }
     attrName = attrName.startsWith('0x') ? attrName : stringToBytes32(attrName)
-    attrValue = attrValue.startsWith('0x') ? attrValue : '0x' + Buffer.from(attrValue, 'utf-8').toString('hex')
+    attrValue = attrValue.startsWith('0x') ? attrValue : hexlify(toUtf8Bytes(attrValue))
     const contract = await this.attachContract(overrides.from ?? undefined)
     delete overrides.from
     const revokeAttributeTX = await contract.revokeAttributeSigned(

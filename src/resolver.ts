@@ -1,4 +1,4 @@
-import { BlockTag, encodeBase58 } from 'ethers'
+import { BlockTag, encodeBase58, encodeBase64, toUtf8String } from 'ethers'
 import { ConfigurationOptions, ConfiguredNetworks, configureResolverWithNetworks } from './configuration'
 import {
   DIDDocument,
@@ -197,13 +197,13 @@ export class EthrDidResolver {
                     pk.publicKeyHex = strip0x(currentEvent.value)
                     break
                   case 'base64':
-                    pk.publicKeyBase64 = Buffer.from(currentEvent.value.slice(2), 'hex').toString('base64')
+                    pk.publicKeyBase64 = encodeBase64(currentEvent.value)
                     break
                   case 'base58':
-                    pk.publicKeyBase58 = encodeBase58(Buffer.from(currentEvent.value.slice(2), 'hex'))
+                    pk.publicKeyBase58 = encodeBase58(currentEvent.value)
                     break
                   case 'pem':
-                    pk.publicKeyPem = Buffer.from(currentEvent.value.slice(2), 'hex').toString()
+                    pk.publicKeyPem = toUtf8String(currentEvent.value)
                     break
                   default:
                     pk.value = strip0x(currentEvent.value)
@@ -216,12 +216,13 @@ export class EthrDidResolver {
                 }
                 break
               }
-              case 'svc':
+              case 'svc': {
                 serviceCount++
+                const encodedService = toUtf8String(currentEvent.value)
                 try {
-                  endpoint = JSON.parse(Buffer.from(currentEvent.value.slice(2), 'hex').toString())
+                  endpoint = JSON.parse(encodedService)
                 } catch {
-                  endpoint = Buffer.from(currentEvent.value.slice(2), 'hex').toString()
+                  endpoint = encodedService
                 }
                 services[eventIndex] = {
                   id: `${did}#service-${serviceCount}`,
@@ -229,6 +230,7 @@ export class EthrDidResolver {
                   serviceEndpoint: endpoint,
                 }
                 break
+              }
             }
           }
         }
