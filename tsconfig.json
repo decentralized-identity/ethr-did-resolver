@@ -12,6 +12,7 @@
     "sourceMap": true,
     "outDir": "lib",
     "strict": true,
+    "skipLibCheck": true,
     "noImplicitThis": false,
     "moduleResolution": "node",
     "allowSyntheticDefaultImports": true,

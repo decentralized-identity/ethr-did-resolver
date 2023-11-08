@@ -1,5 +1,5 @@
 import { VerificationMethod } from 'did-resolver'
-import { keccak256, getAddress, computeAddress, Contract, SigningKey, concat, toBeHex, zeroPadValue } from 'ethers'
+import { computeAddress, getAddress } from 'ethers'
 
 export const identifierMatcher = /^(.*)?(0x[0-9a-fA-F]{40}|0x[0-9a-fA-F]{66})$/
 export const nullAddress = '0x0000000000000000000000000000000000000000'
@@ -57,6 +57,7 @@ export interface LegacyVerificationMethod extends VerificationMethod {
   publicKeyBase64?: string
   /**@deprecated */
   publicKeyPem?: string
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [x: string]: any
 }
@@ -121,25 +122,11 @@ export function interpretIdentifier(identifier: string): { address: string; publ
   }
 }
 
-export async function signMetaTxData(
-  identity: string,
-  signerAddress: string,
-  privateKeyBytes: Uint8Array,
-  dataBytes: Uint8Array,
-  didReg: Contract
-) {
-  const nonce = await didReg.nonce(signerAddress)
-  const paddedNonce = zeroPadValue(toBeHex(nonce), 32)
-  const dataToSign = concat(['0x1900', await didReg.getAddress(), paddedNonce, identity, dataBytes])
-  const hash = keccak256(dataToSign)
-  return new SigningKey(privateKeyBytes).sign(hash)
-}
-
 export enum Errors {
   /**
    * The resolver has failed to construct the DID document.
-   * This can be caused by a network issue, a wrong registry address or malformed logs while parsing the registry history.
-   * Please inspect the `DIDResolutionMetadata.message` to debug further.
+   * This can be caused by a network issue, a wrong registry address or malformed logs while parsing the registry
+   * history. Please inspect the `DIDResolutionMetadata.message` to debug further.
    */
   notFound = 'notFound',
 
@@ -149,12 +136,21 @@ export enum Errors {
   invalidDid = 'invalidDid',
 
   /**
-   * The resolver is misconfigured or is being asked to resolve a DID anchored on an unknown network
+   * The resolver is misconfigured or is being asked to resolve a `DID` anchored on an unknown network
    */
   unknownNetwork = 'unknownNetwork',
 
   /**
-   * The resolver does not supported 'accept' format for {@link did-resolver#DIDResolutionOptions}
+   * The resolver does not support the 'accept' format requested with `DIDResolutionOptions`
    */
   unsupportedFormat = 'unsupportedFormat',
+}
+
+/**
+ * Returns true when the argument is defined and not null.
+ * Usable as array.filter(isDefined)
+ * @param arg
+ */
+export function isDefined<T>(arg: T): arg is Exclude<T, null | undefined> {
+  return arg !== null && typeof arg !== 'undefined'
 }

@@ -1,6 +1,5 @@
 import { BlockTag, encodeBase58 } from 'ethers'
 import { ConfigurationOptions, ConfiguredNetworks, configureResolverWithNetworks } from './configuration'
-import { EthrDidController } from './controller'
 import {
   DIDDocument,
   DIDResolutionOptions,
@@ -12,20 +11,20 @@ import {
   VerificationMethod,
 } from 'did-resolver'
 import {
-  interpretIdentifier,
   DIDAttributeChanged,
   DIDDelegateChanged,
+  DIDOwnerChanged,
   ERC1056Event,
+  Errors,
   eventNames,
+  identifierMatcher,
+  interpretIdentifier,
   legacyAlgoMap,
   legacyAttrTypes,
   LegacyVerificationMethod,
-  verificationMethodTypes,
-  identifierMatcher,
   nullAddress,
-  DIDOwnerChanged,
-  Errors,
   strip0x,
+  verificationMethodTypes,
 } from './helpers'
 import { logDecoder } from './logParser'
 
@@ -41,26 +40,14 @@ export class EthrDidResolver {
   }
 
   /**
-   * returns the current owner of a DID (represented by an address or public key)
+   * Returns the block number with the previous change to a particular address (DID)
    *
-   * @param address
-   *
-   * @deprecated
-   */
-  async getOwner(address: string, networkId: string, blockTag?: BlockTag): Promise<string> {
-    //TODO: check if address or public key
-    return new EthrDidController(address, this.contracts[networkId]).getOwner(address, blockTag)
-  }
-
-  /**
-   * returns the previous change
-   *
-   * @param address
+   * @param address - the address (DID) to check for changes
+   * @param networkId - the EVM network to check
+   * @param blockTag - the block tag to use for the query (default: 'latest')
    */
   async previousChange(address: string, networkId: string, blockTag?: BlockTag): Promise<bigint> {
-    const result = await this.contracts[networkId].changed(address, { blockTag })
-    // console.log(`last change result: '${BigNumber.from(result['0'])}'`)
-    return result
+    return await this.contracts[networkId].changed(address, { blockTag })
   }
 
   async getBlockMetadata(blockHeight: number, networkId: string): Promise<{ height: string; isoDate: string }> {
@@ -148,10 +135,10 @@ export class EthrDidResolver {
     const keyAgreementRefs: Record<string, string> = {}
     const pks: Record<string, VerificationMethod> = {}
     const services: Record<string, Service> = {}
-    // if (typeof blockHeight === 'string') {
-    //   // latest
-    //   blockHeight = -1
-    // }
+    if (typeof blockHeight === 'string') {
+      // latest
+      blockHeight = -1
+    }
     for (const event of history) {
       if (blockHeight !== -1 && event.blockNumber > blockHeight) {
         if (nextVersionId > event.blockNumber) {
@@ -175,7 +162,7 @@ export class EthrDidResolver {
           switch (delegateType) {
             case 'sigAuth':
               auth[eventIndex] = `${did}#delegate-${delegateCount}`
-            // eslint-disable-line no-fallthrough
+            // eslint-disable-next-line no-fallthrough
             case 'veriKey':
               pks[eventIndex] = {
                 id: `${did}#delegate-${delegateCount}`,
