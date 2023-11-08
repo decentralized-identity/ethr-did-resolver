@@ -1,3 +1,10 @@
+# [9.1.0](https://github.com/decentralized-identity/ethr-did-resolver/compare/9.0.0...9.1.0) (2023-11-08)
+
+
+### Features
+
+* add JSON-LD contexts that define all the terms being used ([#192](https://github.com/decentralized-identity/ethr-did-resolver/issues/192)) ([cd49ab8](https://github.com/decentralized-identity/ethr-did-resolver/commit/cd49ab81e8a0269ec130271b534a109b35fa39f6))
+
 # [9.0.0](https://github.com/decentralized-identity/ethr-did-resolver/compare/8.1.2...9.0.0) (2023-09-27)
 
 
