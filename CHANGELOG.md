@@ -1,3 +1,10 @@
+# [10.1.0](https://github.com/decentralized-identity/ethr-did-resolver/compare/10.0.1...10.1.0) (2023-12-05)
+
+
+### Features
+
+* add Sepolia deployment ([#195](https://github.com/decentralized-identity/ethr-did-resolver/issues/195)) ([94015bf](https://github.com/decentralized-identity/ethr-did-resolver/commit/94015bfaa277907b8691dffbc01690bd3e230c1e))
+
 ## [10.0.1](https://github.com/decentralized-identity/ethr-did-resolver/compare/10.0.0...10.0.1) (2023-11-27)
 
 
