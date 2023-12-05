@@ -10,7 +10,7 @@ const infuraNames: Record<string, string> = {
   'linea:goerli': 'linea-goerli',
 }
 
-const knownInfuraNames = ['mainnet', 'goerli', 'aurora', 'linea:goerli']
+const knownInfuraNames = ['mainnet', 'goerli', 'aurora', 'linea:goerli', 'sepolia']
 
 /**
  * A configuration entry for an ethereum network
@@ -18,8 +18,8 @@ const knownInfuraNames = ['mainnet', 'goerli', 'aurora', 'linea:goerli']
  *
  * @example ```js
  * { name: 'development', registry: '0x9af37603e98e0dc2b855be647c39abe984fc2445', rpcUrl: 'http://127.0.0.1:8545/' }
- * { name: 'goerli', chainId: 5, provider: new InfuraProvider('goerli') }
- * { name: 'rinkeby', provider: new AlchemyProvider('rinkeby') }
+ * { name: 'sepolia', chainId: 11155111, provider: new InfuraProvider('sepolia') }
+ * { name: 'goerli', provider: new AlchemyProvider('goerli') }
  * { name: 'rsk:testnet', chainId: '0x1f', rpcUrl: 'https://public-node.testnet.rsk.co' }
  * ```
  */
@@ -115,7 +115,7 @@ function configureNetworks(conf: MultiProviderConfiguration): ConfiguredNetworks
  * [
  *   { name: 'development', registry: '0x9af37603e98e0dc2b855be647c39abe984fc2445', rpcUrl: 'http://127.0.0.1:8545/' },
  *   { name: 'goerli', chainId: 5, provider: new InfuraProvider('goerli') },
- *   { name: 'rinkeby', provider: new AlchemyProvider('rinkeby') },
+ *   { name: 'sepolia', provider: new AlchemyProvider('sepolia') },
  *   { name: 'rsk:testnet', chainId: '0x1f', rpcUrl: 'https://public-node.testnet.rsk.co' },
  * ]
  * ```
