@@ -33,7 +33,7 @@ off-chain usage.
 > Join the discussion as to how to adopt these new changes [on our discord](https://discord.gg/MTeTAwSYe7)
 
 | Network Name    | name            | chainId    | hexChainId | Registry Address                                                                                                                       | Registry version                                                                                               |
-| --------------- | --------------- | ---------- | ---------- | -------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+|-----------------|-----------------|------------|------------|----------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------|
 | Mainnet         | mainnet         | 1          | 0x1        | [0xdca7ef03e98e0dc2b855be647c39abe984fcf21b](https://etherscan.io/address/0xdca7ef03e98e0dc2b855be647c39abe984fcf21b)                  | [4278342e](https://github.com/uport-project/ethr-did-registry/commit/4278342e9b1dec0ab4fd63f4bd5536094c4de9f0) |
 | Ropsten         | ropsten         | 3          | 0x3        | [0xdca7ef03e98e0dc2b855be647c39abe984fcf21b](https://ropsten.etherscan.io/address/0xdca7ef03e98e0dc2b855be647c39abe984fcf21b)          | [4278342e](https://github.com/uport-project/ethr-did-registry/commit/4278342e9b1dec0ab4fd63f4bd5536094c4de9f0) |
 | Rinkeby         | rinkeby         | 4          | 0x4        | [0xdca7ef03e98e0dc2b855be647c39abe984fcf21b](https://rinkeby.etherscan.io/address/0xdca7ef03e98e0dc2b855be647c39abe984fcf21b)          | [4278342e](https://github.com/uport-project/ethr-did-registry/commit/4278342e9b1dec0ab4fd63f4bd5536094c4de9f0) |
@@ -50,6 +50,7 @@ off-chain usage.
 | Aurora          | aurora          | 1313161554 | 0x4E454152 | [0x63ed58b671eed12bc1652845ba5b2cdfbff198e0](https://explorer.mainnet.aurora.dev/address/0x63eD58B671EeD12Bc1652845ba5b2CDfBff198e0)   | [0ab4f151](https://github.com/uport-project/ethr-did-registry/commit/0ab4f151ddde5b7739b97827c4fb901289f57892) |
 | Arbitrum Goerli | arbitrum:goerli | 421613     | 0x66eed    | [0x8FFfcD6a85D29E9C33517aaf60b16FE4548f517E](https://goerli.arbiscan.io/address/0x8FFfcD6a85D29E9C33517aaf60b16FE4548f517E)            | [af1c2db](https://github.com/uport-project/ethr-did-registry/commit/af1c2db0e093507627338a6e562e0ed7c219b9ee)  |
 | Linea Goerli    | linea:goerli    | 59140      | 0xe704     | [0x03d5003bf0e79c5f5223588f347eba39afbc3818](https://goerli.lineascan.build/address/0x03d5003bf0e79c5f5223588f347eba39afbc3818)        | [af1c2db](https://github.com/uport-project/ethr-did-registry/commit/af1c2db0e093507627338a6e562e0ed7c219b9ee)  |
+| Sepolia         | sepolia         | 11155111   | 0xaa36a7   | [0x03d5003bf0e79c5f5223588f347eba39afbc3818](https://sepolia.etherscan.io/address/0x03d5003bf0e79c5f5223588f347eba39afbc3818#code)     | [af1c2db](https://github.com/uport-project/ethr-did-registry/commit/af1c2db0e093507627338a6e562e0ed7c219b9ee)  |
 
 ## Using the Registry
 
@@ -59,13 +60,13 @@ To use the contract, we provide hardhat artifacts. Once you require the `ethr-di
 object containing the JSON.
 
 ```javascript
-const { EthereumDIDRegistry } = require('ethr-did-registry')
+const {EthereumDIDRegistry} = require('ethr-did-registry')
 ```
 
 You can use [`ethers.js`](https://github.com/ethers-io/ethers.js/) to utilize these artifacts.
 
 ```javascript
-const { ethers } = require('ethers')
+const {ethers} = require('ethers')
 const DidReg = new ethers.Contract(registryAddress, EthereumDIDRegistry.abi)
 DidReg.connect(yourSignerOrProvider)
 ```
@@ -195,7 +196,7 @@ event DIDDelegateChanged(
     address delegate,
     uint validTo,
     uint previousChange
-  );
+);
 ```
 
 ## Adding Off-chain Attributes
@@ -245,7 +246,7 @@ event DIDAttributeChanged(
     bytes value,
     uint validTo,
     uint previousChange
-  );
+);
 ```
 
 ### Delegate types and attribute names encoding
