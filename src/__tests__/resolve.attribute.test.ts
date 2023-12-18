@@ -1,4 +1,4 @@
-import { Contract, ethers } from 'ethers'
+import { Contract, ethers, hexlify, toUtf8Bytes } from 'ethers'
 import { Resolvable } from 'did-resolver'
 
 import { GanacheProvider } from '@ethers-ext/provider-ganache'
@@ -44,6 +44,38 @@ describe('attributes', () => {
             type: 'EcdsaSecp256k1VerificationKey2019',
             controller: did,
             publicKeyHex: pubKey.slice(2),
+          },
+        ],
+        authentication: [`${did}#controller`],
+        assertionMethod: [`${did}#controller`, `${did}#delegate-1`],
+      })
+    })
+
+    it('add Bls12381G2Key2020 assertion key', async () => {
+      expect.assertions(1)
+      const { address: identity, shortDID: did, signer } = await randomAccount(provider)
+      const  pubKey  = hexlify(toUtf8Bytes("public key material here")) // encodes to 0x7075626c6963206b6579206d6174657269616c2068657265 in base16
+      await new EthrDidController(identity, registryContract, signer).setAttribute(
+        'did/pub/Bls12381G2Key2020',  // attrName must fit into 32 bytes. Anything extra will be truncated.
+        pubKey, // There's no limit on the size of the public key material
+        86401
+      )
+      const { didDocument } = await didResolver.resolve(did)
+      expect(didDocument).toEqual({
+        '@context': expect.anything(),
+        id: did,
+        verificationMethod: [
+          {
+            id: `${did}#controller`,
+            type: 'EcdsaSecp256k1RecoveryMethod2020',
+            controller: did,
+            blockchainAccountId: `eip155:1337:${identity}`,
+          },
+          {
+            id: `${did}#delegate-1`,
+            type: 'Bls12381G2Key2020',
+            controller: did,
+            publicKeyHex: "7075626c6963206b6579206d6174657269616c2068657265",
           },
         ],
         authentication: [`${did}#controller`],
