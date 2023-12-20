@@ -1,3 +1,10 @@
+## [10.1.1](https://github.com/decentralized-identity/ethr-did-resolver/compare/10.1.0...10.1.1) (2023-12-20)
+
+
+### Bug Fixes
+
+* **deps:** update dependency ethers to v6.9.1 ([01e0006](https://github.com/decentralized-identity/ethr-did-resolver/commit/01e000624996138d7d3142c6f4c604b178684778))
+
 # [10.1.0](https://github.com/decentralized-identity/ethr-did-resolver/compare/10.0.1...10.1.0) (2023-12-05)
 
 
