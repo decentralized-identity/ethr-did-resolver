@@ -98,7 +98,7 @@
     "microbundle": "0.15.1",
     "prettier": "3.2.5",
     "semantic-release": "22.0.12",
-    "typescript": "5.3.3"
+    "typescript": "5.4.2"
   },
   "dependencies": {
     "did-resolver": "^4.1.0",
