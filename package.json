@@ -80,9 +80,9 @@
     ]
   },
   "devDependencies": {
-    "@babel/core": "7.24.0",
-    "@babel/preset-env": "7.24.0",
-    "@babel/preset-typescript": "7.23.3",
+    "@babel/core": "7.24.3",
+    "@babel/preset-env": "7.24.3",
+    "@babel/preset-typescript": "7.24.1",
     "@ethers-ext/provider-ganache": "6.0.0-beta.2",
     "@semantic-release/changelog": "6.0.3",
     "@semantic-release/git": "10.0.1",
@@ -98,7 +98,7 @@
     "microbundle": "0.15.1",
     "prettier": "3.2.5",
     "semantic-release": "22.0.12",
-    "typescript": "5.4.2"
+    "typescript": "5.4.3"
   },
   "dependencies": {
     "did-resolver": "^4.1.0",
