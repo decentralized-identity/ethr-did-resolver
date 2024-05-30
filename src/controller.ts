@@ -360,12 +360,15 @@ export class EthrDidController {
   async createRevokeAttributeHash(attrName: string, attrValue: string) {
     const paddedNonce = await this.getPaddedNonceCompatibility(true)
 
+    // The incoming attribute value may be a hex encoded key, or an utf8 encoded string (like service endpoints)
+    const encodedValue = isHexString(attrValue) ? attrValue : toUtf8Bytes(attrValue)
+
     const dataToHash = concat([
       MESSAGE_PREFIX,
       await this.contract.getAddress(),
       paddedNonce,
       this.address,
-      getBytes(concat([toUtf8Bytes('revokeAttribute'), encodeBytes32String(attrName), toUtf8Bytes(attrValue)])),
+      getBytes(concat([toUtf8Bytes('revokeAttribute'), encodeBytes32String(attrName), encodedValue])),
     ])
     return keccak256(dataToHash)
   }
