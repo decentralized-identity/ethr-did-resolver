@@ -87,6 +87,14 @@ export class EthrDidController {
     this.did = publicKey ? `did:ethr:${networkString}${publicKey}` : `did:ethr:${networkString}${address}`
   }
 
+  encodeAttributeValue(attrValue: string) {
+    /**
+     * NOTE: The incoming attribute value may be a hex encoded key, or an utf8 encoded string (like service endpoints)
+     **/
+    const encodedValue = isHexString(attrValue) ? attrValue : toUtf8Bytes(attrValue)
+    return encodedValue
+  }
+
   async getOwner(address: address, blockTag?: BlockTag): Promise<string> {
     return this.contract.identityOwner(address, { blockTag })
   }
@@ -295,10 +303,7 @@ export class EthrDidController {
 
   async createSetAttributeHash(attrName: string, attrValue: string, exp: number) {
     const paddedNonce = await this.getPaddedNonceCompatibility(true)
-
-    // The incoming attribute value may be a hex encoded key, or an utf8 encoded string (like service endpoints)
-    const encodedValue = isHexString(attrValue) ? attrValue : toUtf8Bytes(attrValue)
-
+    const encodedValue = this.encodeAttributeValue(attrValue)
     const dataToHash = concat([
       MESSAGE_PREFIX,
       await this.contract.getAddress(),
@@ -359,10 +364,7 @@ export class EthrDidController {
 
   async createRevokeAttributeHash(attrName: string, attrValue: string) {
     const paddedNonce = await this.getPaddedNonceCompatibility(true)
-
-    // The incoming attribute value may be a hex encoded key, or an utf8 encoded string (like service endpoints)
-    const encodedValue = isHexString(attrValue) ? attrValue : toUtf8Bytes(attrValue)
-
+    const encodedValue = this.encodeAttributeValue(attrValue)
     const dataToHash = concat([
       MESSAGE_PREFIX,
       await this.contract.getAddress(),

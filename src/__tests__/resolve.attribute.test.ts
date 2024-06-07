@@ -18,6 +18,70 @@ describe('attributes', () => {
     provider = reg.provider
   })
 
+  describe('invoking createSetAttributeHash', () => {
+    it('sets the "encodedValue" to the passed hex encoded string (e.g. a public key)', async () => {
+      expect.assertions(3)
+      const { address: identity, signer } = await randomAccount(provider)
+      const { pubKey: attrValue } = await randomAccount(provider)
+      const attrName = 'did/pub/Secp256k1/veriKey'
+      const controller = new EthrDidController(identity, registryContract, signer)
+      const encodeAttributeValueSpy = jest.spyOn(controller, 'encodeAttributeValue')
+      const ttl = 11111
+      await controller.createSetAttributeHash(attrName, attrValue, ttl)
+      expect(encodeAttributeValueSpy).toHaveBeenCalledWith(attrValue)
+      expect(encodeAttributeValueSpy).toHaveBeenCalledTimes(1)
+      expect(encodeAttributeValueSpy).toHaveReturnedWith(attrValue)
+    })
+
+    it('sets the "encodedValue" to a bytes encoded version of the passed attribute value (e.g. a service endpoint)', async () => {
+      expect.assertions(3)
+      const { address: identity, signer } = await randomAccount(provider)
+      const attrValue = 'https://hubs.uport.me/service-endpoints-are-not-hex'
+      const attrName = 'did/pub/Secp256k1/veriKey'
+      const controller = new EthrDidController(identity, registryContract, signer)
+      const encodeAttributeValueSpy = jest.spyOn(controller, 'encodeAttributeValue')
+      const ttl = 11111
+      await controller.createSetAttributeHash(attrName, attrValue, ttl)
+      expect(encodeAttributeValueSpy).toHaveBeenCalledWith(attrValue)
+      expect(encodeAttributeValueSpy).toHaveBeenCalledTimes(1)
+      const expectedEncodedValue = toUtf8Bytes(attrValue)
+      expect(encodeAttributeValueSpy).toHaveReturnedWith(expectedEncodedValue)
+    })
+  })
+
+  describe('invoking createRevokeAttributeHash', () => {
+    beforeEach(() => {
+      jest.clearAllMocks()
+    })
+
+    it('sets the "encodedValue" to the passed hex encoded string (e.g. a public key)', async () => {
+      expect.assertions(3)
+      const { address: identity, signer } = await randomAccount(provider)
+      const { pubKey: attrValue } = await randomAccount(provider)
+      const attrName = 'did/pub/Secp256k1/veriKey'
+      const controller = new EthrDidController(identity, registryContract, signer)
+      const encodeAttributeValueSpy = jest.spyOn(controller, 'encodeAttributeValue')
+      await controller.createRevokeAttributeHash(attrName, attrValue)
+      expect(encodeAttributeValueSpy).toHaveBeenCalledWith(attrValue)
+      expect(encodeAttributeValueSpy).toHaveBeenCalledTimes(1)
+      expect(encodeAttributeValueSpy).toHaveReturnedWith(attrValue)
+    })
+
+    it('sets the "encodedValue" to a bytes encoded version of the passed attribute value (e.g. a service endpoint)', async () => {
+      expect.assertions(3)
+      const { address: identity, signer } = await randomAccount(provider)
+      const attrValue = 'https://hubs.uport.me/service-endpoints-are-not-hex'
+      const attrName = 'did/pub/Secp256k1/veriKey'
+      const controller = new EthrDidController(identity, registryContract, signer)
+      const encodeAttributeValueSpy = jest.spyOn(controller, 'encodeAttributeValue')
+      await controller.createRevokeAttributeHash(attrName, attrValue)
+      expect(encodeAttributeValueSpy).toHaveBeenCalledWith(attrValue)
+      expect(encodeAttributeValueSpy).toHaveBeenCalledTimes(1)
+      const expectedEncodedValue = toUtf8Bytes(attrValue)
+      expect(encodeAttributeValueSpy).toHaveReturnedWith(expectedEncodedValue)
+    })
+  })
+
   describe('add public keys', () => {
     it('add EcdsaSecp256k1VerificationKey2019 signing key', async () => {
       expect.assertions(1)
@@ -54,9 +118,9 @@ describe('attributes', () => {
     it('add Bls12381G2Key2020 assertion key', async () => {
       expect.assertions(1)
       const { address: identity, shortDID: did, signer } = await randomAccount(provider)
-      const  pubKey  = hexlify(toUtf8Bytes("public key material here")) // encodes to 0x7075626c6963206b6579206d6174657269616c2068657265 in base16
+      const pubKey = hexlify(toUtf8Bytes('public key material here')) // encodes to 0x7075626c6963206b6579206d6174657269616c2068657265 in base16
       await new EthrDidController(identity, registryContract, signer).setAttribute(
-        'did/pub/Bls12381G2Key2020',  // attrName must fit into 32 bytes. Anything extra will be truncated.
+        'did/pub/Bls12381G2Key2020', // attrName must fit into 32 bytes. Anything extra will be truncated.
         pubKey, // There's no limit on the size of the public key material
         86401
       )
@@ -75,7 +139,7 @@ describe('attributes', () => {
             id: `${did}#delegate-1`,
             type: 'Bls12381G2Key2020',
             controller: did,
-            publicKeyHex: "7075626c6963206b6579206d6174657269616c2068657265",
+            publicKeyHex: '7075626c6963206b6579206d6174657269616c2068657265',
           },
         ],
         authentication: [`${did}#controller`],
