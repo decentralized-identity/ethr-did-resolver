@@ -87,12 +87,14 @@ export class EthrDidController {
     this.did = publicKey ? `did:ethr:${networkString}${publicKey}` : `did:ethr:${networkString}${address}`
   }
 
-  encodeAttributeValue(attrValue: string) {
-    /**
-     * NOTE: The incoming attribute value may be a hex encoded key, or an utf8 encoded string (like service endpoints)
-     **/
-    const encodedValue = isHexString(attrValue) ? attrValue : toUtf8Bytes(attrValue)
-    return encodedValue
+  /**
+   * @returns the encoded attribute value in hex or utf8 bytes
+   * @param attrValue - the attribute value to encode (e.g. service endpoint, public key, etc.)
+   *
+   * @remarks The incoming attribute value may be a hex encoded key, or an utf8 encoded string (like service endpoints)
+   **/
+  encodeAttributeValue(attrValue: string): Uint8Array | `0x${string}` {
+    return isHexString(attrValue) ? attrValue : toUtf8Bytes(attrValue)
   }
 
   async getOwner(address: address, blockTag?: BlockTag): Promise<string> {
