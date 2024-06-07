@@ -93,7 +93,7 @@ export class EthrDidController {
    *
    * @remarks The incoming attribute value may be a hex encoded key, or an utf8 encoded string (like service endpoints)
    **/
-  encodeAttributeValue(attrValue: string): Uint8Array | `0x${string}` {
+  encodeAttributeValue(attrValue: string | `0x${string}`): Uint8Array | `0x${string}` {
     return isHexString(attrValue) ? attrValue : toUtf8Bytes(attrValue)
   }
 
