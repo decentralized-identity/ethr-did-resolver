@@ -1,3 +1,10 @@
+## [10.1.6](https://github.com/decentralized-identity/ethr-did-resolver/compare/10.1.5...10.1.6) (2024-06-13)
+
+
+### Bug Fixes
+
+* consistent Encoding of `attrValue` on `createRevokeAttributeHash` ([#200](https://github.com/decentralized-identity/ethr-did-resolver/issues/200)) ([81363d0](https://github.com/decentralized-identity/ethr-did-resolver/commit/81363d0ca8ab1da2c0302442e166678433cd6e6c))
+
 ## [10.1.5](https://github.com/decentralized-identity/ethr-did-resolver/compare/10.1.4...10.1.5) (2024-02-14)
 
 
