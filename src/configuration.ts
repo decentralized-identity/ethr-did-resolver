@@ -10,7 +10,7 @@ const infuraNames: Record<string, string> = {
   'linea:goerli': 'linea-goerli',
 }
 
-const knownInfuraNames = ['mainnet', 'goerli', 'aurora', 'linea:goerli', 'sepolia']
+const knownInfuraNames = ['mainnet', 'aurora', 'linea:goerli', 'sepolia']
 
 /**
  * A configuration entry for an ethereum network

@@ -38,33 +38,6 @@ describe('ethrResolver (alt-chains)', () => {
       })
     })
 
-    it('resolves on goerli when configured', async () => {
-      const did = 'did:ethr:goerli:' + addr
-      const ethr = getResolver({
-        networks: [{ name: 'goerli', rpcUrl: 'https://goerli.infura.io/v3/6b734e0b04454df8a6ce234023c04f26' }],
-      })
-      const resolver = new Resolver(ethr)
-      const result = await resolver.resolve(did)
-      expect(result).toEqual({
-        didDocumentMetadata: {},
-        didResolutionMetadata: { contentType: 'application/did+ld+json' },
-        didDocument: {
-          '@context': expect.anything(),
-          id: did,
-          verificationMethod: [
-            {
-              id: `${did}#controller`,
-              type: 'EcdsaSecp256k1RecoveryMethod2020',
-              controller: did,
-              blockchainAccountId: `eip155:5:${checksumAddr}`,
-            },
-          ],
-          authentication: [`${did}#controller`],
-          assertionMethod: [`${did}#controller`],
-        },
-      })
-    })
-
     it('resolves on linea:goerli when configured', async () => {
       const did = 'did:ethr:linea:goerli:' + addr
       const ethr = getResolver({
