@@ -5015,9 +5015,9 @@ esutils@^2.0.2:
   integrity "sha1-dNLrTeC42hKTcRkQ1Qd1ubcQ72Q= sha512-kVscqXk4OCp68SZ0dkgEKVi6/8ij300KBWTJq32P/dYeWTSwK41WyTxalN1eRmA5Z9UU/LX9D7FWSmV9SAYx6g=="
 
 ethers@^6.6.0, ethers@^6.8.1:
-  version "6.11.1"
-  resolved "https://registry.yarnpkg.com/ethers/-/ethers-6.11.1.tgz#96aae00b627c2e35f9b0a4d65c7ab658259ee6af"
-  integrity sha512-mxTAE6wqJQAbp5QAe/+o+rXOID7Nw91OZXvgpjDa1r4fAbq2Nu314oEZSbjoRLacuCzs7kUC3clEvkCQowffGg==
+  version "6.13.0"
+  resolved "https://registry.yarnpkg.com/ethers/-/ethers-6.13.0.tgz#f342958d0f622cf06559f59fbccdc1d30fa64f50"
+  integrity sha512-+yyQQQWEntY5UVbCv++guA14RRVFm1rSnO1GoLFdrK7/XRWMoktNgyG9UjwxrQqGBfGyFKknNZ81YpUS2emCgg==
   dependencies:
     "@adraffy/ens-normalize" "1.10.1"
     "@noble/curves" "1.2.0"
