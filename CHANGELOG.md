@@ -1,3 +1,10 @@
+## [10.1.7](https://github.com/decentralized-identity/ethr-did-resolver/compare/10.1.6...10.1.7) (2024-06-13)
+
+
+### Bug Fixes
+
+* **test:** remove the connection test for goerli network ([#201](https://github.com/decentralized-identity/ethr-did-resolver/issues/201)) ([c861026](https://github.com/decentralized-identity/ethr-did-resolver/commit/c861026d6d9fa4bb35cf3b6fd13d7d846e2cc728))
+
 ## [10.1.6](https://github.com/decentralized-identity/ethr-did-resolver/compare/10.1.5...10.1.6) (2024-06-13)
 
 
