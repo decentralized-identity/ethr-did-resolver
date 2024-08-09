@@ -35,4 +35,10 @@ export const deployments: EthrDidRegistryDeployment[] = [
   { chainId: 1313161554, registry: '0x63eD58B671EeD12Bc1652845ba5b2CDfBff198e0', name: 'aurora' },
   { chainId: 421613, registry: '0x8FFfcD6a85D29E9C33517aaf60b16FE4548f517E', name: 'arbitrum:goerli' },
   { chainId: 59140, registry: '0x03d5003bf0e79C5F5223588F347ebA39AfbC3818', name: 'linea:goerli' },
+  {
+    chainId: 2442,
+    registry: '0x03d5003bf0e79C5F5223588F347ebA39AfbC3818',
+    name: 'cardona:zkevm',
+    description: 'polygon zkevm cardona testnet',
+  },
 ]
