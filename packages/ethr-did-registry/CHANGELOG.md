@@ -1,3 +1,10 @@
+# [1.3.0](https://github.com/uport-project/ethr-did-registry/compare/1.2.0...1.3.0) (2024-08-09)
+
+
+### Features
+
+* add Polygon zkEVM Cardona testnet deployment ([#62](https://github.com/uport-project/ethr-did-registry/issues/62)) ([d10b06f](https://github.com/uport-project/ethr-did-registry/commit/d10b06fa073e05f85b10e0b926efceafbe1cf98b))
+
 # [1.2.0](https://github.com/uport-project/ethr-did-registry/compare/1.1.0...1.2.0) (2023-07-12)
 
 
