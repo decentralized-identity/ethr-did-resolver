@@ -14,16 +14,6 @@
       "require": "./lib/index.js"
     }
   },
-  "typesVersions": {
-    "*": {
-      "lib/index.d.ts": [
-        "lib/index.d.ts"
-      ],
-      "*": [
-        "./lib/index.d.js"
-      ]
-    }
-  },
   "repository": {
     "type": "git",
     "url": "git@github.com:decentralized-identity/ethr-did-resolver.git"
@@ -36,7 +26,7 @@
   ],
   "author": "Pelle Braendgaard",
   "contributors": [
-    "Mircea Nistor <mircea.nistor@mesh.xyz>"
+    "Mircea Nistor"
   ],
   "license": "Apache-2.0",
   "keywords": [

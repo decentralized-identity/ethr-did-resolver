@@ -1,7 +1,7 @@
 import { Contract, ContractFactory, JsonRpcProvider, Provider } from 'ethers'
 import { DEFAULT_REGISTRY_ADDRESS } from './helpers'
 import { deployments, EthrDidRegistryDeployment } from './config/deployments'
-import { default as EthereumDIDRegistry } from './config/EthereumDIDRegistry.json'
+import { EthereumDIDRegistry } from './config/EthereumDIDRegistry.js'
 
 const infuraNames: Record<string, string> = {
   polygon: 'matic',

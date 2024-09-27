@@ -13,7 +13,8 @@ import {
   MetaSignature,
 } from './helpers'
 
-import { default as EthereumDIDRegistry } from './config/EthereumDIDRegistry.json'
+import { EthereumDIDRegistry } from './config/EthereumDIDRegistry.js'
+import { deployments, EthrDidRegistryDeployment } from './config/deployments'
 
 export {
   DEFAULT_REGISTRY_ADDRESS as REGISTRY,
@@ -31,6 +32,25 @@ export {
   Errors,
   EthereumDIDRegistry,
   MetaSignature,
+  deployments,
+  EthrDidRegistryDeployment,
 }
 
-export { deployments, EthrDidRegistryDeployment } from './config/deployments'
+// workaround for esbuild/vite/hermes issues
+// This should not be needed once we move to ESM only build outputs.
+// This library now builds as a CommonJS library, with a small ESM wrapper on top.
+// This pattern seems to confuse some bundlers, causing errors like `Cannot read 'getResolver' of undefined`
+// see https://github.com/decentralized-identity/ethr-did-resolver/issues/186
+export default {
+  REGISTRY: DEFAULT_REGISTRY_ADDRESS,
+  getResolver,
+  bytes32toString,
+  stringToBytes32,
+  EthrDidController,
+  verificationMethodTypes,
+  identifierMatcher,
+  interpretIdentifier,
+  Errors,
+  EthereumDIDRegistry,
+  deployments,
+}
