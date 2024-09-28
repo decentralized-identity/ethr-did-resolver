@@ -38,7 +38,13 @@ export const deployments: EthrDidRegistryDeployment[] = [
   {
     chainId: 2442,
     registry: '0x03d5003bf0e79C5F5223588F347ebA39AfbC3818',
-    name: 'cardona:zkevm',
+    name: 'cardona',
     description: 'polygon zkevm cardona testnet',
+  },
+  {
+    chainId: 17000,
+    registry: '0x03d5003bf0e79C5F5223588F347ebA39AfbC3818',
+    name: 'holesky',
+    description: 'ethereum infrastructure and core protocol upgrades testnet',
   },
 ]
