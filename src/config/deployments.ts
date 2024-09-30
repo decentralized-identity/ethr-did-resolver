@@ -45,6 +45,7 @@ export const deployments: EthrDidRegistryDeployment[] = [
   // { chainId: 4, registry: '0xdca7ef03e98e0dc2b855be647c39abe984fcf21b', name: 'rinkeby', legacyNonce: true },
   // { chainId: 5, registry: '0xdca7ef03e98e0dc2b855be647c39abe984fcf21b', name: 'goerli', legacyNonce: true },
   { chainId: 11155111, registry: '0x03d5003bf0e79C5F5223588F347ebA39AfbC3818', name: 'sepolia', legacyNonce: false },
+  { chainId: 100, registry: '0x03d5003bf0e79C5F5223588F347ebA39AfbC3818', name: 'gno', legacyNonce: false },
   // { chainId: 42, registry: '0xdca7ef03e98e0dc2b855be647c39abe984fcf21b', name: 'kovan', legacyNonce: true },
   // // rsk networks cause socket hang up
   // { chainId: 30, registry: '0xdca7ef03e98e0dc2b855be647c39abe984fcf21b', name: 'rsk', legacyNonce: true },
