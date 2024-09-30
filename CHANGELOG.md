@@ -1,3 +1,33 @@
+# [11.0.0-alpha.3](https://github.com/decentralized-identity/ethr-did-resolver/compare/11.0.0-alpha.2...11.0.0-alpha.3) (2024-09-30)
+
+
+### Features
+
+* **deployment:** add gnosischain and holesky deployments ([#206](https://github.com/decentralized-identity/ethr-did-resolver/issues/206)) ([4992094](https://github.com/decentralized-identity/ethr-did-resolver/commit/4992094b565387ab0b50b62246b67d27ed697c71))
+
+# [11.0.0-alpha.2](https://github.com/decentralized-identity/ethr-did-resolver/compare/11.0.0-alpha.1...11.0.0-alpha.2) (2024-09-30)
+
+
+### Bug Fixes
+
+* **build:** include default export to work around some bundler issues ([#205](https://github.com/decentralized-identity/ethr-did-resolver/issues/205)) ([1e9e4ef](https://github.com/decentralized-identity/ethr-did-resolver/commit/1e9e4ef93098009eac8fc39567348356139e8673)), closes [#186](https://github.com/decentralized-identity/ethr-did-resolver/issues/186)
+
+# [11.0.0-alpha.1](https://github.com/decentralized-identity/ethr-did-resolver/compare/10.1.10...11.0.0-alpha.1) (2024-09-30)
+
+
+### Bug Fixes
+
+* add esm wrapper instead of double transpile ([d2bbeaf](https://github.com/decentralized-identity/ethr-did-resolver/commit/d2bbeafbd2d77308f12d73f952b0b9940431dd83))
+* **build:** build commonjs and also expose esm wrapper ([522c199](https://github.com/decentralized-identity/ethr-did-resolver/commit/522c1999877c26dd3b1959111cd9d155987ada19))
+* **build:** use commonjs module in tsconfig ([e66d054](https://github.com/decentralized-identity/ethr-did-resolver/commit/e66d054e8c6af9f90bcd55389786488f16ed1ce4))
+* **ci:** run tests on a matrix of node versions ([3825ac0](https://github.com/decentralized-identity/ethr-did-resolver/commit/3825ac04889ec0fc2564cc82c8b94b51a521ef85))
+* create alpha release ([1d5d5f2](https://github.com/decentralized-identity/ethr-did-resolver/commit/1d5d5f21e3d9f13500faf1acfdef89819589606c))
+
+
+### BREAKING CHANGES
+
+* ESM is only supported through a wrapper
+
 ## [10.1.10](https://github.com/decentralized-identity/ethr-did-resolver/compare/10.1.9...10.1.10) (2024-07-26)
 
 
