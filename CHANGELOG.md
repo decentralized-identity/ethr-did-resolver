@@ -1,3 +1,10 @@
+# [11.0.0-alpha.3](https://github.com/decentralized-identity/ethr-did-resolver/compare/11.0.0-alpha.2...11.0.0-alpha.3) (2024-09-30)
+
+
+### Features
+
+* **deployment:** add gnosischain and holesky deployments ([#206](https://github.com/decentralized-identity/ethr-did-resolver/issues/206)) ([4992094](https://github.com/decentralized-identity/ethr-did-resolver/commit/4992094b565387ab0b50b62246b67d27ed697c71))
+
 # [11.0.0-alpha.2](https://github.com/decentralized-identity/ethr-did-resolver/compare/11.0.0-alpha.1...11.0.0-alpha.2) (2024-09-30)
 
 
