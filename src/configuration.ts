@@ -7,7 +7,6 @@ const infuraNames: Record<string, string> = {
   polygon: 'matic',
   'polygon:test': 'maticmum',
   aurora: 'aurora-mainnet',
-  'linea:goerli': 'linea-goerli',
 }
 
 const knownInfuraNames = ['mainnet', 'aurora', 'linea:goerli', 'sepolia']
