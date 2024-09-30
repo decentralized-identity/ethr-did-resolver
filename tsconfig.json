@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "target": "ES2018",
+    "target": "ES2020",
     "module": "CommonJS",
     "lib": [
       "dom",
@@ -12,11 +12,9 @@
     "sourceMap": true,
     "outDir": "lib",
     "strict": true,
+    "skipLibCheck": true,
     "noImplicitThis": false,
     "moduleResolution": "node",
-    "types": [
-      "jest"
-    ],
     "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true,
     "esModuleInterop": true

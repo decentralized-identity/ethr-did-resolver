@@ -1,6 +1,4 @@
-import { BigNumber } from '@ethersproject/bignumber'
-import { Contract, ContractFactory } from '@ethersproject/contracts'
-import { JsonRpcProvider, Provider } from '@ethersproject/providers'
+import { Contract, ContractFactory, JsonRpcProvider, Provider } from 'ethers'
 import { DEFAULT_REGISTRY_ADDRESS } from './helpers'
 import { deployments, EthrDidRegistryDeployment } from './config/deployments'
 import { default as EthereumDIDRegistry } from './config/EthereumDIDRegistry.json'
@@ -9,9 +7,10 @@ const infuraNames: Record<string, string> = {
   polygon: 'matic',
   'polygon:test': 'maticmum',
   aurora: 'aurora-mainnet',
+  'linea:goerli': 'linea-goerli',
 }
 
-const knownInfuraNames = ['mainnet', 'ropsten', 'rinkeby', 'goerli', 'kovan', 'aurora']
+const knownInfuraNames = ['mainnet', 'aurora', 'linea:goerli', 'sepolia']
 
 /**
  * A configuration entry for an ethereum network
@@ -19,14 +18,14 @@ const knownInfuraNames = ['mainnet', 'ropsten', 'rinkeby', 'goerli', 'kovan', 'a
  *
  * @example ```js
  * { name: 'development', registry: '0x9af37603e98e0dc2b855be647c39abe984fc2445', rpcUrl: 'http://127.0.0.1:8545/' }
- * { name: 'goerli', chainId: 5, provider: new InfuraProvider('goerli') }
- * { name: 'rinkeby', provider: new AlchemyProvider('rinkeby') }
+ * { name: 'sepolia', chainId: 11155111, provider: new InfuraProvider('sepolia') }
+ * { name: 'goerli', provider: new AlchemyProvider('goerli') }
  * { name: 'rsk:testnet', chainId: '0x1f', rpcUrl: 'https://public-node.testnet.rsk.co' }
  * ```
  */
 export interface ProviderConfiguration extends Omit<EthrDidRegistryDeployment, 'chainId'> {
-  provider?: Provider
-  chainId?: string | number
+  provider?: Provider | null
+  chainId?: string | number | bigint
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   web3?: any
 }
@@ -67,16 +66,16 @@ export function getContractForNetwork(conf: ProviderConfiguration): Contract {
   if (!provider) {
     if (conf.rpcUrl) {
       const chainIdRaw = conf.chainId ? conf.chainId : deployments.find((d) => d.name === conf.name)?.chainId
-      const chainId = chainIdRaw ? BigNumber.from(chainIdRaw).toNumber() : chainIdRaw
+      const chainId = chainIdRaw ? BigInt(chainIdRaw) : chainIdRaw
       provider = new JsonRpcProvider(conf.rpcUrl, chainId || 'any')
     } else {
       throw new Error(`invalid_config: No web3 provider could be determined for network ${conf.name || conf.chainId}`)
     }
   }
-  const contract: Contract = ContractFactory.fromSolidity(EthereumDIDRegistry)
+  const contract = ContractFactory.fromSolidity(EthereumDIDRegistry)
     .attach(conf.registry || DEFAULT_REGISTRY_ADDRESS)
     .connect(provider)
-  return contract
+  return contract as Contract
 }
 
 function configureNetwork(net: ProviderConfiguration): ConfiguredNetworks {
@@ -87,7 +86,7 @@ function configureNetwork(net: ProviderConfiguration): ConfiguredNetworks {
     if (net.name) {
       networks[net.name] = getContractForNetwork(net)
     }
-    const id = typeof chainId === 'number' ? `0x${chainId.toString(16)}` : chainId
+    const id = typeof chainId === 'bigint' || typeof chainId === 'number' ? `0x${chainId.toString(16)}` : chainId
     networks[id] = getContractForNetwork(net)
   } else if (net.provider || net.web3 || net.rpcUrl) {
     networks[net.name || ''] = getContractForNetwork(net)
@@ -116,7 +115,7 @@ function configureNetworks(conf: MultiProviderConfiguration): ConfiguredNetworks
  * [
  *   { name: 'development', registry: '0x9af37603e98e0dc2b855be647c39abe984fc2445', rpcUrl: 'http://127.0.0.1:8545/' },
  *   { name: 'goerli', chainId: 5, provider: new InfuraProvider('goerli') },
- *   { name: 'rinkeby', provider: new AlchemyProvider('rinkeby') },
+ *   { name: 'sepolia', provider: new AlchemyProvider('sepolia') },
  *   { name: 'rsk:testnet', chainId: '0x1f', rpcUrl: 'https://public-node.testnet.rsk.co' },
  * ]
  * ```

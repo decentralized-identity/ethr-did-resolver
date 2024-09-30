@@ -1,4 +1,4 @@
-import { InfuraProvider, JsonRpcProvider } from '@ethersproject/providers'
+import { InfuraProvider, JsonRpcProvider } from 'ethers'
 import { configureResolverWithNetworks } from '../configuration'
 
 describe('configuration', () => {
@@ -9,15 +9,9 @@ describe('configuration', () => {
     })
     expect(contracts['mainnet']).toBeDefined()
     expect(contracts['0x1']).toBeDefined()
-    expect(contracts['ropsten']).toBeDefined()
-    expect(contracts['0x3']).toBeDefined()
-    expect(contracts['rinkeby']).toBeDefined()
-    expect(contracts['0x4']).toBeDefined()
-    expect(contracts['goerli']).toBeDefined()
-    expect(contracts['0x5']).toBeDefined()
-    expect(contracts['kovan']).toBeDefined()
-    expect(contracts['0x2a']).toBeDefined()
     expect(contracts['dev']).toBeDefined()
+    expect(contracts['linea:goerli']).toBeDefined()
+    expect(contracts['0xe704']).toBeDefined()
   })
 
   it('works with infuraProjectId and overrides', () => {
@@ -25,25 +19,25 @@ describe('configuration', () => {
       infuraProjectId: 'blabla',
       networks: [{ name: 'mainnet', rpcUrl: 'redefine me' }],
     })
-    expect((<InfuraProvider>contracts['mainnet'].provider).projectId).not.toBeDefined()
-    expect((<JsonRpcProvider>contracts['mainnet'].provider).connection.url).toBe('redefine me')
+    expect((<InfuraProvider>contracts['mainnet'].runner!.provider).projectId).not.toBeDefined()
+    expect((<JsonRpcProvider>contracts['mainnet'].runner!.provider)._getConnection().url).toBe('redefine me')
   })
 
   it('works with named network', async () => {
     const contracts = configureResolverWithNetworks({
-      networks: [{ name: 'rinkeby', provider: new JsonRpcProvider('some rinkeby JSONRPC URL') }],
+      networks: [{ name: 'linea:goerli', provider: new JsonRpcProvider('some goerli JSONRPC URL') }],
     })
-    expect(contracts['rinkeby']).toBeDefined()
-    expect(contracts['0x4']).toBeDefined()
+    expect(contracts['linea:goerli']).toBeDefined()
+    expect(contracts['0xe704']).toBeDefined()
   })
 
   it('works with single network', async () => {
     const contracts = configureResolverWithNetworks({
-      name: 'rinkeby',
-      provider: new JsonRpcProvider('some rinkeby JSONRPC URL'),
+      name: 'linea:goerli',
+      provider: new JsonRpcProvider('some goerli JSONRPC URL'),
     })
-    expect(contracts['rinkeby']).toBeDefined()
-    expect(contracts['0x4']).toBeDefined()
+    expect(contracts['linea:goerli']).toBeDefined()
+    expect(contracts['0xe704']).toBeDefined()
   })
 
   it('works with single provider', async () => {
@@ -63,7 +57,7 @@ describe('configuration', () => {
   it('works with rpc and numbered chainId', async () => {
     const contracts = configureResolverWithNetworks({
       rpcUrl: 'some rinkeby JSONRPC URL',
-      chainId: 1,
+      chainId: BigInt(1),
     })
     expect(contracts['0x1']).toBeDefined()
   })

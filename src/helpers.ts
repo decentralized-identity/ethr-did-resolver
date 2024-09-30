@@ -1,11 +1,5 @@
-import { getAddress } from '@ethersproject/address'
-import { BigNumber } from '@ethersproject/bignumber'
-import { computeAddress } from '@ethersproject/transactions'
 import { VerificationMethod } from 'did-resolver'
-import { Contract } from '@ethersproject/contracts'
-import { keccak256 } from '@ethersproject/keccak256'
-import { arrayify, hexConcat, zeroPad } from '@ethersproject/bytes'
-import { SigningKey } from '@ethersproject/signing-key'
+import { computeAddress, getAddress, toUtf8Bytes, toUtf8String, zeroPadBytes } from 'ethers'
 
 export const identifierMatcher = /^(.*)?(0x[0-9a-fA-F]{40}|0x[0-9a-fA-F]{66})$/
 export const nullAddress = '0x0000000000000000000000000000000000000000'
@@ -14,14 +8,14 @@ export const DEFAULT_JSON_RPC = 'http://127.0.0.1:8545/'
 export const MESSAGE_PREFIX = '0x1900'
 
 export type address = string
-export type uint256 = BigNumber
+export type uint256 = bigint
 export type bytes32 = string
 export type bytes = string
 
 export interface ERC1056Event {
   identity: address
   previousChange: uint256
-  validTo?: uint256
+  validTo?: bigint
   _eventName: string
   blockNumber: number
 }
@@ -63,6 +57,7 @@ export interface LegacyVerificationMethod extends VerificationMethod {
   publicKeyBase64?: string
   /**@deprecated */
   publicKeyPem?: string
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [x: string]: any
 }
@@ -100,13 +95,12 @@ export function strip0x(input: string): string {
 }
 
 export function bytes32toString(input: bytes32 | Uint8Array): string {
-  const buff: Buffer = typeof input === 'string' ? Buffer.from(input.slice(2), 'hex') : Buffer.from(input)
-  return buff.toString('utf8').replace(/\0+$/, '')
+  return toUtf8String(input).replace(/\0+$/, '')
 }
 
 export function stringToBytes32(str: string): string {
-  const buffStr = '0x' + Buffer.from(str).slice(0, 32).toString('hex')
-  return buffStr + '0'.repeat(66 - buffStr.length)
+  const bytes = toUtf8Bytes(str)
+  return zeroPadBytes(bytes.slice(0, 32), 32)
 }
 
 export function interpretIdentifier(identifier: string): { address: string; publicKey?: string; network?: string } {
@@ -127,25 +121,11 @@ export function interpretIdentifier(identifier: string): { address: string; publ
   }
 }
 
-export async function signMetaTxData(
-  identity: string,
-  signerAddress: string,
-  privateKeyBytes: Uint8Array,
-  dataBytes: Uint8Array,
-  didReg: Contract
-) {
-  const nonce = await didReg.nonce(signerAddress)
-  const paddedNonce = zeroPad(arrayify(nonce), 32)
-  const dataToSign = hexConcat(['0x1900', didReg.address, paddedNonce, identity, dataBytes])
-  const hash = keccak256(dataToSign)
-  return new SigningKey(privateKeyBytes).signDigest(hash)
-}
-
 export enum Errors {
   /**
    * The resolver has failed to construct the DID document.
-   * This can be caused by a network issue, a wrong registry address or malformed logs while parsing the registry history.
-   * Please inspect the `DIDResolutionMetadata.message` to debug further.
+   * This can be caused by a network issue, a wrong registry address or malformed logs while parsing the registry
+   * history. Please inspect the `DIDResolutionMetadata.message` to debug further.
    */
   notFound = 'notFound',
 
@@ -155,7 +135,21 @@ export enum Errors {
   invalidDid = 'invalidDid',
 
   /**
-   * The resolver is misconfigured or is being asked to resolve a DID anchored on an unknown network
+   * The resolver is misconfigured or is being asked to resolve a `DID` anchored on an unknown network
    */
   unknownNetwork = 'unknownNetwork',
+
+  /**
+   * The resolver does not support the 'accept' format requested with `DIDResolutionOptions`
+   */
+  unsupportedFormat = 'unsupportedFormat',
+}
+
+/**
+ * Returns true when the argument is defined and not null.
+ * Usable as array.filter(isDefined)
+ * @param arg
+ */
+export function isDefined<T>(arg: T): arg is Exclude<T, null | undefined> {
+  return arg !== null && typeof arg !== 'undefined'
 }
