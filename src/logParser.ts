@@ -1,5 +1,5 @@
 import { Contract, Log, LogDescription } from 'ethers'
-import { bytes32toString, ERC1056Event, isDefined } from './helpers'
+import { bytes32toString, ERC1056Event, isDefined } from './helpers.js'
 
 function populateEventMetaClass(logResult: LogDescription, blockNumber: number): ERC1056Event {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

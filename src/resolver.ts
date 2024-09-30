@@ -1,5 +1,5 @@
 import { BlockTag, encodeBase58, encodeBase64, toUtf8String } from 'ethers'
-import { ConfigurationOptions, ConfiguredNetworks, configureResolverWithNetworks } from './configuration'
+import { ConfigurationOptions, ConfiguredNetworks, configureResolverWithNetworks } from './configuration.js'
 import {
   DIDDocument,
   DIDResolutionOptions,
@@ -25,8 +25,8 @@ import {
   nullAddress,
   strip0x,
   verificationMethodTypes,
-} from './helpers'
-import { logDecoder } from './logParser'
+} from './helpers.js'
+import { logDecoder } from './logParser.js'
 
 export function getResolver(options: ConfigurationOptions): Record<string, DIDResolver> {
   return new EthrDidResolver(options).build()
@@ -153,11 +153,11 @@ export class EthrDidResolver {
       }
       const validTo = event.validTo || BigInt(0)
       const eventIndex = `${event._eventName}-${
-        (<DIDDelegateChanged>event).delegateType || (<DIDAttributeChanged>event).name
-      }-${(<DIDDelegateChanged>event).delegate || (<DIDAttributeChanged>event).value}`
+        (event as DIDDelegateChanged).delegateType || (event as DIDAttributeChanged).name
+      }-${(event as DIDDelegateChanged).delegate || (event as DIDAttributeChanged).value}`
       if (validTo && validTo >= now) {
         if (event._eventName === eventNames.DIDDelegateChanged) {
-          const currentEvent = <DIDDelegateChanged>event
+          const currentEvent = event as DIDDelegateChanged
           delegateCount++
           const delegateType = currentEvent.delegateType //conversion from bytes32 is done in logParser
           switch (delegateType) {
@@ -176,7 +176,7 @@ export class EthrDidResolver {
               break
           }
         } else if (event._eventName === eventNames.DIDAttributeChanged) {
-          const currentEvent = <DIDAttributeChanged>event
+          const currentEvent = event as DIDAttributeChanged
           const name = currentEvent.name //conversion from bytes32 is done in logParser
           const match = name.match(/^did\/(pub|svc)\/(\w+)(\/(\w+))?(\/(\w+))?$/)
           if (match) {
@@ -241,7 +241,7 @@ export class EthrDidResolver {
           }
         }
       } else if (event._eventName === eventNames.DIDOwnerChanged) {
-        const currentEvent = <DIDOwnerChanged>event
+        const currentEvent = event as DIDOwnerChanged
         controller = currentEvent.owner
         if (currentEvent.owner === nullAddress) {
           deactivated = true
@@ -251,12 +251,12 @@ export class EthrDidResolver {
         if (
           event._eventName === eventNames.DIDDelegateChanged ||
           (event._eventName === eventNames.DIDAttributeChanged &&
-            (<DIDAttributeChanged>event).name.match(/^did\/pub\//))
+            (event as DIDAttributeChanged).name.match(/^did\/pub\//))
         ) {
           delegateCount++
         } else if (
           event._eventName === eventNames.DIDAttributeChanged &&
-          (<DIDAttributeChanged>event).name.match(/^did\/svc\//)
+          (event as DIDAttributeChanged).name.match(/^did\/svc\//)
         ) {
           serviceCount++
         }

@@ -2,7 +2,7 @@ import { Contract, ContractFactory, ethers, SigningKey, Wallet } from 'ethers'
 import { GanacheProvider } from '@ethers-ext/provider-ganache'
 import { Resolver } from 'did-resolver'
 import { getResolver } from '../resolver'
-import { default as EthereumDIDRegistry } from '../config/EthereumDIDRegistry.json'
+import { EthereumDIDRegistry } from '../config/EthereumDIDRegistry'
 
 export async function deployRegistry(): Promise<{
   registryContract: Contract

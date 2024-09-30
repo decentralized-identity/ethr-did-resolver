@@ -18,7 +18,7 @@ import {
   TransactionReceipt,
   zeroPadValue,
 } from 'ethers'
-import { getContractForNetwork } from './configuration'
+import { getContractForNetwork } from './configuration.js'
 import {
   address,
   DEFAULT_REGISTRY_ADDRESS,
@@ -26,7 +26,7 @@ import {
   MESSAGE_PREFIX,
   MetaSignature,
   stringToBytes32,
-} from './helpers'
+} from './helpers.js'
 
 /**
  * A class that can be used to interact with the ERC1056 contract on behalf of a local controller key-pair
