@@ -1,5 +1,5 @@
-import { getResolver } from './resolver'
-import { EthrDidController } from './controller'
+import { getResolver } from './resolver.js'
+import { EthrDidController } from './controller.js'
 import {
   bytes32toString,
   DEFAULT_REGISTRY_ADDRESS,
@@ -11,10 +11,10 @@ import {
   stringToBytes32,
   verificationMethodTypes,
   MetaSignature,
-} from './helpers'
+} from './helpers.js'
 
 import { EthereumDIDRegistry } from './config/EthereumDIDRegistry.js'
-import { deployments, EthrDidRegistryDeployment } from './config/deployments'
+import { deployments, EthrDidRegistryDeployment } from './config/deployments.js'
 
 export {
   DEFAULT_REGISTRY_ADDRESS as REGISTRY,

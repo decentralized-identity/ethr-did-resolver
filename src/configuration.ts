@@ -1,6 +1,6 @@
 import { Contract, ContractFactory, JsonRpcProvider, Provider } from 'ethers'
-import { DEFAULT_REGISTRY_ADDRESS } from './helpers'
-import { deployments, EthrDidRegistryDeployment } from './config/deployments'
+import { DEFAULT_REGISTRY_ADDRESS } from './helpers.js'
+import { deployments, EthrDidRegistryDeployment } from './config/deployments.js'
 import { EthereumDIDRegistry } from './config/EthereumDIDRegistry.js'
 
 const infuraNames: Record<string, string> = {
