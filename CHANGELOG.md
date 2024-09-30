@@ -1,3 +1,10 @@
+# [11.0.0-alpha.2](https://github.com/decentralized-identity/ethr-did-resolver/compare/11.0.0-alpha.1...11.0.0-alpha.2) (2024-09-30)
+
+
+### Bug Fixes
+
+* **build:** include default export to work around some bundler issues ([#205](https://github.com/decentralized-identity/ethr-did-resolver/issues/205)) ([1e9e4ef](https://github.com/decentralized-identity/ethr-did-resolver/commit/1e9e4ef93098009eac8fc39567348356139e8673)), closes [#186](https://github.com/decentralized-identity/ethr-did-resolver/issues/186)
+
 # [11.0.0-alpha.1](https://github.com/decentralized-identity/ethr-did-resolver/compare/10.1.10...11.0.0-alpha.1) (2024-09-30)
 
 
