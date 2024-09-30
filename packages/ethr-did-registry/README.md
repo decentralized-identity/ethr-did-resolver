@@ -53,6 +53,7 @@ off-chain usage.
 | Sepolia               | sepolia         | 11155111   | 0xaa36a7   | [0x03d5003bf0e79c5f5223588f347eba39afbc3818](https://sepolia.etherscan.io/address/0x03d5003bf0e79c5f5223588f347eba39afbc3818#code)     | [af1c2db](https://github.com/uport-project/ethr-did-registry/commit/af1c2db0e093507627338a6e562e0ed7c219b9ee)     |
 | Cardona               | cardona         | 2442       | 0x98a      | [0x03d5003bf0e79c5f5223588f347eba39afbc3818](https://cardona-zkevm.polygonscan.com/address/0x03d5003bf0e79c5f5223588f347eba39afbc3818) | [0ab4f151](https://github.com/uport-project/ethr-did-registry/commit/0ab4f151ddde5b7739b97827c4fb901289f57892)    |
 | Holešky               | holesky         | 17000      | 0x4268     | [0x03d5003bf0e79c5f5223588f347eba39afbc3818](https://holesky.etherscan.io/address/0x03d5003bf0e79c5f5223588f347eba39afbc3818)          | [0ab4f151](https://github.com/uport-project/ethr-did-registry/commit/0ab4f151ddde5b7739b97827c4fb901289f57892)    |
+| Gnosischain           | gno             | 100        | 0x64       | [0x03d5003bf0e79c5f5223588f347eba39afbc3818](https://gnosisscan.io/address/0x03d5003bf0e79c5f5223588f347eba39afbc3818)                 | [0ab4f151](https://github.com/uport-project/ethr-did-registry/commit/0ab4f151ddde5b7739b97827c4fb901289f57892)    |
 
 ## Using the Registry
 
