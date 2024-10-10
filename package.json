@@ -57,17 +57,17 @@
     "release": "semantic-release --debug"
   },
   "devDependencies": {
-    "@babel/core": "7.25.2",
-    "@babel/preset-env": "7.25.4",
-    "@babel/preset-typescript": "7.24.7",
+    "@babel/core": "7.25.8",
+    "@babel/preset-env": "7.25.8",
+    "@babel/preset-typescript": "7.25.7",
     "@eslint/eslintrc": "^3.1.0",
     "@eslint/js": "^9.11.1",
     "@ethers-ext/provider-ganache": "6.0.0-beta.2",
     "@semantic-release/changelog": "6.0.3",
     "@semantic-release/git": "10.0.1",
     "@types/jest": "29.5.13",
-    "@typescript-eslint/eslint-plugin": "8.8.0",
-    "@typescript-eslint/parser": "8.8.0",
+    "@typescript-eslint/eslint-plugin": "8.8.1",
+    "@typescript-eslint/parser": "8.8.1",
     "babel-jest": "29.7.0",
     "eslint": "8.57.1",
     "eslint-config-prettier": "9.1.0",
@@ -77,7 +77,7 @@
     "prettier": "3.3.3",
     "semantic-release": "22.0.12",
     "ts-jest": "^29.2.5",
-    "typescript": "5.6.2"
+    "typescript": "5.6.3"
   },
   "dependencies": {
     "did-resolver": "^4.1.0",
