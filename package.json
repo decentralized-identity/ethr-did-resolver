@@ -3,13 +3,10 @@
   "version": "11.0.4",
   "description": "Resolve DID documents for ethereum addresses and public keys",
   "main": "./lib.commonjs/index.js",
+  "types": "./lib.commonjs/index.d.ts",
   "exports": {
-    "import": {
-      "types": "./lib.esm/index.d.ts",
-      "default": "./lib.esm/index.js"
-    },
-    "require": {
-      "types": "./lib.commonjs/index.d.ts",
+    ".": {
+      "import": "./lib.esm/index.js",
       "default": "./lib.commonjs/index.js"
     }
   },
