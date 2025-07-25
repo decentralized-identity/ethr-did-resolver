@@ -30,6 +30,7 @@ const config = {
       'ts-jest',
       {
         useESM: true,
+        tsconfig: 'tsconfig.esm.json',
       },
     ],
   },
