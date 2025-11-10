@@ -2,16 +2,12 @@
   "name": "ethr-did-resolver",
   "version": "11.0.5",
   "description": "Resolve DID documents for ethereum addresses and public keys",
-  "type": "commonjs",
-  "source": "./src/index.ts",
-  "main": "./lib/index.js",
-  "module": "./esm/index.js",
-  "types": "./lib/index.d.ts",
+  "main": "./lib.commonjs/index.js",
+  "types": "./lib.commonjs/index.d.ts",
   "exports": {
     ".": {
-      "types": "./lib/index.d.ts",
-      "import": "./esm/index.js",
-      "require": "./lib/index.js"
+      "import": "./lib.esm/index.js",
+      "default": "./lib.commonjs/index.js"
     }
   },
   "repository": {
@@ -19,10 +15,8 @@
     "url": "git@github.com:decentralized-identity/ethr-did-resolver.git"
   },
   "files": [
-    "lib",
-    "esm",
-    "src",
-    "LICENSE"
+    "lib.commonjs",
+    "lib.esm"
   ],
   "author": "Pelle Braendgaard",
   "contributors": [
@@ -49,8 +43,10 @@
   "scripts": {
     "test": "jest",
     "test:ci": "jest --coverage",
-    "build": "tsc",
-    "clean": "rm -rf ./lib",
+    "build": "yarn run build:common && yarn run build:esm",
+    "build:common": "tsc --project tsconfig.common.json",
+    "build:esm": "tsc --project tsconfig.esm.json",
+    "clean": "rm -rf ./lib.commonjs ./lib.esm",
     "format": "prettier --write \"src/**/*.[jt]s\"",
     "lint": "eslint --ignore-pattern \"src/**/*.test.[jt]s\" \"src/**/*.[jt]s\"",
     "prepublishOnly": "yarn test:ci && yarn format && yarn lint",
