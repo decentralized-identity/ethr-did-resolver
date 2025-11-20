@@ -1,0 +1,31 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "CommonJS",
+    "lib": [
+      "dom",
+      "es6",
+      "es2015.promise"
+    ],
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "outDir": "lib.commonjs",
+    "strict": true,
+    "skipLibCheck": true,
+    "noImplicitThis": false,
+    "moduleResolution": "node",
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
+    "esModuleInterop": true
+  },
+  "exclude": [
+    "**/__tests__/*",
+    "node_modules",
+    "lib.commonjs",
+    "lib.esm"
+  ],
+  "include": [
+    "src"
+  ]
+}
