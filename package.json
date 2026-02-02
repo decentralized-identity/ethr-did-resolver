@@ -57,8 +57,8 @@
     "release": "semantic-release --debug"
   },
   "devDependencies": {
-    "@babel/core": "7.28.6",
-    "@babel/preset-env": "7.28.6",
+    "@babel/core": "7.29.0",
+    "@babel/preset-env": "7.29.0",
     "@babel/preset-typescript": "7.28.5",
     "@eslint/eslintrc": "^3.1.0",
     "@eslint/js": "^9.11.1",
@@ -66,8 +66,8 @@
     "@semantic-release/changelog": "6.0.3",
     "@semantic-release/git": "10.0.1",
     "@types/jest": "29.5.14",
-    "@typescript-eslint/eslint-plugin": "8.53.1",
-    "@typescript-eslint/parser": "8.53.1",
+    "@typescript-eslint/eslint-plugin": "8.54.0",
+    "@typescript-eslint/parser": "8.54.0",
     "babel-jest": "29.7.0",
     "eslint": "8.57.1",
     "eslint-config-prettier": "9.1.2",
