@@ -1,0 +1,25 @@
+{
+  "name": "ethr-7702",
+  "version": "0.1.0",
+  "description": "EIP-7702 PoC: EOA → ERC-1056 (did:ethr) interactions enabled by Pectra hardfork",
+  "type": "module",
+  "scripts": {
+    "build:contracts": "tsx scripts/compile.ts",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "did-resolver": "^4.1.0",
+    "ethr-did": "^3.0.0",
+    "ethr-did-resolver": "^11.0.0",
+    "ethers": "^6.13.0",
+    "viem": "^2.21.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "solc": "0.8.28",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0",
+    "vitest": "^3.0.0"
+  }
+}
