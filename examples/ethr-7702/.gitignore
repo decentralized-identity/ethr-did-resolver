@@ -1,6 +1,7 @@
 node_modules/
 dist/
 artifacts/
+coverage/
 .env
 *.log
 .DS_Store

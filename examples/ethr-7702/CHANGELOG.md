@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.2.0] — Phase 10 — Formal Code Coverage
+
+### Added
+- `@vitest/coverage-v8` dev dependency (v3.2.4, matched to vitest version)
+- `coverage` config block in `vitest.config.ts`: provider v8, text+html+lcov reporters, `src/**` included
+- `"test:coverage"` script in `package.json`
+- `coverage/` added to `.gitignore`
+
+### Changed
+- `package.json` version bumped to `1.1.0` (matches CHANGELOG)
+- Removed unused `ethr-did` dependency from `package.json`
+
+### Baseline Coverage
+- 81.3% statements, 57.1% branches, 75.9% functions (20/20 tests passing)
+
+---
+
 ## [1.1.0] — Phase 9 — Part 2 Article
 
 ### Added
