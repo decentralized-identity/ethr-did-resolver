@@ -46,7 +46,8 @@ export async function simpleDidUpdate(
   })
 
   // 4. Wait for receipt
-  await publicClient.waitForTransactionReceipt({ hash })
+  const receipt = await publicClient.waitForTransactionReceipt({ hash })
+  if (receipt.status === 'reverted') throw new Error(`simpleDidUpdate reverted (txHash: ${hash})`)
 
   return hash
 }

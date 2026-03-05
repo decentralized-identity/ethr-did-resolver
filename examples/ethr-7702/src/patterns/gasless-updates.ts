@@ -60,7 +60,8 @@ export async function gaslessDidUpdate(
     account: sponsorWalletClient.account!,
   })
 
-  await publicClient.waitForTransactionReceipt({ hash })
+  const receipt = await publicClient.waitForTransactionReceipt({ hash })
+  if (receipt.status === 'reverted') throw new Error(`gaslessDidUpdate reverted (txHash: ${hash})`)
 
   return hash
 }

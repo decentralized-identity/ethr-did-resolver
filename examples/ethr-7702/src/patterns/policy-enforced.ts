@@ -71,7 +71,10 @@ export async function configurePolicyDelegation(
     account: eoaWalletClient.account!,
   })
 
-  await publicClient.waitForTransactionReceipt({ hash })
+  const receipt = await publicClient.waitForTransactionReceipt({ hash })
+  if (receipt.status === 'reverted') {
+    throw new Error(`configurePolicyDelegation reverted (txHash: ${hash})`)
+  }
 
   return hash
 }

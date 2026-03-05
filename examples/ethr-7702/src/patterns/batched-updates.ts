@@ -57,7 +57,8 @@ export async function batchedDidUpdates(
     account: eoaWalletClient.account!,
   })
 
-  await publicClient.waitForTransactionReceipt({ hash })
+  const receipt = await publicClient.waitForTransactionReceipt({ hash })
+  if (receipt.status === 'reverted') throw new Error(`batchedDidUpdates reverted (txHash: ${hash})`)
 
   return hash
 }

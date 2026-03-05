@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.9.0] — Phase 7 — Final Polish
+
+### Added
+- `README.md` — setup instructions, pattern table, project structure
+
+### Changed
+- All pattern functions now check `receipt.status === 'reverted'` and throw explicitly (consistent across all 4 patterns)
+- Fixed malformed JSDoc in `policy-enforced.ts`
+
 ## [0.8.0] — Phase 6 — Article
 
 ### Added
