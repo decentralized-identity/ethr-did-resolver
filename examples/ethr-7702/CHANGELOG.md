@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.7.0] — Phase 5 — Pattern 3: Policy-Enforced DID Updates
+
+### Added
+- `contracts/PolicyDIDManager7702.sol` — session-key delegation contract with:
+  - `configure(sessionKey, maxValidity, allowedPrefix)` — owner-only setup
+  - `setAttributeViaSessionKey(...)` — session key entrypoint with validity cap + prefix enforcement
+- `src/utils/abis.ts` — added `POLICY_DID_MANAGER_ABI`
+- `src/deploy.ts` — deploys `PolicyDIDManager7702`; updated `DeployedContracts` type
+- `src/patterns/policy-enforced.ts` — `configurePolicyDelegation()` + `sessionKeyDidUpdate()`
+- `test/policy-enforced.test.ts` — 3 tests: happy path, validity cap, prefix rejection
+
+### Fixed
+- `src/utils/anvil.ts` — corrected `ANVIL_PRIVATE_KEYS[8]` (was `...da1`, actual `...b97`)
+- `sessionKeyDidUpdate` — check `receipt.status` to throw on contract reverts
+
+### Notes
+- `waitForTransactionReceipt` does NOT throw on revert; must check `status === 'reverted'` manually
+- Each vitest `it()` is isolated by Anvil snapshot/revert — state never leaks between tests
+- `gas: 200_000n` required on session-key tx to bypass `eth_estimateGas` failure on 7702-delegated EOAs
+
 ## [0.6.0] — Phase 4 — Pattern 2: Gasless/Sponsored DID Updates
 
 ### Added

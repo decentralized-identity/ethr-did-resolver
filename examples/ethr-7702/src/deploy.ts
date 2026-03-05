@@ -12,6 +12,7 @@ const __dirname = fileURLToPath(new URL('.', import.meta.url))
 export type DeployedContracts = {
   registry: `0x${string}`
   didManager: `0x${string}`
+  policyDidManager: `0x${string}`
 }
 
 function loadArtifact(name: string): { abi: unknown[]; bytecode: `0x${string}` } {
@@ -42,8 +43,21 @@ export async function deployAll(
     throw new Error('DIDManager7702 deployment failed: no contract address in receipt')
   }
 
+  const policyDidManagerArtifact = loadArtifact('PolicyDIDManager7702')
+  const policyDidManagerHash = await walletClient.deployContract({
+    abi: policyDidManagerArtifact.abi,
+    bytecode: policyDidManagerArtifact.bytecode,
+    account,
+    chain: walletClient.chain,
+  })
+  const policyDidManagerReceipt = await publicClient.waitForTransactionReceipt({ hash: policyDidManagerHash })
+  if (!policyDidManagerReceipt.contractAddress) {
+    throw new Error('PolicyDIDManager7702 deployment failed: no contract address in receipt')
+  }
+
   return {
     registry: registry.address,
     didManager: didManagerReceipt.contractAddress,
+    policyDidManager: policyDidManagerReceipt.contractAddress,
   }
 }
