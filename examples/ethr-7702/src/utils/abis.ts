@@ -279,3 +279,39 @@ export const CROSS_CHAIN_DID_MANAGER_ABI = [
     stateMutability: 'view',
   },
 ] as const
+
+export const EXPIRING_DID_MANAGER_ABI = [
+  {
+    name: 'configure',
+    type: 'function',
+    inputs: [{ name: '_expiry', type: 'uint256' }],
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    name: 'setAttributeForIdentity',
+    type: 'function',
+    inputs: [
+      { name: 'registry', type: 'address' },
+      { name: 'name', type: 'bytes32' },
+      { name: 'value', type: 'bytes' },
+      { name: 'validity', type: 'uint256' },
+    ],
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    name: 'expiry',
+    type: 'function',
+    inputs: [],
+    outputs: [{ name: '', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    name: 'isActive',
+    type: 'function',
+    inputs: [],
+    outputs: [{ name: '', type: 'bool' }],
+    stateMutability: 'view',
+  },
+] as const

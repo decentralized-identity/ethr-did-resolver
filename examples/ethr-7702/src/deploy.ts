@@ -17,6 +17,7 @@ export type DeployedContracts = {
   timelockDidManager: `0x${string}`
   revocationDidManager: `0x${string}`
   crossChainDidManager: `0x${string}`
+  expiringDidManager: `0x${string}`
 }
 
 function loadArtifact(name: string): { abi: unknown[]; bytecode: `0x${string}` } {
@@ -107,6 +108,18 @@ export async function deployAll(
     throw new Error('CrossChainDIDManager7702 deployment failed: no contract address in receipt')
   }
 
+  const expiringDidManagerArtifact = loadArtifact('ExpiringDIDManager7702')
+  const expiringDidManagerHash = await walletClient.deployContract({
+    abi: expiringDidManagerArtifact.abi,
+    bytecode: expiringDidManagerArtifact.bytecode,
+    account,
+    chain: walletClient.chain,
+  })
+  const expiringDidManagerReceipt = await publicClient.waitForTransactionReceipt({ hash: expiringDidManagerHash })
+  if (!expiringDidManagerReceipt.contractAddress) {
+    throw new Error('ExpiringDIDManager7702 deployment failed: no contract address in receipt')
+  }
+
   return {
     registry: registry.address,
     didManager: didManagerReceipt.contractAddress,
@@ -115,5 +128,6 @@ export async function deployAll(
     timelockDidManager: timelockDidManagerReceipt.contractAddress,
     revocationDidManager: revocationDidManagerReceipt.contractAddress,
     crossChainDidManager: crossChainDidManagerReceipt.contractAddress,
+    expiringDidManager: expiringDidManagerReceipt.contractAddress,
   }
 }

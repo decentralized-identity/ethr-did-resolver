@@ -1,5 +1,30 @@
 # Changelog
 
+## [1.4.0] — Phase 12 — Delegation Lifecycle Patterns
+
+### Added
+- `contracts/ExpiringDIDManager7702.sol` — app-level TTL delegation contract:
+  - `configure(expiry)` sets a Unix timestamp deadline (only callable by EOA owner)
+  - `setAttributeForIdentity(...)` reverts after expiry or if not configured
+  - `isActive()` view function returns current active status
+- `src/utils/abis.ts` — `EXPIRING_DID_MANAGER_ABI` added
+- `src/deploy.ts` — `ExpiringDIDManager7702` deployed in `deployAll()`, `expiringDidManager` added to `DeployedContracts` type
+- `test/delegation-lifecycle.test.ts` — 11 lifecycle pattern tests:
+  - **Pattern 8 (Delegation Revocation)**: revoking by re-authorizing to `address(0)` clears EOA code; subsequent calls are no-ops
+  - **Pattern 9 (Re-delegation A→B)**: re-authorizing to a different contract swaps code pointer atomically; EOA code reflects new contract address
+  - **Pattern 10 (Expiring Delegation)**: write succeeds before expiry, reverts after; `isActive()` correctly tracks state; reconfiguring renews delegation; unconfigured EOA rejects writes
+  - **Pattern 11 (EXTCODESIZE pitfall)**: delegated EOA has 23-byte delegation designator (`0xef0100` + address); naive `isContract()` checks return `true` — documents the pitfall
+
+### Discovered / documented
+- Sending calldata to an EOA with no code (after revocation) **succeeds** (no revert) — the EVM ignores the data
+- Bundling delegate+revoke in one tx with same nonce only applies the first auth tuple
+- EIP-7702 delegation designator is exactly 23 bytes: `0xef0100` + 20-byte address
+
+### Test suite
+- 58/58 tests passing (11 files)
+
+---
+
 ## [1.3.0] — Phase 11 — Security Bug Fixes + Edge Case Tests
 
 ### Fixed (Solidity)
