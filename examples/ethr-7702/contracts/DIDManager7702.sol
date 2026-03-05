@@ -15,11 +15,13 @@ interface IEthereumDIDRegistry {
 ///         Deploy once; EOAs delegate to it via EIP-7702 authorization.
 ///         When called via delegation, address(this) == the EOA's address.
 contract DIDManager7702 {
-    /// @notice Sets a DID attribute for this identity (the delegating EOA).
-    /// @dev Callable when an EOA has delegated to this contract via EIP-7702.
-    ///      msg.sender must be this contract (i.e., a self-call from the EOA).
-    ///      In the delegation context, address(this) == EOA address, so
-    ///      setAttribute(address(this), ...) authenticates as the EOA owner.
+    struct AttributeUpdate {
+        bytes32 name;
+        bytes value;
+        uint256 validity;
+    }
+
+    /// @notice Sets a single DID attribute for this identity (the delegating EOA).
     function setAttributeForIdentity(
         address registry,
         bytes32 name,
@@ -27,5 +29,17 @@ contract DIDManager7702 {
         uint256 validity
     ) external {
         IEthereumDIDRegistry(registry).setAttribute(address(this), name, value, validity);
+    }
+
+    /// @notice Sets multiple DID attributes in a single transaction.
+    /// @dev All updates go to the same registry and are applied to address(this) (the EOA).
+    function setBatchAttributesForIdentity(
+        address registry,
+        AttributeUpdate[] calldata updates
+    ) external {
+        IEthereumDIDRegistry reg = IEthereumDIDRegistry(registry);
+        for (uint256 i = 0; i < updates.length; i++) {
+            reg.setAttribute(address(this), updates[i].name, updates[i].value, updates[i].validity);
+        }
     }
 }

@@ -14,4 +14,22 @@ export const DID_MANAGER_ABI = [
     outputs: [],
     stateMutability: 'nonpayable',
   },
+  {
+    name: 'setBatchAttributesForIdentity',
+    type: 'function',
+    inputs: [
+      { name: 'registry', type: 'address' },
+      {
+        name: 'updates',
+        type: 'tuple[]',
+        components: [
+          { name: 'name', type: 'bytes32' },
+          { name: 'value', type: 'bytes' },
+          { name: 'validity', type: 'uint256' },
+        ],
+      },
+    ],
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
 ] as const

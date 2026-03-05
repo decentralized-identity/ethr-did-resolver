@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.5.0] — Phase 3 — Pattern 1: Batched DID Updates
+
+### Added
+- `contracts/DIDManager7702.sol` — added `setBatchAttributesForIdentity(address registry, AttributeUpdate[] updates)` for atomic multi-attribute updates
+- `src/utils/abis.ts` — added `setBatchAttributesForIdentity` entry to `DID_MANAGER_ABI`
+- `src/patterns/batched-updates.ts` — `batchedDidUpdates()`: one EIP-7702 auth + one type-4 tx sets N DID attributes atomically
+- `test/batched-updates.test.ts` — integration test asserting Ed25519 (#delegate-1) and Secp256k1 (#delegate-2) both appear in resolved DID document
+
+### Notes
+- `Secp256k1` key via `did/pub/Secp256k1/veriKey/base64` resolves as `EcdsaSecp256k1VerificationKey2019` (not `Secp256k1VerificationKey2018`)
+- Artifacts auto-recompiled; `setBatchAttributesForIdentity` uses a struct array for clean calldata encoding
+
 ## [0.4.1] — Phase 2.5 — Tightened DID document assertions
 
 ### Fixed
