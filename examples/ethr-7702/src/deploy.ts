@@ -1,18 +1,49 @@
 // src/deploy.ts
 // Orchestration: deploy all contracts to a running Anvil instance
 
+import { readFileSync, existsSync } from 'fs'
+import { join } from 'path'
+import { fileURLToPath } from 'url'
 import { type PublicClient, type WalletClient } from 'viem'
 import { deployRegistry } from './utils/registry.js'
 
+const __dirname = fileURLToPath(new URL('.', import.meta.url))
+
 export type DeployedContracts = {
   registry: `0x${string}`
-  // more will be added in Phase 2
+  didManager: `0x${string}`
+}
+
+function loadArtifact(name: string): { abi: unknown[]; bytecode: `0x${string}` } {
+  const path = join(__dirname, '..', 'artifacts', `${name}.json`)
+  if (!existsSync(path)) {
+    throw new Error(`Artifact not found: ${path}. Run pnpm build:contracts first.`)
+  }
+  return JSON.parse(readFileSync(path, 'utf-8'))
 }
 
 export async function deployAll(
   walletClient: WalletClient,
   publicClient: PublicClient
 ): Promise<DeployedContracts> {
+  const [account] = await walletClient.getAddresses()
+
   const registry = await deployRegistry(walletClient, publicClient)
-  return { registry: registry.address }
+
+  const didManagerArtifact = loadArtifact('DIDManager7702')
+  const didManagerHash = await walletClient.deployContract({
+    abi: didManagerArtifact.abi,
+    bytecode: didManagerArtifact.bytecode,
+    account,
+    chain: walletClient.chain,
+  })
+  const didManagerReceipt = await publicClient.waitForTransactionReceipt({ hash: didManagerHash })
+  if (!didManagerReceipt.contractAddress) {
+    throw new Error('DIDManager7702 deployment failed: no contract address in receipt')
+  }
+
+  return {
+    registry: registry.address,
+    didManager: didManagerReceipt.contractAddress,
+  }
 }
