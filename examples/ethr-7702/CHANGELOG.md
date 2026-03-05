@@ -1,6 +1,53 @@
 # Changelog
 
-## [0.9.0] — Phase 7 — Final Polish
+## [1.1.0] — Phase 9 — Part 2 Article
+
+### Added
+- `article/eip-7702-did-ethr-part2.md` — technical article covering:
+  - Patterns 4–7 with full contract and TypeScript code
+  - Gas optimization analysis (baseline costs + optimization opportunities)
+  - Re-entrancy and storage collision audit across all contracts
+  - Authorization tuple lifecycle (valid states, revocation flows, nonce rules)
+  - Key compromise response playbook (4 scenarios: session key, multisig, EOA key, timelock)
+  - Summary table for all 8 patterns
+
+## [1.0.0] — Phase 8 — Part 2: Advanced Patterns (Patterns 4–7)
+
+### Added
+- `contracts/MultiSigDIDManager7702.sol` — M-of-N co-signer approval for DID updates
+  - `configure([signers], threshold)` — owner-only signer set configuration
+  - `setAttributeWithMultiSig(...)` — verifies sorted ECDSA signatures, enforces threshold
+  - EIP-191 digest with identity + registry + nonce binding; replay protection via nonce
+- `contracts/TimelockDIDManager7702.sol` — mandatory observation window before attribute takes effect
+  - `configure(delay)`, `propose(...)`, `execute(proposalId)`, `cancel(proposalId)`
+  - Anyone can execute after delay; only owner can cancel
+- `contracts/RevocationDIDManager7702.sol` — dual revocation: ERC-1056 attribute expiry + credential registry
+  - `revokeAttributeForIdentity(...)` — calls `registry.revokeAttribute` (sets validTo=0)
+  - `revokeCredential(credentialId)` — stores revocation in EOA storage
+  - `isRevoked(credentialId)` — public view; verifiers can query directly
+- `contracts/CrossChainDIDManager7702.sol` — EOA-signed EIP-712 updates, relayer-submitted on any chain
+  - `setAttributeCrossChain(...)` — verifies EIP-712 signature (chain + EOA bound), increments nonce
+  - `crossChainNonce` — sequential replay protection stored in EOA storage
+- `src/utils/abis.ts` — ABI exports for all four new contracts
+- `src/deploy.ts` — deploys all Part 2 contracts; updated `DeployedContracts` type
+- `src/patterns/multisig-updates.ts` — `configureMultiSigDelegation`, `fetchUpdateDigest`, `setAttributeWithMultiSig`
+- `src/patterns/timelock-updates.ts` — `configureTimelockDelegation`, `proposeDidUpdate`, `executeDidUpdate`, `cancelDidUpdate`
+- `src/patterns/revocation.ts` — `setupRevocationDelegation`, `addDIDAttribute`, `revokeAttribute`, `revokeCredential`, `checkIsRevoked`
+- `src/patterns/cross-chain-sync.ts` — `signCrossChainAuthorization`, `signCrossChainUpdate`, `relayerSubmitUpdate`
+- `test/multisig-updates.test.ts` — 3 tests: happy path, threshold enforcement, replay rejection
+- `test/timelock-updates.test.ts` — 3 tests: happy path, delay enforcement, cancellation
+- `test/revocation.test.ts` — 3 tests: ERC-1056 revocation, credential revocation, attacker rejection
+- `test/cross-chain-sync.test.ts` — 3 tests: relayer-bundled delegation+update, replay rejection, wrong chain ID rejection
+
+### Fixed
+- Cross-chain pattern: use `executor: relayerAddress` (not `executor: 'self'`) when relayer sends the type-4 tx. `executor: 'self'` inflates EOA nonce by 1, causing auth to be silently ignored by Ethereum.
+
+### Notes
+- 20/20 tests passing across 9 test files
+- All Part 2 contracts store state in EOA storage (not contract storage) via the 7702 delegation model
+- Combining delegation + first real call in one tx avoids the Anvil gas estimation issue with no-op `data: '0x'` on nonce-0 EOAs
+
+
 
 ### Added
 - `README.md` — setup instructions, pattern table, project structure
