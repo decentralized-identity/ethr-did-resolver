@@ -44,6 +44,8 @@ describe('Pattern 0: Simple 7702 DID Update', () => {
     })
 
     const attrName = stringToBytes32('did/pub/Ed25519/veriKey/base64') as `0x${string}`
+    // The resolver decodes the bytes value as UTF-8 and then base64-encodes it for
+    // publicKeyBase64. 'base64encodedpubkey' → UTF-8 bytes → base64 = 'YmFzZTY0ZW5jb2RlZHB1YmtleQ=='
     const attrValue = new TextEncoder().encode('base64encodedpubkey')
     const validity = 86400n // 1 day
 
@@ -57,7 +59,7 @@ describe('Pattern 0: Simple 7702 DID Update', () => {
 
     expect(txHash).toMatch(/^0x[0-9a-f]{64}$/i)
 
-    // Resolve the DID and assert the attribute appears
+    // --- Verify the DID document reflects the update ---
     const resolver = new Resolver(
       getResolver({
         networks: [{ name: 'dev', chainId, rpcUrl, registry: contracts.registry }],
@@ -68,9 +70,26 @@ describe('Pattern 0: Simple 7702 DID Update', () => {
     const result = await resolver.resolve(did)
 
     expect(result.didResolutionMetadata.error).toBeUndefined()
-    expect(result.didDocument!.verificationMethod!.length).toBeGreaterThan(1)
 
-    // Check delegation indicator: getCode should return 0xef0100<20-byte-didManager-address>
+    const doc = result.didDocument!
+    // Two entries: the default #controller + the newly added Ed25519 key
+    expect(doc.verificationMethod).toHaveLength(2)
+
+    // The new entry should be the Ed25519 key we set
+    const newKey = doc.verificationMethod!.find((vm) => vm.id.endsWith('#delegate-1'))
+    expect(newKey).toBeDefined()
+    expect(newKey!.type).toBe('Ed25519VerificationKey2018')
+    expect(newKey!.controller).toBe(did)
+    // ethr-did-resolver base64-encodes the raw bytes value into publicKeyBase64
+    expect((newKey as { publicKeyBase64?: string }).publicKeyBase64).toBe('YmFzZTY0ZW5jb2RlZHB1YmtleQ==')
+
+    // The key should appear in assertionMethod (veriKey delegate type)
+    expect(doc.assertionMethod).toContain(`${did}#delegate-1`)
+    // It is NOT in authentication (that would require sigAuth delegate type)
+    expect(doc.authentication).not.toContain(`${did}#delegate-1`)
+
+    // --- Verify the 7702 delegation indicator is set on the EOA ---
+    // getCode returns 0xef0100<20-byte-implementation-address> for delegated EOAs
     const code = await publicClient.getCode({ address: eoaAddress })
     const expectedCode = `0xef0100${contracts.didManager.slice(2).toLowerCase()}`
     expect(code?.toLowerCase()).toBe(expectedCode)
