@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.8.0] — Phase 6 — Article
+
+### Added
+- `article/eip-7702-did-ethr.md` — technical article covering all four patterns, the authorization mechanism, security implications, and a summary table
+
 ## [0.7.0] — Phase 5 — Pattern 3: Policy-Enforced DID Updates
 
 ### Added
