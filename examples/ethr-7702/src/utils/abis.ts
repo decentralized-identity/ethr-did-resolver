@@ -140,3 +140,66 @@ export const MULTISIG_DID_MANAGER_ABI = [
     stateMutability: 'view',
   },
 ] as const
+
+export const TIMELOCK_DID_MANAGER_ABI = [
+  {
+    name: 'configure',
+    type: 'function',
+    inputs: [{ name: '_delay', type: 'uint256' }],
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    name: 'propose',
+    type: 'function',
+    inputs: [
+      { name: 'registry', type: 'address' },
+      { name: 'name', type: 'bytes32' },
+      { name: 'value', type: 'bytes' },
+      { name: 'validity', type: 'uint256' },
+    ],
+    outputs: [{ name: 'proposalId', type: 'bytes32' }],
+    stateMutability: 'nonpayable',
+  },
+  {
+    name: 'execute',
+    type: 'function',
+    inputs: [{ name: 'proposalId', type: 'bytes32' }],
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    name: 'cancel',
+    type: 'function',
+    inputs: [{ name: 'proposalId', type: 'bytes32' }],
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    name: 'getProposal',
+    type: 'function',
+    inputs: [{ name: 'proposalId', type: 'bytes32' }],
+    outputs: [
+      {
+        name: '',
+        type: 'tuple',
+        components: [
+          { name: 'registry', type: 'address' },
+          { name: 'name', type: 'bytes32' },
+          { name: 'value', type: 'bytes' },
+          { name: 'validity', type: 'uint256' },
+          { name: 'eta', type: 'uint256' },
+          { name: 'status', type: 'uint8' },
+        ],
+      },
+    ],
+    stateMutability: 'view',
+  },
+  {
+    name: 'delay',
+    type: 'function',
+    inputs: [],
+    outputs: [{ name: '', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+] as const
