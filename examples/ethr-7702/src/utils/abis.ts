@@ -203,3 +203,43 @@ export const TIMELOCK_DID_MANAGER_ABI = [
     stateMutability: 'view',
   },
 ] as const
+
+export const REVOCATION_DID_MANAGER_ABI = [
+  {
+    name: 'setAttributeForIdentity',
+    type: 'function',
+    inputs: [
+      { name: 'registry', type: 'address' },
+      { name: 'name', type: 'bytes32' },
+      { name: 'value', type: 'bytes' },
+      { name: 'validity', type: 'uint256' },
+    ],
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    name: 'revokeAttributeForIdentity',
+    type: 'function',
+    inputs: [
+      { name: 'registry', type: 'address' },
+      { name: 'name', type: 'bytes32' },
+      { name: 'value', type: 'bytes' },
+    ],
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    name: 'revokeCredential',
+    type: 'function',
+    inputs: [{ name: 'credentialId', type: 'bytes32' }],
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    name: 'isRevoked',
+    type: 'function',
+    inputs: [{ name: 'credentialId', type: 'bytes32' }],
+    outputs: [{ name: '', type: 'bool' }],
+    stateMutability: 'view',
+  },
+] as const

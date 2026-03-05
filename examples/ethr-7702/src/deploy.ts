@@ -15,6 +15,7 @@ export type DeployedContracts = {
   policyDidManager: `0x${string}`
   multiSigDidManager: `0x${string}`
   timelockDidManager: `0x${string}`
+  revocationDidManager: `0x${string}`
 }
 
 function loadArtifact(name: string): { abi: unknown[]; bytecode: `0x${string}` } {
@@ -81,11 +82,24 @@ export async function deployAll(
     throw new Error('TimelockDIDManager7702 deployment failed: no contract address in receipt')
   }
 
+  const revocationDidManagerArtifact = loadArtifact('RevocationDIDManager7702')
+  const revocationDidManagerHash = await walletClient.deployContract({
+    abi: revocationDidManagerArtifact.abi,
+    bytecode: revocationDidManagerArtifact.bytecode,
+    account,
+    chain: walletClient.chain,
+  })
+  const revocationDidManagerReceipt = await publicClient.waitForTransactionReceipt({ hash: revocationDidManagerHash })
+  if (!revocationDidManagerReceipt.contractAddress) {
+    throw new Error('RevocationDIDManager7702 deployment failed: no contract address in receipt')
+  }
+
   return {
     registry: registry.address,
     didManager: didManagerReceipt.contractAddress,
     policyDidManager: policyDidManagerReceipt.contractAddress,
     multiSigDidManager: multiSigDidManagerReceipt.contractAddress,
     timelockDidManager: timelockDidManagerReceipt.contractAddress,
+    revocationDidManager: revocationDidManagerReceipt.contractAddress,
   }
 }
