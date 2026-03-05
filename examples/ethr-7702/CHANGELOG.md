@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.6.0] — Phase 4 — Pattern 2: Gasless/Sponsored DID Updates
+
+### Added
+- `src/patterns/gasless-updates.ts` — `gaslessDidUpdate()`: EOA signs 7702 auth with `executor: sponsorAddress`; sponsor broadcasts the type-4 tx and pays gas
+- `test/gasless-updates.test.ts` — verifies EOA balance unchanged, DID document updated, delegation code set
+
+### Notes
+- `executor: 'self'` vs `executor: <address>` is the only API difference between Pattern 0 and Pattern 2
+- EOA balance assertion proves the gas was paid by the sponsor, not the EOA
+
 ## [0.5.0] — Phase 3 — Pattern 1: Batched DID Updates
 
 ### Added
