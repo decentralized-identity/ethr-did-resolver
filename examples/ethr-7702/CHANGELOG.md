@@ -1,5 +1,36 @@
 # Changelog
 
+## [1.5.0] — Phase 13 — MetaMask Delegation Framework Integration
+
+### Added
+- `contracts/DIDAttributeEnforcer.sol` — stateless caveat enforcer for the MetaMask Delegation Framework:
+  - `beforeHook(terms, args, mode, executionCalldata, ...)` — validates `setAttribute` calls against a 4-byte name prefix
+  - `terms` = `bytes4` allowed prefix (set at delegation time); reverts if calldata uses a different prefix or non-`setAttribute` selector
+  - Storage-free: no state variables; all enforcement is pure
+- `artifacts/DIDAttributeEnforcer.json` — compiled artifact
+- `src/utils/metamask-framework.ts` — deploys the MetaMask Delegation Framework contracts to Anvil:
+  - `deployMetaMaskFramework(walletClient, publicClient)` → `{ entryPoint, delegationManager, statelessDeleGator }`
+  - Loads bytecodes from `@metamask/delegation-abis` via `createRequire` (pnpm store path)
+  - Re-exports `DelegationManagerABI`, `EIP7702StatelessDeleGatorABI`, `EntryPointABI`
+- `src/deploy.ts` — extended to deploy MetaMask framework + `DIDAttributeEnforcer`; `DeployedContracts` type now includes `entryPoint`, `delegationManager`, `statelessDeleGator`, `didAttributeEnforcer`
+- `test/metamask-delegation.test.ts` — 5 integration tests:
+  - **Framework deployed**: confirms all 3 framework contracts + enforcer have bytecode
+  - **Happy path**: EOA → EIP-7702 deleGator → relayer calls `DelegationManager.redeemDelegations` → enforcer passes → `setAttribute` written → DID attribute confirmed via logs
+  - **Enforcer blocks wrong prefix**: `svc/LinkedDomains` attr (prefix `0x7376632f`) rejected by enforcer configured for `did/` prefix (`0x6469642f`)
+  - **Gas comparison**: custom `DIDManager7702` = ~67k gas vs MetaMask framework = ~116k gas (+48k overhead)
+  - **Enforcer blocks non-setAttribute**: `revokeAttribute` calldata rejected due to wrong selector
+
+### Discovered / documented
+- `redeemDelegations` must be called on `DelegationManager` directly, NOT on the deleGator. The DelegationManager checks `msg.sender == delegation.delegate` (relayer) and then calls `deleGator.executeFromExecutor`. Calling the deleGator's `redeemDelegations` makes the DelegationManager see the deleGator (EOA) as redeemer, not the relayer.
+- MetaMask `SIGNABLE_DELEGATION_TYPED_DATA` includes only `{ enforcer, terms }` in the `Caveat` type — `args` is intentionally excluded from EIP-712 signing even though it exists on the on-chain struct.
+- `@metamask/delegation-abis` is not directly importable in the project; must use `createRequire` pointed at the pnpm store path inside `@metamask/smart-accounts-kit`.
+- Both `did/pub/...` and `did/svc/...` attributes share the same 4-byte prefix `did/` (`0x6469642f`); use an entirely different namespace (e.g. `svc/...`) to test prefix rejection.
+
+### Test suite
+- 63/63 tests passing (12 files)
+
+---
+
 ## [1.4.0] — Phase 12 — Delegation Lifecycle Patterns
 
 ### Added

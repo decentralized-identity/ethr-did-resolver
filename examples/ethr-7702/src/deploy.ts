@@ -6,6 +6,7 @@ import { join } from 'path'
 import { fileURLToPath } from 'url'
 import { type PublicClient, type WalletClient } from 'viem'
 import { deployRegistry } from './utils/registry.js'
+import { deployMetaMaskFramework } from './utils/metamask-framework.js'
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url))
 
@@ -18,6 +19,11 @@ export type DeployedContracts = {
   revocationDidManager: `0x${string}`
   crossChainDidManager: `0x${string}`
   expiringDidManager: `0x${string}`
+  // MetaMask Delegation Framework (Phase 13)
+  entryPoint: `0x${string}`
+  delegationManager: `0x${string}`
+  statelessDeleGator: `0x${string}`
+  didAttributeEnforcer: `0x${string}`
 }
 
 function loadArtifact(name: string): { abi: unknown[]; bytecode: `0x${string}` } {
@@ -120,6 +126,26 @@ export async function deployAll(
     throw new Error('ExpiringDIDManager7702 deployment failed: no contract address in receipt')
   }
 
+  // -------------------------------------------------------------------------
+  // MetaMask Delegation Framework (Phase 13)
+  // -------------------------------------------------------------------------
+
+  const mmFramework = await deployMetaMaskFramework(walletClient, publicClient)
+
+  const didAttributeEnforcerArtifact = loadArtifact('DIDAttributeEnforcer')
+  const didAttributeEnforcerHash = await walletClient.deployContract({
+    abi: didAttributeEnforcerArtifact.abi,
+    bytecode: didAttributeEnforcerArtifact.bytecode,
+    account,
+    chain: walletClient.chain,
+  })
+  const didAttributeEnforcerReceipt = await publicClient.waitForTransactionReceipt({
+    hash: didAttributeEnforcerHash,
+  })
+  if (!didAttributeEnforcerReceipt.contractAddress) {
+    throw new Error('DIDAttributeEnforcer deployment failed: no contract address in receipt')
+  }
+
   return {
     registry: registry.address,
     didManager: didManagerReceipt.contractAddress,
@@ -129,5 +155,9 @@ export async function deployAll(
     revocationDidManager: revocationDidManagerReceipt.contractAddress,
     crossChainDidManager: crossChainDidManagerReceipt.contractAddress,
     expiringDidManager: expiringDidManagerReceipt.contractAddress,
+    entryPoint: mmFramework.entryPoint,
+    delegationManager: mmFramework.delegationManager,
+    statelessDeleGator: mmFramework.statelessDeleGator,
+    didAttributeEnforcer: didAttributeEnforcerReceipt.contractAddress,
   }
 }
