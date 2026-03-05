@@ -13,6 +13,7 @@ export type DeployedContracts = {
   registry: `0x${string}`
   didManager: `0x${string}`
   policyDidManager: `0x${string}`
+  multiSigDidManager: `0x${string}`
 }
 
 function loadArtifact(name: string): { abi: unknown[]; bytecode: `0x${string}` } {
@@ -55,9 +56,22 @@ export async function deployAll(
     throw new Error('PolicyDIDManager7702 deployment failed: no contract address in receipt')
   }
 
+  const multiSigDidManagerArtifact = loadArtifact('MultiSigDIDManager7702')
+  const multiSigDidManagerHash = await walletClient.deployContract({
+    abi: multiSigDidManagerArtifact.abi,
+    bytecode: multiSigDidManagerArtifact.bytecode,
+    account,
+    chain: walletClient.chain,
+  })
+  const multiSigDidManagerReceipt = await publicClient.waitForTransactionReceipt({ hash: multiSigDidManagerHash })
+  if (!multiSigDidManagerReceipt.contractAddress) {
+    throw new Error('MultiSigDIDManager7702 deployment failed: no contract address in receipt')
+  }
+
   return {
     registry: registry.address,
     didManager: didManagerReceipt.contractAddress,
     policyDidManager: policyDidManagerReceipt.contractAddress,
+    multiSigDidManager: multiSigDidManagerReceipt.contractAddress,
   }
 }
