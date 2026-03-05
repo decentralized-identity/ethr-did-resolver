@@ -1,5 +1,27 @@
 # Changelog
 
+## [1.3.0] — Phase 11 — Security Bug Fixes + Edge Case Tests
+
+### Fixed (Solidity)
+- `MultiSigDIDManager7702.configure()`: duplicate signers are now rejected (signers must be in strictly ascending order)
+- `MultiSigDIDManager7702.setAttributeWithMultiSig()`: reverts with "not configured" when called before `configure()` (threshold=0 bypass closed)
+- `MultiSigDIDManager7702._recoverSigner()`: EIP-2 high-s malleability check added
+- `CrossChainDIDManager7702._recoverSigner()`: EIP-2 high-s malleability check added
+
+### Added
+- `test/edge-cases.test.ts` — 27 edge case tests across all 6 delegation contracts:
+  - `DIDManager7702`: empty batch no-op, third-party call allowed (by design)
+  - `PolicyDIDManager7702`: non-session-key rejection, call before configure, boundary validity, reconfigure revokes old key
+  - `MultiSigDIDManager7702`: threshold=0 bypass blocked, duplicate/unsorted signers rejected, zero address rejected, threshold > signers rejected, unordered sigs rejected, extra sigs accepted, reconfigure revokes old set
+  - `TimelockDIDManager7702`: delay=0 immediate execution, duplicate proposal, nonexistent proposal, double execution, non-owner cancel, third-party execute
+  - `RevocationDIDManager7702`: idempotent revocation, non-owner revokeAttribute rejected, non-owner setAttribute rejected
+  - `CrossChainDIDManager7702`: invalid sig length, zero-byte sig, wrong signer, nonce increments
+
+### Test suite
+- 47/47 tests passing (10 files)
+
+---
+
 ## [1.2.0] — Phase 10 — Formal Code Coverage
 
 ### Added

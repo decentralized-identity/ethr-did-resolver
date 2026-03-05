@@ -54,6 +54,8 @@ contract MultiSigDIDManager7702 {
         delete signers;
         for (uint256 i = 0; i < _signers.length; i++) {
             require(_signers[i] != address(0), "zero signer");
+            // Require strictly ascending order to prevent duplicates in O(n) without a mapping
+            require(i == 0 || _signers[i] > _signers[i - 1], "signers not sorted/dup");
             signers.push(_signers[i]);
         }
         threshold = _threshold;
@@ -77,6 +79,7 @@ contract MultiSigDIDManager7702 {
         uint256 validity,
         bytes[] calldata sigs
     ) external {
+        require(threshold > 0, "not configured");
         require(sigs.length >= threshold, "not enough signatures");
 
         // Build the digest that signers must have signed
@@ -151,6 +154,8 @@ contract MultiSigDIDManager7702 {
         }
         if (v < 27) v += 27;
         require(v == 27 || v == 28, "invalid v");
+        // EIP-2: reject high-s signatures to prevent malleability
+        require(uint256(s) <= 0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5D576E7357A4501DDFE92F46681B20A0, "invalid s");
         address recovered = ecrecover(digest, v, r, s);
         require(recovered != address(0), "ecrecover failed");
         return recovered;

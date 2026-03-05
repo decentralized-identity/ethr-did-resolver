@@ -142,6 +142,8 @@ contract CrossChainDIDManager7702 {
         }
         if (v < 27) v += 27;
         require(v == 27 || v == 28, "invalid v");
+        // EIP-2: reject high-s signatures to prevent malleability
+        require(uint256(s) <= 0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5D576E7357A4501DDFE92F46681B20A0, "invalid s");
         address recovered = ecrecover(digest, v, r, s);
         require(recovered != address(0), "ecrecover failed");
         return recovered;
