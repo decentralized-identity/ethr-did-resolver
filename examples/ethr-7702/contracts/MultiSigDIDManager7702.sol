@@ -92,9 +92,8 @@ contract MultiSigDIDManager7702 {
         for (uint256 i = 0; i < sigs.length && verified < threshold; i++) {
             address recovered = _recoverSigner(digest, sigs[i]);
             require(recovered > prev, "sigs not ordered / duplicate");
-            if (_isSigner(recovered)) {
-                verified++;
-            }
+            require(_isSigner(recovered), "not a registered signer");
+            verified++;
             prev = recovered;
         }
 
