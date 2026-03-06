@@ -2,7 +2,7 @@
 
 ## Introduction
 
-[Part 1](./eip-7702-did-ethr.md) covered the foundational EIP-7702 delegation patterns for `did:ethr`: simple self-updates, batched attribute writes, gasless sponsorship, and policy-enforced session keys. This article goes further — four advanced patterns that address real production requirements, followed by a production hardening guide covering gas optimization, storage safety, authorization tuple lifecycle, and key compromise response.
+[Part 1](./eip-7702-did-ethr.md) covered the foundational EIP-7702 delegation patterns for `did:ethr`: simple self-updates, batched attribute writes, gasless sponsorship, and policy-enforced session keys. This article goes further — three advanced patterns that address real production requirements, followed by a production hardening guide covering gas optimization, storage safety, authorization tuple lifecycle, and key compromise response.
 
 All patterns are tested against an Anvil Prague hardfork node. Code lives in `src/patterns/` and `contracts/`.
 
@@ -48,7 +48,8 @@ contract MultiSigDIDManager7702 {
         for (uint256 i = 0; i < sigs.length && verified < threshold; i++) {
             address recovered = _recoverSigner(digest, sigs[i]);
             require(recovered > prev, "sigs not ordered / duplicate");
-            if (_isSigner(recovered)) verified++;
+            require(_isSigner(recovered), "not a registered signer");
+            verified++;
             prev = recovered;
         }
         require(verified >= threshold, "threshold not met");
@@ -111,88 +112,7 @@ await setAttributeWithMultiSig(anyWalletClient, publicClient, {
 
 ---
 
-## Pattern 5: Time-Locked Key Rotation
-
-**Scenario**: A high-value DID key rotation should have a mandatory 48-hour observation window. During this window, any watcher (security monitoring, other signers, the EOA owner on another device) can cancel if the update looks unauthorized.
-
-This mirrors how governance timelocks work in DeFi protocols (Compound, OpenZeppelin TimelockController).
-
-### Contract: TimelockDIDManager7702
-
-```solidity
-contract TimelockDIDManager7702 {
-    uint256 public delay;
-    mapping(bytes32 => Proposal) public proposals;
-
-    function configure(uint256 _delay) external {
-        require(msg.sender == address(this), "only owner");
-        delay = _delay;
-    }
-
-    function propose(address registry, bytes32 name, bytes calldata value, uint256 validity)
-        external returns (bytes32 proposalId)
-    {
-        require(msg.sender == address(this), "only owner");
-        uint256 eta = block.timestamp + delay;
-        proposalId = keccak256(abi.encode(registry, name, value, validity, eta));
-        proposals[proposalId] = Proposal({ ..., eta: eta, status: Status.Queued });
-        emit Proposed(proposalId, eta);
-    }
-
-    function execute(bytes32 proposalId) external {
-        Proposal storage p = proposals[proposalId];
-        require(p.status == Status.Queued, "not queued");
-        require(block.timestamp >= p.eta, "delay not elapsed");
-        p.status = Status.Executed;
-        IEthereumDIDRegistry(p.registry).setAttribute(address(this), ...);
-    }
-
-    function cancel(bytes32 proposalId) external {
-        require(msg.sender == address(this), "only owner");
-        proposals[proposalId].status = Status.Cancelled;
-    }
-}
-```
-
-### TypeScript Flow
-
-```typescript
-// Step 1: configure delegation with 2-day delay
-await configureTimelockDelegation(eoaWalletClient, publicClient, {
-  timelockDidManagerAddress: contracts.timelockDidManager,
-  delay: 172800n, // 48 hours in seconds
-})
-
-// Step 2: EOA queues the update
-const { proposalId } = await proposeDidUpdate(eoaWalletClient, publicClient, {
-  timelockDidManagerAddress: contracts.timelockDidManager,
-  registry, attrName, attrValue, validity,
-})
-// proposalId is extracted from receipt.logs[0].topics[1]
-// — Solidity return values are not visible to the TypeScript caller
-
-// Step 3 (in tests): advance Anvil clock
-await testClient.increaseTime({ seconds: 172800 })
-await testClient.mine({ blocks: 1 })
-
-// Step 4: anyone executes (EOA does not need to be online)
-await executeDidUpdate(anyWalletClient, publicClient, {
-  eoaAddress, timelockDidManagerAddress: contracts.timelockDidManager, proposalId,
-})
-```
-
-**Tip**: `propose()` returns `proposalId` in Solidity, but this return value is not accessible to the viem TypeScript caller via a regular `sendTransaction` call. Extract it from `receipt.logs[0].topics[1]` (the first `indexed` topic of the `Proposed` event).
-
-### Security Properties
-
-- **Observation window**: any external monitoring system (or the EOA owner on a secure device) has `delay` seconds to detect and cancel a rogue update.
-- **Cancel-only-by-owner**: `cancel` requires `msg.sender == address(this)`, so only the EOA itself can cancel. A compromised session key or relayer cannot cancel a legitimate pending update.
-- **Open execution**: after the delay, anyone can execute. This prevents an update from being silently blocked — the proposer can always execute when the window passes.
-- **Duplicate protection**: `proposalId = keccak256(registry, name, value, validity, eta)` — two identical proposals at different timestamps get different IDs.
-
----
-
-## Pattern 6: Revocation Registry Integration
+## Pattern 5: Revocation Registry Integration
 
 **Scenario**: An issuer EOA needs to provide two revocation mechanisms: (1) ERC-1056 key expiry (set `validTo = 0` on an attribute) and (2) credential-level revocation — a per-credential boolean that verifiers can query on-chain without resolving the full DID document.
 
@@ -263,7 +183,7 @@ The ERC-1056 path is resolver-visible: after `revokeAttribute`, the `did:ethr` r
 
 ---
 
-## Pattern 7: Cross-Chain DID Sync
+## Pattern 6: Cross-Chain DID Sync
 
 **Scenario**: An EOA's DID document exists on Ethereum mainnet. The same identity needs to be usable on an L2 or sidechain where the EOA has no ETH. A relayer on the target chain should be able to propagate signed DID updates from the EOA without requiring the EOA to bridge ETH or hold any native token on the target chain.
 
@@ -370,8 +290,6 @@ await relayerSubmitUpdate(relayerWalletClient, publicClient, {
 | `setAttribute` (ERC-1056) | ~45,000–55,000 |
 | `MultiSigDIDManager7702.configure` (3 signers) | ~80,000 |
 | `setAttributeWithMultiSig` (2-of-3) | ~75,000 |
-| `TimelockDIDManager7702.propose` | ~65,000 |
-| `TimelockDIDManager7702.execute` | ~55,000 |
 | `revokeCredential` (first time, cold storage) | ~45,000 |
 | `setAttributeCrossChain` (with delegation) | ~80,000 |
 
@@ -399,7 +317,6 @@ await relayerSubmitUpdate(relayerWalletClient, publicClient, {
 | Contract | Slot 0 | Slot 1 | Slot 2 |
 |----------|--------|--------|--------|
 | MultiSigDIDManager7702 | `signers[]` (length) | `threshold` | `nonce` |
-| TimelockDIDManager7702 | `delay` | `proposals` mapping | — |
 | RevocationDIDManager7702 | `revocations` mapping | — | — |
 | CrossChainDIDManager7702 | `crossChainNonce` | — | — |
 | PolicyDIDManager7702 (Part 1) | `sessionKey` | `maxValidity` | `allowedPrefix` |
@@ -476,17 +393,6 @@ The following procedures assume the production setup from these patterns.
 
 **Preventive measure**: for high-value EOA identities, use a multisig wallet (Safe or similar) as the DID controller address from the start, so no single key has unilateral authority.
 
-#### Scenario D: Timelock Proposal Looks Suspicious (Pattern 5)
-
-**Impact**: A proposal was queued that should not be executed — either fraudulent or mistaken.
-
-**Response**:
-1. During the observation window: call `cancel(proposalId)` from the EOA. This immediately sets `status = Cancelled`. Gas: ~20,000.
-2. If the delay has already elapsed and `execute` has not been called: still cancel — execution is optional.
-3. If `execute` was already called: the attribute is in the registry. Call `revokeAttributeForIdentity` to set `validTo = 0`.
-
-**Design note**: The timelock delay is the window for detection. For high-security deployments, set `delay` to at least 24–48 hours and run automated monitoring for `Proposed` events on EOA addresses.
-
 ---
 
 ## Summary Table
@@ -494,9 +400,8 @@ The following procedures assume the production setup from these patterns.
 | Pattern | Contract | Gas Payer | Key Feature | EOA online? |
 |---------|----------|-----------|-------------|-------------|
 | 4 — Multi-sig | MultiSigDIDManager7702 | Submitter (anyone) | M-of-N approval | Configure only |
-| 5 — Timelock | TimelockDIDManager7702 | EOA (propose), anyone (execute) | Observation window | Propose + cancel |
-| 6 — Revocation | RevocationDIDManager7702 | EOA | ERC-1056 + credential revocation | Per revocation |
-| 7 — Cross-chain | CrossChainDIDManager7702 | Relayer (always) | EOA has zero ETH on target chain | Never |
+| 5 — Revocation | RevocationDIDManager7702 | EOA | ERC-1056 + credential revocation | Per revocation |
+| 6 — Cross-chain | CrossChainDIDManager7702 | Relayer (always) | EOA has zero ETH on target chain | Never |
 
 ---
 
@@ -507,7 +412,7 @@ pnpm install
 pnpm test
 ```
 
-All 20 tests pass (9 test files) against a local Anvil Prague hardfork node.
+All tests pass against a local Anvil Prague hardfork node.
 
 | File | Tests | Pattern |
 |------|-------|---------|
@@ -517,6 +422,5 @@ All 20 tests pass (9 test files) against a local Anvil Prague hardfork node.
 | `test/gasless-updates.test.ts` | 1 | Pattern 2 |
 | `test/policy-enforced.test.ts` | 3 | Pattern 3 |
 | `test/multisig-updates.test.ts` | 3 | Pattern 4 |
-| `test/timelock-updates.test.ts` | 3 | Pattern 5 |
-| `test/revocation.test.ts` | 3 | Pattern 6 |
-| `test/cross-chain-sync.test.ts` | 3 | Pattern 7 |
+| `test/revocation.test.ts` | 3 | Pattern 5 |
+| `test/cross-chain-sync.test.ts` | 3 | Pattern 6 |

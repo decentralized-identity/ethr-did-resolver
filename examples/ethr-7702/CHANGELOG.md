@@ -1,5 +1,53 @@
 # Changelog
 
+## [1.6.0] — Phase 14 — MetaTx Pattern, H-1 Security Fix, Article Update
+
+### Added
+- `contracts/MetaTxDIDManager7702.sol` — EIP-712 meta-transaction delegation contract (Pattern 1a):
+  - `nonce` stored at slot 0 for replay protection
+  - `setAttributeMetaTx(registry, name, value, validity, sig)` — verifies EOA EIP-712 signature, calls `setAttribute`
+  - `setBatchAttributesMetaTx(registry, updates, sig)` — verifies batch digest, calls `setAttribute` for each update
+  - `getNonce()`, `attributeDigest()`, `batchAttributeDigest()` view functions for off-chain signing
+  - Domain: `name="MetaTxDIDManager7702"`, `version="1"`, chain+verifyingContract bound
+- `src/utils/abis.ts` — `META_TX_DID_MANAGER_ABI` added
+- `src/deploy.ts` — `MetaTxDIDManager7702` deployed in `deployAll()`; `metaTxDidManager` added to `DeployedContracts` type
+- `src/patterns/meta-tx-updates.ts` — `metaTxDidUpdate()` and `metaTxBatchDidUpdate()` pattern helpers
+- `test/meta-tx-updates.test.ts` — 6 integration tests:
+  - Happy path single attribute via meta-tx
+  - Happy path batch attributes via meta-tx
+  - Nonce increments after each meta-tx (replay protection)
+  - Replayed signature rejected
+  - Wrong signer signature rejected
+  - Batch with wrong signer rejected
+
+### Fixed (Security — H-1)
+- `contracts/MultiSigDIDManager7702.sol` — non-signer signatures now explicitly rejected:
+  - Old: `if (_isSigner(recovered)) { verified++; }` silently skipped unknown signers
+  - New: `require(_isSigner(recovered), "not a registered signer")` — reverts immediately if any signature is from a non-registered address
+  - Prevents an attacker from padding the signature array with their own signatures to reach threshold
+
+### Changed
+- `test/edge-cases.test.ts`:
+  - Removed `TimelockDIDManager7702` edge case block (contract removed in Phase 13 cleanup)
+  - Removed `timelockDidManager` from `TestEnv` type
+  - Added `metaTxDidManager` to `TestEnv.contracts`
+  - Fixed header comment "six" → "five" (five delegation contracts remain)
+  - Added H-1 regression test: non-signer signature in multisig now reverts with "not a registered signer"
+- `article/eip-7702-did-ethr.md` — added security framing paragraph after Pattern 0:
+  - Explains Pattern 0 has no access control by design
+  - Notes EIP-7702 does not inherently improve security
+  - Introduces `MetaTxDIDManager7702` as Pattern 1a with EIP-712 authorization
+
+### Removed
+- `contracts/TimelockDIDManager7702.sol` — removed (superseded; pattern consolidated)
+- `src/patterns/timelock-updates.ts` — removed
+- `test/timelock-updates.test.ts` — removed
+
+### Test suite
+- 61/61 tests passing (12 files)
+
+---
+
 ## [1.5.0] — Phase 13 — MetaMask Delegation Framework Integration
 
 ### Added

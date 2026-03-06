@@ -111,6 +111,8 @@ const hash = await eoaWalletClient.sendTransaction({
 
 **What changes vs. a plain EOA call**: Nothing observable on-chain — the DID document update is identical. The difference is the delegation code (`0xef0100...`) is now set on the EOA. This can be cleared by a later authorization to `address(0)`.
 
+**Security note**: Pattern 0 has no access control by design — the EOA is the transaction sender, so no other party can invoke the delegation. EIP-7702 does not inherently improve security; it simply shifts where authorization is enforced. Once an EOA delegates to a contract that calls `setAttribute(address(this), ...)`, anyone who can call that function can update the DID document on the EOA's behalf. For patterns where a third party (relayer) sends the transaction, explicit on-chain authorization is required. Pattern 1a introduces `MetaTxDIDManager7702`, which adds EIP-712 typed-data signatures so the EOA authorizes each specific update — the relayer can submit it but cannot forge or alter the content.
+
 ---
 
 ## Pattern 1: Batched DID Updates
