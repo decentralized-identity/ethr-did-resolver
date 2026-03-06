@@ -15,9 +15,9 @@ export type DeployedContracts = {
   didManager: `0x${string}`
   policyDidManager: `0x${string}`
   multiSigDidManager: `0x${string}`
-  timelockDidManager: `0x${string}`
   revocationDidManager: `0x${string}`
   crossChainDidManager: `0x${string}`
+  metaTxDidManager: `0x${string}`
   expiringDidManager: `0x${string}`
   // MetaMask Delegation Framework (Phase 13)
   entryPoint: `0x${string}`
@@ -78,18 +78,6 @@ export async function deployAll(
     throw new Error('MultiSigDIDManager7702 deployment failed: no contract address in receipt')
   }
 
-  const timelockDidManagerArtifact = loadArtifact('TimelockDIDManager7702')
-  const timelockDidManagerHash = await walletClient.deployContract({
-    abi: timelockDidManagerArtifact.abi,
-    bytecode: timelockDidManagerArtifact.bytecode,
-    account,
-    chain: walletClient.chain,
-  })
-  const timelockDidManagerReceipt = await publicClient.waitForTransactionReceipt({ hash: timelockDidManagerHash })
-  if (!timelockDidManagerReceipt.contractAddress) {
-    throw new Error('TimelockDIDManager7702 deployment failed: no contract address in receipt')
-  }
-
   const revocationDidManagerArtifact = loadArtifact('RevocationDIDManager7702')
   const revocationDidManagerHash = await walletClient.deployContract({
     abi: revocationDidManagerArtifact.abi,
@@ -112,6 +100,18 @@ export async function deployAll(
   const crossChainDidManagerReceipt = await publicClient.waitForTransactionReceipt({ hash: crossChainDidManagerHash })
   if (!crossChainDidManagerReceipt.contractAddress) {
     throw new Error('CrossChainDIDManager7702 deployment failed: no contract address in receipt')
+  }
+
+  const metaTxDidManagerArtifact = loadArtifact('MetaTxDIDManager7702')
+  const metaTxDidManagerHash = await walletClient.deployContract({
+    abi: metaTxDidManagerArtifact.abi,
+    bytecode: metaTxDidManagerArtifact.bytecode,
+    account,
+    chain: walletClient.chain,
+  })
+  const metaTxDidManagerReceipt = await publicClient.waitForTransactionReceipt({ hash: metaTxDidManagerHash })
+  if (!metaTxDidManagerReceipt.contractAddress) {
+    throw new Error('MetaTxDIDManager7702 deployment failed: no contract address in receipt')
   }
 
   const expiringDidManagerArtifact = loadArtifact('ExpiringDIDManager7702')
@@ -151,9 +151,9 @@ export async function deployAll(
     didManager: didManagerReceipt.contractAddress,
     policyDidManager: policyDidManagerReceipt.contractAddress,
     multiSigDidManager: multiSigDidManagerReceipt.contractAddress,
-    timelockDidManager: timelockDidManagerReceipt.contractAddress,
     revocationDidManager: revocationDidManagerReceipt.contractAddress,
     crossChainDidManager: crossChainDidManagerReceipt.contractAddress,
+    metaTxDidManager: metaTxDidManagerReceipt.contractAddress,
     expiringDidManager: expiringDidManagerReceipt.contractAddress,
     entryPoint: mmFramework.entryPoint,
     delegationManager: mmFramework.delegationManager,

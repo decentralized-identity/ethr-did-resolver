@@ -141,69 +141,6 @@ export const MULTISIG_DID_MANAGER_ABI = [
   },
 ] as const
 
-export const TIMELOCK_DID_MANAGER_ABI = [
-  {
-    name: 'configure',
-    type: 'function',
-    inputs: [{ name: '_delay', type: 'uint256' }],
-    outputs: [],
-    stateMutability: 'nonpayable',
-  },
-  {
-    name: 'propose',
-    type: 'function',
-    inputs: [
-      { name: 'registry', type: 'address' },
-      { name: 'name', type: 'bytes32' },
-      { name: 'value', type: 'bytes' },
-      { name: 'validity', type: 'uint256' },
-    ],
-    outputs: [{ name: 'proposalId', type: 'bytes32' }],
-    stateMutability: 'nonpayable',
-  },
-  {
-    name: 'execute',
-    type: 'function',
-    inputs: [{ name: 'proposalId', type: 'bytes32' }],
-    outputs: [],
-    stateMutability: 'nonpayable',
-  },
-  {
-    name: 'cancel',
-    type: 'function',
-    inputs: [{ name: 'proposalId', type: 'bytes32' }],
-    outputs: [],
-    stateMutability: 'nonpayable',
-  },
-  {
-    name: 'getProposal',
-    type: 'function',
-    inputs: [{ name: 'proposalId', type: 'bytes32' }],
-    outputs: [
-      {
-        name: '',
-        type: 'tuple',
-        components: [
-          { name: 'registry', type: 'address' },
-          { name: 'name', type: 'bytes32' },
-          { name: 'value', type: 'bytes' },
-          { name: 'validity', type: 'uint256' },
-          { name: 'eta', type: 'uint256' },
-          { name: 'status', type: 'uint8' },
-        ],
-      },
-    ],
-    stateMutability: 'view',
-  },
-  {
-    name: 'delay',
-    type: 'function',
-    inputs: [],
-    outputs: [{ name: '', type: 'uint256' }],
-    stateMutability: 'view',
-  },
-] as const
-
 export const REVOCATION_DID_MANAGER_ABI = [
   {
     name: 'setAttributeForIdentity',
@@ -273,6 +210,87 @@ export const CROSS_CHAIN_DID_MANAGER_ABI = [
   },
   {
     name: 'crossChainNonce',
+    type: 'function',
+    inputs: [],
+    outputs: [{ name: '', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+] as const
+
+export const META_TX_DID_MANAGER_ABI = [
+  {
+    name: 'setAttribute',
+    type: 'function',
+    inputs: [
+      { name: 'registry', type: 'address' },
+      { name: 'name', type: 'bytes32' },
+      { name: 'value', type: 'bytes' },
+      { name: 'validity', type: 'uint256' },
+      { name: 'signature', type: 'bytes' },
+    ],
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    name: 'setBatchAttributes',
+    type: 'function',
+    inputs: [
+      { name: 'registry', type: 'address' },
+      {
+        name: 'updates',
+        type: 'tuple[]',
+        components: [
+          { name: 'name', type: 'bytes32' },
+          { name: 'value', type: 'bytes' },
+          { name: 'validity', type: 'uint256' },
+        ],
+      },
+      { name: 'signature', type: 'bytes' },
+    ],
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    name: 'getNonce',
+    type: 'function',
+    inputs: [],
+    outputs: [{ name: '', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    name: 'attributeDigest',
+    type: 'function',
+    inputs: [
+      { name: 'registry', type: 'address' },
+      { name: 'name', type: 'bytes32' },
+      { name: 'value', type: 'bytes' },
+      { name: 'validity', type: 'uint256' },
+      { name: 'nonce', type: 'uint256' },
+    ],
+    outputs: [{ name: '', type: 'bytes32' }],
+    stateMutability: 'view',
+  },
+  {
+    name: 'batchAttributeDigest',
+    type: 'function',
+    inputs: [
+      { name: 'registry', type: 'address' },
+      {
+        name: 'updates',
+        type: 'tuple[]',
+        components: [
+          { name: 'name', type: 'bytes32' },
+          { name: 'value', type: 'bytes' },
+          { name: 'validity', type: 'uint256' },
+        ],
+      },
+      { name: 'nonce', type: 'uint256' },
+    ],
+    outputs: [{ name: '', type: 'bytes32' }],
+    stateMutability: 'view',
+  },
+  {
+    name: 'nonce',
     type: 'function',
     inputs: [],
     outputs: [{ name: '', type: 'uint256' }],

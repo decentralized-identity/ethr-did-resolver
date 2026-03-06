@@ -1,5 +1,5 @@
 // test/edge-cases.test.ts
-// Edge case and security tests for all six delegation contracts.
+// Edge case and security tests for all five delegation contracts.
 //
 // Tests are organized by contract. Each test exercises boundary conditions,
 // access-control rejection paths, and (fixed) security bugs.
@@ -11,7 +11,6 @@ import { readFileSync } from 'fs'
 import {
   createPublicClient,
   createWalletClient,
-  createTestClient,
   encodeFunctionData,
   hashTypedData,
   http,
@@ -23,12 +22,11 @@ import { privateKeyToAccount } from 'viem/accounts'
 import { anvil as anvilChain } from 'viem/chains'
 import { stringToBytes32 } from 'ethr-did-resolver'
 import { TEST_ENV_FILE } from './globalSetup.js'
-import { getAnvilPrivateKeys, ANVIL_RPC_URL } from '../src/utils/anvil.js'
+import { getAnvilPrivateKeys } from '../src/utils/anvil.js'
 import {
   DID_MANAGER_ABI,
   POLICY_DID_MANAGER_ABI,
   MULTISIG_DID_MANAGER_ABI,
-  TIMELOCK_DID_MANAGER_ABI,
   REVOCATION_DID_MANAGER_ABI,
   CROSS_CHAIN_DID_MANAGER_ABI,
 } from '../src/utils/abis.js'
@@ -45,9 +43,9 @@ type TestEnv = {
     didManager: `0x${string}`
     policyDidManager: `0x${string}`
     multiSigDidManager: `0x${string}`
-    timelockDidManager: `0x${string}`
     revocationDidManager: `0x${string}`
     crossChainDidManager: `0x${string}`
+    metaTxDidManager: `0x${string}`
   }
 }
 
@@ -646,266 +644,65 @@ describe('MultiSigDIDManager7702 edge cases', () => {
     })
     expect(success).toBe(false) // "threshold not met" — old signer no longer valid
   })
-})
 
-// ===========================================================================
-// TimelockDIDManager7702 edge cases
-// ===========================================================================
-
-describe('TimelockDIDManager7702 edge cases', () => {
-  it('delay=0 allows immediate execution', async () => {
+  it('(H-1 FIX) rejects signature from non-registered signer', async () => {
+    // SECURITY (H-1): Previously the loop silently skipped non-signer signatures,
+    // allowing an attacker to pad a M-sig call with fake sigs to meet ordering
+    // requirements while under-providing real signer sigs. The fix uses require()
+    // so any non-signer signature immediately reverts.
     const { rpcUrl, contracts } = loadEnv()
 
-    const eoaAccount = privateKeyToAccount(keys[3])
+    const eoaAccount = privateKeyToAccount(keys[5])
+    // Two registered signers
+    const signer6 = privateKeyToAccount(keys[6])
+    const signer7 = privateKeyToAccount(keys[7])
+    // Attacker — NOT in the signer set
+    const attacker = privateKeyToAccount(keys[9])
+
+    const signers = [signer6, signer7].sort((a, b) =>
+      a.address.toLowerCase().localeCompare(b.address.toLowerCase())
+    )
+
     const publicClient = createPublicClient({ chain: anvilChain, transport: http(rpcUrl) })
     const eoaWalletClient = createWalletClient({ chain: anvilChain, transport: http(rpcUrl), account: eoaAccount })
 
-    // Configure with delay=0
+    // Configure 2-of-2 multi-sig with signer6 and signer7
     const configData = encodeFunctionData({
-      abi: TIMELOCK_DID_MANAGER_ABI,
+      abi: MULTISIG_DID_MANAGER_ABI,
       functionName: 'configure',
-      args: [0n],
+      args: [signers.map((s) => s.address), 2n],
     })
-    await delegateAndCall(eoaWalletClient, publicClient, contracts.timelockDidManager, configData)
+    await delegateAndCall(eoaWalletClient, publicClient, contracts.multiSigDidManager, configData)
 
-    // Propose
-    const proposeData = encodeFunctionData({
-      abi: TIMELOCK_DID_MANAGER_ABI,
-      functionName: 'propose',
-      args: [contracts.registry, ATTR_NAME, ATTR_VALUE, VALIDITY],
+    const digest = await publicClient.readContract({
+      address: eoaAccount.address,
+      abi: MULTISIG_DID_MANAGER_ABI,
+      functionName: 'updateDigest',
+      args: [contracts.registry, ATTR_NAME, ATTR_VALUE, VALIDITY, 0n],
+    }) as `0x${string}`
+
+    // One valid signer + one attacker signature (attacker is NOT registered)
+    const validSig = await signers[0].sign({ hash: digest })
+    const attackerSig = await attacker.sign({ hash: digest })
+
+    // Sort the two sigs by recovered signer address for ordering requirement
+    const signerAddr = signers[0].address.toLowerCase()
+    const attackerAddr = attacker.address.toLowerCase()
+    const [firstSig, secondSig] = signerAddr < attackerAddr
+      ? [validSig, attackerSig]
+      : [attackerSig, validSig]
+
+    const updateData = encodeFunctionData({
+      abi: MULTISIG_DID_MANAGER_ABI,
+      functionName: 'setAttributeWithMultiSig',
+      args: [contracts.registry, ATTR_NAME, ATTR_VALUE, VALIDITY, [firstSig, secondSig]],
     })
-    const { success: proposeOk, hash: proposeHash } = await sendToEoa(eoaWalletClient, publicClient, {
-      to: eoaAccount.address,
-      data: proposeData,
-    })
-    expect(proposeOk).toBe(true)
 
-    const proposeReceipt = await publicClient.getTransactionReceipt({ hash: proposeHash })
-    const proposalId = proposeReceipt.logs.find((l) => l.topics.length >= 2)!.topics[1] as `0x${string}`
-
-    // Execute immediately — delay=0 so eta == block.timestamp at propose time,
-    // and this tx is in the same block OR a later block, so block.timestamp >= eta
-    const testClient = createTestClient({ mode: 'anvil', chain: anvilChain, transport: http(ANVIL_RPC_URL) })
-    await testClient.mine({ blocks: 1 }) // advance one block to ensure timestamp >= eta
-
-    const executeData = encodeFunctionData({
-      abi: TIMELOCK_DID_MANAGER_ABI,
-      functionName: 'execute',
-      args: [proposalId],
-    })
     const { success } = await sendToEoa(eoaWalletClient, publicClient, {
       to: eoaAccount.address,
-      data: executeData,
+      data: updateData,
     })
-    expect(success).toBe(true)
-  })
-
-  it('duplicate proposal (same params + eta) is rejected', async () => {
-    const { rpcUrl, contracts } = loadEnv()
-
-    const eoaAccount = privateKeyToAccount(keys[3])
-    const publicClient = createPublicClient({ chain: anvilChain, transport: http(rpcUrl) })
-    const eoaWalletClient = createWalletClient({ chain: anvilChain, transport: http(rpcUrl), account: eoaAccount })
-
-    // Configure with a large delay so eta is deterministic within the same block
-    const configData = encodeFunctionData({
-      abi: TIMELOCK_DID_MANAGER_ABI,
-      functionName: 'configure',
-      args: [3600n],
-    })
-    await delegateAndCall(eoaWalletClient, publicClient, contracts.timelockDidManager, configData)
-
-    const proposeData = encodeFunctionData({
-      abi: TIMELOCK_DID_MANAGER_ABI,
-      functionName: 'propose',
-      args: [contracts.registry, ATTR_NAME, ATTR_VALUE, VALIDITY],
-    })
-
-    // First proposal — should succeed
-    const { success: first } = await sendToEoa(eoaWalletClient, publicClient, {
-      to: eoaAccount.address,
-      data: proposeData,
-    })
-    expect(first).toBe(true)
-
-    // Second proposal with identical params and same block timestamp — should revert
-    const { success: second } = await sendToEoa(eoaWalletClient, publicClient, {
-      to: eoaAccount.address,
-      data: proposeData,
-    })
-    expect(second).toBe(false) // "duplicate proposal"
-  })
-
-  it('execute on a nonexistent proposal reverts', async () => {
-    const { rpcUrl, contracts } = loadEnv()
-
-    const eoaAccount = privateKeyToAccount(keys[3])
-    const publicClient = createPublicClient({ chain: anvilChain, transport: http(rpcUrl) })
-    const eoaWalletClient = createWalletClient({ chain: anvilChain, transport: http(rpcUrl), account: eoaAccount })
-
-    // Configure first so the delegation is set
-    const configData = encodeFunctionData({
-      abi: TIMELOCK_DID_MANAGER_ABI,
-      functionName: 'configure',
-      args: [60n],
-    })
-    await delegateAndCall(eoaWalletClient, publicClient, contracts.timelockDidManager, configData)
-
-    const fakeProposalId = keccak256(toHex('this-proposal-never-existed'))
-    const executeData = encodeFunctionData({
-      abi: TIMELOCK_DID_MANAGER_ABI,
-      functionName: 'execute',
-      args: [fakeProposalId],
-    })
-    const { success } = await sendToEoa(eoaWalletClient, publicClient, {
-      to: eoaAccount.address,
-      data: executeData,
-    })
-    expect(success).toBe(false) // "not queued"
-  })
-
-  it('double execution is rejected', async () => {
-    const { rpcUrl, contracts } = loadEnv()
-
-    const eoaAccount = privateKeyToAccount(keys[3])
-    const publicClient = createPublicClient({ chain: anvilChain, transport: http(rpcUrl) })
-    const eoaWalletClient = createWalletClient({ chain: anvilChain, transport: http(rpcUrl), account: eoaAccount })
-    const testClient = createTestClient({ mode: 'anvil', chain: anvilChain, transport: http(ANVIL_RPC_URL) })
-
-    const DELAY = 60n
-
-    const configData = encodeFunctionData({
-      abi: TIMELOCK_DID_MANAGER_ABI,
-      functionName: 'configure',
-      args: [DELAY],
-    })
-    await delegateAndCall(eoaWalletClient, publicClient, contracts.timelockDidManager, configData)
-
-    const proposeData = encodeFunctionData({
-      abi: TIMELOCK_DID_MANAGER_ABI,
-      functionName: 'propose',
-      args: [contracts.registry, ATTR_NAME, ATTR_VALUE, VALIDITY],
-    })
-    const { hash: proposeHash } = await sendToEoa(eoaWalletClient, publicClient, {
-      to: eoaAccount.address,
-      data: proposeData,
-    })
-    const receipt = await publicClient.getTransactionReceipt({ hash: proposeHash })
-    const proposalId = receipt.logs.find((l) => l.topics.length >= 2)!.topics[1] as `0x${string}`
-
-    await testClient.increaseTime({ seconds: Number(DELAY) + 1 })
-    await testClient.mine({ blocks: 1 })
-
-    const executeData = encodeFunctionData({
-      abi: TIMELOCK_DID_MANAGER_ABI,
-      functionName: 'execute',
-      args: [proposalId],
-    })
-
-    // First execution — should succeed
-    const { success: first } = await sendToEoa(eoaWalletClient, publicClient, {
-      to: eoaAccount.address,
-      data: executeData,
-    })
-    expect(first).toBe(true)
-
-    // Second execution — should revert (status is now Executed, not Queued)
-    const { success: second } = await sendToEoa(eoaWalletClient, publicClient, {
-      to: eoaAccount.address,
-      data: executeData,
-    })
-    expect(second).toBe(false) // "not queued"
-  })
-
-  it('non-owner cannot cancel a queued proposal', async () => {
-    const { rpcUrl, contracts } = loadEnv()
-
-    const eoaAccount = privateKeyToAccount(keys[3])
-    const attackerAccount = privateKeyToAccount(keys[9])
-
-    const publicClient = createPublicClient({ chain: anvilChain, transport: http(rpcUrl) })
-    const eoaWalletClient = createWalletClient({ chain: anvilChain, transport: http(rpcUrl), account: eoaAccount })
-    const attackerWalletClient = createWalletClient({ chain: anvilChain, transport: http(rpcUrl), account: attackerAccount })
-
-    const configData = encodeFunctionData({
-      abi: TIMELOCK_DID_MANAGER_ABI,
-      functionName: 'configure',
-      args: [3600n],
-    })
-    await delegateAndCall(eoaWalletClient, publicClient, contracts.timelockDidManager, configData)
-
-    const proposeData = encodeFunctionData({
-      abi: TIMELOCK_DID_MANAGER_ABI,
-      functionName: 'propose',
-      args: [contracts.registry, ATTR_NAME, ATTR_VALUE, VALIDITY],
-    })
-    const { hash: proposeHash } = await sendToEoa(eoaWalletClient, publicClient, {
-      to: eoaAccount.address,
-      data: proposeData,
-    })
-    const receipt = await publicClient.getTransactionReceipt({ hash: proposeHash })
-    const proposalId = receipt.logs.find((l) => l.topics.length >= 2)!.topics[1] as `0x${string}`
-
-    const cancelData = encodeFunctionData({
-      abi: TIMELOCK_DID_MANAGER_ABI,
-      functionName: 'cancel',
-      args: [proposalId],
-    })
-
-    // Attacker tries to cancel — should fail (only owner == EOA can cancel)
-    const { success } = await sendToEoa(attackerWalletClient, publicClient, {
-      to: eoaAccount.address,
-      data: cancelData,
-    })
-    expect(success).toBe(false) // "only owner"
-  })
-
-  it('anyone can execute a queued proposal after delay (not just the EOA)', async () => {
-    const { rpcUrl, contracts } = loadEnv()
-
-    const eoaAccount = privateKeyToAccount(keys[3])
-    const thirdPartyAccount = privateKeyToAccount(keys[9])
-    const DELAY = 60n
-
-    const publicClient = createPublicClient({ chain: anvilChain, transport: http(rpcUrl) })
-    const eoaWalletClient = createWalletClient({ chain: anvilChain, transport: http(rpcUrl), account: eoaAccount })
-    const thirdPartyWalletClient = createWalletClient({ chain: anvilChain, transport: http(rpcUrl), account: thirdPartyAccount })
-    const testClient = createTestClient({ mode: 'anvil', chain: anvilChain, transport: http(ANVIL_RPC_URL) })
-
-    const configData = encodeFunctionData({
-      abi: TIMELOCK_DID_MANAGER_ABI,
-      functionName: 'configure',
-      args: [DELAY],
-    })
-    await delegateAndCall(eoaWalletClient, publicClient, contracts.timelockDidManager, configData)
-
-    const proposeData = encodeFunctionData({
-      abi: TIMELOCK_DID_MANAGER_ABI,
-      functionName: 'propose',
-      args: [contracts.registry, ATTR_NAME, ATTR_VALUE, VALIDITY],
-    })
-    const { hash: proposeHash } = await sendToEoa(eoaWalletClient, publicClient, {
-      to: eoaAccount.address,
-      data: proposeData,
-    })
-    const receipt = await publicClient.getTransactionReceipt({ hash: proposeHash })
-    const proposalId = receipt.logs.find((l) => l.topics.length >= 2)!.topics[1] as `0x${string}`
-
-    await testClient.increaseTime({ seconds: Number(DELAY) + 1 })
-    await testClient.mine({ blocks: 1 })
-
-    const executeData = encodeFunctionData({
-      abi: TIMELOCK_DID_MANAGER_ABI,
-      functionName: 'execute',
-      args: [proposalId],
-    })
-
-    // Third party (not the EOA owner) executes — should succeed
-    const { success } = await sendToEoa(thirdPartyWalletClient, publicClient, {
-      to: eoaAccount.address,
-      data: executeData,
-    })
-    expect(success).toBe(true)
+    expect(success).toBe(false) // "not a registered signer"
   })
 })
 
