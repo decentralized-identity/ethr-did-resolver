@@ -125,6 +125,25 @@ describe('RPC failure handling', () => {
     expect(result.didResolutionMetadata.error).toBe('notFound')
     expect(result.didResolutionMetadata.message).toMatch(/archive node/)
   })
+
+  it('returns error when previousChange points to a block but getLogs returns no events', async () => {
+    expect.assertions(3)
+    const { shortDID: did, address, signer } = await randomAccount(provider)
+    // Create a real on-chain event so changed(address) is non-zero
+    const { address: delegate } = await randomAccount(provider)
+    const registry = registryResolver['contracts']['dev'] as Contract
+    const connected = registry.connect(signer) as Contract
+    await connected['addDelegate'](address, stringToBytes32('veriKey'), delegate, 86400)
+    // Spy on provider.getLogs to return empty — simulating a non-archive node
+    const realProvider = registry.runner!.provider!
+    const getLogsSpy = jest.spyOn(realProvider, 'getLogs').mockResolvedValueOnce([])
+    const parsed = { did, id: `dev:${address}`, method: 'ethr', didUrl: did }
+    const result = await registryResolver.resolve(did, parsed as never, null as never, {})
+    getLogsSpy.mockRestore()
+    expect(result.didDocument).toBeNull()
+    expect(result.didResolutionMetadata.error).toBe('notFound')
+    expect(result.didResolutionMetadata.message).toMatch(/archive node/)
+  })
 })
 
 describe('non-DID registry events', () => {

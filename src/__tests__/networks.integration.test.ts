@@ -9,6 +9,78 @@ describe('ethrResolver (alt-chains)', () => {
   const checksumAddr = address
 
   describe('eth-networks', () => {
+    it('resolves a real mainnet DID via publicnode', async () => {
+      const did = 'did:ethr:0x096164268929e920a217a76965547dc44732bb13'
+      const resolver = new Resolver(
+        getResolver({ networks: [{ name: 'mainnet', rpcUrl: 'https://ethereum.publicnode.com' }] })
+      )
+      const result = await resolver.resolve(did)
+      expect(result).toEqual({
+        didDocumentMetadata: {
+          versionId: '7813666',
+          updated: '2019-05-23T03:44:12Z',
+        },
+        didResolutionMetadata: { contentType: 'application/did+ld+json' },
+        didDocument: {
+          '@context': expect.anything(),
+          id: did,
+          verificationMethod: [
+            {
+              id: `${did}#controller`,
+              type: 'EcdsaSecp256k1RecoveryMethod2020',
+              controller: did,
+              blockchainAccountId: 'eip155:1:0x8A948fddD8dE92ba977D336a3655e1c73Ed379db',
+            },
+          ],
+          authentication: [`${did}#controller`],
+          assertionMethod: [`${did}#controller`],
+        },
+      })
+    })
+
+    it('resolves historical versionId on mainnet via publicnode', async () => {
+      const did = 'did:ethr:0x096164268929e920a217a76965547dc44732bb13'
+      const resolver = new Resolver(
+        getResolver({ networks: [{ name: 'mainnet', rpcUrl: 'https://ethereum.publicnode.com' }] })
+      )
+      // versionId=7813665 is one block before the DIDOwnerChanged event at 7813666
+      const result = await resolver.resolve(`${did}?versionId=7813665`)
+      expect(result).toEqual({
+        didDocumentMetadata: {
+          versionId: '7049829',
+          updated: '2019-01-11T20:27:32Z',
+          nextVersionId: '7813666',
+          nextUpdate: '2019-05-23T03:44:12Z',
+        },
+        didResolutionMetadata: { contentType: 'application/did+ld+json' },
+        didDocument: {
+          '@context': expect.anything(),
+          id: did,
+          verificationMethod: [
+            {
+              id: `${did}#controller`,
+              type: 'EcdsaSecp256k1RecoveryMethod2020',
+              controller: did,
+              blockchainAccountId: 'eip155:1:0x8A948fddD8dE92ba977D336a3655e1c73Ed379db',
+            },
+          ],
+          authentication: [`${did}#controller`],
+          assertionMethod: [`${did}#controller`],
+        },
+      })
+    })
+
+    it('returns error when non-archive node silently drops historical logs', async () => {
+      const did = 'did:ethr:0x096164268929e920a217a76965547dc44732bb13'
+      const resolver = new Resolver(getResolver({ networks: [{ name: 'mainnet', rpcUrl: 'https://1rpc.io/eth' }] }))
+      const result = await resolver.resolve(did)
+      // 1rpc.io is not an archive node — it returns empty logs for old blocks.
+      // The integrity check detects the missing events and returns an actionable error.
+      expect(result.didDocument).toBeNull()
+      expect(result.didResolutionMetadata.error).toBe('notFound')
+      expect(result.didResolutionMetadata.message).toMatch(/archive node/)
+    })
+
     it('resolves on mainnet with versionId', async () => {
       const resolver = new Resolver(getResolver({ infuraProjectId: '6b734e0b04454df8a6ce234023c04f26' }))
       const result = await resolver.resolve('did:ethr:0x26bf14321004e770e7a8b080b7a526d8eed8b388?versionId=12090174')

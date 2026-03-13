@@ -91,14 +91,32 @@ export class EthrDidResolver {
         fromBlock: previousChange,
         toBlock: previousChange,
       })
+      if (logs.length === 0) {
+        throw new Error(
+          `No logs found for block ${blockNumber} but previousChange points here. ` +
+            `The RPC node may not have historical log data. Use an archive node for complete DID resolution.`
+        )
+      }
+      // Extract previousChange from ALL raw logs (including ones that may be filtered as non-DID).
+      // This keeps chain-walking independent of event filtering.
+      previousChange = null
+      for (const log of logs) {
+        const parsed = contract.interface.parseLog({ topics: [...log.topics], data: log.data })
+        if (!parsed) continue
+        const pcIndex = parsed.fragment.inputs.findIndex((i) => i.name === 'previousChange')
+        if (pcIndex >= 0) {
+          const pc = BigInt(parsed.args[pcIndex])
+          if (pc > 0n && pc < blockNumber) {
+            previousChange = pc
+            break
+          }
+        }
+      }
+      // Collect only valid DID events into history (reverse + unshift preserves chronological order)
       const events: ERC1056Event[] = logDecoder(contract, logs)
       events.reverse()
-      previousChange = null
       for (const event of events) {
         history.unshift(event)
-        if (event.previousChange < blockNumber) {
-          previousChange = event.previousChange
-        }
       }
     }
     return { address, history, controllerKey, chainId }
