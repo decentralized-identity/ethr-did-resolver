@@ -103,15 +103,28 @@ describe('RPC failure handling', () => {
     expect(result.didResolutionMetadata.message).toMatch(/archive node/)
   })
 
-  it('instructs user to use an archive node for historical queries that fail with RPC error', async () => {
+  it('instructs user to use an archive node for historical queries that fail with server-side RPC error', async () => {
     expect.assertions(2)
     const { shortDID: did, address } = await randomAccount(provider)
-    // A generic RPC error on a versionId (historical) query should also suggest archive node
+    // A server-side RPC error (missing response) on a versionId (historical) query should suggest archive node
     jest.spyOn(registryResolver, 'getBlockMetadata').mockRejectedValueOnce(new Error('missing response'))
     const parsed = { did, id: `dev:${address}`, method: 'ethr', didUrl: did }
     const result = await registryResolver.resolve(did, parsed as never, null as never, { blockTag: 5 } as never)
     expect(result.didResolutionMetadata.error).toBe('notFound')
     expect(result.didResolutionMetadata.message).toMatch(/archive node/)
+  })
+
+  it('does not suggest archive node for timeout errors on historical queries', async () => {
+    expect.assertions(3)
+    const { shortDID: did, address } = await randomAccount(provider)
+    // A timeout on a versionId query means the endpoint is unreachable, not that it lacks archive data
+    const timeoutErr = Object.assign(new Error('request timeout'), { code: 'TIMEOUT' })
+    jest.spyOn(registryResolver, 'getBlockMetadata').mockRejectedValueOnce(timeoutErr)
+    const parsed = { did, id: `dev:${address}`, method: 'ethr', didUrl: did }
+    const result = await registryResolver.resolve(did, parsed as never, null as never, { blockTag: 5 } as never)
+    expect(result.didResolutionMetadata.error).toBe('notFound')
+    expect(result.didResolutionMetadata.message).toMatch(/reachable/)
+    expect(result.didResolutionMetadata.message).not.toMatch(/archive/)
   })
 
   it('returns DIDResolutionResult when getBlockMetadata fails for a historical query', async () => {

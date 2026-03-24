@@ -1,5 +1,5 @@
 import { Contract, Log, LogDescription } from 'ethers'
-import { bytes32toString, ERC1056Event, isDefined } from './helpers.js'
+import { bytes32toString, ERC1056Event } from './helpers.js'
 
 function extractPreviousChange(logResult: LogDescription): bigint {
   const pcIndex = logResult.fragment.inputs.findIndex((i) => i.name === 'previousChange')

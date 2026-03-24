@@ -450,19 +450,22 @@ export class EthrDidResolver {
         message.includes('missing trie node') ||
         message.includes('header not found') ||
         message.includes('missing revert data') ||
+        message.includes('pruned history unavailable') ||
+        message.includes('beyond current head block') ||
         message.includes('historical state not available')
-      // Generic RPC connectivity errors
-      const isRpcError =
+      // Pure connectivity/timeout failures — the endpoint is not reachable at all
+      const isConnectivityError =
         message.includes('could not detect network') ||
-        message.includes('missing response') ||
         message.includes('timeout') ||
-        message.includes('SERVER_ERROR') ||
         e?.code === 'NETWORK_ERROR' ||
-        e?.code === 'TIMEOUT' ||
-        e?.code === 'SERVER_ERROR'
+        e?.code === 'TIMEOUT'
+      // Server responded but with an error — may indicate missing historical data on non-archive nodes
+      const isServerError =
+        message.includes('missing response') || message.includes('SERVER_ERROR') || e?.code === 'SERVER_ERROR'
+      const isRpcError = isConnectivityError || isServerError
 
       let hint = ''
-      if (isArchiveError || (isHistoricalQuery && isRpcError)) {
+      if (isArchiveError || (isHistoricalQuery && isServerError)) {
         hint =
           ' The RPC node does not have the requested historical state. Use an archive node to resolve historical DID versions (versionId queries).'
       } else if (isRpcError) {

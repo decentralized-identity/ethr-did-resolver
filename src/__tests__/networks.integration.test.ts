@@ -72,7 +72,9 @@ describe('ethrResolver (alt-chains)', () => {
 
     it('returns error when non-archive node silently drops historical logs', async () => {
       const did = 'did:ethr:0x096164268929e920a217a76965547dc44732bb13'
-      const resolver = new Resolver(getResolver({ networks: [{ name: 'mainnet', rpcUrl: 'https://1rpc.io/eth' }] }))
+      const resolver = new Resolver(
+        getResolver({ networks: [{ name: 'mainnet', rpcUrl: 'https://rpc.flashbots.net' }] })
+      )
       const result = await resolver.resolve(did)
       // 1rpc.io is not an archive node — it returns empty logs for old blocks.
       // The integrity check detects the missing events and returns an actionable error.
