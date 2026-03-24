@@ -76,7 +76,7 @@ describe('ethrResolver (alt-chains)', () => {
         getResolver({ networks: [{ name: 'mainnet', rpcUrl: 'https://rpc.flashbots.net' }] })
       )
       const result = await resolver.resolve(did)
-      // 1rpc.io is not an archive node — it returns empty logs for old blocks.
+      // The flashbots.net RPC endpoint is not an archive node — it returns empty logs for old blocks.
       // The integrity check detects the missing events and returns an actionable error.
       expect(result.didDocument).toBeNull()
       expect(result.didResolutionMetadata.error).toBe('notFound')
