@@ -1,7 +1,5 @@
-import { Contract, ethers, hexlify, toUtf8Bytes } from 'ethers'
+import { BrowserProvider, Contract, ethers, hexlify, toUtf8Bytes } from 'ethers'
 import { Resolvable } from 'did-resolver'
-
-import { GanacheProvider } from '@ethers-ext/provider-ganache'
 import { EthrDidController } from '../controller'
 import { deployRegistry, randomAccount, sleep } from './testUtils'
 import { stringToBytes32 } from '../helpers'
@@ -9,7 +7,7 @@ import { stringToBytes32 } from '../helpers'
 jest.setTimeout(30000)
 
 describe('attributes', () => {
-  let registryContract: Contract, didResolver: Resolvable, provider: GanacheProvider
+  let registryContract: Contract, didResolver: Resolvable, provider: BrowserProvider
 
   beforeAll(async () => {
     const reg = await deployRegistry()

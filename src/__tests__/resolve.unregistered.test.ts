@@ -1,12 +1,12 @@
+import { BrowserProvider } from 'ethers'
 import { Resolvable } from 'did-resolver'
 
-import { GanacheProvider } from '@ethers-ext/provider-ganache'
 import { deployRegistry, randomAccount } from './testUtils'
 
 jest.setTimeout(30000)
 
 describe('unregistered DIDs', () => {
-  let didResolver: Resolvable, provider: GanacheProvider
+  let didResolver: Resolvable, provider: BrowserProvider
 
   beforeAll(async () => {
     const reg = await deployRegistry()

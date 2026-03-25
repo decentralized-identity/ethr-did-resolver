@@ -1,14 +1,13 @@
-import { Contract, ContractFactory, getBytes, SigningKey } from 'ethers'
+import { BrowserProvider, Contract, ContractFactory, getBytes, SigningKey } from 'ethers'
 import { EthrDidController } from '../controller'
 import { default as LegacyEthereumDIDRegistry } from './EthereumDIDRegistry-Legacy/LegacyEthereumDIDRegistry.json'
 import { deployRegistry, randomAccount } from './testUtils'
-import { GanacheProvider } from '@ethers-ext/provider-ganache'
 
 jest.setTimeout(30000)
 
 describe('nonce tracking', () => {
   // let registry, accounts, did, identity, controller, delegate1, delegate2, ethr, didResolver
-  let legacyRegistryContract: Contract, registryContract: Contract, provider: GanacheProvider
+  let legacyRegistryContract: Contract, registryContract: Contract, provider: BrowserProvider
 
   beforeAll(async () => {
     let reg = await deployRegistry()

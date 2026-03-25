@@ -1,14 +1,13 @@
-import { Contract } from 'ethers'
+import { BrowserProvider, Contract } from 'ethers'
 import { Resolvable } from 'did-resolver'
 import { EthrDidController } from '../controller'
 import { nullAddress } from '../helpers'
 import { deployRegistry, randomAccount, sleep } from './testUtils'
-import { GanacheProvider } from '@ethers-ext/provider-ganache'
 
 jest.setTimeout(30000)
 
 describe('versioning', () => {
-  let registryContract: Contract, didResolver: Resolvable, provider: GanacheProvider
+  let registryContract: Contract, didResolver: Resolvable, provider: BrowserProvider
 
   beforeAll(async () => {
     const reg = await deployRegistry()

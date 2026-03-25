@@ -1,16 +1,20 @@
-import { Contract, ContractFactory, ethers, SigningKey, Wallet } from 'ethers'
-import { GanacheProvider } from '@ethers-ext/provider-ganache'
+import { BrowserProvider, Contract, ContractFactory, ethers, NonceManager, SigningKey, Wallet } from 'ethers'
+import hre from 'hardhat'
 import { Resolver } from 'did-resolver'
 import { getResolver } from '../resolver'
 import { EthereumDIDRegistry } from '../config/EthereumDIDRegistry'
 
+let _provider: BrowserProvider | null = null
+let _automining = true
+
 export async function deployRegistry(): Promise<{
   registryContract: Contract
-  provider: GanacheProvider
+  provider: BrowserProvider
   didResolver: Resolver
 }> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const provider = new GanacheProvider({ logging: { quiet: true } } as any)
+  const provider = new ethers.BrowserProvider(hre.network.provider, undefined, { cacheTimeout: -1 })
+  _provider = provider
+  _automining = true
   const factory = ContractFactory.fromSolidity(EthereumDIDRegistry).connect(await provider.getSigner(0))
 
   const registryContract: Contract = await (await factory.deploy()).waitForDeployment()
@@ -22,33 +26,38 @@ export async function deployRegistry(): Promise<{
 }
 
 export async function sleep(milliseconds: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, milliseconds))
+  await new Promise<void>((resolve) => setTimeout(resolve, milliseconds))
+  if (_provider && _automining) {
+    await _provider.send('evm_mine', [])
+  }
 }
 
-export async function stopMining(provider: GanacheProvider): Promise<unknown> {
-  return provider.send('miner_stop', [])
+export async function stopMining(provider: BrowserProvider): Promise<unknown> {
+  _automining = false
+  return provider.send('evm_setAutomine', [false])
 }
 
-export async function startMining(provider: GanacheProvider): Promise<unknown> {
-  return provider.send('miner_start', [1])
+export async function startMining(provider: BrowserProvider): Promise<unknown> {
+  _automining = true
+  await provider.send('evm_setAutomine', [true])
+  return provider.send('evm_mine', [])
 }
 
-export async function randomAccount(provider: GanacheProvider): Promise<{
+export async function randomAccount(provider: BrowserProvider): Promise<{
   privKey: SigningKey
   address: string
   shortDID: string
   longDID: string
   pubKey: string
-  signer: Wallet
+  signer: NonceManager
 }> {
   const privKey = new ethers.SigningKey(ethers.randomBytes(32))
   const pubKey = privKey.compressedPublicKey
-  const signer = new ethers.Wallet(privKey, provider)
-  const address = await signer.getAddress()
+  const wallet = new ethers.Wallet(privKey, provider)
+  const signer = new NonceManager(wallet)
+  const address = await wallet.getAddress()
   const shortDID = `did:ethr:dev:${address}`
   const longDID = `did:ethr:dev:${pubKey}`
-  await provider.setAccount(address, {
-    balance: '0x1000000000000000000000',
-  })
+  await provider.send('hardhat_setBalance', [address, '0x1000000000000000000000'])
   return { privKey, pubKey, signer, address, shortDID, longDID }
 }

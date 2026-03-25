@@ -1,14 +1,12 @@
-import { Contract } from 'ethers'
+import { BrowserProvider, Contract } from 'ethers'
 import { Resolvable } from 'did-resolver'
-
-import { GanacheProvider } from '@ethers-ext/provider-ganache'
 import { EthrDidController } from '../controller'
 import { deployRegistry, randomAccount } from './testUtils'
 
 jest.setTimeout(30000)
 
 describe('change identity owner', () => {
-  let registryContract: Contract, didResolver: Resolvable, provider: GanacheProvider
+  let registryContract: Contract, didResolver: Resolvable, provider: BrowserProvider
 
   beforeAll(async () => {
     const reg = await deployRegistry()
