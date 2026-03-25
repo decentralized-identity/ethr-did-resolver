@@ -1,4 +1,4 @@
-import { BrowserProvider, Contract, ContractFactory, ethers, NonceManager, SigningKey, Wallet } from 'ethers'
+import { BrowserProvider, Contract, ContractFactory, ethers, NonceManager, SigningKey } from 'ethers'
 import hre from 'hardhat'
 import { Resolver } from 'did-resolver'
 import { getResolver } from '../resolver'
