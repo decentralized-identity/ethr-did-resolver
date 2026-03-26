@@ -57,13 +57,13 @@
     "release": "semantic-release --debug"
   },
   "devDependencies": {
-    "@eslint/eslintrc": "3.1.0",
-    "@eslint/js": "9.11.1",
+    "@eslint/eslintrc": "3.3.5",
+    "@eslint/js": "9.39.4",
     "@semantic-release/changelog": "6.0.3",
     "@semantic-release/git": "10.0.1",
-    "@typescript-eslint/eslint-plugin": "8.54.0",
-    "@typescript-eslint/parser": "8.54.0",
-    "@vitest/coverage-v8": "4.1.1",
+    "@typescript-eslint/eslint-plugin": "8.57.2",
+    "@typescript-eslint/parser": "8.57.2",
+    "@vitest/coverage-v8": "4.1.2",
     "eslint": "8.57.1",
     "eslint-config-prettier": "9.1.2",
     "eslint-plugin-prettier": "5.5.5",
@@ -72,7 +72,7 @@
     "prettier": "3.8.1",
     "semantic-release": "22.0.12",
     "typescript": "5.9.3",
-    "vitest": "4.1.1"
+    "vitest": "4.1.2"
   },
   "dependencies": {
     "did-resolver": "^4.1.0",
