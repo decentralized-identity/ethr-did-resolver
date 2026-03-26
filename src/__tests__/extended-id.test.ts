@@ -1,3 +1,4 @@
+import { describe, it, expect } from 'vitest'
 import { identifierMatcher, interpretIdentifier } from '../helpers'
 
 describe('pattern matcher', () => {

@@ -1,15 +1,12 @@
-import { Contract } from 'ethers'
+import { describe, it, expect, beforeAll } from 'vitest'
+import { BrowserProvider, Contract } from 'ethers'
 import { Resolvable } from 'did-resolver'
-
-import { GanacheProvider } from '@ethers-ext/provider-ganache'
 import { EthrDidController } from '../controller'
 import { deployRegistry, randomAccount, sleep, startMining, stopMining } from './testUtils'
 import { stringToBytes32 } from '../helpers'
 
-jest.setTimeout(30000)
-
 describe('overlapping events', () => {
-  let registryContract: Contract, didResolver: Resolvable, provider: GanacheProvider
+  let registryContract: Contract, didResolver: Resolvable, provider: BrowserProvider
 
   beforeAll(async () => {
     const reg = await deployRegistry()
@@ -61,7 +58,7 @@ describe('overlapping events', () => {
 
   it('adding 2 services in 2 consecutive blocks should result in only 2 services appearing in the DID doc (no duplication)', async () => {
     expect.assertions(3)
-    const { address, shortDID: identifier, signer } = await randomAccount(provider)
+    const { shortDID: identifier, signer } = await randomAccount(provider)
 
     const ethrDid = new EthrDidController(identifier, registryContract, signer)
 
@@ -97,7 +94,7 @@ describe('overlapping events', () => {
 
   it('adding and removing a service in the same block should result in no change to the doc (correct order, same block)', async () => {
     expect.assertions(2)
-    const { address, shortDID: identifier, signer } = await randomAccount(provider)
+    const { shortDID: identifier, signer } = await randomAccount(provider)
 
     const ethrDid = new EthrDidController(identifier, registryContract, signer)
 

@@ -2,11 +2,7 @@
   "compilerOptions": {
     "target": "ES2020",
     "module": "CommonJS",
-    "lib": [
-      "dom",
-      "es6",
-      "es2015.promise"
-    ],
+    "lib": ["dom", "es6", "es2015.promise"],
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
@@ -19,12 +15,6 @@
     "resolveJsonModule": true,
     "esModuleInterop": true
   },
-  "exclude": [
-    "**/__tests__/*",
-    "node_modules",
-    "lib"
-  ],
-  "include": [
-    "src"
-  ]
+  "exclude": ["**/__tests__/*", "node_modules", "lib"],
+  "include": ["src"]
 }

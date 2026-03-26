@@ -1,15 +1,12 @@
-import { Contract, ethers, hexlify, toUtf8Bytes } from 'ethers'
+import { describe, it, expect, beforeAll, beforeEach, vi } from 'vitest'
+import { BrowserProvider, Contract, ethers, hexlify, toUtf8Bytes } from 'ethers'
 import { Resolvable } from 'did-resolver'
-
-import { GanacheProvider } from '@ethers-ext/provider-ganache'
 import { EthrDidController } from '../controller'
 import { deployRegistry, randomAccount, sleep } from './testUtils'
 import { stringToBytes32 } from '../helpers'
 
-jest.setTimeout(30000)
-
 describe('attributes', () => {
-  let registryContract: Contract, didResolver: Resolvable, provider: GanacheProvider
+  let registryContract: Contract, didResolver: Resolvable, provider: BrowserProvider
 
   beforeAll(async () => {
     const reg = await deployRegistry()
@@ -25,7 +22,7 @@ describe('attributes', () => {
       const { pubKey: attrValue } = await randomAccount(provider)
       const attrName = 'did/pub/Secp256k1/veriKey'
       const controller = new EthrDidController(identity, registryContract, signer)
-      const encodeAttributeValueSpy = jest.spyOn(controller, 'encodeAttributeValue')
+      const encodeAttributeValueSpy = vi.spyOn(controller, 'encodeAttributeValue')
       const ttl = 11111
       await controller.createSetAttributeHash(attrName, attrValue, ttl)
       expect(encodeAttributeValueSpy).toHaveBeenCalledWith(attrValue)
@@ -39,7 +36,7 @@ describe('attributes', () => {
       const attrValue = 'https://hubs.uport.me/service-endpoints-are-not-hex'
       const attrName = 'did/pub/Secp256k1/veriKey'
       const controller = new EthrDidController(identity, registryContract, signer)
-      const encodeAttributeValueSpy = jest.spyOn(controller, 'encodeAttributeValue')
+      const encodeAttributeValueSpy = vi.spyOn(controller, 'encodeAttributeValue')
       const ttl = 11111
       await controller.createSetAttributeHash(attrName, attrValue, ttl)
       expect(encodeAttributeValueSpy).toHaveBeenCalledWith(attrValue)
@@ -51,7 +48,7 @@ describe('attributes', () => {
 
   describe('invoking createRevokeAttributeHash', () => {
     beforeEach(() => {
-      jest.clearAllMocks()
+      vi.clearAllMocks()
     })
 
     it('sets the "encodedValue" to the passed hex encoded string (e.g. a public key)', async () => {
@@ -60,7 +57,7 @@ describe('attributes', () => {
       const { pubKey: attrValue } = await randomAccount(provider)
       const attrName = 'did/pub/Secp256k1/veriKey'
       const controller = new EthrDidController(identity, registryContract, signer)
-      const encodeAttributeValueSpy = jest.spyOn(controller, 'encodeAttributeValue')
+      const encodeAttributeValueSpy = vi.spyOn(controller, 'encodeAttributeValue')
       await controller.createRevokeAttributeHash(attrName, attrValue)
       expect(encodeAttributeValueSpy).toHaveBeenCalledWith(attrValue)
       expect(encodeAttributeValueSpy).toHaveBeenCalledTimes(1)
@@ -73,7 +70,7 @@ describe('attributes', () => {
       const attrValue = 'https://hubs.uport.me/service-endpoints-are-not-hex'
       const attrName = 'did/pub/Secp256k1/veriKey'
       const controller = new EthrDidController(identity, registryContract, signer)
-      const encodeAttributeValueSpy = jest.spyOn(controller, 'encodeAttributeValue')
+      const encodeAttributeValueSpy = vi.spyOn(controller, 'encodeAttributeValue')
       await controller.createRevokeAttributeHash(attrName, attrValue)
       expect(encodeAttributeValueSpy).toHaveBeenCalledWith(attrValue)
       expect(encodeAttributeValueSpy).toHaveBeenCalledTimes(1)
