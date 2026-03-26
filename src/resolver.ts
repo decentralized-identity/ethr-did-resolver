@@ -91,14 +91,17 @@ export class EthrDidResolver {
         fromBlock: previousChange,
         toBlock: previousChange,
       })
-      const events: ERC1056Event[] = logDecoder(contract, logs)
+      if (logs.length === 0) {
+        throw new Error(
+          `No logs found for block ${blockNumber} but previousChange points here. ` +
+            `The RPC node may not have historical log data. Use an archive node for complete DID resolution.`
+        )
+      }
+      const { events, previousChange: pc } = logDecoder(contract, logs, blockNumber)
+      previousChange = pc || null
       events.reverse()
-      previousChange = null
       for (const event of events) {
         history.unshift(event)
-        if (event.previousChange < blockNumber) {
-          previousChange = event.previousChange
-        }
       }
     }
     return { address, history, controllerKey, chainId }
@@ -193,6 +196,7 @@ export class EthrDidResolver {
                   controller: did,
                 }
                 pk.type = legacyAlgoMap[pk.type] || algorithm
+                let keyDataSet = true
                 switch (encoding) {
                   case null:
                   case undefined:
@@ -206,34 +210,48 @@ export class EthrDidResolver {
                     pk.publicKeyBase58 = encodeBase58(currentEvent.value)
                     break
                   case 'pem':
-                    pk.publicKeyPem = toUtf8String(currentEvent.value)
+                    try {
+                      pk.publicKeyPem = toUtf8String(currentEvent.value)
+                    } catch {
+                      // value is not valid UTF-8; skip this key — non-DID use of registry
+                      keyDataSet = false
+                    }
                     break
                   default:
                     pk.value = strip0x(currentEvent.value)
                 }
-                pks[eventIndex] = pk
-                if (match[4] === 'sigAuth') {
-                  auth[eventIndex] = pk.id
-                  signingRefs[eventIndex] = pk.id
-                } else if (match[4] === 'enc') {
-                  keyAgreementRefs[eventIndex] = pk.id
-                } else {
-                  signingRefs[eventIndex] = pk.id
+                if (keyDataSet) {
+                  pks[eventIndex] = pk
+                  if (match[4] === 'sigAuth') {
+                    auth[eventIndex] = pk.id
+                    signingRefs[eventIndex] = pk.id
+                  } else if (match[4] === 'enc') {
+                    keyAgreementRefs[eventIndex] = pk.id
+                  } else {
+                    signingRefs[eventIndex] = pk.id
+                  }
                 }
                 break
               }
               case 'svc': {
                 serviceCount++
-                const encodedService = toUtf8String(currentEvent.value)
+                let encodedService: string | null = null
                 try {
-                  endpoint = JSON.parse(encodedService)
+                  encodedService = toUtf8String(currentEvent.value)
                 } catch {
-                  endpoint = encodedService
+                  // value is not valid UTF-8; skip this service — non-DID use of registry
                 }
-                services[eventIndex] = {
-                  id: `${did}#service-${serviceCount}`,
-                  type: algorithm,
-                  serviceEndpoint: endpoint,
+                if (encodedService !== null) {
+                  try {
+                    endpoint = JSON.parse(encodedService)
+                  } catch {
+                    endpoint = encodedService
+                  }
+                  services[eventIndex] = {
+                    id: `${did}#service-${serviceCount}`,
+                    type: algorithm,
+                    serviceEndpoint: endpoint,
+                  }
                 }
                 break
               }
@@ -381,15 +399,13 @@ export class EthrDidResolver {
 
     let now = BigInt(Math.floor(new Date().getTime() / 1000))
 
-    if (typeof blockTag === 'number') {
-      const block = await this.getBlockMetadata(blockTag, networkId)
-      now = BigInt(Date.parse(block.isoDate) / 1000)
-    } else {
-      // 'latest'
-    }
-
-    const { address, history, controllerKey, chainId } = await this.changeLog(id, networkId, 'latest')
     try {
+      if (typeof blockTag === 'number') {
+        const block = await this.getBlockMetadata(blockTag, networkId)
+        now = BigInt(Date.parse(block.isoDate) / 1000)
+      }
+
+      const { address, history, controllerKey, chainId } = await this.changeLog(id, networkId, 'latest')
       const { didDocument, deactivated, versionId, nextVersionId } = this.wrapDidDocument(
         did,
         address,
@@ -427,10 +443,39 @@ export class EthrDidResolver {
       }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
+      const message: string = e?.message ?? e?.toString() ?? 'unknown error'
+      const isHistoricalQuery = typeof blockTag === 'number'
+      // Errors that indicate the node lacks historical state (non-archive node)
+      const isArchiveError =
+        message.includes('missing trie node') ||
+        message.includes('header not found') ||
+        message.includes('missing revert data') ||
+        message.includes('pruned history unavailable') ||
+        message.includes('beyond current head block') ||
+        message.includes('historical state not available')
+      // Pure connectivity/timeout failures — the endpoint is not reachable at all
+      const isConnectivityError =
+        message.includes('could not detect network') ||
+        message.includes('timeout') ||
+        e?.code === 'NETWORK_ERROR' ||
+        e?.code === 'TIMEOUT'
+      // Server responded but with an error — may indicate missing historical data on non-archive nodes
+      const isServerError =
+        message.includes('missing response') || message.includes('SERVER_ERROR') || e?.code === 'SERVER_ERROR'
+      const isRpcError = isConnectivityError || isServerError
+
+      let hint = ''
+      if (isArchiveError || (isHistoricalQuery && isServerError)) {
+        hint =
+          ' The RPC node does not have the requested historical state. Use an archive node to resolve historical DID versions (versionId queries).'
+      } else if (isRpcError) {
+        hint = ' Ensure the RPC endpoint is reachable.'
+      }
+
       return {
         didResolutionMetadata: {
           error: Errors.notFound,
-          message: e.toString(), // This is not in spec, nut may be helpful
+          message: `${message}${hint}`,
         },
         didDocumentMetadata: {},
         didDocument: null,

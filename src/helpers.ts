@@ -94,8 +94,12 @@ export function strip0x(input: string): string {
   return input.startsWith('0x') ? input.slice(2) : input
 }
 
-export function bytes32toString(input: bytes32 | Uint8Array): string {
-  return toUtf8String(input).replace(/\0+$/, '')
+export function bytes32toString(input: bytes32 | Uint8Array): string | null {
+  try {
+    return toUtf8String(input).replace(/\0+$/, '')
+  } catch {
+    return null
+  }
 }
 
 export function stringToBytes32(str: string): string {
