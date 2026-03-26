@@ -1,10 +1,3 @@
-# [11.1.0](https://github.com/decentralized-identity/ethr-did-resolver/compare/11.0.5...11.1.0) (2026-03-26)
-
-
-### Features
-
-* **error-handling:** Intentionally fail resolution if the RPC endpoint is not serving historical data ([#214](https://github.com/decentralized-identity/ethr-did-resolver/issues/214)) ([ae6beeb](https://github.com/decentralized-identity/ethr-did-resolver/commit/ae6beeba7c740dab1d46c8cd4ec5042b71f26e01))
-
 ## [11.0.5](https://github.com/decentralized-identity/ethr-did-resolver/compare/11.0.4...11.0.5) (2025-08-10)
 
 
