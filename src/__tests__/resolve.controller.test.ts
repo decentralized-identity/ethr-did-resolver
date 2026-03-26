@@ -1,9 +1,8 @@
+import { describe, it, expect, beforeAll } from 'vitest'
 import { BrowserProvider, Contract } from 'ethers'
 import { Resolvable } from 'did-resolver'
 import { EthrDidController } from '../controller'
 import { deployRegistry, randomAccount } from './testUtils'
-
-jest.setTimeout(30000)
 
 describe('change identity owner', () => {
   let registryContract: Contract, didResolver: Resolvable, provider: BrowserProvider

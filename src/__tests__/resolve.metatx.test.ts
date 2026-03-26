@@ -1,9 +1,8 @@
+import { describe, it, expect, beforeAll } from 'vitest'
 import { BrowserProvider, Contract } from 'ethers'
 import { Resolvable } from 'did-resolver'
 import { EthrDidController } from '../controller'
 import { deployRegistry, randomAccount, sleep } from './testUtils'
-
-jest.setTimeout(30000)
 
 describe('meta transactions', () => {
   let registryContract: Contract, didResolver: Resolvable, provider: BrowserProvider
@@ -100,7 +99,7 @@ describe('meta transactions', () => {
   })
 
   it('set attribute signed', async () => {
-    const { shortDID: identifier, privKey, signer } = await randomAccount(provider)
+    const { shortDID: identifier, privKey } = await randomAccount(provider)
 
     const serviceEndpointParams = { uri: 'https://didcomm.example.com', transportType: 'http' }
     const attributeName = 'did/svc/testService'
@@ -192,8 +191,8 @@ describe('meta transactions', () => {
   })
 
   it('change owner signed', async () => {
-    const { address: identity, shortDID: identifier, privKey: originalPrivKey } = await randomAccount(provider)
-    const { address: newOwner, privKey: newOwnerKey } = await randomAccount(provider)
+    const { shortDID: identifier, privKey: originalPrivKey } = await randomAccount(provider)
+    const { address: newOwner } = await randomAccount(provider)
 
     const hash = await new EthrDidController(identifier, registryContract).createChangeOwnerHash(newOwner)
     const signature = originalPrivKey.sign(hash)
@@ -222,7 +221,7 @@ describe('meta transactions', () => {
   })
 
   it('set attribute signed (key)', async () => {
-    const { address: identity, shortDID: identifier, privKey } = await randomAccount(provider)
+    const { shortDID: identifier, privKey } = await randomAccount(provider)
     const { pubKey: signingKey } = await randomAccount(provider)
 
     const attributeName = 'did/pub/Secp256k1/veriKey/hex'

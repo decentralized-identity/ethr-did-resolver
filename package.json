@@ -47,8 +47,8 @@
     "Ed25519VerificationKey2018"
   ],
   "scripts": {
-    "test": "jest",
-    "test:ci": "jest --coverage",
+    "test": "HARDHAT_CONFIG=hardhat.config.mts vitest run",
+    "test:ci": "HARDHAT_CONFIG=hardhat.config.mts vitest run --coverage",
     "build": "tsc",
     "clean": "rm -rf ./lib",
     "format": "prettier --write \"src/**/*.[jt]s\"",
@@ -57,27 +57,22 @@
     "release": "semantic-release --debug"
   },
   "devDependencies": {
-    "@babel/core": "7.29.0",
-    "@babel/preset-env": "7.29.0",
-    "@babel/preset-typescript": "7.28.5",
-    "@eslint/eslintrc": "^3.1.0",
-    "@eslint/js": "^9.11.1",
+    "@eslint/eslintrc": "3.1.0",
+    "@eslint/js": "9.11.1",
     "@semantic-release/changelog": "6.0.3",
     "@semantic-release/git": "10.0.1",
-    "@types/jest": "29.5.14",
     "@typescript-eslint/eslint-plugin": "8.54.0",
     "@typescript-eslint/parser": "8.54.0",
-    "hardhat": "^2.22.0",
-    "babel-jest": "29.7.0",
+    "@vitest/coverage-v8": "4.1.1",
     "eslint": "8.57.1",
     "eslint-config-prettier": "9.1.2",
-    "eslint-plugin-jest": "28.14.0",
     "eslint-plugin-prettier": "5.5.5",
-    "jest": "29.7.0",
+    "eslint-plugin-vitest": "0.5.4",
+    "hardhat": "3.2.0",
     "prettier": "3.8.1",
     "semantic-release": "22.0.12",
-    "ts-jest": "^29.2.5",
-    "typescript": "5.9.3"
+    "typescript": "5.9.3",
+    "vitest": "4.1.1"
   },
   "dependencies": {
     "did-resolver": "^4.1.0",

@@ -1,10 +1,9 @@
+import { describe, it, expect, beforeAll } from 'vitest'
 import { BrowserProvider, Contract } from 'ethers'
 import { Resolvable } from 'did-resolver'
 import { EthrDidController } from '../controller'
 import { interpretIdentifier, nullAddress } from '../helpers'
 import { deployRegistry, randomAccount } from './testUtils'
-
-jest.setTimeout(30000)
 
 describe('regression', () => {
   let registryContract: Contract, didResolver: Resolvable, provider: BrowserProvider

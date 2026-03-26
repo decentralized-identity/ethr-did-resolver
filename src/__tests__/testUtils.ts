@@ -1,18 +1,21 @@
 import { BrowserProvider, Contract, ContractFactory, ethers, NonceManager, SigningKey } from 'ethers'
 import hre from 'hardhat'
+type NetworkConnection = Awaited<ReturnType<typeof hre.network.connect>>
 import { Resolver } from 'did-resolver'
 import { getResolver } from '../resolver'
 import { EthereumDIDRegistry } from '../config/EthereumDIDRegistry'
 
 let _provider: BrowserProvider | null = null
 let _automining = true
+let _connection: NetworkConnection | null = null
 
 export async function deployRegistry(): Promise<{
   registryContract: Contract
   provider: BrowserProvider
   didResolver: Resolver
 }> {
-  const provider = new ethers.BrowserProvider(hre.network.provider, undefined, { cacheTimeout: -1 })
+  _connection = await hre.network.connect('hardhat')
+  const provider = new BrowserProvider(_connection.provider, undefined, { cacheTimeout: -1 })
   _provider = provider
   _automining = true
   const factory = ContractFactory.fromSolidity(EthereumDIDRegistry).connect(await provider.getSigner(0))

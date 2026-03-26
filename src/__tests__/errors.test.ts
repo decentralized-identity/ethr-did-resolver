@@ -1,3 +1,4 @@
+import { describe, it, expect } from 'vitest'
 import { Resolver } from 'did-resolver'
 import { getResolver } from '../resolver'
 

@@ -1,10 +1,9 @@
+import { describe, it, expect, beforeAll } from 'vitest'
 import { BrowserProvider, Contract } from 'ethers'
 import { Resolvable } from 'did-resolver'
 import { EthrDidController } from '../controller'
 import { nullAddress } from '../helpers'
 import { deployRegistry, randomAccount, sleep } from './testUtils'
-
-jest.setTimeout(30000)
 
 describe('versioning', () => {
   let registryContract: Contract, didResolver: Resolvable, provider: BrowserProvider
