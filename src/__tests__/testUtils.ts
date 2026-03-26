@@ -5,8 +5,6 @@ import { Resolver } from 'did-resolver'
 import { getResolver } from '../resolver'
 import { EthereumDIDRegistry } from '../config/EthereumDIDRegistry'
 
-let _provider: BrowserProvider | null = null
-let _automining = true
 let _connection: NetworkConnection | null = null
 
 export async function deployRegistry(): Promise<{
@@ -16,8 +14,6 @@ export async function deployRegistry(): Promise<{
 }> {
   _connection = await hre.network.connect('hardhat')
   const provider = new BrowserProvider(_connection.provider, undefined, { cacheTimeout: -1 })
-  _provider = provider
-  _automining = true
   const factory = ContractFactory.fromSolidity(EthereumDIDRegistry).connect(await provider.getSigner(0))
 
   const registryContract: Contract = await (await factory.deploy()).waitForDeployment()
@@ -30,18 +26,13 @@ export async function deployRegistry(): Promise<{
 
 export async function sleep(milliseconds: number): Promise<void> {
   await new Promise<void>((resolve) => setTimeout(resolve, milliseconds))
-  if (_provider && _automining) {
-    await _provider.send('evm_mine', [])
-  }
 }
 
 export async function stopMining(provider: BrowserProvider): Promise<unknown> {
-  _automining = false
   return provider.send('evm_setAutomine', [false])
 }
 
 export async function startMining(provider: BrowserProvider): Promise<unknown> {
-  _automining = true
   await provider.send('evm_setAutomine', [true])
   return provider.send('evm_mine', [])
 }
