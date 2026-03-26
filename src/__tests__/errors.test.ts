@@ -1,11 +1,9 @@
-import { describe, it, expect } from 'vitest'
-import { Contract, zeroPadBytes } from 'ethers'
+import { describe, it, expect, beforeAll, vi } from 'vitest'
+import { BrowserProvider, Contract, zeroPadBytes } from 'ethers'
 import { Resolver } from 'did-resolver'
 import { getResolver, EthrDidResolver } from '../resolver'
 import { deployRegistry, randomAccount } from './testUtils'
 import { stringToBytes32 } from '../helpers'
-
-jest.setTimeout(30000)
 
 describe('error handling', () => {
   const didResolver = new Resolver(
@@ -60,7 +58,7 @@ describe('error handling', () => {
 
 describe('RPC failure handling', () => {
   let registryResolver: EthrDidResolver
-  let provider: GanacheProvider
+  let provider: BrowserProvider
 
   beforeAll(async () => {
     const reg = await deployRegistry()
@@ -72,7 +70,7 @@ describe('RPC failure handling', () => {
   it('returns DIDResolutionResult (not thrown exception) when changeLog fails', async () => {
     expect.assertions(3)
     const { shortDID: did, address } = await randomAccount(provider)
-    jest.spyOn(registryResolver, 'changeLog').mockRejectedValueOnce(new Error('missing response'))
+    vi.spyOn(registryResolver, 'changeLog').mockRejectedValueOnce(new Error('missing response'))
     // parsed.id is the part after 'did:ethr:' (the method-specific identifier)
     const parsed = { did, id: `dev:${address}`, method: 'ethr', didUrl: did }
     const result = await registryResolver.resolve(did, parsed as never, null as never, {})
@@ -84,7 +82,7 @@ describe('RPC failure handling', () => {
   it('includes RPC hint in message for connectivity errors (non-historical)', async () => {
     expect.assertions(3)
     const { shortDID: did, address } = await randomAccount(provider)
-    jest.spyOn(registryResolver, 'changeLog').mockRejectedValueOnce(new Error('missing response'))
+    vi.spyOn(registryResolver, 'changeLog').mockRejectedValueOnce(new Error('missing response'))
     const parsed = { did, id: `dev:${address}`, method: 'ethr', didUrl: did }
     const result = await registryResolver.resolve(did, parsed as never, null as never, {})
     expect(result.didResolutionMetadata.error).toBe('notFound')
@@ -96,7 +94,7 @@ describe('RPC failure handling', () => {
   it('instructs user to use an archive node when a known archive error occurs', async () => {
     expect.assertions(2)
     const { shortDID: did, address } = await randomAccount(provider)
-    jest.spyOn(registryResolver, 'changeLog').mockRejectedValueOnce(new Error('missing trie node abc (path )'))
+    vi.spyOn(registryResolver, 'changeLog').mockRejectedValueOnce(new Error('missing trie node abc (path )'))
     const parsed = { did, id: `dev:${address}`, method: 'ethr', didUrl: did }
     const result = await registryResolver.resolve(did, parsed as never, null as never, {})
     expect(result.didResolutionMetadata.error).toBe('notFound')
@@ -107,7 +105,7 @@ describe('RPC failure handling', () => {
     expect.assertions(2)
     const { shortDID: did, address } = await randomAccount(provider)
     // A server-side RPC error (missing response) on a versionId (historical) query should suggest archive node
-    jest.spyOn(registryResolver, 'getBlockMetadata').mockRejectedValueOnce(new Error('missing response'))
+    vi.spyOn(registryResolver, 'getBlockMetadata').mockRejectedValueOnce(new Error('missing response'))
     const parsed = { did, id: `dev:${address}`, method: 'ethr', didUrl: did }
     const result = await registryResolver.resolve(did, parsed as never, null as never, { blockTag: 5 } as never)
     expect(result.didResolutionMetadata.error).toBe('notFound')
@@ -119,7 +117,7 @@ describe('RPC failure handling', () => {
     const { shortDID: did, address } = await randomAccount(provider)
     // A timeout on a versionId query means the endpoint is unreachable, not that it lacks archive data
     const timeoutErr = Object.assign(new Error('request timeout'), { code: 'TIMEOUT' })
-    jest.spyOn(registryResolver, 'getBlockMetadata').mockRejectedValueOnce(timeoutErr)
+    vi.spyOn(registryResolver, 'getBlockMetadata').mockRejectedValueOnce(timeoutErr)
     const parsed = { did, id: `dev:${address}`, method: 'ethr', didUrl: did }
     const result = await registryResolver.resolve(did, parsed as never, null as never, { blockTag: 5 } as never)
     expect(result.didResolutionMetadata.error).toBe('notFound')
@@ -130,7 +128,7 @@ describe('RPC failure handling', () => {
   it('returns DIDResolutionResult when getBlockMetadata fails for a historical query', async () => {
     expect.assertions(3)
     const { shortDID: did, address } = await randomAccount(provider)
-    jest.spyOn(registryResolver, 'getBlockMetadata').mockRejectedValueOnce(new Error('missing revert data'))
+    vi.spyOn(registryResolver, 'getBlockMetadata').mockRejectedValueOnce(new Error('missing revert data'))
     const parsed = { did, id: `dev:${address}`, method: 'ethr', didUrl: did }
     // blockTag as a number triggers getBlockMetadata before changeLog
     const result = await registryResolver.resolve(did, parsed as never, null as never, { blockTag: 5 } as never)
@@ -149,7 +147,7 @@ describe('RPC failure handling', () => {
     await connected['addDelegate'](address, stringToBytes32('veriKey'), delegate, 86400)
     // Spy on provider.getLogs to return empty — simulating a non-archive node
     const realProvider = registry.runner!.provider!
-    const getLogsSpy = jest.spyOn(realProvider, 'getLogs').mockResolvedValueOnce([])
+    const getLogsSpy = vi.spyOn(realProvider, 'getLogs').mockResolvedValueOnce([])
     const parsed = { did, id: `dev:${address}`, method: 'ethr', didUrl: did }
     const result = await registryResolver.resolve(did, parsed as never, null as never, {})
     getLogsSpy.mockRestore()
@@ -166,7 +164,7 @@ describe('non-DID registry events', () => {
 
   let registryContract: Contract
   let didResolver: Resolver
-  let provider: GanacheProvider
+  let provider: BrowserProvider
 
   beforeAll(async () => {
     const reg = await deployRegistry()
