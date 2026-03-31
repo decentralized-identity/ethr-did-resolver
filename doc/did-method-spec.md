@@ -441,10 +441,10 @@ where `eventIndex` is the index of the event that modifies that section of the D
 - add key => `#delegate-1` is added
 - add another key => `#delegate-2` is added
 - add delegate => `#delegate-3` is added
-- add service => `#service-1` ia added
-- revoke first key => `#delegate-1` gets removed from the DID document; `#delegate-2` and `#delegte-3` remain.
+- add service => `#service-1` is added
+- revoke first key => `#delegate-1` gets removed from the DID document; `#delegate-2` and `#delegate-3` remain.
 - add another delegate => `#delegate-5` is added (earlier revocation is counted as an event)
-- first delegate expires => `delegate-3` is removed, `#delegate-5` remains intact
+- first delegate expires => `#delegate-3` is removed, `#delegate-5` remains intact
 
 ### Update
 
@@ -578,10 +578,9 @@ all resolution queries. For high-assurance scenarios, running a local full node 
 
 On-chain ERC1056 transactions inherit Ethereum's native replay protection through account nonces and EIP-155 chain IDs.
 The ERC1056 proposal mentions meta-transaction support, where a user can sign a transaction off-chain and have a third
-party submit it on their behalf. If this pattern is used by a user and the ERC1056 registry implementation does not
-require
-chain-specific signatures, then the same signed meta-transaction could be replayed on a different Ethereum network (
-e.g., mainnet vs. a testnet), potentially causing unintended updates to the corresponding DID on that different network.
+party submit it on their behalf. If this pattern is used by a user and the ERC1056 registry implementation does not require
+chain-specific signatures, then the same signed meta-transaction could be replayed on a different Ethereum network (e.g.,
+mainnet vs. a testnet), potentially causing unintended updates to the corresponding DID on that different network.
 To mitigate this, users can opt to not use the meta-transaction support in the ERC-1056 implementation or change the
 owner
 of their DID to a smart contract that implements its own meta-transaction support, bypassing the ERC-1056 implementation
@@ -658,7 +657,7 @@ assurance by independently validating all state transitions.
 Light client implementations, which verify only block headers and Merkle proofs rather than re-executing all
 transactions, offer a middle ground but rely on the honesty of peers serving block data. Where `did:ethr` is deployed on
 networks with varying topology (e.g., side-chains, L2 rollups), the specific security assumptions of that network's
-consensus and data availability model MUST be documented and understood by relying-parties.
+consensus and data availability model MUST be documented and understood by relying parties.
 
 ### Cryptographic Protection
 
