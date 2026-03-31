@@ -1,8 +1,8 @@
 # ETHR DID Method Specification
 
-## Author
+## Editor
 
-- Veramo core team: <https://github.com/uport-project/veramo/discussions> or veramo-hello@mesh.xyz
+- Mircea Nistor [<ethr@mirceanis.xyz>](mailto:ethr@mirceanis.xyz)
 
 ## Preface
 
