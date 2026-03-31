@@ -84,7 +84,7 @@ describe('ethrResolver (alt-chains)', () => {
     })
 
     it('resolves on mainnet with versionId', async () => {
-      const resolver = new Resolver(getResolver({ infuraProjectId: '6b734e0b04454df8a6ce234023c04f26' }))
+      const resolver = new Resolver(getResolver({ infuraProjectId: '074ec0a8a6f74f5cbf3630acd19ae7ef' }))
       const result = await resolver.resolve('did:ethr:0x26bf14321004e770e7a8b080b7a526d8eed8b388?versionId=12090174')
       expect(result).toEqual({
         didDocumentMetadata: {
@@ -114,7 +114,7 @@ describe('ethrResolver (alt-chains)', () => {
     it('resolves on sepolia when configured', async () => {
       const did = 'did:ethr:sepolia:' + addr
       const ethr = getResolver({
-        infuraProjectId: '6b734e0b04454df8a6ce234023c04f26',
+        infuraProjectId: '074ec0a8a6f74f5cbf3630acd19ae7ef',
       })
       const resolver = new Resolver(ethr)
       const result = await resolver.resolve(did)
