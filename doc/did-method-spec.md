@@ -251,9 +251,9 @@ When the controller address of a `did:ethr` is changed, a `DIDOwnerChanged` even
 
 ```solidity
 event DIDOwnerChanged(
-  address indexed identity,
-  address owner,
-  uint previousChange
+    address indexed identity,
+    address owner,
+    uint previousChange
 );
 ```
 
@@ -272,11 +272,11 @@ document.
 
 ```solidity
 event DIDDelegateChanged(
-  address indexed identity,
-  bytes32 delegateType,
-  address delegate,
-  uint validTo,
-  uint previousChange
+    address indexed identity,
+    bytes32 delegateType,
+    address delegate,
+    uint validTo,
+    uint previousChange
 );
 ```
 
@@ -317,11 +317,11 @@ contract events of type `DIDAttributeChanged` and can thus not be queried from w
 
 ```solidity
 event DIDAttributeChanged(
-  address indexed identity,
-  bytes32 name,
-  bytes value,
-  uint validTo,
-  uint previousChange
+    address indexed identity,
+    bytes32 name,
+    bytes value,
+    uint validTo,
+    uint previousChange
 );
 ```
 
@@ -430,21 +430,21 @@ A `DIDAttributeChanged` event for the account `0xf3beac30c498d9e26865f34fcaa57db
 With the exception of `#controller` and `#controllerKey`, the `id` properties that appear throughout the DID document
 MUST be stable across updates. This means that the same key material will be referenced by the same ID after an update.
 
-* Attribute or delegate changes that result in `verificationMethod` entries MUST set the `id`
+- Attribute or delegate changes that result in `verificationMethod` entries MUST set the `id`
   `${did}#delegate-${eventIndex}`.
-* Attributes that result in `service` entries MUST set the `id` to `${did}#service-${eventIndex}`
+- Attributes that result in `service` entries MUST set the `id` to `${did}#service-${eventIndex}`
 
 where `eventIndex` is the index of the event that modifies that section of the DID document.
 
 **Example**
 
-* add key => `#delegate-1` is added
-* add another key => `#delegate-2` is added
-* add delegate => `#delegate-3` is added
-* add service => `#service-1` ia added
-* revoke first key => `#delegate-1` gets removed from the DID document; `#delegate-2` and `#delegte-3` remain.
-* add another delegate => `#delegate-5` is added (earlier revocation is counted as an event)
-* first delegate expires => `delegate-3` is removed, `#delegate-5` remains intact
+- add key => `#delegate-1` is added
+- add another key => `#delegate-2` is added
+- add delegate => `#delegate-3` is added
+- add service => `#service-1` ia added
+- revoke first key => `#delegate-1` gets removed from the DID document; `#delegate-2` and `#delegte-3` remain.
+- add another delegate => `#delegate-5` is added (earlier revocation is counted as an event)
+- first delegate expires => `delegate-3` is removed, `#delegate-5` remains intact
 
 ### Update
 
@@ -501,8 +501,8 @@ The `resolve` method returns an object with the following properties: `didDocume
 
 When resolving a DID document that has had updates, the latest update MUST be listed in the `didDocumentMetadata`.
 
-* `versionId` MUST be the block number of the latest update.
-* `updated` MUST be the ISO date string of the block time of the latest update (without sub-second resolution).
+- `versionId` MUST be the block number of the latest update.
+- `updated` MUST be the ISO date string of the block time of the latest update (without sub-second resolution).
 
 Example:
 
@@ -539,8 +539,8 @@ Only ERC1056 events prior to or contained in this block number are to be conside
 If there are any events after that block that mutate the DID, the earliest of them SHOULD be used to populate the
 properties of the `didDocumentMetadata`:
 
-* `nextVersionId` MUST be the block number of the next update to the DID document.
-* `nextUpdate` MUST be the ISO date string of the block time of the next update (without sub-second resolution).
+- `nextVersionId` MUST be the block number of the next update to the DID document.
+- `nextUpdate` MUST be the ISO date string of the block time of the next update (without sub-second resolution).
 
 In case the DID has had updates prior to or included in the `versionId` block number, the `updated` and `versionId`
 properties of the `didDocumentMetadata` MUST correspond to the latest block prior to the `versionId` query string param.
@@ -561,19 +561,162 @@ Example:
 }
 ```
 
-#### Security considerations of DID versioning
+## Security Considerations
 
-Applications MUST take precautions when using versioned DID URIs.
-If a key is compromised and revoked then it can still be used to issue signatures on behalf of the "older" DID URI.
-The use of versioned DID URIs is only recommended in some limited situations where the timestamp of signatures can also
-be verified, where malicious signatures can be easily revoked, and where applications can afford to check for these
-explicit revocations of either keys or signatures.
-Wherever versioned DIDs are in use, it SHOULD be made obvious to users that they are dealing with potentially revoked
-data.
+This section addresses the security considerations required by the
+[W3C DID specification](https://www.w3.org/TR/did-core/#security-requirements), following the guidelines of
+[RFC3552](https://www.rfc-editor.org/rfc/rfc3552) as they apply to the `did:ethr` method and ERC1056-based operations.
 
-### `initial-state` query string parameter
+### Eavesdropping
 
-TBD
+DID resolution for `did:ethr` relies on JSON-RPC calls to Ethereum nodes to read contract state and event logs. These
+calls can expose which identifiers are being resolved and what data is returned. Implementers MUST use TLS-secured
+(HTTPS/WSS) connections to Ethereum RPC endpoints. Even with transport encryption, the RPC provider itself can observe
+all resolution queries. For high-assurance scenarios, running a local full node is RECOMMENDED.
+
+### Replay Attacks
+
+On-chain ERC1056 transactions inherit Ethereum's native replay protection through account nonces and EIP-155 chain IDs.
+The ERC1056 proposal mentions meta-transaction support, where a user can sign a transaction off-chain and have a third
+party submit it on their behalf. If this pattern is used by a user and the ERC1056 registry implementation does not
+require
+chain-specific signatures, then the same signed meta-transaction could be replayed on a different Ethereum network (
+e.g., mainnet vs. a testnet), potentially causing unintended updates to the corresponding DID on that different network.
+To mitigate this, users can opt to not use the meta-transaction support in the ERC-1056 implementation or change the
+owner
+of their DID to a smart contract that implements its own meta-transaction support, bypassing the ERC-1056 implementation
+altogether.
+
+### Message Insertion and Modification
+
+The integrity of DID document data depends on trust in the Ethereum RPC endpoint used for resolution. A compromised or
+malicious RPC provider could return fabricated event logs or omit legitimate events, resulting in an incorrect DID
+document. Full node verification provides the strongest integrity guarantees since all state transitions are validated
+locally. Light clients (e.g., those relying on block header proofs) offer weaker guarantees and trust the honesty of the
+peers serving the data. Implementers SHOULD cross-reference results from multiple independent RPC providers when full
+node verification is not feasible.
+
+### Deletion
+
+ERC1056 contract events are immutable once confirmed on-chain; they cannot be deleted from the blockchain history.
+Attributes and delegates are effectively removed from the DID document by their validity period expiring or by an
+explicit revocation event. DID deactivation is achieved by calling `changeOwner` with the null address
+(`0x0000000000000000000000000000000000000000`), which is irreversible. After deactivation, no further changes to the DID
+document are possible, and all pre-existing keys and services MUST be considered revoked.
+
+### Denial of Service
+
+An attacker with sufficient funds can add a large number of attributes and delegates to an identity on ERC1056,
+inflating
+the event history that resolvers must enumerate. Since resolution requires scanning all historical events for a given
+identity, excessively long histories increase resolution time and resource consumption. Resolvers SHOULD implement
+caching strategies and set reasonable limits on event enumeration depth. Additionally, the availability of the Ethereum
+RPC endpoint is a dependency for resolution; if the endpoint is unavailable, resolution will fail. Deployments SHOULD
+use redundant RPC providers or local nodes to mitigate this.
+
+### Amplification
+
+A single `setAttribute` or `addDelegate` call on ERC1056 produces an event that the resolver must process and
+potentially expand into one or more DID document entries (verification methods, services). An attacker could issue many
+such calls to force resolvers to process disproportionately large amounts of data relative to the on-chain input.
+Resolvers MAY impose upper bounds on the number of events processed for a single identity and alert or fail when
+those bounds are exceeded.
+
+### Man-in-the-Middle
+
+The primary man-in-the-middle vector is a compromised Ethereum RPC provider returning manipulated contract state or
+event logs during resolution. This could lead a verifier to trust a forged DID document. Mitigations include:
+using trusted, authenticated RPC endpoints; cross-referencing results from multiple independent providers; and running a
+local full node for authoritative state. On-chain operations themselves (Create, Update, Delete) are protected by
+ECDSA signature verification in the ERC1056 contract and are not susceptible to man-in-the-middle attacks.
+
+### Integrity Protection and Update Authentication
+
+All state changes in ERC1056 require authorization from the current controller (`owner`) of the identity. Direct
+transactions must originate from the `owner` address, and the Ethereum protocol verifies the transaction signature.
+Meta-transactions (where a third party submits the transaction) require an off-chain ECDSA signature from the `owner`,
+which is verified on-chain by the ERC1056 contract before the state change is applied. This ensures that only the
+legitimate controller can modify the DID document, regardless of who pays the gas fee. The `owner` address is the sole
+authority for all update and deactivation operations.
+
+### Unique Assignment
+
+The uniqueness of `did:ethr` identifiers is guaranteed by the properties of the secp256k1 elliptic curve used by
+Ethereum. Generating a key pair produces a public key from which the Ethereum address is derived via Keccak-256 hashing.
+The probability of two independently generated key pairs producing the same address is negligible (approximately
+2^-160). No on-chain registration is required for identifier creation, which eliminates the risk of registration-time
+conflicts. When using public key identifiers (66-hex-character form), uniqueness is similarly guaranteed by the
+cryptographic properties of the curve (~2^-256 collision resistance for full public keys).
+
+### Endpoint Authentication and Network Topology
+
+Resolvers depend on Ethereum RPC endpoints to retrieve contract state and events. The security of resolution is
+therefore bounded by the trust placed in these endpoints. Hosted RPC providers (e.g., Infura, Alchemy) offer convenience
+but require trusting the provider not to censor or fabricate responses. Self-hosted full nodes provide the highest
+assurance by independently validating all state transitions.
+
+Light client implementations, which verify only block headers and Merkle proofs rather than re-executing all
+transactions, offer a middle ground but rely on the honesty of peers serving block data. Where `did:ethr` is deployed on
+networks with varying topology (e.g., side-chains, L2 rollups), the specific security assumptions of that network's
+consensus and data availability model MUST be documented and understood by relying-parties.
+
+### Cryptographic Protection
+
+All on-chain authentication in ERC1056 uses secp256k1 ECDSA signatures. Transaction signatures protect the integrity
+and authenticity of all state-changing operations. The `ecrecover` precompile is used for meta-transaction signature
+verification, recovering the signer's address from the signature and comparing it to the identity's `owner`.
+
+Public keys listed in the DID document are not encrypted; they are intended to be public. The DID document itself does
+not provide confidentiality. Integrity of the DID document is derived from the integrity of the underlying blockchain
+state. The secp256k1 curve provides approximately 128 bits of security against known attacks.
+
+### Key Management and Secret Data
+
+Private keys that control `did:ethr` identifiers (i.e., the key corresponding to the `owner` address) MUST be stored
+securely and MUST NOT be exposed in DID documents, on-chain data, or resolver outputs. Similarly, private keys for any
+delegates MUST be protected by their holders.
+
+Key rotation is supported via the `changeOwner` function, which transfers control to a new Ethereum address. Users
+SHOULD rotate keys periodically and SHOULD revoke compromised keys immediately by calling `changeOwner` to transfer
+control to a secure address. There is no built-in social recovery or multi-party recovery mechanism in ERC1056; however,
+the `owner` can be set to a smart contract address (e.g., a multi-sig wallet) to enable more advanced recovery and
+access control schemes.
+
+### Peer-to-Peer Resource Considerations
+
+Resolution of `did:ethr` identifiers requires enumerating contract events from the Ethereum blockchain. The cost of
+resolution scales linearly with the number of historical changes made to an identity. For identities with extensive
+histories, this can result in significant RPC call overhead and processing time.
+
+On-chain operations (adding attributes, delegates, or changing the owner) incur gas costs, which serve as a natural
+rate-limiting mechanism against spam. However, on networks with low gas costs, this protection is weaker. Resolvers
+SHOULD implement caching and pagination strategies to manage resource consumption. Service operators SHOULD monitor for
+identities with abnormally large event histories as a potential indicator of abuse.
+
+### DID Document Versioning
+
+Applications MUST take precautions when using versioned DID URIs (resolved with the `versionId` query parameter). If a
+key is compromised and subsequently revoked, it can still be used to produce valid signatures when verified against an
+older version of the DID document. The use of versioned DID URIs is only RECOMMENDED in limited situations where:
+
+- The timestamp of signatures can be independently verified.
+- Malicious signatures can be revoked through an external mechanism.
+- Applications can check for explicit revocations of either keys or signatures.
+
+Wherever versioned DIDs are in use, it SHOULD be made obvious to users that they are dealing with historical data that
+may reference revoked keys or outdated service endpoints.
+
+### Residual Risks
+
+Even with the above mitigations, the following residual risks remain:
+
+- **Smart contract vulnerabilities**: Bugs in the ERC1056 registry contract could allow unauthorized state changes.
+  The reference contract has been widely deployed and used, but has not been formally verified.
+- **Chain reorganizations**: Recent events may be affected by blockchain reorganizations, temporarily altering the
+  resolved DID document. Resolvers SHOULD wait for sufficient block confirmations before treating state as final.
+- **Cryptographic advances**: Future advances in computing (e.g., quantum computing) may weaken secp256k1 ECDSA. The
+  `did:ethr` method currently has no migration path to post-quantum algorithms, though the `changeOwner` mechanism
+  could potentially be used to transition control to a quantum-resistant smart contract.
 
 ## Reference Implementations
 
