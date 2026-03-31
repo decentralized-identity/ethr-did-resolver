@@ -11,9 +11,7 @@ describe('ethrResolver (alt-chains)', () => {
   describe('eth-networks', () => {
     it('resolves a real mainnet DID via publicnode', async () => {
       const did = 'did:ethr:0x096164268929e920a217a76965547dc44732bb13'
-      const resolver = new Resolver(
-        getResolver({ networks: [{ name: 'mainnet', rpcUrl: 'https://ethereum.publicnode.com' }] })
-      )
+      const resolver = new Resolver(getResolver({ networks: [{ name: 'mainnet', rpcUrl: 'https://eth.drpc.org' }] }))
       const result = await resolver.resolve(did)
       expect(result).toEqual({
         didDocumentMetadata: {
@@ -40,9 +38,7 @@ describe('ethrResolver (alt-chains)', () => {
 
     it('resolves historical versionId on mainnet via publicnode', async () => {
       const did = 'did:ethr:0x096164268929e920a217a76965547dc44732bb13'
-      const resolver = new Resolver(
-        getResolver({ networks: [{ name: 'mainnet', rpcUrl: 'https://ethereum.publicnode.com' }] })
-      )
+      const resolver = new Resolver(getResolver({ networks: [{ name: 'mainnet', rpcUrl: 'https://eth.drpc.org' }] }))
       // versionId=7813665 is one block before the DIDOwnerChanged event at 7813666
       const result = await resolver.resolve(`${did}?versionId=7813665`)
       expect(result).toEqual({
