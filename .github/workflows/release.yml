@@ -14,23 +14,27 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.GH_TOKEN }}
 
-      - name: "Setup node with cache"
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.0
+
+      - name: 'Setup node with cache'
         uses: actions/setup-node@v6
         with:
           node-version: 24
-          cache: 'yarn'
+          cache: 'pnpm'
 
-      - run: yarn install --frozen-lockfile
-      - run: yarn run build
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run build
 
-      - name: "Setup git coordinates"
+      - name: 'Setup git coordinates'
         run: |
           git config user.name ${{ secrets.GH_USER }}
           git config user.email ${{ secrets.GH_EMAIL }}
 
-      - name: "Run semantic-release"
+      - name: 'Run semantic-release'
         env:
           GH_TOKEN: ${{secrets.GH_TOKEN}}
           NPM_TOKEN: ${{secrets.NPM_TOKEN}}
         if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/alpha'
-        run: yarn run release
+        run: pnpm run release
