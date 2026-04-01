@@ -145,10 +145,7 @@ The default DID document for an `did:ethr<Ethereum address>` on mainnet, e.g.
 
 ```json
 {
-  "@context": [
-    "https://www.w3.org/ns/did/v1",
-    "https://w3id.org/security/suites/secp256k1recovery-2020/v2"
-  ],
+  "@context": ["https://www.w3.org/ns/did/v1", "https://w3id.org/security/suites/secp256k1recovery-2020/v2"],
   "id": "did:ethr:0xb9c5714089478a327f09197987f16f9e5d936e8a",
   "verificationMethod": [
     {
@@ -158,12 +155,8 @@ The default DID document for an `did:ethr<Ethereum address>` on mainnet, e.g.
       "blockchainAccountId": "eip155:1:0xb9c5714089478a327f09197987f16f9e5d936e8a"
     }
   ],
-  "authentication": [
-    "did:ethr:0xb9c5714089478a327f09197987f16f9e5d936e8a#controller"
-  ],
-  "assertionMethod": [
-    "did:ethr:0xb9c5714089478a327f09197987f16f9e5d936e8a#controller"
-  ]
+  "authentication": ["did:ethr:0xb9c5714089478a327f09197987f16f9e5d936e8a#controller"],
+  "assertionMethod": ["did:ethr:0xb9c5714089478a327f09197987f16f9e5d936e8a#controller"]
 }
 ```
 
@@ -172,10 +165,7 @@ looks like this:
 
 ```json
 {
-  "@context": [
-    "https://www.w3.org/ns/did/v1",
-    "https://w3id.org/security/suites/secp256k1recovery-2020/v2"
-  ],
+  "@context": ["https://www.w3.org/ns/did/v1", "https://w3id.org/security/suites/secp256k1recovery-2020/v2"],
   "id": "did:ethr:0x0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798",
   "verificationMethod": [
     {
@@ -563,9 +553,9 @@ Example:
 
 ## Security Considerations
 
-This section addresses the security considerations required by the
-[W3C DID specification](https://www.w3.org/TR/did-core/#security-requirements), following the guidelines of
-[RFC3552](https://www.rfc-editor.org/rfc/rfc3552) as they apply to the `did:ethr` method and ERC1056-based operations.
+as required by the [W3C DID specification](https://www.w3.org/TR/did-core/#security-requirements), guided
+by [RFC3552](https://www.rfc-editor.org/rfc/rfc3552) as they apply to the `did:ethr` method and ERC1056-based
+operations.
 
 ### Eavesdropping
 
@@ -716,6 +706,85 @@ Even with the above mitigations, the following residual risks remain:
 - **Cryptographic advances**: Future advances in computing (e.g., quantum computing) may weaken secp256k1 ECDSA. The
   `did:ethr` method currently has no migration path to post-quantum algorithms, though the `changeOwner` mechanism
   could potentially be used to transition control to a quantum-resistant smart contract.
+
+## Privacy Considerations
+
+as required by [the DID specification](https://w3c.github.io/did/#privacy-requirements), guided
+by [RFC 6973](https://datatracker.ietf.org/doc/html/rfc6973#section-5).
+
+### Surveillance
+
+All ERC1056 contract events (`DIDOwnerChanged`, `DIDDelegateChanged`, `DIDAttributeChanged`) are publicly recorded on
+the Ethereum blockchain. Any observer can monitor DID document changes, key rotations, and delegate additions for any
+`did:ethr` identifier. This is an inherent property of using a public ledger as the verifiable data registry. However,
+the DID document itself does not mandate personally identifiable information (PII) -- it should only hold cryptographic
+key material and service endpoints. Implementers should be aware that transaction metadata (sender address, gas payer,
+timestamps) is also publicly observable and could be used for surveillance purposes.
+
+### Stored Data Compromise
+
+Since the ERC1056 registry is a public smart contract on a public blockchain, the data it holds is already publicly
+accessible. There is no traditional "stored data compromise" risk for the on-chain data itself. The primary risk is
+compromise of the private key controlling the DID. If the controller's private key is compromised, an attacker can make
+unauthorized changes to the DID document via the ERC1056 contract. The `changeOwner` function can be used to rotate the
+controller to a new key pair.
+
+### Unsolicited Traffic
+
+Service endpoints published in DID documents (via `DIDAttributeChanged` events with `did/svc/` attributes) could expose
+the DID subject to unsolicited traffic. Implementers should exercise caution when adding service endpoints to DID
+documents, and should consider the implications of making such endpoints publicly discoverable. Where possible, service
+endpoints should implement their own authentication and authorization mechanisms.
+
+### Misattribution
+
+If the controller key of a `did:ethr` is compromised, an attacker could modify the DID document to add verification
+methods under their control, enabling them to create signatures misattributed to the DID subject. The risk is mitigated
+by the ability to rotate the controller key via `changeOwner`. Users should monitor their DID documents for unauthorized
+changes by watching ERC1056 events for their identity address.
+
+### Correlation
+
+Ethereum addresses and public keys used as `did:ethr` identifiers are inherently correlatable on public blockchains. All
+transactions and state changes associated with an address are publicly visible, making it possible for observers to
+correlate activity across different contexts where the same DID is used. To minimize correlation, users should create
+separate DIDs for different relationships or contexts. Since `did:ethr` creation requires no on-chain transaction and
+incurs no cost, maintaining multiple DIDs is practical. Meta-transaction support further helps by decoupling the gas
+payer from the DID controller, reducing the ability to correlate based on funding sources.
+
+### Identification
+
+A `did:ethr` identifier does not inherently reveal the real-world identity of its subject. However, if the underlying
+Ethereum address has been linked to a real-world identity through external means (e.g., KYC processes on exchanges,
+public ENS registrations, or disclosed transactions), the DID can become linked to that identity. The method itself does
+not require or encourage the disclosure of PII. Implementers and users should be aware that the public nature of the
+Ethereum blockchain means any prior or future association between an address and a real-world identity will compromise
+pseudonymity.
+
+### Secondary Use
+
+Data published to the ERC1056 registry is immutable and publicly available. Any attributes, delegates, or service
+endpoints written on-chain may be used by third parties for purposes beyond the DID subject's original intent. Since the
+blockchain is append-only, even revoked attributes remain visible in the historical event log (though they are excluded
+from the resolved DID document). Implementers should minimize the data stored on-chain and should avoid publishing
+sensitive information as DID document attributes. The design of ERC1056 intentionally limits attribute types to
+verification methods and service endpoints to discourage misuse for storing personal data on-chain.
+
+### Disclosure
+
+DID documents resolved from the ERC1056 registry are fully public. There is no mechanism for selective disclosure at the
+DID document level -- all verification methods and service endpoints are visible to any resolver. Sensitive claims or
+attributes about the DID subject should not be stored in the DID document. Instead, implementers should use Verifiable
+Credentials or other privacy-preserving mechanisms for sharing identity attributes, using the DID only as the identifier
+and the DID document only for cryptographic key discovery and service endpoint resolution.
+
+### Exclusion
+
+The `did:ethr` method upholds the principle of exclusion by ensuring the DID subject (via their controller key) has full
+authority over their DID document. The controller can add or revoke delegates, update attributes, rotate the controller
+key, and deactivate the DID entirely by setting the owner to `0x0`. No third party can make changes to the DID document
+without control of the controller key (or a meta-transaction signed by it). This ensures that the DID subject is not
+excluded from decisions about the use and management of their identifier.
 
 ## Reference Implementations
 
