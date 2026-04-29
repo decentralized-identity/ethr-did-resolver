@@ -22,8 +22,6 @@ a valid identifier. Such an identifier needs no registration. In case that key m
 as "service endpoints" are required, they are resolved using ERC1056 smart contracts deployed on the networks listed in
 the [registry repository](https://github.com/uport-project/ethr-did-registry#contract-deployments).
 
-Most networks use the default registry address: `0xdca7ef03e98e0dc2b855be647c39abe984fcf21b`.
-
 Since each Ethereum transaction must be funded, there is a growing trend of on-chain transactions that are authenticated
 via an externally created signature and not by the actual transaction originator. This allows for 3rd party funding
 services, or for receivers to pay without any fundamental changes to the underlying Ethereum architecture. These kinds
@@ -37,7 +35,7 @@ For a reference implementation of this DID method specification see [3].
 ### Identifier Controller
 
 By default, each identifier is controlled by itself, or rather by its corresponding Ethereum address. Each identifier
-can only be controlled by a single ethereum address at any given time. The controller can replace themselves with any
+can only be controlled by a single Ethereum address at any given time. The controller can replace themselves with any
 other Ethereum address, including contracts to allow more advanced models such as multi-signature control.
 
 ## Target System
@@ -45,7 +43,9 @@ other Ethereum address, including contracts to allow more advanced models such a
 The target system is the Ethereum network where the ERC1056 is deployed. This could either be:
 
 - Mainnet
-- Goerli
+- Sepolia test-net
+- Polygon networks
+- Gnosis chain
 - other EVM-compliant blockchains such as private chains, side-chains, or consortium chains.
 
 ### Advantages
@@ -64,18 +64,25 @@ The target system is the Ethereum network where the ERC1056 is deployed. This co
 
 ## JSON-LD Context Definition
 
-Since this DID method still supports `publicKeyHex` and `publicKeyBase64` encodings for verification methods, it
-requires a valid JSON-LD context for those entries.
-To enable JSON-LD processing, the `@context` used when constructing DID documents for `did:ethr` should be:
+To enable JSON-LD processing, the `@context` used when constructing DID documents for `did:ethr` depends on which
+verification method types appear in the document.
 
-```
-"@context": [
-  "https://www.w3.org/ns/did/v1",
-  "https://w3id.org/security/suites/secp256k1recovery-2020/v2"
-]
+The base `@context` required for all `did:ethr` documents is:
+
+```json
+{
+  "@context": [
+    "https://www.w3.org/ns/did/v1",
+    "https://w3id.org/security/suites/secp256k1recovery-2020/v2"
+  ]
+}
 ```
 
-You will also need this `@context` if you need to use `EcdsaSecp256k1RecoveryMethod2020` in your apps.
+This covers `EcdsaSecp256k1RecoveryMethod2020` (used for the `#controller` entry and Ethereum address-based delegates)
+and `blockchainAccountId` (CAIP-10 format).
+
+Additional context entries MUST be appended when other verification method types are present in the DID document.
+See the [Public Keys](#public-keys) section for the additional `@context` entries required per key type.
 
 ## DID Method Name
 
@@ -129,7 +136,12 @@ Delete operations on the registry on behalf of the `identity` address.
 This address MUST be listed with the ID `${did}#controller` in the `verificationMethod` section and also referenced
 in all other verification relationships listed in the DID document.
 In addition to this, if the identifier is a public key, this public key MUST be listed with the
-ID `${did}#controllerKey` in all locations where `#controller` appears.
+ID `${did}#controllerKey` in all locations where `#controller` appears. The `#controllerKey` entry MUST use
+type `EcdsaSecp256k1VerificationKey2019` with the `publicKeyJwk` property containing the uncompressed public key
+in JWK format (`kty: "EC"`, `crv: "secp256k1"`). When resolving for `application/did+ld+json`, the DID document
+`@context` MUST include `https://w3id.org/security/v2` (for the `EcdsaSecp256k1VerificationKey2019` type term) and the
+inline definition `{ "publicKeyJwk": { "@id": "https://w3id.org/security#publicKeyJwk", "@type": "@json" } }` (to map
+`publicKeyJwk` as a top-level term for use with this type).
 
 ## CRUD Operation Definitions
 
@@ -165,7 +177,12 @@ looks like this:
 
 ```json
 {
-  "@context": ["https://www.w3.org/ns/did/v1", "https://w3id.org/security/suites/secp256k1recovery-2020/v2"],
+  "@context": [
+    "https://www.w3.org/ns/did/v1",
+    "https://w3id.org/security/suites/secp256k1recovery-2020/v2",
+    "https://w3id.org/security/v2",
+    { "publicKeyJwk": { "@id": "https://w3id.org/security#publicKeyJwk", "@type": "@json" } }
+  ],
   "id": "did:ethr:0x0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798",
   "verificationMethod": [
     {
@@ -178,7 +195,12 @@ looks like this:
       "id": "did:ethr:0x0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798#controllerKey",
       "type": "EcdsaSecp256k1VerificationKey2019",
       "controller": "did:ethr:0x0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798",
-      "publicKeyHex": "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798"
+      "publicKeyJwk": {
+        "crv": "secp256k1",
+        "kty": "EC",
+        "x": "eb5mfvncu6xVoGKVzocLBwKb_NstzijZWfKBWxb4F5g",
+        "y": "SDradyajxGVdpPv8DhEIqP0XtEimhVQZnEfQj_sQ1Lg"
+      }
     }
   ],
   "authentication": [
@@ -197,8 +219,9 @@ looks like this:
 The DID document is built by using read only functions and contract events on the ERC1056 registry.
 
 Any value from the registry that returns an Ethereum address will be added to the `verificationMethod` array of the
-DID document with type `EcdsaSecp256k1RecoveryMethod2020` and a `blockchainAccountId` attribute containing the address
-using [CAIP10 Format](https://github.com/ChainAgnostic/CAIPs/blob/master/CAIPs/caip-10.md).
+DID document with type [`EcdsaSecp256k1RecoveryMethod2020`](https://identity.foundation/EcdsaSecp256k1RecoverySignature2020/)
+and a `blockchainAccountId` property containing the address
+in [CAIP-10 Format](https://github.com/ChainAgnostic/CAIPs/blob/master/CAIPs/caip-10.md) (`eip155:<chainId>:<address>`).
 
 Other verification relationships and service entries are added or removed by enumerating contract events (see below).
 
@@ -226,7 +249,7 @@ The latest event can be efficiently looked up by checking for one of the 3 above
 
 Each ERC1056 event contains a `previousChange` value which contains the block number of the previous change (if any).
 
-To see all changes in history for an address use the following pseudo-code:
+To see all changes in history for an address use the following pseudocode:
 
 1. eth_call `changed(address identity)` on the ERC1056 contract to get the latest block where a change occurred.
 2. If result is `null` return.
@@ -272,11 +295,11 @@ event DIDDelegateChanged(
 
 The only 2 `delegateTypes` that are currently published in the DID document are:
 
-- `veriKey` which adds a `EcdsaSecp256k1RecoveryMethod2020` to the `verificationMethod` section of the DID document with
-  the `blockchainAccountId`(`ethereumAddress`) of the delegate, and adds a reference to it in the `assertionMethod`
-  section.
-- `sigAuth` which adds a `EcdsaSecp256k1RecoveryMethod2020` to the `verificationMethod` section of document and a
-  reference to it in the `authentication` section.
+- `veriKey` which adds an `EcdsaSecp256k1RecoveryMethod2020` entry to the `verificationMethod` section of the DID
+  document with the `blockchainAccountId` (CAIP-10 format) of the delegate address, and adds a reference to it in the
+  `assertionMethod` section.
+- `sigAuth` which adds an `EcdsaSecp256k1RecoveryMethod2020` entry to the `verificationMethod` section of the document
+  and adds a reference to it in the `authentication` section.
 
 Note, the `delegateType` is a `bytes32` type for Ethereum gas efficiency reasons and not a `string`. This restricts us
 to 32 bytes, which is why we use the shorthand versions above.
@@ -286,8 +309,8 @@ document. When resolving an older version (using `versionId` in the didURL query
 compared to the timestamp of the block of `versionId` height.
 
 Such valid delegates MUST be added to the `verificationMethod` array as `EcdsaSecp256k1RecoveryMethod2020` entries, with
-the `delegate` address listed in the `blockchainAccountId` property and prefixed with `eip155:<chainId>:`, according
-to [CAIP10](https://github.com/ChainAgnostic/CAIPs/blob/master/CAIPs/caip-10.md)
+the `delegate` address listed in the `blockchainAccountId` property in CAIP-10 format (`eip155:<chainId>:<address>`),
+according to [CAIP-10](https://standards.chainagnostic.org/CAIPs/caip-10).
 
 Example:
 
@@ -324,16 +347,14 @@ While any attribute can be stored, for the DID document we support adding to eac
 - Service Endpoints
 
 This design decision is meant to discourage the use of custom attributes in DID documents as they would be too easy to
-misuse for storing personal user information on-chain.
+misuse for storing personal user information forever on-chain.
 
 ###### Public Keys
 
-The name of the attribute added to ERC1056 should follow this format:
-`did/pub/(Secp256k1|RSA|Ed25519|X25519)/(veriKey|sigAuth|enc)/(hex|base64|base58)`
+The name of the attribute added to ERC1056 MUST follow this format:
+`did/pub/<key algorithm>/<key purpose>/<optional encoding hint>`
 
-(Essentially `did/pub/<key algorithm>/<key purpose>/<encoding>`)
-Please opt for the `base58` encoding since the other encodings are not spec compliant and will be removed in future
-versions of the spec and reference resolver.
+Examples: `did/pub/(Secp256k1|RSA|Ed25519|X25519)/(veriKey|sigAuth|enc)/(hex|base64|base58)`
 
 ###### Key purposes
 
@@ -348,6 +369,49 @@ versions of the spec and reference resolver.
 
 > **Note** The `<encoding>` only refers to the key encoding in the resolved DID document.
 > Attribute values sent to the ERC1056 registry should always be hex encodings of the raw public key data.
+> 
+> The resolver MAY interpret the encoding hint and convert the verification method key material to the requested format.
+> By default, resolvers SHOULD use the canonical key encoding defined by each verification method type. 
+
+###### Known Key Types
+
+The following table lists the supported key algorithms, their canonical verification method type, default key
+encoding property, and the `@context` entries required in the DID document when that type is present.
+
+| `<key algorithm>` | Verification Method Type            | Default Key Encoding | Required `@context` entry                                                                                                         |
+|-------------------|-------------------------------------|----------------------|-----------------------------------------------------------------------------------------------------------------------------------|
+| `Secp256k1`       | `EcdsaSecp256k1VerificationKey2019` | `publicKeyJwk`       | `https://w3id.org/security/v2` +<br/> `{ "publicKeyJwk": { "@id": "https://w3id.org/security#publicKeyJwk", "@type": "@json" } }` |
+| `Ed25519`         | `Ed25519VerificationKey2020`        | `publicKeyMultibase` | `https://w3id.org/security/suites/ed25519-2020/v1`                                                                                |
+| `X25519`          | `X25519KeyAgreementKey2020`         | `publicKeyMultibase` | `https://w3id.org/security/suites/x25519-2020/v1`                                                                                 |
+| `RSA`             | `RsaVerificationKey2018`            | `publicKeyPem`       | `https://w3id.org/security/v2`                                                                                                    |
+
+> **Note** When the resolver detects an unknown key algorithm, it MUST present it verbatim as the verification method type.
+> In this case, the default key encoding is `publicKeyHex`.
+
+###### Example Secp256k1 Verification Key
+
+A `DIDAttributeChanged` event for the account `0xf3beac30c498d9e26865f34fcaa57dbb935b0d74` with the name
+`did/pub/Secp256k1/veriKey` and the value of `0x02b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71`
+(a compressed SEC1 secp256k1 public key) generates a verification method entry like the following:
+
+```json
+{
+  "id": "did:ethr:0xf3beac30c498d9e26865f34fcaa57dbb935b0d74#delegate-1",
+  "type": "EcdsaSecp256k1VerificationKey2019",
+  "controller": "did:ethr:0xf3beac30c498d9e26865f34fcaa57dbb935b0d74",
+  "publicKeyJwk": {
+    "kty": "EC",
+    "crv": "secp256k1",
+    "x": "uXww3nZ_CE7DMICBuD3ZWehwc5fNFJJDmpSfv7IpC24",
+    "y": "svfFHPTcBv2Q_xbpJcIBPXHVqr3MGRGQ3epJqcKFExE"
+  }
+}
+```
+
+The resolver MUST convert the compressed SEC1 point from the attribute value to `publicKeyJwk` format.
+The DID document `@context` MUST include `https://w3id.org/security/v2` and
+`{ "publicKeyJwk": { "@id": "https://w3id.org/security#publicKeyJwk", "@type": "@json" } }` to define
+`EcdsaSecp256k1VerificationKey2019` and its properties.
 
 ###### Example Hex encoded Secp256k1 Verification Key
 
@@ -364,36 +428,70 @@ generates a verification method entry like the following:
 }
 ```
 
-###### Example Base58 encoded Ed25519 Verification Key
+The `@context` entry `{ "publicKeyHex": "https://w3id.org/security#publicKeyHex" }` MUST be included when this
+encoding is resolved in a DID document.
+The DID document `@context` MUST include `https://w3id.org/security/v2` to define `EcdsaSecp256k1VerificationKey2019`, just like in the previous example.
+
+###### Example Ed25519 Verification Key
 
 A `DIDAttributeChanged` event for the account `0xf3beac30c498d9e26865f34fcaa57dbb935b0d74` with the name
-`did/pub/Ed25519/veriKey/base58` and the value of `0xb97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71`
+`did/pub/Ed25519/veriKey` and the value of `0xc642b35757cc36906fa75fa0338bf33e5210c5bce4769324801fd64276d69d07`
 generates a verification method entry like this:
 
 ```json
 {
   "id": "did:ethr:0xf3beac30c498d9e26865f34fcaa57dbb935b0d74#delegate-1",
-  "type": "Ed25519VerificationKey2018",
+  "type": "Ed25519VerificationKey2020",
   "controller": "did:ethr:0xf3beac30c498d9e26865f34fcaa57dbb935b0d74",
-  "publicKeyBase58": "DV4G2kpBKjE6zxKor7Cj21iL9x9qyXb6emqjszBXcuhz"
+  "publicKeyMultibase": "z6MksoBm2hUcoKLLHsUQ77iA5YXxwNskXJ9fs7V7z8edniop"
 }
 ```
 
-###### Example Base64 encoded X25519 Encryption Key
+The resolver MUST encode the raw 32-byte Ed25519 public key as `publicKeyMultibase` by prepending the multicodec
+prefix `0xed01` and encoding the result as base58btc with a `z` prefix.
+The DID document `@context` MUST include `https://w3id.org/security/suites/ed25519-2020/v1` to define
+`Ed25519VerificationKey2020` and its scoped `publicKeyMultibase` property.
+
+###### Example X25519 Encryption Key
 
 A `DIDAttributeChanged` event for the account `0xf3beac30c498d9e26865f34fcaa57dbb935b0d74` with the name
-`did/pub/X25519/enc/base64` and the value of
-`0x302a300506032b656e032100118557777ffb078774371a52b00fed75561dcf975e61c47553e664a617661052`
+`did/pub/X25519/enc` and the value of
+`0x118557777ffb078774371a52b00fed75561dcf975e61c47553e664a617661052`
 generates a verification method entry like this:
 
 ```json
 {
   "id": "did:ethr:0xf3beac30c498d9e26865f34fcaa57dbb935b0d74#delegate-1",
-  "type": "X25519KeyAgreementKey2019",
+  "type": "X25519KeyAgreementKey2020",
   "controller": "did:ethr:0xf3beac30c498d9e26865f34fcaa57dbb935b0d74",
-  "publicKeyBase64": "MCowBQYDK2VuAyEAEYVXd3/7B4d0NxpSsA/tdVYdz5deYcR1U+ZkphdmEFI="
+  "publicKeyMultibase": "z6LScra2Lg8mSU6TkMX1AKJSn6ApwneQkfXgJZpj48hCp3N1"
 }
 ```
+
+The resolver MUST encode the raw 32-byte X25519 public key as `publicKeyMultibase` by prepending the multicodec
+prefix `0xec01` and encoding the result as base58btc with a `z` prefix.
+The DID document `@context` MUST include `https://w3id.org/security/suites/x25519-2020/v1`.
+
+###### Example RSA Verification Key
+
+A `DIDAttributeChanged` event for the account `0xf3beac30c498d9e26865f34fcaa57dbb935b0d74` with the name
+`did/pub/RSA/veriKey` and the value being the DER-encoded RSA public key bytes (hex-encoded on-chain) generates
+a verification method entry like this:
+
+```json
+{
+  "id": "did:ethr:0xf3beac30c498d9e26865f34fcaa57dbb935b0d74#delegate-1",
+  "type": "RsaVerificationKey2018",
+  "controller": "did:ethr:0xf3beac30c498d9e26865f34fcaa57dbb935b0d74",
+  "publicKeyPem": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA2a2rwplBQLF29amygykE\nMmYz0...L/S1yd9zICAWMsTQMtogkBdJ\nnwIDAQAB\n-----END PUBLIC KEY-----"
+}
+```
+
+The resolver MUST convert the hex attribute value to bytes and then PEM-encode them as a
+[PKCS#8](https://www.rfc-editor.org/rfc/rfc5958) `PUBLIC KEY` block. The attribute value is expected to already
+be a DER-encoded PKCS#8 `SubjectPublicKeyInfo` structure; the resolver base64-encodes those bytes and wraps them
+with `-----BEGIN PUBLIC KEY-----` / `-----END PUBLIC KEY-----` headers to produce the PEM string.
+The DID document `@context` MUST include `https://w3id.org/security/v2` to define `RsaVerificationKey2018` and `publicKeyPem`.
 
 ###### Service Endpoints
 
@@ -418,7 +516,8 @@ A `DIDAttributeChanged` event for the account `0xf3beac30c498d9e26865f34fcaa57db
 #### `id` properties of entries
 
 With the exception of `#controller` and `#controllerKey`, the `id` properties that appear throughout the DID document
-MUST be stable across updates. This means that the same key material will be referenced by the same ID after an update.
+MUST be stable across updates. This means that the same key material will be referenced by the same ID after an update
+or automatic expiry of the other attributes.
 
 - Attribute or delegate changes that result in `verificationMethod` entries MUST set the `id`
   `${did}#delegate-${eventIndex}`.
@@ -647,7 +746,7 @@ assurance by independently validating all state transitions.
 Light client implementations, which verify only block headers and Merkle proofs rather than re-executing all
 transactions, offer a middle ground but rely on the honesty of peers serving block data. Where `did:ethr` is deployed on
 networks with varying topology (e.g., side-chains, L2 rollups), the specific security assumptions of that network's
-consensus and data availability model MUST be documented and understood by relying parties.
+consensus and data availability model MUST be documented and understood by relying-parties.
 
 ### Cryptographic Protection
 
