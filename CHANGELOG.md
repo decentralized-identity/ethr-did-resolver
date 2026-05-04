@@ -1,3 +1,10 @@
+## [11.1.1](https://github.com/decentralized-identity/ethr-did-resolver/compare/11.1.0...11.1.1) (2026-05-04)
+
+
+### Bug Fixes
+
+* **deps:** Update dependency did-resolver to v5 ([b682d34](https://github.com/decentralized-identity/ethr-did-resolver/commit/b682d340a440cbd64a06f3010b5e272a3998cdab))
+
 # [11.1.0](https://github.com/decentralized-identity/ethr-did-resolver/compare/11.0.5...11.1.0) (2026-03-26)
 
 
