@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       did-resolver:
-        specifier: ^4.1.0
-        version: 4.1.0
+        specifier: ^5.0.0
+        version: 5.0.0
       ethers:
         specifier: ^6.8.1
         version: 6.16.0
@@ -1063,8 +1063,8 @@ packages:
     resolution: {integrity: sha512-Btj2BOOO83o3WyH59e8MgXsxEQVcarkUOpEYrubB0urwnN10yQ364rsiByU11nZlqWYZm05i/of7io4mzihBtQ==}
     engines: {node: '>=8'}
 
-  did-resolver@4.1.0:
-    resolution: {integrity: sha512-S6fWHvCXkZg2IhS4RcVHxwuyVejPR7c+a4Go0xbQ9ps5kILa8viiYQgrM4gfTyeTjJ0ekgJH9gk/BawTpmkbZA==}
+  did-resolver@5.0.0:
+    resolution: {integrity: sha512-rPgyyPwb2jid4kU7LS6whZaU3oMZn3cQV6HCxe+J1L/NJBdKilO/F2EmOM9jNLnb0NtE+xEIZ1DR72/xd/dzxA==}
 
   dir-glob@3.0.1:
     resolution: {integrity: sha512-WkrWp9GR4KXfKGYzOLmTuGVi1UWFfws377n9cc55/tb6DuqyF6pcQ5AbiHEshaDpY9v6oaSr2XCDidGmMwdzIA==}
@@ -3519,7 +3519,7 @@ snapshots:
 
   detect-libc@2.1.2: {}
 
-  did-resolver@4.1.0: {}
+  did-resolver@5.0.0: {}
 
   dir-glob@3.0.1:
     dependencies:
