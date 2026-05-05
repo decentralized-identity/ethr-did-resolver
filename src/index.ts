@@ -6,8 +6,6 @@ import {
   Errors,
   identifierMatcher,
   interpretIdentifier,
-  legacyAlgoMap,
-  legacyAttrTypes,
   stringToBytes32,
   verificationMethodTypes,
   MetaSignature,
@@ -22,10 +20,6 @@ export {
   bytes32toString,
   stringToBytes32,
   EthrDidController,
-  /**@deprecated */
-  legacyAlgoMap as delegateTypes,
-  /**@deprecated */
-  legacyAttrTypes as attrTypes,
   verificationMethodTypes,
   identifierMatcher,
   interpretIdentifier,
