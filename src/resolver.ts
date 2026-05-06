@@ -167,7 +167,6 @@ export class EthrDidResolver {
             case 'sigAuth':
               auth[eventIndex] = `${did}#delegate-${delegateCount}`
               signingRefs[eventIndex] = `${did}#delegate-${delegateCount}`
-            // eslint-disable-next-line no-fallthrough
             case 'veriKey':
               pks[eventIndex] = {
                 id: `${did}#delegate-${delegateCount}`,
@@ -331,7 +330,6 @@ export class EthrDidResolver {
   async resolve(
     did: string,
     parsed: ParsedDID,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _unused: Resolvable,
     options: DIDResolutionOptions
   ): Promise<DIDResolutionResult> {

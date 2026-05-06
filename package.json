@@ -1,7 +1,7 @@
 {
   "name": "ethr-did-resolver",
   "version": "11.1.2",
-  "description": "Resolve DID documents for ethereum addresses and public keys",
+  "description": "Resolve DID documents for Ethereum addresses and public keys",
   "type": "commonjs",
   "source": "./src/index.ts",
   "main": "./lib/index.js",
@@ -16,7 +16,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git@github.com:decentralized-identity/ethr-did-resolver.git"
+    "url": "https://github.com/decentralized-identity/ethr-did-resolver"
   },
   "files": [
     "lib",
@@ -26,7 +26,7 @@
   ],
   "author": "Pelle Braendgaard",
   "contributors": [
-    "Mircea Nistor"
+    "Mircea Nistor <work@mirceanis.xyz>"
   ],
   "license": "Apache-2.0",
   "keywords": [
@@ -52,26 +52,22 @@
     "build": "tsc",
     "clean": "rm -rf ./lib",
     "format": "prettier --write \"src/**/*.[jt]s\"",
-    "lint": "eslint --ignore-pattern \"src/**/*.test.[jt]s\" \"src/**/*.[jt]s\"",
-    "prepublishOnly": "pnpm test:ci && pnpm format && pnpm lint",
+    "lint": "eslint \"src/**/*.[jt]s\"",
     "release": "semantic-release --debug"
   },
   "devDependencies": {
-    "@eslint/eslintrc": "3.3.5",
-    "@eslint/js": "9.39.4",
     "@semantic-release/changelog": "6.0.3",
     "@semantic-release/git": "10.0.1",
-    "@typescript-eslint/eslint-plugin": "8.59.1",
-    "@typescript-eslint/parser": "8.59.1",
+    "@typescript-eslint/eslint-plugin": "8.59.2",
+    "@typescript-eslint/parser": "8.59.2",
     "@vitest/coverage-v8": "4.1.5",
-    "eslint": "8.57.1",
-    "eslint-config-prettier": "9.1.2",
+    "@vitest/eslint-plugin": "1.6.16",
+    "eslint": "10.3.0",
+    "eslint-config-prettier": "10.1.8",
     "eslint-plugin-prettier": "5.5.5",
-    "eslint-plugin-vitest": "0.5.4",
-    "globals": "17.6.0",
-    "hardhat": "3.4.3",
+    "hardhat": "3.4.4",
     "prettier": "3.8.3",
-    "semantic-release": "22.0.12",
+    "semantic-release": "25.0.3",
     "typescript": "5.9.3",
     "vitest": "4.1.5"
   },
