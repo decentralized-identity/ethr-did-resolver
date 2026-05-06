@@ -401,8 +401,7 @@ export class EthrDidResolver {
         id: `${did}#controllerKey`,
         type: VMTypes.EcdsaSecp256k1VerificationKey2019,
         controller: did,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        publicKeyJwk: compressedSecp256k1ToJwk(controllerKey) as any,
+        publicKeyJwk: compressedSecp256k1ToJwk(controllerKey),
       })
       authentication.push(`${did}#controllerKey`)
       assertionMethod.push(`${did}#controllerKey`)
