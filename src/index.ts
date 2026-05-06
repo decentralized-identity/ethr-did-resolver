@@ -7,7 +7,7 @@ import {
   identifierMatcher,
   interpretIdentifier,
   stringToBytes32,
-  verificationMethodTypes,
+  VMTypes,
   MetaSignature,
 } from './helpers.js'
 
@@ -20,7 +20,7 @@ export {
   bytes32toString,
   stringToBytes32,
   EthrDidController,
-  verificationMethodTypes,
+  VMTypes as verificationMethodTypes,
   identifierMatcher,
   interpretIdentifier,
   Errors,
@@ -41,7 +41,7 @@ export default {
   bytes32toString,
   stringToBytes32,
   EthrDidController,
-  verificationMethodTypes,
+  verificationMethodTypes: VMTypes,
   identifierMatcher,
   interpretIdentifier,
   Errors,

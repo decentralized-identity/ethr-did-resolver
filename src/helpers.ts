@@ -1,5 +1,15 @@
-import { VerificationMethod } from 'did-resolver'
-import { computeAddress, encodeBase58, getAddress, SigningKey, toUtf8Bytes, toUtf8String, zeroPadBytes } from 'ethers'
+import { Extensible, VerificationMethod } from 'did-resolver'
+import {
+  computeAddress,
+  encodeBase58,
+  encodeBase64,
+  getBytes,
+  getAddress,
+  SigningKey,
+  toUtf8Bytes,
+  toUtf8String,
+  zeroPadBytes,
+} from 'ethers'
 
 export const identifierMatcher = /^(.*)?(0x[0-9a-fA-F]{40}|0x[0-9a-fA-F]{66})$/
 export const nullAddress = '0x0000000000000000000000000000000000000000'
@@ -35,7 +45,7 @@ export interface DIDDelegateChanged extends ERC1056Event {
   validTo: uint256
 }
 
-export enum verificationMethodTypes {
+export enum VMTypes {
   EcdsaSecp256k1VerificationKey2019 = 'EcdsaSecp256k1VerificationKey2019',
   EcdsaSecp256k1RecoveryMethod2020 = 'EcdsaSecp256k1RecoveryMethod2020',
   Ed25519VerificationKey2020 = 'Ed25519VerificationKey2020',
@@ -52,17 +62,10 @@ export enum eventNames {
   DIDDelegateChanged = 'DIDDelegateChanged',
 }
 
-export interface LegacyVerificationMethod extends VerificationMethod {
-  /**@deprecated */
-  publicKeyHex?: string
-  /**@deprecated */
-  publicKeyBase64?: string
-  /**@deprecated */
-  publicKeyPem?: string
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  [x: string]: any
-}
+/**
+ * Verification Method definitions that allow extra properties
+ */
+export type ExtendedVerificationMethod = VerificationMethod & Extensible
 
 /**
  * Interface for transporting v, r, s signature parameters used in meta transactions
@@ -73,7 +76,6 @@ export interface MetaSignature {
   sigS: bytes32
 }
 
-
 /**
  * Maps the `<key algorithm>` token from a `did/pub/<algorithm>/...` attribute name
  * to the canonical verification method type for that algorithm.
@@ -82,13 +84,13 @@ export interface MetaSignature {
  * string `<algorithm>` is used.
  */
 export const algoToVMType: Record<string, string> = {
-  Secp256k1: verificationMethodTypes.EcdsaSecp256k1VerificationKey2019,
-  Ed25519: verificationMethodTypes.Ed25519VerificationKey2020,
-  X25519: verificationMethodTypes.X25519KeyAgreementKey2020,
-  RSA: verificationMethodTypes.RsaVerificationKey2018,
-  Bls12381G2: verificationMethodTypes.Bls12381G2Key2020,
-  Bls12381G1: verificationMethodTypes.Bls12381G1Key2020,
-  Multikey: verificationMethodTypes.Multikey,
+  Secp256k1: VMTypes.EcdsaSecp256k1VerificationKey2019,
+  Ed25519: VMTypes.Ed25519VerificationKey2020,
+  X25519: VMTypes.X25519KeyAgreementKey2020,
+  RSA: VMTypes.RsaVerificationKey2018,
+  Bls12381G2: VMTypes.Bls12381G2Key2020,
+  Bls12381G1: VMTypes.Bls12381G1Key2020,
+  Multikey: VMTypes.Multikey,
 }
 
 export function strip0x(input: string): string {
@@ -163,10 +165,14 @@ export function isDefined<T>(arg: T): arg is Exclude<T, null | undefined> {
  * Multicodec varint prefixes for known key types.
  * Used to construct publicKeyMultibase values per the Multikey spec.
  */
-export const multicodecPrefixes: Partial<Record<verificationMethodTypes, Uint8Array>> = {
-  [verificationMethodTypes.Ed25519VerificationKey2020]: new Uint8Array([0xed, 0x01]),
-  [verificationMethodTypes.X25519KeyAgreementKey2020]: new Uint8Array([0xec, 0x01]),
-  // Multikey values already carry their own prefix in the on-chain bytes
+export const multicodecPrefixes: Partial<Record<VMTypes, Uint8Array>> = {
+  [VMTypes.Ed25519VerificationKey2020]: new Uint8Array([0xed, 0x01]), // ed25519-pub
+  [VMTypes.X25519KeyAgreementKey2020]: new Uint8Array([0xec, 0x01]), // x25519-pub
+  [VMTypes.EcdsaSecp256k1VerificationKey2019]: new Uint8Array([0xe7, 0x01]), // secp256k1-pub
+  [VMTypes.Bls12381G1Key2020]: new Uint8Array([0xea, 0x01]), // bls12_381-g1-pub
+  [VMTypes.Bls12381G2Key2020]: new Uint8Array([0xeb, 0x01]), // bls12_381-g2-pub
+  [VMTypes.RsaVerificationKey2018]: new Uint8Array([0x85, 0x24]), // rsa-pub
+  // Multikey: prefix is already embedded in the on-chain value (e.g. 0x1200 for P-256)
 }
 
 /**

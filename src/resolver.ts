@@ -1,4 +1,4 @@
-import { BlockTag, encodeBase58, encodeBase64, toUtf8String } from 'ethers'
+import { BlockTag, encodeBase58, encodeBase64, getBytes, toUtf8String } from 'ethers'
 import { ConfigurationOptions, ConfiguredNetworks, configureResolverWithNetworks } from './configuration.js'
 import type {
   ContextEntry,
@@ -21,13 +21,13 @@ import {
   identifierMatcher,
   interpretIdentifier,
   algoToVMType,
-  LegacyVerificationMethod,
+  ExtendedVerificationMethod,
   multicodecPrefixes,
   nullAddress,
   strip0x,
   toMultibase,
   compressedSecp256k1ToJwk,
-  verificationMethodTypes,
+  VMTypes,
 } from './helpers.js'
 import { logDecoder } from './logParser.js'
 
@@ -55,26 +55,23 @@ function buildLdContext(didDocument: DIDDocument): ContextEntry[] {
 
   // security/v2 defines EcdsaSecp256k1VerificationKey2019, RsaVerificationKey2018,
   // publicKeyBase58, publicKeyPem — add it when any of those types are present.
-  if (
-    types.has(verificationMethodTypes.EcdsaSecp256k1VerificationKey2019) ||
-    types.has(verificationMethodTypes.RsaVerificationKey2018)
-  ) {
+  if (types.has(VMTypes.EcdsaSecp256k1VerificationKey2019) || types.has(VMTypes.RsaVerificationKey2018)) {
     contexts.push('https://w3id.org/security/v2')
   }
 
-  if (types.has(verificationMethodTypes.Ed25519VerificationKey2020)) {
+  if (types.has(VMTypes.Ed25519VerificationKey2020)) {
     contexts.push('https://w3id.org/security/suites/ed25519-2020/v1')
   }
 
-  if (types.has(verificationMethodTypes.X25519KeyAgreementKey2020)) {
+  if (types.has(VMTypes.X25519KeyAgreementKey2020)) {
     contexts.push('https://w3id.org/security/suites/x25519-2020/v1')
   }
 
-  if (types.has(verificationMethodTypes.Bls12381G2Key2020) || types.has(verificationMethodTypes.Bls12381G1Key2020)) {
+  if (types.has(VMTypes.Bls12381G2Key2020) || types.has(VMTypes.Bls12381G1Key2020)) {
     contexts.push('https://w3id.org/security/suites/bls12381-2020/v1')
   }
 
-  if (types.has(verificationMethodTypes.Multikey)) {
+  if (types.has(VMTypes.Multikey)) {
     contexts.push('https://w3id.org/security/multikey/v1')
   }
 
@@ -235,7 +232,7 @@ export class EthrDidResolver {
             case 'veriKey':
               pks[eventIndex] = {
                 id: `${did}#delegate-${delegateCount}`,
-                type: verificationMethodTypes.EcdsaSecp256k1RecoveryMethod2020,
+                type: VMTypes.EcdsaSecp256k1RecoveryMethod2020,
                 controller: did,
                 blockchainAccountId: `eip155:${chainId}:${currentEvent.delegate}`,
               }
@@ -256,35 +253,33 @@ export class EthrDidResolver {
                 // Primary lookup: algorithm token → canonical VM type.
                 // Unknown/future key types pass through as-is.
                 const vmType = algoToVMType[algorithm] ?? algorithm
-                const pk: LegacyVerificationMethod = {
+                const pk: ExtendedVerificationMethod = {
                   id: `${did}#delegate-${delegateCount}`,
                   type: vmType,
                   controller: did,
                 }
                 let keyDataSet = true
                 switch (pk.type) {
-                  case verificationMethodTypes.Ed25519VerificationKey2020:
-                  case verificationMethodTypes.X25519KeyAgreementKey2020:
-                    // Always produce publicKeyMultibase regardless of encoding hint.
+                  case VMTypes.Ed25519VerificationKey2020:
+                  case VMTypes.X25519KeyAgreementKey2020:
+                    // Always produce publicKeyMultibase regardless of encoding hint, to match spec.
                     // On-chain value is always raw key bytes (hex); prepend multicodec prefix.
-                    pk.publicKeyMultibase = toMultibase(
-                      currentEvent.value,
-                      multicodecPrefixes[pk.type as verificationMethodTypes]
-                    )
+                    pk.publicKeyMultibase = toMultibase(currentEvent.value, multicodecPrefixes[pk.type])
                     break
-                  case verificationMethodTypes.Bls12381G2Key2020:
-                  case verificationMethodTypes.Bls12381G1Key2020:
-                    // Always produce publicKeyBase58 of raw bytes regardless of encoding hint.
-                    pk.publicKeyBase58 = encodeBase58(Buffer.from(strip0x(currentEvent.value), 'hex'))
+                  case VMTypes.Bls12381G2Key2020:
+                  case VMTypes.Bls12381G1Key2020:
+                    // Always produce publicKeyBase58 of raw bytes regardless of encoding hint, to match spec.
+                    pk.publicKeyBase58 = encodeBase58(getBytes(`0x${strip0x(currentEvent.value)}`))
                     break
-                  case verificationMethodTypes.Multikey:
+                  case VMTypes.Multikey:
                     // On-chain value already includes the multicodec prefix; just base58btc-encode.
                     pk.publicKeyMultibase = toMultibase(currentEvent.value)
                     break
-                  case verificationMethodTypes.RsaVerificationKey2018:
+                  case VMTypes.RsaVerificationKey2018:
                     // RSA keys must be PEM-encoded UTF-8. Any other encoding hint is invalid.
                     if (encoding === 'pem' || encoding === null || encoding === undefined) {
                       try {
+                        // TODO: this is wrong. The spec example says the raw bytes are DER and need to be b64 encoded and then pre/post fixed to be PEM
                         pk.publicKeyPem = toUtf8String(currentEvent.value)
                       } catch {
                         keyDataSet = false
@@ -294,7 +289,7 @@ export class EthrDidResolver {
                     }
                     break
                   default:
-                    // Secp256k1 and unknown types: honor the encoding hint for legacy compat.
+                    // Unknown key types: honor the encoding hint for legacy compat.
                     switch (encoding) {
                       case null:
                       case undefined:
@@ -386,7 +381,7 @@ export class EthrDidResolver {
     const publicKeys: VerificationMethod[] = [
       {
         id: `${did}#controller`,
-        type: verificationMethodTypes.EcdsaSecp256k1RecoveryMethod2020,
+        type: VMTypes.EcdsaSecp256k1RecoveryMethod2020,
         controller: did,
         blockchainAccountId: `eip155:${chainId}:${controller}`,
       },
@@ -395,7 +390,7 @@ export class EthrDidResolver {
     if (controllerKey && controller == address) {
       publicKeys.push({
         id: `${did}#controllerKey`,
-        type: verificationMethodTypes.EcdsaSecp256k1VerificationKey2019,
+        type: VMTypes.EcdsaSecp256k1VerificationKey2019,
         controller: did,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         publicKeyJwk: compressedSecp256k1ToJwk(controllerKey) as any,
