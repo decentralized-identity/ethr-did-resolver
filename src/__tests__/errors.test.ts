@@ -8,7 +8,7 @@ import { stringToBytes32 } from '../helpers'
 describe('error handling', () => {
   const didResolver = new Resolver(
     getResolver({
-      networks: [{ name: 'example', rpcUrl: 'example.com' }],
+      networks: [{ name: 'example', rpcUrl: 'example.com', registry: '0x9af37603e98e0dc2b855be647c39abe984fc2445' }],
     })
   )
 

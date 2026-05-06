@@ -1,5 +1,4 @@
 import { Contract, ContractFactory, JsonRpcProvider, Provider } from 'ethers'
-import { DEFAULT_REGISTRY_ADDRESS } from './helpers.js'
 import { deployments, EthrDidRegistryDeployment } from './config/deployments.js'
 import { EthereumDIDRegistry } from './config/EthereumDIDRegistry.js'
 
@@ -71,9 +70,17 @@ export function getContractForNetwork(conf: ProviderConfiguration): Contract {
       throw new Error(`invalid_config: No web3 provider could be determined for network ${conf.name || conf.chainId}`)
     }
   }
-  const contract = ContractFactory.fromSolidity(EthereumDIDRegistry)
-    .attach(conf.registry || DEFAULT_REGISTRY_ADDRESS)
-    .connect(provider)
+  const registryAddress =
+    conf.registry ||
+    deployments.find(
+      (d) => (conf.chainId && BigInt(d.chainId) === BigInt(conf.chainId)) || (conf.name && d.name === conf.name)
+    )?.registry
+  if (!registryAddress) {
+    throw new Error(
+      `invalid_config: No registry address known for network ${conf.name || conf.chainId}. Please provide a registry address.`
+    )
+  }
+  const contract = ContractFactory.fromSolidity(EthereumDIDRegistry).attach(registryAddress).connect(provider)
   return contract as Contract
 }
 
