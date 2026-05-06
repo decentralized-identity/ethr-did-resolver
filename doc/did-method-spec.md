@@ -356,6 +356,11 @@ The name of the attribute added to ERC1056 MUST follow this format:
 
 Examples: `did/pub/(Secp256k1|RSA|Ed25519|X25519|Bls12381G2|Multikey)/(veriKey|sigAuth|enc)/(hex|base64|base58)`
 
+> **Note** Key algorithms not explicitly listed in the [Known Key Types](#known-key-types) table (e.g. P-256 / `nistP256`)
+> SHOULD be registered using the `Multikey` algorithm token. The actual algorithm is then encoded via the multicodec
+> prefix embedded in the attribute value. `Multikey` is also a valid choice for any of the explicitly supported key
+> types listed below.
+
 ###### Key purposes
 
 - `veriKey` adds a verification key to the `verificationMethod` section of document and adds a reference to it in
@@ -388,8 +393,11 @@ encoding property, and the `@context` entries required in the DID document when 
 | `Bls12381G2`      | `Bls12381G2Key2020`                 | `publicKeyBase58`    | `https://w3id.org/security/suites/bls12381-2020/v1`                                                                               |
 | `Multikey`        | `Multikey`                          | `publicKeyMultibase` | `https://w3id.org/security/multikey/v1`                                                                                           |
 
-> **Note** When the resolver detects an unknown key algorithm, it MUST present it verbatim as the verification method type.
-> In this case, the default key encoding is `publicKeyHex`.
+> **Note** `Multikey` supports all the explicitly listed key types above in addition to any other algorithm encodable via
+> multicodec. Key algorithms not listed in this table (e.g. P-256) SHOULD use the `Multikey` algorithm token.
+> When the resolver encounters an unknown key algorithm, it MUST present it verbatim as the
+> verification method type with `publicKeyHex` as the default key encoding, or with a publicKey encoding that follows
+> the encoding hint in the attribute name.
 
 ###### Example Secp256k1 Verification Key
 
