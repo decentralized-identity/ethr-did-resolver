@@ -279,7 +279,6 @@ export class EthrDidResolver {
                   type: vmType,
                   controller: did,
                 }
-                let keyDataSet = true
                 switch (pk.type) {
                   case VMTypes.EcdsaSecp256k1VerificationKey2019:
                     // Spec mandates publicKeyJwk for Secp256k1 attribute keys regardless of encoding hint.
@@ -300,12 +299,9 @@ export class EthrDidResolver {
                     pk.publicKeyMultibase = toMultibase(currentEvent.value)
                     break
                   case VMTypes.RsaVerificationKey2018:
-                    // RSA keys must be PEM-encoded UTF-8. Any other encoding hint is invalid.
-                    if (encoding === 'pem' || encoding === null || encoding === undefined) {
-                      pk.publicKeyPem = bytesToPem(currentEvent.value)
-                    } else {
-                      keyDataSet = false
-                    }
+                    // Encoding hint is ignored for RSA — always emit publicKeyPem,
+                    // consistent with how other known key types use their canonical encoding.
+                    pk.publicKeyPem = bytesToPem(currentEvent.value)
                     break
                   default:
                     // Unknown key types: honor the encoding hint for legacy compat.
@@ -328,16 +324,14 @@ export class EthrDidResolver {
                         pk.value = strip0x(currentEvent.value)
                     }
                 }
-                if (keyDataSet) {
-                  pks[eventIndex] = pk
-                  if (match[4] === 'sigAuth') {
-                    auth[eventIndex] = pk.id
-                    signingRefs[eventIndex] = pk.id
-                  } else if (match[4] === 'enc') {
-                    keyAgreementRefs[eventIndex] = pk.id
-                  } else {
-                    signingRefs[eventIndex] = pk.id
-                  }
+                pks[eventIndex] = pk
+                if (match[4] === 'sigAuth') {
+                  auth[eventIndex] = pk.id
+                  signingRefs[eventIndex] = pk.id
+                } else if (match[4] === 'enc') {
+                  keyAgreementRefs[eventIndex] = pk.id
+                } else {
+                  signingRefs[eventIndex] = pk.id
                 }
                 break
               }
