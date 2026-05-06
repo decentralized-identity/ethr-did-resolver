@@ -44,22 +44,24 @@ export interface DIDDelegateChanged extends ERC1056Event {
   validTo: uint256
 }
 
-export enum VMTypes {
-  EcdsaSecp256k1VerificationKey2019 = 'EcdsaSecp256k1VerificationKey2019',
-  EcdsaSecp256k1RecoveryMethod2020 = 'EcdsaSecp256k1RecoveryMethod2020',
-  Ed25519VerificationKey2020 = 'Ed25519VerificationKey2020',
-  X25519KeyAgreementKey2020 = 'X25519KeyAgreementKey2020',
-  RsaVerificationKey2018 = 'RsaVerificationKey2018',
-  Bls12381G2Key2020 = 'Bls12381G2Key2020',
-  Bls12381G1Key2020 = 'Bls12381G1Key2020',
-  Multikey = 'Multikey',
-}
+export const VMTypes = {
+  EcdsaSecp256k1VerificationKey2019: 'EcdsaSecp256k1VerificationKey2019',
+  EcdsaSecp256k1RecoveryMethod2020: 'EcdsaSecp256k1RecoveryMethod2020',
+  Ed25519VerificationKey2020: 'Ed25519VerificationKey2020',
+  X25519KeyAgreementKey2020: 'X25519KeyAgreementKey2020',
+  RsaVerificationKey2018: 'RsaVerificationKey2018',
+  Bls12381G2Key2020: 'Bls12381G2Key2020',
+  Bls12381G1Key2020: 'Bls12381G1Key2020',
+  Multikey: 'Multikey',
+} as const
+export type VMTypes = (typeof VMTypes)[keyof typeof VMTypes]
 
-export enum eventNames {
-  DIDOwnerChanged = 'DIDOwnerChanged',
-  DIDAttributeChanged = 'DIDAttributeChanged',
-  DIDDelegateChanged = 'DIDDelegateChanged',
-}
+export const eventNames = {
+  DIDOwnerChanged: 'DIDOwnerChanged',
+  DIDAttributeChanged: 'DIDAttributeChanged',
+  DIDDelegateChanged: 'DIDDelegateChanged',
+} as const
+export type eventNames = (typeof eventNames)[keyof typeof eventNames]
 
 /**
  * Verification Method definitions that allow extra properties
@@ -127,29 +129,30 @@ export function interpretIdentifier(identifier: string): { address: string; publ
   }
 }
 
-export enum Errors {
+export const Errors = {
   /**
    * The resolver has failed to construct the DID document.
    * This can be caused by a network issue, a wrong registry address or malformed logs while parsing the registry
    * history. Please inspect the `DIDResolutionMetadata.message` to debug further.
    */
-  notFound = 'notFound',
+  notFound: 'notFound',
 
   /**
    * The resolver does not know how to resolve the given DID. Most likely it is not a `did:ethr`.
    */
-  invalidDid = 'invalidDid',
+  invalidDid: 'invalidDid',
 
   /**
    * The resolver is misconfigured or is being asked to resolve a `DID` anchored on an unknown network
    */
-  unknownNetwork = 'unknownNetwork',
+  unknownNetwork: 'unknownNetwork',
 
   /**
    * The resolver does not support the 'accept' format requested with `DIDResolutionOptions`
    */
-  unsupportedFormat = 'unsupportedFormat',
-}
+  unsupportedFormat: 'unsupportedFormat',
+} as const
+export type Errors = (typeof Errors)[keyof typeof Errors]
 
 /**
  * Returns true when the argument is defined and not null.
