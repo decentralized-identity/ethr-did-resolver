@@ -3,7 +3,7 @@ import { BrowserProvider, Contract, ethers, hexlify, toUtf8Bytes } from 'ethers'
 import { Resolvable } from 'did-resolver'
 import { EthrDidController } from '../controller'
 import { deployRegistry, randomAccount, sleep } from './testUtils'
-import { stringToBytes32 } from '../helpers'
+import { stringToBytes32, toMultibase } from '../helpers'
 
 describe('attributes', () => {
   let registryContract: Contract, didResolver: Resolvable, provider: BrowserProvider
@@ -136,7 +136,7 @@ describe('attributes', () => {
             id: `${did}#delegate-1`,
             type: 'Bls12381G2Key2020',
             controller: did,
-            publicKeyHex: '7075626c6963206b6579206d6174657269616c2068657265',
+            publicKeyBase58: 'BFdJW3VPNkfWyTpjK8nrmijTp1RoLri9z',
           },
         ],
         authentication: [`${did}#controller`],
@@ -144,7 +144,7 @@ describe('attributes', () => {
       })
     })
 
-    it('add Ed25519VerificationKey2018 authentication key', async () => {
+    it('add Ed25519VerificationKey2020 authentication key', async () => {
       expect.assertions(1)
       const { address: identity, shortDID: did, signer } = await randomAccount(provider)
       const { pubKey } = await randomAccount(provider)
@@ -166,9 +166,9 @@ describe('attributes', () => {
           },
           {
             id: `${did}#delegate-1`,
-            type: 'Ed25519VerificationKey2018',
+            type: 'Ed25519VerificationKey2020',
             controller: did,
-            publicKeyBase64: ethers.encodeBase64(pubKey),
+            publicKeyMultibase: toMultibase(pubKey, new Uint8Array([0xed, 0x01])),
           },
         ],
         authentication: [`${did}#controller`, `${did}#delegate-1`],
@@ -176,7 +176,7 @@ describe('attributes', () => {
       })
     })
 
-    it('add RSAVerificationKey2018 signing key', async () => {
+    it('add RsaVerificationKey2018 signing key', async () => {
       expect.assertions(1)
       const { address: identity, shortDID: did, signer } = await randomAccount(provider)
       await new EthrDidController(identity, registryContract, signer).setAttribute(
@@ -197,7 +197,7 @@ describe('attributes', () => {
           },
           {
             id: `${did}#delegate-1`,
-            type: 'RSAVerificationKey2018',
+            type: 'RsaVerificationKey2018',
             controller: did,
             publicKeyPem: '-----BEGIN PUBLIC KEY...END PUBLIC KEY-----\r\n',
           },
@@ -207,13 +207,14 @@ describe('attributes', () => {
       })
     })
 
-    it('add X25519KeyAgreementKey2019 encryption key', async () => {
+    it('add X25519KeyAgreementKey2020 encryption key', async () => {
       expect.assertions(1)
       const { address: identity, shortDID: did, signer } = await randomAccount(provider)
       const pubKeyBase64 = 'MCowBQYDK2VuAyEAEYVXd3/7B4d0NxpSsA/tdVYdz5deYcR1U+ZkphdmEFI='
+      const pubKeyHex = ethers.hexlify(ethers.decodeBase64(pubKeyBase64))
       await new EthrDidController(did, registryContract, signer).setAttribute(
         'did/pub/X25519/enc/base64',
-        ethers.hexlify(ethers.decodeBase64(pubKeyBase64)),
+        pubKeyHex,
         86404
       )
       const { didDocument } = await didResolver.resolve(did)
@@ -229,9 +230,9 @@ describe('attributes', () => {
           },
           {
             id: `${did}#delegate-1`,
-            type: 'X25519KeyAgreementKey2019',
+            type: 'X25519KeyAgreementKey2020',
             controller: did,
-            publicKeyBase64: pubKeyBase64,
+            publicKeyMultibase: toMultibase(pubKeyHex, new Uint8Array([0xec, 0x01])),
           },
         ],
         authentication: [`${did}#controller`],
@@ -428,7 +429,7 @@ describe('attributes', () => {
       })
     })
 
-    it('revokes Ed25519VerificationKey2018 authentication key', async () => {
+    it('revokes Ed25519VerificationKey2020 authentication key', async () => {
       expect.assertions(2)
       const { address: identity, shortDID: did, signer } = await randomAccount(provider)
       const { pubKey } = await randomAccount(provider)
@@ -450,9 +451,9 @@ describe('attributes', () => {
           },
           {
             id: `${did}#delegate-1`,
-            type: 'Ed25519VerificationKey2018',
+            type: 'Ed25519VerificationKey2020',
             controller: did,
-            publicKeyBase64: ethers.encodeBase64(pubKey),
+            publicKeyMultibase: toMultibase(pubKey, new Uint8Array([0xed, 0x01])),
           },
         ],
         authentication: [`${did}#controller`, `${did}#delegate-1`],
@@ -555,9 +556,9 @@ describe('attributes', () => {
           },
           {
             id: `${did}#delegate-1`,
-            type: 'Ed25519VerificationKey2018',
+            type: 'Ed25519VerificationKey2020',
             controller: did,
-            publicKeyHex: pubKey.slice(2),
+            publicKeyMultibase: toMultibase(pubKey, new Uint8Array([0xed, 0x01])),
           },
         ],
         authentication: [`${did}#controller`, `${did}#delegate-1`],

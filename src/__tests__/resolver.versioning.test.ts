@@ -130,9 +130,9 @@ describe('versioning', () => {
           },
           {
             id: `${identifier}#delegate-1`,
-            type: 'Ed25519VerificationKey2018',
+            type: 'Ed25519VerificationKey2020',
             controller: identifier,
-            publicKeyHex: '11111111',
+            publicKeyMultibase: 'z332EABvYQ',
           },
         ],
         authentication: [`${identifier}#controller`],

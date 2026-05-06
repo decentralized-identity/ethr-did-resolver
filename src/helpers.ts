@@ -1,10 +1,9 @@
 import { VerificationMethod } from 'did-resolver'
-import { computeAddress, getAddress, toUtf8Bytes, toUtf8String, zeroPadBytes } from 'ethers'
+import { computeAddress, encodeBase58, getAddress, SigningKey, toUtf8Bytes, toUtf8String, zeroPadBytes } from 'ethers'
 
 export const identifierMatcher = /^(.*)?(0x[0-9a-fA-F]{40}|0x[0-9a-fA-F]{66})$/
 export const nullAddress = '0x0000000000000000000000000000000000000000'
 export const DEFAULT_REGISTRY_ADDRESS = '0xdca7ef03e98e0dc2b855be647c39abe984fcf21b'
-export const DEFAULT_JSON_RPC = 'http://127.0.0.1:8545/'
 export const MESSAGE_PREFIX = '0x1900'
 
 export type address = string
@@ -158,4 +157,39 @@ export enum Errors {
  */
 export function isDefined<T>(arg: T): arg is Exclude<T, null | undefined> {
   return arg !== null && typeof arg !== 'undefined'
+}
+
+/**
+ * Multicodec varint prefixes for known key types.
+ * Used to construct publicKeyMultibase values per the Multikey spec.
+ */
+export const multicodecPrefixes: Partial<Record<verificationMethodTypes, Uint8Array>> = {
+  [verificationMethodTypes.Ed25519VerificationKey2020]: new Uint8Array([0xed, 0x01]),
+  [verificationMethodTypes.X25519KeyAgreementKey2020]: new Uint8Array([0xec, 0x01]),
+  // Multikey values already carry their own prefix in the on-chain bytes
+}
+
+/**
+ * Encodes raw key bytes (hex string with or without 0x prefix) as a multibase base58btc string.
+ * If a multicodec prefix is provided it is prepended before encoding.
+ * If no prefix is provided the bytes are encoded as-is (for Multikey, where the prefix is
+ * already present in the on-chain value).
+ */
+export function toMultibase(hexValue: string, prefix?: Uint8Array): string {
+  const raw = Buffer.from(strip0x(hexValue), 'hex')
+  const full = prefix ? Buffer.concat([prefix, raw]) : raw
+  return 'z' + encodeBase58(full)
+}
+
+/**
+ * Decompresses a 33-byte secp256k1 public key (hex, with or without 0x prefix) and
+ * returns a JWK object suitable for use as `publicKeyJwk` in a DID document.
+ */
+export function compressedSecp256k1ToJwk(hex: string): Record<string, string> {
+  const uncompressed = SigningKey.computePublicKey(hex.startsWith('0x') ? hex : `0x${hex}`, false)
+  // uncompressed is 0x04 || x (32 bytes) || y (32 bytes) → hex string of 130 chars (excluding 0x)
+  const raw = strip0x(uncompressed)
+  const x = Buffer.from(raw.slice(2, 66), 'hex').toString('base64url')
+  const y = Buffer.from(raw.slice(66, 130), 'hex').toString('base64url')
+  return { kty: 'EC', crv: 'secp256k1', x, y }
 }

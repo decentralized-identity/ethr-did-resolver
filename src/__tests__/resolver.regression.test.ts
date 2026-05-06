@@ -58,8 +58,8 @@ describe('regression', () => {
         {
           id: `${identifier}#delegate-1`,
           controller: identifier,
-          type: `Ed25519VerificationKey2018`,
-          publicKeyHex: authPubKey,
+          type: 'Ed25519VerificationKey2020',
+          publicKeyMultibase: 'z4xRFjeX6BuwkaJyoVa9Aby3PC9NzTf81gqqz1viRK469SVx4HoesPqYKwB',
         },
       ],
       authentication: [`${identifier}#controller`, `${identifier}#delegate-1`],
@@ -67,11 +67,10 @@ describe('regression', () => {
     })
   })
 
-  it('Ed25519VerificationKey2018 in base58 (https://github.com/decentralized-identity/ethr-did-resolver/pull/106)', async () => {
+  it('Ed25519VerificationKey2020 in base58 (https://github.com/decentralized-identity/ethr-did-resolver/pull/106)', async () => {
     expect.assertions(1)
     const { address, shortDID: identifier, signer } = await randomAccount(provider)
     const publicKeyHex = `b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71`
-    const expectedPublicKeyBase58 = 'DV4G2kpBKjE6zxKor7Cj21iL9x9qyXb6emqjszBXcuhz'
     await new EthrDidController(identifier, registryContract, signer).setAttribute(
       'did/pub/Ed25519/veriKey/base58',
       `0x${publicKeyHex}`,
@@ -90,9 +89,9 @@ describe('regression', () => {
         },
         {
           id: `${identifier}#delegate-1`,
-          type: 'Ed25519VerificationKey2018',
+          type: 'Ed25519VerificationKey2020',
           controller: identifier,
-          publicKeyBase58: expectedPublicKeyBase58,
+          publicKeyMultibase: 'z6MkrwKJd14cfGia7TAWXgAZs7GKyXRhPQqTLnkfiG9YY8VN',
         },
       ],
       authentication: [`${identifier}#controller`],

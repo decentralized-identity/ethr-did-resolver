@@ -251,7 +251,12 @@ describe('ethrResolver (alt-chains)', () => {
               id: `${did}#controllerKey`,
               type: 'EcdsaSecp256k1VerificationKey2019',
               controller: did,
-              publicKeyHex: '036d148205e34a8591dcdcea34fb7fed760f5f1eca66d254830833f755ff359ef0',
+              publicKeyJwk: {
+                kty: 'EC',
+                crv: 'secp256k1',
+                x: 'bRSCBeNKhZHc3Oo0-3_tdg9fHspm0lSDCDP3Vf81nvA',
+                y: 'S-wVJwCE67R8DVLJ209o7DxWvkC7zqA7WOMItOjkOKU',
+              },
             },
           ],
           authentication: [`${did}#controller`, `${did}#controllerKey`],

@@ -3,6 +3,7 @@ import { BrowserProvider } from 'ethers'
 import { Resolvable } from 'did-resolver'
 
 import { deployRegistry, randomAccount } from './testUtils'
+import { compressedSecp256k1ToJwk } from '../helpers'
 
 describe('unregistered DIDs', () => {
   let didResolver: Resolvable, provider: BrowserProvider
@@ -57,7 +58,7 @@ describe('unregistered DIDs', () => {
             id: `${longDID}#controllerKey`,
             type: 'EcdsaSecp256k1VerificationKey2019',
             controller: longDID,
-            publicKeyHex: pubKey.slice(2),
+            publicKeyJwk: compressedSecp256k1ToJwk(pubKey),
           },
         ],
         authentication: [`${longDID}#controller`, `${longDID}#controllerKey`],
@@ -85,7 +86,7 @@ describe('unregistered DIDs', () => {
             id: `${pubdid}#controllerKey`,
             type: 'EcdsaSecp256k1VerificationKey2019',
             controller: pubdid,
-            publicKeyHex: pubKey.slice(2),
+            publicKeyJwk: compressedSecp256k1ToJwk(pubKey),
           },
         ],
         authentication: [`${pubdid}#controller`, `${pubdid}#controllerKey`],
@@ -113,7 +114,7 @@ describe('unregistered DIDs', () => {
             id: `${pubdid}#controllerKey`,
             type: 'EcdsaSecp256k1VerificationKey2019',
             controller: pubdid,
-            publicKeyHex: pubKey.slice(2),
+            publicKeyJwk: compressedSecp256k1ToJwk(pubKey),
           },
         ],
         authentication: [`${pubdid}#controller`, `${pubdid}#controllerKey`],
@@ -121,7 +122,8 @@ describe('unregistered DIDs', () => {
         '@context': [
           'https://www.w3.org/ns/did/v1',
           'https://w3id.org/security/suites/secp256k1recovery-2020/v2',
-          'https://w3id.org/security/v3-unstable',
+          'https://w3id.org/security/v2',
+          { publicKeyJwk: { '@id': 'https://w3id.org/security#publicKeyJwk', '@type': '@json' } },
         ],
       },
     })
