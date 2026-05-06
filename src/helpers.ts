@@ -182,8 +182,8 @@ export const multicodecPrefixes: Partial<Record<VMTypes, Uint8Array>> = {
  * already present in the on-chain value).
  */
 export function toMultibase(hexValue: string, prefix?: Uint8Array): string {
-  const raw = Buffer.from(strip0x(hexValue), 'hex')
-  const full = prefix ? Buffer.concat([prefix, raw]) : raw
+  const raw = getBytes(`0x${strip0x(hexValue)}`)
+  const full = prefix ? new Uint8Array([...prefix, ...raw]) : raw
   return 'z' + encodeBase58(full)
 }
 
@@ -193,9 +193,11 @@ export function toMultibase(hexValue: string, prefix?: Uint8Array): string {
  */
 export function compressedSecp256k1ToJwk(hex: string): Record<string, string> {
   const uncompressed = SigningKey.computePublicKey(hex.startsWith('0x') ? hex : `0x${hex}`, false)
-  // uncompressed is 0x04 || x (32 bytes) || y (32 bytes) → hex string of 130 chars (excluding 0x)
-  const raw = strip0x(uncompressed)
-  const x = Buffer.from(raw.slice(2, 66), 'hex').toString('base64url')
-  const y = Buffer.from(raw.slice(66, 130), 'hex').toString('base64url')
+  // uncompressed is 0x04 || x (32 bytes) || y (32 bytes)
+  const raw = getBytes(uncompressed)
+  const toBase64url = (bytes: Uint8Array) =>
+    encodeBase64(bytes).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
+  const x = toBase64url(raw.slice(1, 33))
+  const y = toBase64url(raw.slice(33, 65))
   return { kty: 'EC', crv: 'secp256k1', x, y }
 }
