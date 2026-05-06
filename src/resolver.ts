@@ -27,6 +27,7 @@ import {
   strip0x,
   toMultibase,
   compressedSecp256k1ToJwk,
+  bytesToPem,
   VMTypes,
 } from './helpers.js'
 import { logDecoder } from './logParser.js'
@@ -260,10 +261,13 @@ export class EthrDidResolver {
                 }
                 let keyDataSet = true
                 switch (pk.type) {
+                  case VMTypes.EcdsaSecp256k1VerificationKey2019:
+                    // Spec mandates publicKeyJwk for Secp256k1 attribute keys regardless of encoding hint.
+                    pk.publicKeyJwk = compressedSecp256k1ToJwk(currentEvent.value)
+                    break
                   case VMTypes.Ed25519VerificationKey2020:
                   case VMTypes.X25519KeyAgreementKey2020:
                     // Always produce publicKeyMultibase regardless of encoding hint, to match spec.
-                    // On-chain value is always raw key bytes (hex); prepend multicodec prefix.
                     pk.publicKeyMultibase = toMultibase(currentEvent.value, multicodecPrefixes[pk.type])
                     break
                   case VMTypes.Bls12381G2Key2020:
@@ -278,12 +282,7 @@ export class EthrDidResolver {
                   case VMTypes.RsaVerificationKey2018:
                     // RSA keys must be PEM-encoded UTF-8. Any other encoding hint is invalid.
                     if (encoding === 'pem' || encoding === null || encoding === undefined) {
-                      try {
-                        // TODO: this is wrong. The spec example says the raw bytes are DER and need to be b64 encoded and then pre/post fixed to be PEM
-                        pk.publicKeyPem = toUtf8String(currentEvent.value)
-                      } catch {
-                        keyDataSet = false
-                      }
+                      pk.publicKeyPem = bytesToPem(currentEvent.value)
                     } else {
                       keyDataSet = false
                     }
@@ -303,11 +302,7 @@ export class EthrDidResolver {
                         pk.publicKeyBase58 = encodeBase58(currentEvent.value)
                         break
                       case 'pem':
-                        try {
-                          pk.publicKeyPem = toUtf8String(currentEvent.value)
-                        } catch {
-                          keyDataSet = false
-                        }
+                        pk.publicKeyPem = bytesToPem(currentEvent.value)
                         break
                       default:
                         pk.value = strip0x(currentEvent.value)

@@ -104,7 +104,7 @@ describe('attributes', () => {
             id: `${did}#delegate-1`,
             type: 'EcdsaSecp256k1VerificationKey2019',
             controller: did,
-            publicKeyHex: pubKey.slice(2),
+            publicKeyJwk: expect.objectContaining({ kty: 'EC', crv: 'secp256k1' }),
           },
         ],
         authentication: [`${did}#controller`],
@@ -179,9 +179,11 @@ describe('attributes', () => {
     it('add RsaVerificationKey2018 signing key', async () => {
       expect.assertions(1)
       const { address: identity, shortDID: did, signer } = await randomAccount(provider)
+      // DER-encoded SubjectPublicKeyInfo (synthetic 1024-bit RSA key for testing)
+      const derHex = '30819f300d06092a864886f70d010101050003818d00308189028181' + '00' + 'bb'.repeat(128) + '0203010001'
       await new EthrDidController(identity, registryContract, signer).setAttribute(
         'did/pub/RSA/veriKey/pem',
-        '-----BEGIN PUBLIC KEY...END PUBLIC KEY-----\r\n',
+        `0x${derHex}`,
         86403
       )
       const { didDocument } = await didResolver.resolve(did)
@@ -199,7 +201,14 @@ describe('attributes', () => {
             id: `${did}#delegate-1`,
             type: 'RsaVerificationKey2018',
             controller: did,
-            publicKeyPem: '-----BEGIN PUBLIC KEY...END PUBLIC KEY-----\r\n',
+            publicKeyPem: [
+              '-----BEGIN PUBLIC KEY-----',
+              'MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQC7u7u7u7u7u7u7u7u7u7u7u7u7',
+              'u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7',
+              'u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7',
+              'u7u7u7u7u7u7u7u7uwIDAQAB',
+              '-----END PUBLIC KEY-----',
+            ].join('\n'),
           },
         ],
         authentication: [`${did}#controller`],
@@ -400,7 +409,7 @@ describe('attributes', () => {
             id: `${did}#delegate-1`,
             type: 'EcdsaSecp256k1VerificationKey2019',
             controller: did,
-            publicKeyHex: pubKey.slice(2),
+            publicKeyJwk: expect.objectContaining({ kty: 'EC', crv: 'secp256k1' }),
           },
         ],
         authentication: [`${did}#controller`],

@@ -1,4 +1,4 @@
-import { Extensible, VerificationMethod } from 'did-resolver'
+import { Extensible, JsonWebKey, VerificationMethod } from 'did-resolver'
 import {
   computeAddress,
   encodeBase58,
@@ -191,7 +191,7 @@ export function toMultibase(hexValue: string, prefix?: Uint8Array): string {
  * Decompresses a 33-byte secp256k1 public key (hex, with or without 0x prefix) and
  * returns a JWK object suitable for use as `publicKeyJwk` in a DID document.
  */
-export function compressedSecp256k1ToJwk(hex: string): Record<string, string> {
+export function compressedSecp256k1ToJwk(hex: string): JsonWebKey {
   const uncompressed = SigningKey.computePublicKey(hex.startsWith('0x') ? hex : `0x${hex}`, false)
   // uncompressed is 0x04 || x (32 bytes) || y (32 bytes)
   const raw = getBytes(uncompressed)
@@ -200,4 +200,23 @@ export function compressedSecp256k1ToJwk(hex: string): Record<string, string> {
   const x = toBase64url(raw.slice(1, 33))
   const y = toBase64url(raw.slice(33, 65))
   return { kty: 'EC', crv: 'secp256k1', x, y }
+}
+
+/**
+ * Decodes an on-chain hex value to a PEM public key string.
+ * If the bytes are valid UTF-8 and already contain a PEM header, returns them as-is.
+ * Otherwise treats the bytes as DER and wraps them in PEM headers.
+ */
+export function bytesToPem(hex: string): string {
+  const tryUtf8 = (() => {
+    try {
+      return toUtf8String(hex)
+    } catch {
+      return null
+    }
+  })()
+  if (tryUtf8?.includes('-----BEGIN')) return tryUtf8
+  const b64 = encodeBase64(getBytes(`0x${strip0x(hex)}`))
+  const lines = b64.match(/.{1,64}/g)?.join('\n') ?? b64
+  return `-----BEGIN PUBLIC KEY-----\n${lines}\n-----END PUBLIC KEY-----`
 }
