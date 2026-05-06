@@ -1,38 +1,26 @@
 import typescriptEslint from '@typescript-eslint/eslint-plugin'
-import vitest from 'eslint-plugin-vitest'
-import globals from 'globals'
+import vitest from '@vitest/eslint-plugin'
 import tsParser from '@typescript-eslint/parser'
-import path from 'node:path'
-import { fileURLToPath } from 'node:url'
-import js from '@eslint/js'
-import { FlatCompat } from '@eslint/eslintrc'
-
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
-const compat = new FlatCompat({
-  baseDirectory: __dirname,
-  recommendedConfig: js.configs.recommended,
-  allConfig: js.configs.all,
-})
+import prettierConfig from 'eslint-config-prettier'
+import prettierPlugin from 'eslint-plugin-prettier'
 
 export default [
-  ...compat.extends('eslint:recommended', 'plugin:@typescript-eslint/recommended', 'plugin:prettier/recommended'),
+  { ignores: ['src/**/*.test.[jt]s'] },
+  ...typescriptEslint.configs['flat/recommended'],
+  prettierConfig,
   {
+    files: ['src/**/*.{js,ts}'],
     plugins: {
-      '@typescript-eslint': typescriptEslint,
       vitest,
+      prettier: prettierPlugin,
     },
-
     languageOptions: {
-      globals: {
-        ...globals.node,
-      },
-
       parser: tsParser,
       ecmaVersion: 2020,
       sourceType: 'module',
     },
-
-    rules: {},
+    rules: {
+      'prettier/prettier': 'error',
+    },
   },
 ]
