@@ -1,7 +1,7 @@
 {
   "name": "ethr-did-resolver",
   "version": "11.1.2",
-  "description": "Resolve DID documents for ethereum addresses and public keys",
+  "description": "Resolve DID documents for Ethereum addresses and public keys",
   "type": "commonjs",
   "source": "./src/index.ts",
   "main": "./lib/index.js",
@@ -16,7 +16,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git@github.com:decentralized-identity/ethr-did-resolver.git"
+    "url": "https://github.com/decentralized-identity/ethr-did-resolver"
   },
   "files": [
     "lib",
@@ -26,7 +26,7 @@
   ],
   "author": "Pelle Braendgaard",
   "contributors": [
-    "Mircea Nistor"
+    "Mircea Nistor <work@mirceanis.xyz>"
   ],
   "license": "Apache-2.0",
   "keywords": [
@@ -53,7 +53,6 @@
     "clean": "rm -rf ./lib",
     "format": "prettier --write \"src/**/*.[jt]s\"",
     "lint": "eslint --ignore-pattern \"src/**/*.test.[jt]s\" \"src/**/*.[jt]s\"",
-    "prepublishOnly": "pnpm test:ci && pnpm format && pnpm lint",
     "release": "semantic-release --debug"
   },
   "devDependencies": {
