@@ -43,8 +43,7 @@ export class EthrDidController {
    * @param provider - optional - a web3 Provider. At least one of `contract`, `provider`, or `rpcUrl` is required
    * @param rpcUrl - optional - a JSON-RPC URL that can be used to connect to an ethereum network. At least one of
    *   `contract`, `provider`, or `rpcUrl` is required
-   * @param registry - optional - The ERC1056 registry address. Defaults to
-   *   '0xdca7ef03e98e0dc2b855be647c39abe984fcf21b'. Only used with 'provider' or 'rpcUrl'
+   * @param registry - optional - The ERC1056 registry address. Only used with 'provider' or 'rpcUrl'
    * @param legacyNonce - optional - If the legacy nonce tracking method should be accounted for. If lesser version of
    *   did-ethr-registry contract v1.0.0 is used then this should be true.
    */
