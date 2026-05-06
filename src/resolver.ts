@@ -53,10 +53,18 @@ function buildLdContext(didDocument: DIDDocument): ContextEntry[] {
   const types = new Set(allVMs.map((vm) => vm.type))
   const hasPublicKeyHex = allVMs.some((vm) => 'publicKeyHex' in vm)
   const hasPublicKeyJwk = allVMs.some((vm) => 'publicKeyJwk' in vm)
+  const hasPublicKeyBase58 = allVMs.some((vm) => 'publicKeyBase58' in vm)
+  const hasPublicKeyPem = allVMs.some((vm) => 'publicKeyPem' in vm)
+  const hasPublicKeyBase64 = allVMs.some((vm) => 'publicKeyBase64' in vm)
 
   // security/v2 defines EcdsaSecp256k1VerificationKey2019, RsaVerificationKey2018,
-  // publicKeyBase58, publicKeyPem — add it when any of those types are present.
-  if (types.has(VMTypes.EcdsaSecp256k1VerificationKey2019) || types.has(VMTypes.RsaVerificationKey2018)) {
+  // publicKeyBase58, publicKeyPem — add it when any of those types or properties are present.
+  if (
+    types.has(VMTypes.EcdsaSecp256k1VerificationKey2019) ||
+    types.has(VMTypes.RsaVerificationKey2018) ||
+    hasPublicKeyBase58 ||
+    hasPublicKeyPem
+  ) {
     contexts.push('https://w3id.org/security/v2')
   }
 
@@ -77,12 +85,24 @@ function buildLdContext(didDocument: DIDDocument): ContextEntry[] {
   }
 
   // Inline term definitions for properties not defined by any of the above contexts.
+  const securityV2Included = contexts.includes('https://w3id.org/security/v2')
   const inline: Record<string, unknown> = {}
   if (hasPublicKeyHex) {
     inline['publicKeyHex'] = 'https://w3id.org/security#publicKeyHex'
   }
   if (hasPublicKeyJwk) {
     inline['publicKeyJwk'] = { '@id': 'https://w3id.org/security#publicKeyJwk', '@type': '@json' }
+  }
+  // publicKeyBase58/publicKeyPem are defined by security/v2; only add inline if that context is absent.
+  if (hasPublicKeyBase58 && !securityV2Included) {
+    inline['publicKeyBase58'] = 'https://w3id.org/security#publicKeyBase58'
+  }
+  if (hasPublicKeyPem && !securityV2Included) {
+    inline['publicKeyPem'] = 'https://w3id.org/security#publicKeyPem'
+  }
+  // publicKeyBase64 is not defined by any suite context — always inline when present.
+  if (hasPublicKeyBase64) {
+    inline['publicKeyBase64'] = 'https://w3id.org/security#publicKeyBase64'
   }
   if (Object.keys(inline).length > 0) {
     contexts.push(inline)
