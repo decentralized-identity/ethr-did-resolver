@@ -5,7 +5,7 @@
     {
       "name": "alpha",
       "prerelease": true
-    }
+    },
     { "name": "feat/*", "channel": "preview", "prerelease": "${name.replace(/^feat\\//g, 'feat-')}" },
     { "name": "fix/*", "channel": "preview", "prerelease": "${name.replace(/^fix\\//g, 'fix-')}" },
     { "name": "chore/*", "channel": "preview", "prerelease": "${name.replace(/^chore\\//g, 'chore-')}" }
