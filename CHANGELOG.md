@@ -1,3 +1,12 @@
+## [11.1.3](https://github.com/decentralized-identity/ethr-did-resolver/compare/11.1.2...11.1.3) (2026-05-07)
+
+
+### Bug Fixes
+
+* **ci:** fix typo in release rc file ([#233](https://github.com/decentralized-identity/ethr-did-resolver/issues/233)) ([a7e9bc1](https://github.com/decentralized-identity/ethr-did-resolver/commit/a7e9bc1485fbee92ff505ddf4f4c39cc144da9b0))
+* **ci:** harden ci workflows ([#231](https://github.com/decentralized-identity/ethr-did-resolver/issues/231)) ([94a6ea3](https://github.com/decentralized-identity/ethr-did-resolver/commit/94a6ea34737c03e048492391ecc31393a25d732c))
+* **ci:** pin pnpm to exact version in workflows ([#232](https://github.com/decentralized-identity/ethr-did-resolver/issues/232)) ([60d865f](https://github.com/decentralized-identity/ethr-did-resolver/commit/60d865f2d3d70274b519971928f82789969b4213))
+
 ## [11.1.2](https://github.com/decentralized-identity/ethr-did-resolver/compare/11.1.1...11.1.2) (2026-05-04)
 
 
