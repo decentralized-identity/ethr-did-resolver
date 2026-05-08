@@ -424,16 +424,16 @@ The DID document `@context` MUST include `https://w3id.org/security/v2` and
 `{ "publicKeyJwk": { "@id": "https://w3id.org/security#publicKeyJwk", "@type": "@json" } }` to define
 `EcdsaSecp256k1VerificationKey2019` and its properties.
 
-###### Example Hex encoded Secp256k1 Verification Key
+###### Example Hex encoded Custom Verification Key type
 
 A `DIDAttributeChanged` event for the account `0xf3beac30c498d9e26865f34fcaa57dbb935b0d74` with the name
-`did/pub/Secp256k1/veriKey/hex` and the value of `0x02b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71`
+`did/pub/CustomKeyType/veriKey/hex` and the value of `0x02b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71`
 generates a verification method entry like the following:
 
 ```json
 {
   "id": "did:ethr:0xf3beac30c498d9e26865f34fcaa57dbb935b0d74#delegate-1",
-  "type": "EcdsaSecp256k1VerificationKey2019",
+  "type": "CustomKeyType",
   "controller": "did:ethr:0xf3beac30c498d9e26865f34fcaa57dbb935b0d74",
   "publicKeyHex": "02b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71"
 }
@@ -553,6 +553,61 @@ The DID document `@context` MUST include `https://w3id.org/security/multikey/v1`
 
 > **Note** Unlike other key types where the attribute value is raw key bytes, `Multikey` attribute values MUST
 > include the multicodec prefix. Without it, the resolver cannot determine the key algorithm.
+
+###### Example ML-DSA-44 Verification Key
+
+ML-DSA-44 is a post-quantum signature scheme.
+Its multicodec identifier is `mldsa-44-pub` (`0x1210`, varint-encoded as `0x90 0x24`).
+
+A `DIDAttributeChanged` event for the account `0xf3beac30c498d9e26865f34fcaa57dbb935b0d74` with the name
+`did/pub/Multikey/veriKey` and the value of `0x9024` (multicodec prefix for mldsa-44-pub) followed by the 1312-byte ML-DSA-44 public key bytes
+generates a verification method entry like the following:
+
+```json
+{
+  "id": "did:ethr:0xf3beac30c498d9e26865f34fcaa57dbb935b0d74#delegate-1",
+  "type": "Multikey",
+  "controller": "did:ethr:0xf3beac30c498d9e26865f34fcaa57dbb935b0d74",
+  "publicKeyMultibase": "z4sdsKt2uv6ihpqL...BwaT5oVfJ8m"
+}
+```
+
+###### Example SLH-DSA-SHAKE-256f Verification Key
+
+SLH-DSA-SHAKE-256f is a stateless hash-based post-quantum signature scheme.
+Its multicodec identifier is `slhdsa-shake-256f-pub` (`0x122b`, varint-encoded as `0xab 0x24`).
+
+A `DIDAttributeChanged` event for the account `0xf3beac30c498d9e26865f34fcaa57dbb935b0d74` with the name
+`did/pub/Multikey/veriKey` and the prefix value of `0xab24` followed by the 64-byte SLH-DSA-SHAKE-256f public key bytes
+generates a verification method entry like the following:
+
+```json
+{
+  "id": "did:ethr:0xf3beac30c498d9e26865f34fcaa57dbb935b0d74#delegate-1",
+  "type": "Multikey",
+  "controller": "did:ethr:0xf3beac30c498d9e26865f34fcaa57dbb935b0d74",
+  "publicKeyMultibase": "z29fFXjoZvoyCNEghaLLoKHniPBHCqicX5rWbJZwcrcyv8dyC4HEDaviBgeF7fvhVxBV3kxYY4pLJg8VkJ5cJKYQDqUj"
+}
+```
+
+###### Example ML-KEM-768 Post-Quantum Key Agreement Key
+
+ML-KEM-768 is a post-quantum key encapsulation mechanism.
+It is used for key agreement (`enc` purpose), not signing.
+Its multicodec identifier is `mlkem-768-pub` (`0x120c`, varint-encoded as `0x8c 0x24`).
+
+A `DIDAttributeChanged` event for the account `0xf3beac30c498d9e26865f34fcaa57dbb935b0d74` with the name
+`did/pub/Multikey/enc` and the prefix value of `0x8c24` followed by the 1184-byte ML-KEM-768 public key bytes generates
+a verification method entry in the `keyAgreement` section like the following:
+
+```json
+{
+  "id": "did:ethr:0xf3beac30c498d9e26865f34fcaa57dbb935b0d74#delegate-1",
+  "type": "Multikey",
+  "controller": "did:ethr:0xf3beac30c498d9e26865f34fcaa57dbb935b0d74",
+  "publicKeyMultibase": "z9LYKE2JVeDxHVNnK7wa...K6Pqv7s3GyXb4h81YjkYf8Z9"
+}
+```
 
 ###### Service Endpoints
 
