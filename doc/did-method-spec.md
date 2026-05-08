@@ -32,7 +32,7 @@ off-chain or in payment channels through temporary or permanent delegates.
 
 For a reference implementation of this DID method specification see [3].
 
-### Identifier Controller
+## Identifier Controller
 
 By default, each identifier is controlled by itself, or rather by its corresponding Ethereum address. Each identifier
 can only be controlled by a single Ethereum address at any given time. The controller can replace themselves with any
@@ -48,7 +48,7 @@ The target system is the Ethereum network where the ERC1056 is deployed. This co
 - Gnosis chain
 - other EVM-compliant blockchains such as private chains, side-chains, or consortium chains.
 
-### Advantages
+## Advantages
 
 - No transaction fee for identifier creation
 - Identifier creation is private
@@ -227,8 +227,10 @@ Other verification relationships and service entries are added or removed by enu
 
 #### Controller Address
 
-Each identifier always has a controller address. By default, it is the same as the identifier address, but the resolver
-MUST check the read only contract function `identityOwner(address identity)` on the deployed ERC1056 contract.
+Each identifier always has a controller address. By default, it is the same as the identifier address, but it can be updated.
+The value of the controller address is stored in the `owner` property of the ERC1056 contract and can be read using the
+`identityOwner(address identity)` function, or extrapolated from the latest `DIDOwnerChanged` event for a corresponding
+DID.
 
 This controller address MUST be represented in the DID document as a `verificationMethod` entry with the `id` set as the
 DID being resolved and with the fragment `#controller` appended to it.
@@ -325,7 +327,7 @@ Example:
 
 ##### Non-Ethereum Attributes (`DIDAttributeChanged`)
 
-Non-Ethereum keys, service endpoints etc. can be added using attributes. Attributes only exist on the blockchain as
+Public keys, service endpoints etc. can be added using attributes. Attributes only exist on the blockchain as
 contract events of type `DIDAttributeChanged` and can thus not be queried from within solidity code.
 
 ```solidity
@@ -354,12 +356,7 @@ misuse for storing personal user information forever on-chain.
 The name of the attribute added to ERC1056 MUST follow this format:
 `did/pub/<key algorithm>/<key purpose>/<optional encoding hint>`
 
-Examples: `did/pub/(Secp256k1|RSA|Ed25519|X25519|Bls12381G2|Multikey)/(veriKey|sigAuth|enc)/(hex|base64|base58)`
-
-> **Note** Key algorithms not explicitly listed in the [Known Key Types](#known-key-types) table (e.g. P-256 / `nistP256`)
-> SHOULD be registered using the `Multikey` algorithm token. The actual algorithm is then encoded via the multicodec
-> prefix embedded in the attribute value. `Multikey` is also a valid choice for any of the explicitly supported key
-> types listed below.
+Examples: `did/pub/(Secp256k1|Ed25519|X25519|Bls12381G2|Multikey)/(veriKey|sigAuth|enc)/(hex|base64|base58)`.
 
 ###### Key purposes
 
@@ -388,13 +385,13 @@ encoding property, and the `@context` entries required in the DID document when 
 | `Secp256k1`       | `EcdsaSecp256k1VerificationKey2019` | `publicKeyJwk`       | `https://w3id.org/security/v2` +<br/> `{ "publicKeyJwk": { "@id": "https://w3id.org/security#publicKeyJwk", "@type": "@json" } }` |
 | `Ed25519`         | `Ed25519VerificationKey2020`        | `publicKeyMultibase` | `https://w3id.org/security/suites/ed25519-2020/v1`                                                                                |
 | `X25519`          | `X25519KeyAgreementKey2020`         | `publicKeyMultibase` | `https://w3id.org/security/suites/x25519-2020/v1`                                                                                 |
-| `RSA`             | `RsaVerificationKey2018`            | `publicKeyPem`       | `https://w3id.org/security/v2`                                                                                                    |
 | `Bls12381G1`      | `Bls12381G1Key2020`                 | `publicKeyBase58`    | `https://w3id.org/security/suites/bls12381-2020/v1`                                                                               |
 | `Bls12381G2`      | `Bls12381G2Key2020`                 | `publicKeyBase58`    | `https://w3id.org/security/suites/bls12381-2020/v1`                                                                               |
 | `Multikey`        | `Multikey`                          | `publicKeyMultibase` | `https://w3id.org/security/multikey/v1`                                                                                           |
 
-> **Note** `Multikey` supports all the explicitly listed key types above in addition to any other algorithm encodable via
-> multicodec. Key algorithms not listed in this table (e.g. P-256) SHOULD use the `Multikey` algorithm token.
+> **Note** `Multikey` supports all the explicitly listed key types above in addition to any other algorithm encodable
+> via multicodec. Key algorithms not listed in this table (e.g. P-256, RSA, ML-KEM, etc.) SHOULD be expressed using the
+> `Multikey` verification method.
 > When the resolver encounters an unknown key algorithm, it MUST present it verbatim as the
 > verification method type with `publicKeyHex` as the default key encoding, or with a publicKey encoding that follows
 > the encoding hint in the attribute name.
@@ -403,7 +400,7 @@ encoding property, and the `@context` entries required in the DID document when 
 
 A `DIDAttributeChanged` event for the account `0xf3beac30c498d9e26865f34fcaa57dbb935b0d74` with the name
 `did/pub/Secp256k1/veriKey` and the value of `0x02b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71`
-(a compressed SEC1 secp256k1 public key) generates a verification method entry like the following:
+(a compressed secp256k1 public key) generates a verification method entry like the following:
 
 ```json
 {
@@ -419,16 +416,16 @@ A `DIDAttributeChanged` event for the account `0xf3beac30c498d9e26865f34fcaa57db
 }
 ```
 
-The resolver MUST convert the compressed SEC1 point from the attribute value to `publicKeyJwk` format.
+The resolver MUST convert the elliptic curve point from the attribute value to `publicKeyJwk` format.
 The DID document `@context` MUST include `https://w3id.org/security/v2` and
 `{ "publicKeyJwk": { "@id": "https://w3id.org/security#publicKeyJwk", "@type": "@json" } }` to define
 `EcdsaSecp256k1VerificationKey2019` and its properties.
 
 ###### Example Hex encoded Custom Verification Key type
 
-A `DIDAttributeChanged` event for the account `0xf3beac30c498d9e26865f34fcaa57dbb935b0d74` with the name
-`did/pub/CustomKeyType/veriKey/hex` and the value of `0x02b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71`
-generates a verification method entry like the following:
+A `DIDAttributeChanged` event with the name `did/pub/CustomKeyType/veriKey/hex` and the value of
+`0x02b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71` generates a verification method entry like the
+following:
 
 ```json
 {
@@ -445,9 +442,8 @@ The DID document `@context` MUST include `https://w3id.org/security/v2` to defin
 
 ###### Example Ed25519 Verification Key
 
-A `DIDAttributeChanged` event for the account `0xf3beac30c498d9e26865f34fcaa57dbb935b0d74` with the name
-`did/pub/Ed25519/veriKey` and the value of `0xc642b35757cc36906fa75fa0338bf33e5210c5bce4769324801fd64276d69d07`
-generates a verification method entry like this:
+A `DIDAttributeChanged` event with the name `did/pub/Ed25519/veriKey` and the value of
+`0xc642b35757cc36906fa75fa0338bf33e5210c5bce4769324801fd64276d69d07` generates a verification method entry like this:
 
 ```json
 {
@@ -458,17 +454,17 @@ generates a verification method entry like this:
 }
 ```
 
-The resolver MUST encode the raw 32-byte Ed25519 public key as `publicKeyMultibase` by prepending the multicodec
-prefix `0xed01` and encoding the result as base58btc with a `z` prefix.
+Based on
+the [Ed25519VerificationKey2020](https://www.w3.org/community/reports/credentials/CG-FINAL-di-eddsa-2020-20220724/#ed25519verificationkey2020)
+mandate, the resolver MUST encode the raw 32-byte Ed25519 public key data from the event value as `publicKeyMultibase`
+by prepending the multicodec prefix `0xed01` and encoding the result as base58btc with a `z` prefix.
 The DID document `@context` MUST include `https://w3id.org/security/suites/ed25519-2020/v1` to define
 `Ed25519VerificationKey2020` and its scoped `publicKeyMultibase` property.
 
 ###### Example X25519 Encryption Key
 
-A `DIDAttributeChanged` event for the account `0xf3beac30c498d9e26865f34fcaa57dbb935b0d74` with the name
-`did/pub/X25519/enc` and the value of
-`0x118557777ffb078774371a52b00fed75561dcf975e61c47553e664a617661052`
-generates a verification method entry like this:
+A `DIDAttributeChanged` event with the name `did/pub/X25519/enc` and the value of
+`0x118557777ffb078774371a52b00fed75561dcf975e61c47553e664a617661052` generates a verification method entry like this:
 
 ```json
 {
@@ -483,33 +479,11 @@ The resolver MUST encode the raw 32-byte X25519 public key as `publicKeyMultibas
 prefix `0xec01` and encoding the result as base58btc with a `z` prefix.
 The DID document `@context` MUST include `https://w3id.org/security/suites/x25519-2020/v1`.
 
-###### Example RSA Verification Key
-
-A `DIDAttributeChanged` event for the account `0xf3beac30c498d9e26865f34fcaa57dbb935b0d74` with the name
-`did/pub/RSA/veriKey` and the value being the DER-encoded RSA public key bytes (hex-encoded on-chain) generates
-a verification method entry like this:
-
-```json
-{
-  "id": "did:ethr:0xf3beac30c498d9e26865f34fcaa57dbb935b0d74#delegate-1",
-  "type": "RsaVerificationKey2018",
-  "controller": "did:ethr:0xf3beac30c498d9e26865f34fcaa57dbb935b0d74",
-  "publicKeyPem": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA2a2rwplBQLF29amygykE\nMmYz0...L/S1yd9zICAWMsTQMtogkBdJ\nnwIDAQAB\n-----END PUBLIC KEY-----"
-}
-```
-
-The resolver MUST convert the hex attribute value to bytes and then PEM-encode them as a
-[PKCS#8](https://www.rfc-editor.org/rfc/rfc5958) `PUBLIC KEY` block. The attribute value is expected to already
-be a DER-encoded PKCS#8 `SubjectPublicKeyInfo` structure; the resolver base64-encodes those bytes and wraps them
-with `-----BEGIN PUBLIC KEY-----` / `-----END PUBLIC KEY-----` headers to produce the PEM string.
-The DID document `@context` MUST include `https://w3id.org/security/v2` to define `RsaVerificationKey2018` and `publicKeyPem`.
-
 ###### Example BLS12-381 G2 Verification Key
 
-A `DIDAttributeChanged` event for the account `0xf3beac30c498d9e26865f34fcaa57dbb935b0d74` with the name
-`did/pub/Bls12381G2/veriKey` and the value of
-`0xb3bac1c8cfd6dde4ebf2f900070e151c232a31383f464d545b626970777e858c939aa1a8afb6bdc4cbd2d9e0e7eef5fc030a11181f262d343b424950575e656c737a81888f969da4abb2b9c0c7ced5dce3eaf1f8ff060d141b222930373e454c`
-(a 96-byte compressed BLS12-381 G2 public key) generates a verification method entry like the following:
+A `DIDAttributeChanged` event with the name `did/pub/Bls12381G2/veriKey` and the value of
+`0xb3bac1c8cfd6dde4ebf2f900070e151c232a31383f464d545b626970777e858c939aa1a8afb6bdc4cbd2d9e0e7eef5fc030a11181f262d343b424950575e656c737a81888f969da4abb2b9c0c7ced5dce3eaf1f8ff060d141b222930373e454c` (
+a 96-byte compressed BLS12-381 G2 public key) generates a verification method entry like the following:
 
 ```json
 {
@@ -530,11 +504,9 @@ algorithm directly in the `publicKeyMultibase` value via a multicodec prefix. Th
 attribute name is always `Multikey`; the actual algorithm is determined by the multicodec prefix embedded in the
 attribute value.
 
-A `DIDAttributeChanged` event for the account `0xf3beac30c498d9e26865f34fcaa57dbb935b0d74` with the name
-`did/pub/Multikey/veriKey` and the value of
-`0xe70102b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71`
-(multicodec prefix `0xe701` for secp256k1 followed by the 33-byte compressed public key) generates a verification
-method entry like the following:
+A `DIDAttributeChanged` event with the name `did/pub/Multikey/veriKey` and the value of
+`0xe70102b97c30de767f084ce3080168ee293053ba33b235d7116a3263d29f1450936b71` (multicodec prefix `0xe701` for secp256k1
+followed by the 33-byte compressed public key) generates a verification method entry like the following:
 
 ```json
 {
@@ -545,11 +517,14 @@ method entry like the following:
 }
 ```
 
-The resolver MUST base58btc-encode the attribute value bytes as-is (prefixed with `z`) to produce `publicKeyMultibase`,
-since the multicodec prefix is already present in the on-chain value.
-Common multicodec prefixes: secp256k1 = `0xe701`, Ed25519 = `0xed01`, P-256 = `0x8024`, BLS12-381 G2 = `0xeb01`.
-The DID document `@context` MUST include `https://w3id.org/security/multikey/v1`, which defines `Multikey` and
-`publicKeyMultibase`.
+To produce a `publicKeyMultibase` string value for a `Multikey` verification method, the resolver MUST take the raw byte
+array of the attribute value (that already includes the varint multicodec prefix) and encode it
+as [multibase](https://www.w3.org/TR/cid-1.0/#multibase-0). The accepted encodings are either `base58btc` with a `z`
+prefix or `base64url` with a `u` prefix. For large keys (e.g. post-quantum keys, RSA) there is a small efficiency
+benefit to using `base64url`. All known key types in the Multikey spec mandate `base58btc` encoding.
+
+When resolving for JSON-LD, the DID document `@context` MUST include `https://w3id.org/security/multikey/v1`, which
+defines `Multikey` and `publicKeyMultibase`.
 
 > **Note** Unlike other key types where the attribute value is raw key bytes, `Multikey` attribute values MUST
 > include the multicodec prefix. Without it, the resolver cannot determine the key algorithm.
@@ -559,9 +534,9 @@ The DID document `@context` MUST include `https://w3id.org/security/multikey/v1`
 ML-DSA-44 is a post-quantum signature scheme.
 Its multicodec identifier is `mldsa-44-pub` (`0x1210`, varint-encoded as `0x90 0x24`).
 
-A `DIDAttributeChanged` event for the account `0xf3beac30c498d9e26865f34fcaa57dbb935b0d74` with the name
-`did/pub/Multikey/veriKey` and the value of `0x9024` (multicodec prefix for mldsa-44-pub) followed by the 1312-byte ML-DSA-44 public key bytes
-generates a verification method entry like the following:
+A `DIDAttributeChanged` event with the name `did/pub/Multikey/veriKey` and the value of `0x9024` (multicodec prefix for
+mldsa-44-pub) followed by the 1312-byte ML-DSA-44 public key bytes generates a verification method entry like the
+following:
 
 ```json
 {
@@ -577,9 +552,8 @@ generates a verification method entry like the following:
 SLH-DSA-SHAKE-256f is a stateless hash-based post-quantum signature scheme.
 Its multicodec identifier is `slhdsa-shake-256f-pub` (`0x122b`, varint-encoded as `0xab 0x24`).
 
-A `DIDAttributeChanged` event for the account `0xf3beac30c498d9e26865f34fcaa57dbb935b0d74` with the name
-`did/pub/Multikey/veriKey` and the prefix value of `0xab24` followed by the 64-byte SLH-DSA-SHAKE-256f public key bytes
-generates a verification method entry like the following:
+A `DIDAttributeChanged` event with the name `did/pub/Multikey/veriKey` and the prefix value of `0xab24` followed by the
+64-byte SLH-DSA-SHAKE-256f public key bytes generates a verification method entry like the following:
 
 ```json
 {
@@ -592,13 +566,12 @@ generates a verification method entry like the following:
 
 ###### Example ML-KEM-768 Post-Quantum Key Agreement Key
 
-ML-KEM-768 is a post-quantum key encapsulation mechanism.
-It is used for key agreement (`enc` purpose), not signing.
-Its multicodec identifier is `mlkem-768-pub` (`0x120c`, varint-encoded as `0x8c 0x24`).
+ML-KEM-768 is a post-quantum key encapsulation mechanism. It is used for key agreement (`enc` purpose), not signing. Its
+multicodec identifier is `mlkem-768-pub` (`0x120c`, varint-encoded as `0x8c 0x24`).
 
-A `DIDAttributeChanged` event for the account `0xf3beac30c498d9e26865f34fcaa57dbb935b0d74` with the name
-`did/pub/Multikey/enc` and the prefix value of `0x8c24` followed by the 1184-byte ML-KEM-768 public key bytes generates
-a verification method entry in the `keyAgreement` section like the following:
+A `DIDAttributeChanged` event with the name `did/pub/Multikey/enc` and the prefix value of `0x8c24` followed by the
+1184-byte ML-KEM-768 public key bytes generates a verification method entry in the `keyAgreement` section like the
+following:
 
 ```json
 {
@@ -617,9 +590,8 @@ The name of the attribute should follow this format:
 
 Example:
 
-A `DIDAttributeChanged` event for the account `0xf3beac30c498d9e26865f34fcaa57dbb935b0d74` with the name
-`did/svc/HubService` and value of the URL `https://hubs.uport.me` hex encoded as
-`0x68747470733a2f2f687562732e75706f72742e6d65` generates a service endpoint entry like the following:
+A `DIDAttributeChanged` event with the name `did/svc/HubService` and value of the URL `https://hubs.uport.me` hex
+encoded as `0x68747470733a2f2f687562732e75706f72742e6d65` generates a service endpoint entry like the following:
 
 ```json
 {
@@ -631,7 +603,7 @@ A `DIDAttributeChanged` event for the account `0xf3beac30c498d9e26865f34fcaa57db
 
 #### `id` properties of entries
 
-With the exception of `#controller` and `#controllerKey`, the `id` properties that appear throughout the DID document
+Except for `#controller` and `#controllerKey`, the `id` properties that appear throughout the DID document
 MUST be stable across updates. This means that the same key material will be referenced by the same ID after an update
 or automatic expiry of the other attributes.
 
@@ -750,7 +722,8 @@ properties of the `didDocumentMetadata`:
 In case the DID has had updates prior to or included in the `versionId` block number, the `updated` and `versionId`
 properties of the `didDocumentMetadata` MUST correspond to the latest block prior to the `versionId` query string param.
 
-Any timestamp comparisons of `validTo` fields of the event history MUST be done against the `versionId` block timestamp.
+Any timestamp comparisons of `validTo` fields of the event history MUST be performed against the timestamp of the block
+appearing as `versionId`.
 
 Example:
 `?versionId=12101682`
