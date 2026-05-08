@@ -49,8 +49,6 @@ export const VMTypes = {
   EcdsaSecp256k1RecoveryMethod2020: 'EcdsaSecp256k1RecoveryMethod2020',
   Ed25519VerificationKey2020: 'Ed25519VerificationKey2020',
   X25519KeyAgreementKey2020: 'X25519KeyAgreementKey2020',
-  Bls12381G2Key2020: 'Bls12381G2Key2020',
-  Bls12381G1Key2020: 'Bls12381G1Key2020',
   Multikey: 'Multikey',
 } as const
 export type VMTypes = (typeof VMTypes)[keyof typeof VMTypes]
@@ -87,8 +85,6 @@ export const algoToVMType: Record<string, string> = {
   Secp256k1: VMTypes.EcdsaSecp256k1VerificationKey2019,
   Ed25519: VMTypes.Ed25519VerificationKey2020,
   X25519: VMTypes.X25519KeyAgreementKey2020,
-  Bls12381G2: VMTypes.Bls12381G2Key2020,
-  Bls12381G1: VMTypes.Bls12381G1Key2020,
   Multikey: VMTypes.Multikey,
 }
 
@@ -169,8 +165,6 @@ export const multicodecPrefixes: Partial<Record<VMTypes, Uint8Array>> = {
   [VMTypes.Ed25519VerificationKey2020]: new Uint8Array([0xed, 0x01]), // ed25519-pub
   [VMTypes.X25519KeyAgreementKey2020]: new Uint8Array([0xec, 0x01]), // x25519-pub
   [VMTypes.EcdsaSecp256k1VerificationKey2019]: new Uint8Array([0xe7, 0x01]), // secp256k1-pub
-  [VMTypes.Bls12381G1Key2020]: new Uint8Array([0xea, 0x01]), // bls12_381-g1-pub
-  [VMTypes.Bls12381G2Key2020]: new Uint8Array([0xeb, 0x01]), // bls12_381-g2-pub
   // Multikey: prefix is already embedded in the on-chain value (e.g. 0x1200 for P-256)
 }
 

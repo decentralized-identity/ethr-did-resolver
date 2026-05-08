@@ -46,8 +46,7 @@
     "EcdsaSecp256k1VerificationKey2019",
     "Ed25519VerificationKey2020",
     "X25519KeyAgreementKey2020",
-    "Multikey",
-    "Bls12381G2Key2020"
+    "Multikey"
   ],
   "scripts": {
     "test": "HARDHAT_CONFIG=hardhat.config.mts vitest run",

@@ -1,4 +1,4 @@
-import { BlockTag, encodeBase58, encodeBase64, getBytes, toUtf8String } from 'ethers'
+import { BlockTag, encodeBase58, encodeBase64, toUtf8String } from 'ethers'
 import { ConfigurationOptions, ConfiguredNetworks, configureResolverWithNetworks } from './configuration.js'
 import type {
   ContextEntry,
@@ -12,21 +12,21 @@ import type {
   VerificationMethod,
 } from 'did-resolver'
 import {
+  algoToVMType,
+  compressedSecp256k1ToJwk,
   DIDAttributeChanged,
   DIDDelegateChanged,
   DIDOwnerChanged,
   ERC1056Event,
   Errors,
   eventNames,
+  ExtendedVerificationMethod,
   identifierMatcher,
   interpretIdentifier,
-  algoToVMType,
-  ExtendedVerificationMethod,
   multicodecPrefixes,
   nullAddress,
   strip0x,
   toMultibase,
-  compressedSecp256k1ToJwk,
   VMTypes,
 } from './helpers.js'
 import { logDecoder } from './logParser.js'
@@ -55,8 +55,7 @@ function buildLdContext(didDocument: DIDDocument): ContextEntry[] {
   const hasPublicKeyBase58 = allVMs.some((vm) => 'publicKeyBase58' in vm)
   const hasPublicKeyBase64 = allVMs.some((vm) => 'publicKeyBase64' in vm)
 
-  // security/v2 defines EcdsaSecp256k1VerificationKey2019,
-  // publicKeyBase58 — add it when any of those types or properties are present.
+  // security/v2 defines EcdsaSecp256k1VerificationKey2019 & publicKeyBase58
   if (types.has(VMTypes.EcdsaSecp256k1VerificationKey2019) || hasPublicKeyBase58) {
     contexts.push('https://w3id.org/security/v2')
   }
@@ -67,10 +66,6 @@ function buildLdContext(didDocument: DIDDocument): ContextEntry[] {
 
   if (types.has(VMTypes.X25519KeyAgreementKey2020)) {
     contexts.push('https://w3id.org/security/suites/x25519-2020/v1')
-  }
-
-  if (types.has(VMTypes.Bls12381G2Key2020) || types.has(VMTypes.Bls12381G1Key2020)) {
-    contexts.push('https://w3id.org/security/suites/bls12381-2020/v1')
   }
 
   if (types.has(VMTypes.Multikey)) {
@@ -236,6 +231,7 @@ export class EthrDidResolver {
           const currentEvent = event as DIDDelegateChanged
           delegateCount++
           const delegateType = currentEvent.delegateType //conversion from bytes32 is done in logParser
+          // noinspection FallThroughInSwitchStatementJS
           switch (delegateType) {
             case 'sigAuth':
               auth[eventIndex] = `${did}#delegate-${delegateCount}`
@@ -278,11 +274,6 @@ export class EthrDidResolver {
                   case VMTypes.X25519KeyAgreementKey2020:
                     // Always produce publicKeyMultibase regardless of encoding hint, to match spec.
                     pk.publicKeyMultibase = toMultibase(currentEvent.value, multicodecPrefixes[pk.type])
-                    break
-                  case VMTypes.Bls12381G2Key2020:
-                  case VMTypes.Bls12381G1Key2020:
-                    // Always produce publicKeyBase58 of raw bytes regardless of encoding hint, to match spec.
-                    pk.publicKeyBase58 = encodeBase58(getBytes(`0x${strip0x(currentEvent.value)}`))
                     break
                   case VMTypes.Multikey:
                     // On-chain value already includes the multicodec prefix; just base58btc-encode.

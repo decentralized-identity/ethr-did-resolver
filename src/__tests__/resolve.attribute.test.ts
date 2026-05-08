@@ -112,13 +112,15 @@ describe('attributes', () => {
       })
     })
 
-    it('add Bls12381G2Key2020 assertion key', async () => {
+    it('add Bls12381G2Key2020 assertion key via Multikey', async () => {
       expect.assertions(1)
       const { address: identity, shortDID: did, signer } = await randomAccount(provider)
-      const pubKey = hexlify(toUtf8Bytes('public key material here')) // encodes to 0x7075626c6963206b6579206d6174657269616c2068657265 in base16
+      // 0xeb01 is the multicodec prefix for bls12_381-g2-pub; the on-chain value must include it
+      const rawKey = toUtf8Bytes('public key material here') // 0x7075626c6963206b6579206d6174657269616c2068657265
+      const pubKey = hexlify(new Uint8Array([0xeb, 0x01, ...rawKey]))
       await new EthrDidController(identity, registryContract, signer).setAttribute(
-        'did/pub/Bls12381G2Key2020', // attrName must fit into 32 bytes. Anything extra will be truncated.
-        pubKey, // There's no limit on the size of the public key material
+        'did/pub/Multikey', // attrName must fit into 32 bytes
+        pubKey,
         86401
       )
       const { didDocument } = await didResolver.resolve(did)
@@ -134,9 +136,9 @@ describe('attributes', () => {
           },
           {
             id: `${did}#delegate-1`,
-            type: 'Bls12381G2Key2020',
+            type: 'Multikey',
             controller: did,
-            publicKeyBase58: 'BFdJW3VPNkfWyTpjK8nrmijTp1RoLri9z',
+            publicKeyMultibase: 'z8CNhpjgEH67cHtG4PWA1dS9udD1Z4pKmUCVA',
           },
         ],
         authentication: [`${did}#controller`],
