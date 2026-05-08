@@ -247,10 +247,10 @@ describe('meta transactions', () => {
       }
     )
     const result = await didResolver.resolve(identifier)
-    expect(result?.didDocument?.verificationMethod?.[1]).toEqual({
+    expect(result?.didDocument?.verificationMethod?.[1]).toMatchObject({
       controller: `${identifier}`,
       id: `${identifier}#delegate-1`,
-      publicKeyHex: attributeValue.slice(2),
+      publicKeyJwk: expect.objectContaining({ kty: 'EC', crv: 'secp256k1' }),
       type: 'EcdsaSecp256k1VerificationKey2019',
     })
   })

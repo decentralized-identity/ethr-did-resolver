@@ -44,7 +44,9 @@
     "EIP1056",
     "EcdsaSecp256k1RecoveryMethod2020",
     "EcdsaSecp256k1VerificationKey2019",
-    "Ed25519VerificationKey2018"
+    "Ed25519VerificationKey2020",
+    "X25519KeyAgreementKey2020",
+    "Multikey"
   ],
   "scripts": {
     "test": "HARDHAT_CONFIG=hardhat.config.mts vitest run",
@@ -72,7 +74,7 @@
     "vitest": "4.1.5"
   },
   "dependencies": {
-    "did-resolver": "^5.0.0",
+    "did-resolver": "^5.0.1",
     "ethers": "^6.8.1"
   },
   "packageManager": "pnpm@10.33.3"

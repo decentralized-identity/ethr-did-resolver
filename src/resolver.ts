@@ -1,6 +1,7 @@
 import { BlockTag, encodeBase58, encodeBase64, toUtf8String } from 'ethers'
 import { ConfigurationOptions, ConfiguredNetworks, configureResolverWithNetworks } from './configuration.js'
-import {
+import type {
+  ContextEntry,
   DIDDocument,
   DIDResolutionOptions,
   DIDResolutionResult,
@@ -11,22 +12,89 @@ import {
   VerificationMethod,
 } from 'did-resolver'
 import {
+  algoToVMType,
+  compressedSecp256k1ToJwk,
   DIDAttributeChanged,
   DIDDelegateChanged,
   DIDOwnerChanged,
   ERC1056Event,
   Errors,
   eventNames,
+  ExtendedVerificationMethod,
   identifierMatcher,
   interpretIdentifier,
-  legacyAlgoMap,
-  legacyAttrTypes,
-  LegacyVerificationMethod,
+  multicodecPrefixes,
   nullAddress,
   strip0x,
-  verificationMethodTypes,
+  toMultibase,
+  VMTypes,
 } from './helpers.js'
 import { logDecoder } from './logParser.js'
+
+/**
+ * Builds the JSON-LD @context array for a DID document based on the verification method types
+ * and key encoding properties actually present in the document.
+ *
+ * - Always includes the base DID v1 and secp256k1recovery-2020/v2 contexts.
+ * - Adds suite-specific contexts only for key types present in the document.
+ * - Appends an inline term definition object for any terms not covered by the above contexts
+ *   (publicKeyHex, publicKeyJwk).
+ */
+function buildLdContext(didDocument: DIDDocument): ContextEntry[] {
+  const contexts: ContextEntry[] = [
+    'https://www.w3.org/ns/did/v1',
+    // defines EcdsaSecp256k1RecoveryMethod2020, blockchainAccountId
+    'https://w3id.org/security/suites/secp256k1recovery-2020/v2',
+  ]
+
+  const allVMs: VerificationMethod[] = didDocument.verificationMethod ?? []
+
+  const types = new Set(allVMs.map((vm) => vm.type))
+  const hasPublicKeyHex = allVMs.some((vm) => 'publicKeyHex' in vm)
+  const hasPublicKeyJwk = allVMs.some((vm) => 'publicKeyJwk' in vm)
+  const hasPublicKeyBase58 = allVMs.some((vm) => 'publicKeyBase58' in vm)
+  const hasPublicKeyBase64 = allVMs.some((vm) => 'publicKeyBase64' in vm)
+
+  // security/v2 defines EcdsaSecp256k1VerificationKey2019 & publicKeyBase58
+  if (types.has(VMTypes.EcdsaSecp256k1VerificationKey2019) || hasPublicKeyBase58) {
+    contexts.push('https://w3id.org/security/v2')
+  }
+
+  if (types.has(VMTypes.Ed25519VerificationKey2020)) {
+    contexts.push('https://w3id.org/security/suites/ed25519-2020/v1')
+  }
+
+  if (types.has(VMTypes.X25519KeyAgreementKey2020)) {
+    contexts.push('https://w3id.org/security/suites/x25519-2020/v1')
+  }
+
+  if (types.has(VMTypes.Multikey)) {
+    contexts.push('https://w3id.org/security/multikey/v1')
+  }
+
+  // Inline term definitions for properties not defined by any of the above contexts.
+  const securityV2Included = contexts.includes('https://w3id.org/security/v2')
+  const inline: Record<string, unknown> = {}
+  if (hasPublicKeyHex) {
+    inline['publicKeyHex'] = 'https://w3id.org/security#publicKeyHex'
+  }
+  if (hasPublicKeyJwk) {
+    inline['publicKeyJwk'] = { '@id': 'https://w3id.org/security#publicKeyJwk', '@type': '@json' }
+  }
+  // publicKeyBase58 is defined by security/v2; only add inline if that context is absent.
+  if (hasPublicKeyBase58 && !securityV2Included) {
+    inline['publicKeyBase58'] = 'https://w3id.org/security#publicKeyBase58'
+  }
+  // publicKeyBase64 is not defined by any suite context — always inline when present.
+  if (hasPublicKeyBase64) {
+    inline['publicKeyBase64'] = 'https://w3id.org/security#publicKeyBase64'
+  }
+  if (Object.keys(inline).length > 0) {
+    contexts.push(inline)
+  }
+
+  return contexts
+}
 
 export function getResolver(options: ConfigurationOptions): Record<string, DIDResolver> {
   return new EthrDidResolver(options).build()
@@ -163,6 +231,7 @@ export class EthrDidResolver {
           const currentEvent = event as DIDDelegateChanged
           delegateCount++
           const delegateType = currentEvent.delegateType //conversion from bytes32 is done in logParser
+          // noinspection FallThroughInSwitchStatementJS
           switch (delegateType) {
             case 'sigAuth':
               auth[eventIndex] = `${did}#delegate-${delegateCount}`
@@ -170,7 +239,7 @@ export class EthrDidResolver {
             case 'veriKey':
               pks[eventIndex] = {
                 id: `${did}#delegate-${delegateCount}`,
-                type: verificationMethodTypes.EcdsaSecp256k1RecoveryMethod2020,
+                type: VMTypes.EcdsaSecp256k1RecoveryMethod2020,
                 controller: did,
                 blockchainAccountId: `eip155:${chainId}:${currentEvent.delegate}`,
               }
@@ -184,51 +253,58 @@ export class EthrDidResolver {
           if (match) {
             const section = match[1]
             const algorithm = match[2]
-            const type = legacyAttrTypes[match[4]] || match[4]
             const encoding = match[6]
             switch (section) {
               case 'pub': {
                 delegateCount++
-                const pk: LegacyVerificationMethod = {
+                // Primary lookup: algorithm token → canonical VM type.
+                // Unknown/future key types pass through as-is.
+                const vmType = algoToVMType[algorithm] ?? algorithm
+                const pk: ExtendedVerificationMethod = {
                   id: `${did}#delegate-${delegateCount}`,
-                  type: `${algorithm}${type}`,
+                  type: vmType,
                   controller: did,
                 }
-                pk.type = legacyAlgoMap[pk.type] || algorithm
-                let keyDataSet = true
-                switch (encoding) {
-                  case null:
-                  case undefined:
-                  case 'hex':
-                    pk.publicKeyHex = strip0x(currentEvent.value)
+                switch (pk.type) {
+                  case VMTypes.EcdsaSecp256k1VerificationKey2019:
+                    // Spec mandates publicKeyJwk for Secp256k1 attribute keys regardless of encoding hint.
+                    pk.publicKeyJwk = compressedSecp256k1ToJwk(currentEvent.value)
                     break
-                  case 'base64':
-                    pk.publicKeyBase64 = encodeBase64(currentEvent.value)
+                  case VMTypes.Ed25519VerificationKey2020:
+                  case VMTypes.X25519KeyAgreementKey2020:
+                    // Always produce publicKeyMultibase regardless of encoding hint, to match spec.
+                    pk.publicKeyMultibase = toMultibase(currentEvent.value, multicodecPrefixes[pk.type])
                     break
-                  case 'base58':
-                    pk.publicKeyBase58 = encodeBase58(currentEvent.value)
-                    break
-                  case 'pem':
-                    try {
-                      pk.publicKeyPem = toUtf8String(currentEvent.value)
-                    } catch {
-                      // value is not valid UTF-8; skip this key — non-DID use of registry
-                      keyDataSet = false
-                    }
+                  case VMTypes.Multikey:
+                    // On-chain value already includes the multicodec prefix; just base58btc-encode.
+                    pk.publicKeyMultibase = toMultibase(currentEvent.value)
                     break
                   default:
-                    pk.value = strip0x(currentEvent.value)
+                    // Unknown key types: honor the encoding hint for legacy compat.
+                    switch (encoding) {
+                      case null:
+                      case undefined:
+                      case 'hex':
+                        pk.publicKeyHex = strip0x(currentEvent.value)
+                        break
+                      case 'base64':
+                        pk.publicKeyBase64 = encodeBase64(currentEvent.value)
+                        break
+                      case 'base58':
+                        pk.publicKeyBase58 = encodeBase58(currentEvent.value)
+                        break
+                      default:
+                        pk.value = strip0x(currentEvent.value)
+                    }
                 }
-                if (keyDataSet) {
-                  pks[eventIndex] = pk
-                  if (match[4] === 'sigAuth') {
-                    auth[eventIndex] = pk.id
-                    signingRefs[eventIndex] = pk.id
-                  } else if (match[4] === 'enc') {
-                    keyAgreementRefs[eventIndex] = pk.id
-                  } else {
-                    signingRefs[eventIndex] = pk.id
-                  }
+                pks[eventIndex] = pk
+                if (match[4] === 'sigAuth') {
+                  auth[eventIndex] = pk.id
+                  signingRefs[eventIndex] = pk.id
+                } else if (match[4] === 'enc') {
+                  keyAgreementRefs[eventIndex] = pk.id
+                } else {
+                  signingRefs[eventIndex] = pk.id
                 }
                 break
               }
@@ -287,7 +363,7 @@ export class EthrDidResolver {
     const publicKeys: VerificationMethod[] = [
       {
         id: `${did}#controller`,
-        type: verificationMethodTypes.EcdsaSecp256k1RecoveryMethod2020,
+        type: VMTypes.EcdsaSecp256k1RecoveryMethod2020,
         controller: did,
         blockchainAccountId: `eip155:${chainId}:${controller}`,
       },
@@ -296,9 +372,9 @@ export class EthrDidResolver {
     if (controllerKey && controller == address) {
       publicKeys.push({
         id: `${did}#controllerKey`,
-        type: verificationMethodTypes.EcdsaSecp256k1VerificationKey2019,
+        type: VMTypes.EcdsaSecp256k1VerificationKey2019,
         controller: did,
-        publicKeyHex: strip0x(controllerKey),
+        publicKeyJwk: compressedSecp256k1ToJwk(controllerKey),
       })
       authentication.push(`${did}#controllerKey`)
       assertionMethod.push(`${did}#controllerKey`)
@@ -333,21 +409,11 @@ export class EthrDidResolver {
     _unused: Resolvable,
     options: DIDResolutionOptions
   ): Promise<DIDResolutionResult> {
-    let ldContext = {}
+    let wantLdContext = false
     if (options.accept === 'application/did+json') {
-      ldContext = {}
+      wantLdContext = false
     } else if (options.accept === 'application/did+ld+json' || typeof options.accept !== 'string') {
-      ldContext = {
-        '@context': [
-          'https://www.w3.org/ns/did/v1',
-
-          // defines EcdsaSecp256k1RecoveryMethod2020 & blockchainAccountId
-          'https://w3id.org/security/suites/secp256k1recovery-2020/v2',
-
-          // defines publicKeyHex & EcdsaSecp256k1VerificationKey2019; v2 does not define publicKeyHex
-          'https://w3id.org/security/v3-unstable',
-        ],
-      }
+      wantLdContext = true
     } else {
       return {
         didResolutionMetadata: {
@@ -436,7 +502,7 @@ export class EthrDidResolver {
         didResolutionMetadata: { contentType: options.accept ?? 'application/did+ld+json' },
         didDocument: {
           ...didDocument,
-          ...ldContext,
+          ...(wantLdContext ? { '@context': buildLdContext(didDocument) } : {}),
         },
       }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any

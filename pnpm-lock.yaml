@@ -9,7 +9,7 @@ importers:
   .:
     dependencies:
       did-resolver:
-        specifier: ^5.0.0
+        specifier: ^5.0.1
         version: 5.0.1
       ethers:
         specifier: ^6.8.1

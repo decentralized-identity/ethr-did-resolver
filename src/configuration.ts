@@ -1,5 +1,4 @@
 import { Contract, ContractFactory, JsonRpcProvider, Provider } from 'ethers'
-import { DEFAULT_REGISTRY_ADDRESS } from './helpers.js'
 import { deployments, EthrDidRegistryDeployment } from './config/deployments.js'
 import { EthereumDIDRegistry } from './config/EthereumDIDRegistry.js'
 
@@ -60,27 +59,37 @@ function configureNetworksWithInfura(projectId?: string): ConfiguredNetworks {
   return configureNetworks({ networks })
 }
 
+/** Returns true when a deployment matches the given conf by chainId or by name/description alias. */
+function matchesDeployment(d: (typeof deployments)[number], conf: ProviderConfiguration): boolean {
+  if (conf.chainId && BigInt(d.chainId) === BigInt(conf.chainId)) return true
+  if (conf.name && (d.name === conf.name || d.description === conf.name)) return true
+  return false
+}
+
 export function getContractForNetwork(conf: ProviderConfiguration): Contract {
   let provider: Provider = conf.provider || conf.web3?.currentProvider
   if (!provider) {
     if (conf.rpcUrl) {
-      const chainIdRaw = conf.chainId ? conf.chainId : deployments.find((d) => d.name === conf.name)?.chainId
+      const chainIdRaw = conf.chainId ? conf.chainId : deployments.find((d) => matchesDeployment(d, conf))?.chainId
       const chainId = chainIdRaw ? BigInt(chainIdRaw) : chainIdRaw
       provider = new JsonRpcProvider(conf.rpcUrl, chainId || 'any')
     } else {
       throw new Error(`invalid_config: No web3 provider could be determined for network ${conf.name || conf.chainId}`)
     }
   }
-  const contract = ContractFactory.fromSolidity(EthereumDIDRegistry)
-    .attach(conf.registry || DEFAULT_REGISTRY_ADDRESS)
-    .connect(provider)
+  const registryAddress = conf.registry || deployments.find((d) => matchesDeployment(d, conf))?.registry
+  if (!registryAddress) {
+    throw new Error(
+      `invalid_config: No registry address known for network ${conf.name || conf.chainId}. Please provide a registry address.`
+    )
+  }
+  const contract = ContractFactory.fromSolidity(EthereumDIDRegistry).attach(registryAddress).connect(provider)
   return contract as Contract
 }
 
 function configureNetwork(net: ProviderConfiguration): ConfiguredNetworks {
   const networks: ConfiguredNetworks = {}
-  const chainId =
-    net.chainId || deployments.find((d) => net.name && (d.name === net.name || d.description === net.name))?.chainId
+  const chainId = net.chainId || deployments.find((d) => matchesDeployment(d, net))?.chainId
   if (chainId) {
     if (net.name) {
       networks[net.name] = getContractForNetwork(net)

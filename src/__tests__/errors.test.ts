@@ -8,7 +8,7 @@ import { stringToBytes32 } from '../helpers'
 describe('error handling', () => {
   const didResolver = new Resolver(
     getResolver({
-      networks: [{ name: 'example', rpcUrl: 'example.com' }],
+      networks: [{ name: 'example', rpcUrl: 'example.com', registry: '0x9af37603e98e0dc2b855be647c39abe984fc2445' }],
     })
   )
 
@@ -196,20 +196,6 @@ describe('non-DID registry events', () => {
     const result = await didResolver.resolve(did)
     expect(result.didResolutionMetadata.error).toBeUndefined()
     expect(result.didDocument?.verificationMethod).toHaveLength(1)
-  })
-
-  it('skips pem key when value bytes are not valid UTF-8', async () => {
-    expect.assertions(3)
-    const { address: identity, shortDID: did, signer } = await randomAccount(provider)
-    const connected = registryContract.connect(signer) as Contract
-    const pemAttrName = stringToBytes32('did/pub/Secp256k1/veriKey/pem')
-    // value is raw bytes that are not valid UTF-8 (a PEM should be ASCII text)
-    await connected['setAttribute'](identity, pemAttrName, INVALID_UTF8_BYTES, 86400)
-    const result = await didResolver.resolve(did)
-    expect(result.didResolutionMetadata.error).toBeUndefined()
-    // The malformed pem key must NOT appear in the document
-    expect(result.didDocument?.verificationMethod).toHaveLength(1)
-    expect(result.didDocument?.assertionMethod).toHaveLength(1)
   })
 
   it('skips service when value bytes are not valid UTF-8', async () => {

@@ -6,7 +6,7 @@ describe('configuration', () => {
   it('works with infuraProjectId', () => {
     const contracts = configureResolverWithNetworks({
       infuraProjectId: 'blabla',
-      networks: [{ name: 'dev', rpcUrl: 'test' }],
+      networks: [{ name: 'dev', rpcUrl: 'test', registry: '0x9af37603e98e0dc2b855be647c39abe984fc2445' }],
     })
     expect(contracts['mainnet']).toBeDefined()
     expect(contracts['0x1']).toBeDefined()
@@ -43,21 +43,23 @@ describe('configuration', () => {
 
   it('works with single provider', async () => {
     const contracts = configureResolverWithNetworks({
-      provider: new JsonRpcProvider('some rinkeby JSONRPC URL'),
+      provider: new JsonRpcProvider('some JSONRPC URL'),
+      registry: '0x9af37603e98e0dc2b855be647c39abe984fc2445',
     })
     expect(contracts['']).toBeDefined()
   })
 
   it('works with only rpcUrl', async () => {
     const contracts = configureResolverWithNetworks({
-      rpcUrl: 'some rinkeby JSONRPC URL',
+      rpcUrl: 'some JSONRPC URL',
+      registry: '0x9af37603e98e0dc2b855be647c39abe984fc2445',
     })
     expect(contracts['']).toBeDefined()
   })
 
   it('works with rpc and numbered chainId', async () => {
     const contracts = configureResolverWithNetworks({
-      rpcUrl: 'some rinkeby JSONRPC URL',
+      rpcUrl: 'some JSONRPC URL',
       chainId: BigInt(1),
     })
     expect(contracts['0x1']).toBeDefined()
@@ -67,6 +69,12 @@ describe('configuration', () => {
     expect(() => {
       configureResolverWithNetworks()
     }).toThrowError('invalid_config: Please make sure to have at least one network')
+  })
+
+  it('throws when no registry is known for a network', () => {
+    expect(() => {
+      configureResolverWithNetworks({ networks: [{ name: 'unknown-net', rpcUrl: 'http://localhost:8545' }] })
+    }).toThrowError('invalid_config: No registry address known for network unknown-net')
   })
 
   it('throws when no relevant configuration is provided for a network', () => {
