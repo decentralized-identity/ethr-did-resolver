@@ -27,7 +27,6 @@ import {
   strip0x,
   toMultibase,
   compressedSecp256k1ToJwk,
-  bytesToPem,
   VMTypes,
 } from './helpers.js'
 import { logDecoder } from './logParser.js'
@@ -54,17 +53,11 @@ function buildLdContext(didDocument: DIDDocument): ContextEntry[] {
   const hasPublicKeyHex = allVMs.some((vm) => 'publicKeyHex' in vm)
   const hasPublicKeyJwk = allVMs.some((vm) => 'publicKeyJwk' in vm)
   const hasPublicKeyBase58 = allVMs.some((vm) => 'publicKeyBase58' in vm)
-  const hasPublicKeyPem = allVMs.some((vm) => 'publicKeyPem' in vm)
   const hasPublicKeyBase64 = allVMs.some((vm) => 'publicKeyBase64' in vm)
 
-  // security/v2 defines EcdsaSecp256k1VerificationKey2019, RsaVerificationKey2018,
-  // publicKeyBase58, publicKeyPem — add it when any of those types or properties are present.
-  if (
-    types.has(VMTypes.EcdsaSecp256k1VerificationKey2019) ||
-    types.has(VMTypes.RsaVerificationKey2018) ||
-    hasPublicKeyBase58 ||
-    hasPublicKeyPem
-  ) {
+  // security/v2 defines EcdsaSecp256k1VerificationKey2019,
+  // publicKeyBase58 — add it when any of those types or properties are present.
+  if (types.has(VMTypes.EcdsaSecp256k1VerificationKey2019) || hasPublicKeyBase58) {
     contexts.push('https://w3id.org/security/v2')
   }
 
@@ -93,12 +86,9 @@ function buildLdContext(didDocument: DIDDocument): ContextEntry[] {
   if (hasPublicKeyJwk) {
     inline['publicKeyJwk'] = { '@id': 'https://w3id.org/security#publicKeyJwk', '@type': '@json' }
   }
-  // publicKeyBase58/publicKeyPem are defined by security/v2; only add inline if that context is absent.
+  // publicKeyBase58 is defined by security/v2; only add inline if that context is absent.
   if (hasPublicKeyBase58 && !securityV2Included) {
     inline['publicKeyBase58'] = 'https://w3id.org/security#publicKeyBase58'
-  }
-  if (hasPublicKeyPem && !securityV2Included) {
-    inline['publicKeyPem'] = 'https://w3id.org/security#publicKeyPem'
   }
   // publicKeyBase64 is not defined by any suite context — always inline when present.
   if (hasPublicKeyBase64) {
@@ -298,11 +288,6 @@ export class EthrDidResolver {
                     // On-chain value already includes the multicodec prefix; just base58btc-encode.
                     pk.publicKeyMultibase = toMultibase(currentEvent.value)
                     break
-                  case VMTypes.RsaVerificationKey2018:
-                    // Encoding hint is ignored for RSA — always emit publicKeyPem,
-                    // consistent with how other known key types use their canonical encoding.
-                    pk.publicKeyPem = bytesToPem(currentEvent.value)
-                    break
                   default:
                     // Unknown key types: honor the encoding hint for legacy compat.
                     switch (encoding) {
@@ -316,9 +301,6 @@ export class EthrDidResolver {
                         break
                       case 'base58':
                         pk.publicKeyBase58 = encodeBase58(currentEvent.value)
-                        break
-                      case 'pem':
-                        pk.publicKeyPem = bytesToPem(currentEvent.value)
                         break
                       default:
                         pk.value = strip0x(currentEvent.value)

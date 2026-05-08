@@ -49,7 +49,6 @@ export const VMTypes = {
   EcdsaSecp256k1RecoveryMethod2020: 'EcdsaSecp256k1RecoveryMethod2020',
   Ed25519VerificationKey2020: 'Ed25519VerificationKey2020',
   X25519KeyAgreementKey2020: 'X25519KeyAgreementKey2020',
-  RsaVerificationKey2018: 'RsaVerificationKey2018',
   Bls12381G2Key2020: 'Bls12381G2Key2020',
   Bls12381G1Key2020: 'Bls12381G1Key2020',
   Multikey: 'Multikey',
@@ -88,7 +87,6 @@ export const algoToVMType: Record<string, string> = {
   Secp256k1: VMTypes.EcdsaSecp256k1VerificationKey2019,
   Ed25519: VMTypes.Ed25519VerificationKey2020,
   X25519: VMTypes.X25519KeyAgreementKey2020,
-  RSA: VMTypes.RsaVerificationKey2018,
   Bls12381G2: VMTypes.Bls12381G2Key2020,
   Bls12381G1: VMTypes.Bls12381G1Key2020,
   Multikey: VMTypes.Multikey,
@@ -173,7 +171,6 @@ export const multicodecPrefixes: Partial<Record<VMTypes, Uint8Array>> = {
   [VMTypes.EcdsaSecp256k1VerificationKey2019]: new Uint8Array([0xe7, 0x01]), // secp256k1-pub
   [VMTypes.Bls12381G1Key2020]: new Uint8Array([0xea, 0x01]), // bls12_381-g1-pub
   [VMTypes.Bls12381G2Key2020]: new Uint8Array([0xeb, 0x01]), // bls12_381-g2-pub
-  [VMTypes.RsaVerificationKey2018]: new Uint8Array([0x85, 0x24]), // rsa-pub
   // Multikey: prefix is already embedded in the on-chain value (e.g. 0x1200 for P-256)
 }
 
@@ -202,23 +199,4 @@ export function compressedSecp256k1ToJwk(hex: string): JsonWebKey {
   const x = toBase64url(raw.slice(1, 33))
   const y = toBase64url(raw.slice(33, 65))
   return { kty: 'EC', crv: 'secp256k1', x, y }
-}
-
-/**
- * Decodes an on-chain hex value to a PEM public key string.
- * If the bytes are valid UTF-8 and already contain a PEM header, returns them as-is.
- * Otherwise treats the bytes as DER and wraps them in PEM headers.
- */
-export function bytesToPem(hex: string): string {
-  const tryUtf8 = (() => {
-    try {
-      return toUtf8String(hex)
-    } catch {
-      return null
-    }
-  })()
-  if (tryUtf8?.includes('-----BEGIN')) return tryUtf8
-  const b64 = encodeBase64(getBytes(`0x${strip0x(hex)}`))
-  const lines = b64.match(/.{1,64}/g)?.join('\n') ?? b64
-  return `-----BEGIN PUBLIC KEY-----\n${lines}\n-----END PUBLIC KEY-----`
 }

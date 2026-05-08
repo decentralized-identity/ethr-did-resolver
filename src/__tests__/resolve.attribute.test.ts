@@ -176,46 +176,6 @@ describe('attributes', () => {
       })
     })
 
-    it('add RsaVerificationKey2018 signing key', async () => {
-      expect.assertions(1)
-      const { address: identity, shortDID: did, signer } = await randomAccount(provider)
-      // DER-encoded SubjectPublicKeyInfo (synthetic 1024-bit RSA key for testing)
-      const derHex = '30819f300d06092a864886f70d010101050003818d00308189028181' + '00' + 'bb'.repeat(128) + '0203010001'
-      await new EthrDidController(identity, registryContract, signer).setAttribute(
-        'did/pub/RSA/veriKey/pem',
-        `0x${derHex}`,
-        86403
-      )
-      const { didDocument } = await didResolver.resolve(did)
-      expect(didDocument).toEqual({
-        '@context': expect.anything(),
-        id: did,
-        verificationMethod: [
-          {
-            id: `${did}#controller`,
-            type: 'EcdsaSecp256k1RecoveryMethod2020',
-            controller: did,
-            blockchainAccountId: `eip155:1337:${identity}`,
-          },
-          {
-            id: `${did}#delegate-1`,
-            type: 'RsaVerificationKey2018',
-            controller: did,
-            publicKeyPem: [
-              '-----BEGIN PUBLIC KEY-----',
-              'MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQC7u7u7u7u7u7u7u7u7u7u7u7u7',
-              'u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7',
-              'u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7',
-              'u7u7u7u7u7u7u7u7uwIDAQAB',
-              '-----END PUBLIC KEY-----',
-            ].join('\n'),
-          },
-        ],
-        authentication: [`${did}#controller`],
-        assertionMethod: [`${did}#controller`, `${did}#delegate-1`],
-      })
-    })
-
     it('add X25519KeyAgreementKey2020 encryption key', async () => {
       expect.assertions(1)
       const { address: identity, shortDID: did, signer } = await randomAccount(provider)

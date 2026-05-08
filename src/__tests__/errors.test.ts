@@ -198,22 +198,6 @@ describe('non-DID registry events', () => {
     expect(result.didDocument?.verificationMethod).toHaveLength(1)
   })
 
-  it('encodes pem key from raw bytes regardless of UTF-8 validity', async () => {
-    expect.assertions(3)
-    const { address: identity, shortDID: did, signer } = await randomAccount(provider)
-    const connected = registryContract.connect(signer) as Contract
-    // RSA always uses PEM output; arbitrary bytes are DER-wrapped in PEM headers
-    const pemAttrName = stringToBytes32('did/pub/RSA/veriKey/pem')
-    await connected['setAttribute'](identity, pemAttrName, INVALID_UTF8_BYTES, 86400)
-    const result = await didResolver.resolve(did)
-    expect(result.didResolutionMetadata.error).toBeUndefined()
-    // Raw bytes are DER-encoded and wrapped in PEM headers regardless of UTF-8 validity
-    expect(result.didDocument?.verificationMethod).toHaveLength(2)
-    expect(result.didDocument?.verificationMethod?.[1]).toMatchObject({
-      publicKeyPem: '-----BEGIN PUBLIC KEY-----\ngIGCgw==\n-----END PUBLIC KEY-----',
-    })
-  })
-
   it('skips service when value bytes are not valid UTF-8', async () => {
     expect.assertions(3)
     const { address: identity, shortDID: did, signer } = await randomAccount(provider)
