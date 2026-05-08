@@ -1,3 +1,50 @@
+# [12.0.0](https://github.com/decentralized-identity/ethr-did-resolver/compare/11.1.3...12.0.0) (2026-05-08)
+
+
+### Features
+
+* support additional key types in the reference resolver implementation ([#229](https://github.com/decentralized-identity/ethr-did-resolver/issues/229)) ([1463f93](https://github.com/decentralized-identity/ethr-did-resolver/commit/1463f93fe2586e6b40ba3d164a5916a5ea4bf31b))
+
+
+### BREAKING CHANGES
+
+* `attrTypes` and `delegateTypes` are no longer exported as they mapped to the deprecated VM names.
+
+* feat: upgrade key->VM mappings to modern variants an add extra key types
+
+ * Ed25519 => Ed25519VerificationKey2020 instead of 2018
+ * X25519 => X25519KeyAgreementKey2020
+   instead of 2019
+ * The #controllerKey is now resolved using `publicKeyJwk` instead of `publicKeyHex`
+ * added Multikey & BLS key support
+* the resolved DID documents now display the modern, spec compliant, Verification Methods for several key types, ignoring the encoding hint, effectively changing the output. Ed25519/X25519 VM methods now map to their 2020 definitions.
+
+* chore: define extra multicodec prefixes for known key types
+
+* refactor: avoid using Buffer in conversions
+
+* feat: output secp256k1 keys as JWK
+* Update resolver to use publicKeyJwk for secp256k1 keys, ignoring the encoding hint.
+
+* refactor: remove DEFAULT_REGISTRY_ADDRESS and require explicit registry address for networks
+* Remove REGISTRY export from index. The default registry address is misleading as it refers to an older build of the registry contract that is no longer deployed on most networks. The resolver should throw if there is no registry configured.
+
+* refactor: replace enums with const objects and types for `VMTypes`, `eventNames`, and `Errors`
+
+* feat: support multiple public key property types in context generation
+
+* refactor: always emit publicKey data for known key types and remove keyDataSet checks
+
+* refactor: remove unnecessary type assertion for publicKeyJwk in controller key generation
+
+* refactor: centralize deployment matching logic and update registry param docs
+
+* refactor: remove unused RSA & publicKeyPem handling
+* RSA keys no longer directly handled. There is no history of usage, but still counts as breaking.
+* The encoding hint from DIDAttributeChanged is only used when the key type is unknown. If none is specified, publicKeyHex is used.
+
+* refactor: remove Bls12381G1/G2 key type handling and tests in favor of Multikey
+
 ## [11.1.3](https://github.com/decentralized-identity/ethr-did-resolver/compare/11.1.2...11.1.3) (2026-05-07)
 
 
