@@ -356,7 +356,7 @@ misuse for storing personal user information forever on-chain.
 The name of the attribute added to ERC1056 MUST follow this format:
 `did/pub/<key algorithm>/<key purpose>/<optional encoding hint>`
 
-Examples: `did/pub/(Secp256k1|Ed25519|X25519|Bls12381G2|Multikey)/(veriKey|sigAuth|enc)/(hex|base64|base58)`.
+Examples: `did/pub/(Secp256k1|Ed25519|X25519|Multikey)/(veriKey|sigAuth|enc)/(hex|base64|base58)`.
 
 ###### Key purposes
 
@@ -385,12 +385,10 @@ encoding property, and the `@context` entries required in the DID document when 
 | `Secp256k1`       | `EcdsaSecp256k1VerificationKey2019` | `publicKeyJwk`       | `https://w3id.org/security/v2` +<br/> `{ "publicKeyJwk": { "@id": "https://w3id.org/security#publicKeyJwk", "@type": "@json" } }` |
 | `Ed25519`         | `Ed25519VerificationKey2020`        | `publicKeyMultibase` | `https://w3id.org/security/suites/ed25519-2020/v1`                                                                                |
 | `X25519`          | `X25519KeyAgreementKey2020`         | `publicKeyMultibase` | `https://w3id.org/security/suites/x25519-2020/v1`                                                                                 |
-| `Bls12381G1`      | `Bls12381G1Key2020`                 | `publicKeyBase58`    | `https://w3id.org/security/suites/bls12381-2020/v1`                                                                               |
-| `Bls12381G2`      | `Bls12381G2Key2020`                 | `publicKeyBase58`    | `https://w3id.org/security/suites/bls12381-2020/v1`                                                                               |
 | `Multikey`        | `Multikey`                          | `publicKeyMultibase` | `https://w3id.org/security/multikey/v1`                                                                                           |
 
-> **Note** `Multikey` supports all the explicitly listed key types above in addition to any other algorithm encodable
-> via multicodec. Key algorithms not listed in this table (e.g. P-256, RSA, ML-KEM, etc.) SHOULD be expressed using the
+> **Note** `Multikey` is algorithm-agnostic and supports any key type encodable via multicodec, including BLS12-381
+> G1/G2, P-256, RSA, ML-KEM, and others. Key algorithms not listed in this table SHOULD be expressed using the
 > `Multikey` verification method.
 > When the resolver encounters an unknown key algorithm, it MUST present it verbatim as the
 > verification method type with `publicKeyHex` as the default key encoding, or with a publicKey encoding that follows
@@ -479,23 +477,28 @@ The resolver MUST encode the raw 32-byte X25519 public key as `publicKeyMultibas
 prefix `0xec01` and encoding the result as base58btc with a `z` prefix.
 The DID document `@context` MUST include `https://w3id.org/security/suites/x25519-2020/v1`.
 
-###### Example BLS12-381 G2 Verification Key
+###### Example BLS12-381 G2 Verification Key via Multikey
 
-A `DIDAttributeChanged` event with the name `did/pub/Bls12381G2/veriKey` and the value of
-`0xb3bac1c8cfd6dde4ebf2f900070e151c232a31383f464d545b626970777e858c939aa1a8afb6bdc4cbd2d9e0e7eef5fc030a11181f262d343b424950575e656c737a81888f969da4abb2b9c0c7ced5dce3eaf1f8ff060d141b222930373e454c` (
-a 96-byte compressed BLS12-381 G2 public key) generates a verification method entry like the following:
+BLS12-381 G2 keys SHOULD be registered using the `Multikey` verification method type by prepending the multicodec
+prefix `0xeb01` (bls12_381-g2-pub) to the raw 96-byte compressed public key before storing it on-chain.
+
+A `DIDAttributeChanged` event with the name `did/pub/Multikey/veriKey` and the value of
+`0xeb01b3bac1c8cfd6dde4ebf2f900070e151c232a31383f464d545b626970777e858c939aa1a8afb6bdc4cbd2d9e0e7eef5fc030a11181f262d343b424950575e656c737a81888f969da4abb2b9c0c7ced5dce3eaf1f8ff060d141b222930373e454c` (
+multicodec prefix `0xeb01` followed by the 96-byte compressed BLS12-381 G2 public key) generates a verification method
+entry like the following:
 
 ```json
 {
   "id": "did:ethr:0xf3beac30c498d9e26865f34fcaa57dbb935b0d74#delegate-1",
-  "type": "Bls12381G2Key2020",
+  "type": "Multikey",
   "controller": "did:ethr:0xf3beac30c498d9e26865f34fcaa57dbb935b0d74",
-  "publicKeyBase58": "24uuz8oBBN6TFti8KMTGDqaMiGC7hb4TD9EUraf6ax2uUuoWGqC2xUGLfkzNTckaYz6vpYfK92fGENXeBZV477mkhmaQixVR7fw2USAjqDVJcdks8Hr6op32nHtJqhyREnLb"
+  "publicKeyMultibase": "zUC7JkTsCUqQiiKUJeoAXPxS8sidWURud3191d4g4WZPgvGHKQTuXrS7GiJLuyii948C8KLhb5AxQYpCKQNJikPpwjHRZvJpv8YbwaisLPNhhSSUzfCjNnGuyqSkm53jHXa7Gwu"
 }
 ```
 
-The resolver MUST base58btc-encode the raw 96-byte G2 public key (no multicodec prefix) as `publicKeyBase58`.
-The DID document `@context` MUST include `https://w3id.org/security/suites/bls12381-2020/v1`.
+The resolver MUST take the attribute value (which already includes the `0xeb01` multicodec prefix) and encode it as
+`publicKeyMultibase` using base58btc with a `z` prefix.
+The DID document `@context` MUST include `https://w3id.org/security/multikey/v1`.
 
 ###### Example Multikey Verification Key
 
