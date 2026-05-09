@@ -1,3 +1,5 @@
+lib.commonjs/
+lib.esm/
 lib/
 
 # Created by https://www.gitignore.io/api/node,linux,macos,windows,intellij
