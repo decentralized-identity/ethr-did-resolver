@@ -8,13 +8,15 @@
   "module": "./lib.esm/index.js",
   "types": "./lib.commonjs/index.d.ts",
   "exports": {
-    "import": {
-      "types": "./lib.esm/index.d.ts",
-      "default": "./lib.esm/index.js"
-    },
-    "require": {
-      "types": "./lib.commonjs/index.d.ts",
-      "default": "./lib.commonjs/index.js"
+    ".": {
+      "import": {
+        "types": "./lib.esm/index.d.ts",
+        "default": "./lib.esm/index.js"
+      },
+      "require": {
+        "types": "./lib.commonjs/index.d.ts",
+        "default": "./lib.commonjs/index.js"
+      }
     }
   },
   "repository": {
