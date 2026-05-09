@@ -57,7 +57,7 @@
     "test:ci": "HARDHAT_CONFIG=hardhat.config.mts vitest run --coverage",
     "build": "pnpm run build:common && pnpm run build:esm",
     "build:common": "tsc --project tsconfig.common.json",
-    "build:esm": "tsc --project tsconfig.esm.json",
+    "build:esm": "tsc --project tsconfig.esm.json && echo '{\"type\":\"module\"}' > lib.esm/package.json",
     "clean": "rm -rf ./lib.commonjs ./lib.esm",
     "format": "prettier --write \"src/**/*.[jt]s\"",
     "lint": "eslint \"src/**/*.[jt]s\"",
