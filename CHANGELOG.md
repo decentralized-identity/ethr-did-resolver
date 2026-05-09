@@ -1,3 +1,13 @@
+## [12.0.1-alpha.1](https://github.com/decentralized-identity/ethr-did-resolver/compare/12.0.0...12.0.1-alpha.1) (2026-05-09)
+
+
+### Bug Fixes
+
+* **build:** add package.json with type module to esm build output ([de7b2d9](https://github.com/decentralized-identity/ethr-did-resolver/commit/de7b2d9d08a55528c09a9f1b805e1db99bb54627))
+* **build:** update tsconfig to use modern module and resolution settings ([14b799c](https://github.com/decentralized-identity/ethr-did-resolver/commit/14b799c30b09c570f6872a14d74e49a0f0a63b35))
+* mismatched ethers types when in esm project ([63fdce3](https://github.com/decentralized-identity/ethr-did-resolver/commit/63fdce383b95de2ae3d43c02f79a32f0cc788130))
+* update exports field to support subpath patterns for esm and commonjs ([468bab9](https://github.com/decentralized-identity/ethr-did-resolver/commit/468bab9db603391059d9ada5a30a276312ae4649))
+
 # [12.0.0](https://github.com/decentralized-identity/ethr-did-resolver/compare/11.1.3...12.0.0) (2026-05-08)
 
 
