@@ -1,18 +1,15 @@
 {
   "compilerOptions": {
     "target": "ES2020",
-    "module": "nodenext",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "lib": ["ES2020"],
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
     "outDir": "lib.esm",
     "strict": true,
-    "skipLibCheck": true,
-    "noImplicitThis": false,
-    "moduleResolution": "nodenext",
-    "allowSyntheticDefaultImports": true,
-    "resolveJsonModule": true,
-    "esModuleInterop": true
+    "skipLibCheck": true
   },
   "exclude": [
     "**/__tests__/*",
