@@ -60,18 +60,18 @@
   "devDependencies": {
     "@semantic-release/changelog": "6.0.3",
     "@semantic-release/git": "10.0.1",
-    "@typescript-eslint/eslint-plugin": "8.59.2",
-    "@typescript-eslint/parser": "8.59.2",
-    "@vitest/coverage-v8": "4.1.5",
-    "@vitest/eslint-plugin": "1.6.16",
+    "@typescript-eslint/eslint-plugin": "8.59.3",
+    "@typescript-eslint/parser": "8.59.3",
+    "@vitest/coverage-v8": "4.1.6",
+    "@vitest/eslint-plugin": "1.6.17",
     "eslint": "10.3.0",
     "eslint-config-prettier": "10.1.8",
     "eslint-plugin-prettier": "5.5.5",
-    "hardhat": "3.4.4",
+    "hardhat": "3.4.5",
     "prettier": "3.8.3",
     "semantic-release": "25.0.3",
     "typescript": "5.9.3",
-    "vitest": "4.1.5"
+    "vitest": "4.1.6"
   },
   "dependencies": {
     "did-resolver": "^5.0.1",
