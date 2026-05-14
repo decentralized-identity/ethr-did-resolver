@@ -70,7 +70,7 @@
     "hardhat": "3.4.5",
     "prettier": "3.8.3",
     "semantic-release": "25.0.3",
-    "typescript": "5.9.3",
+    "typescript": "6.0.3",
     "vitest": "4.1.6"
   },
   "dependencies": {
