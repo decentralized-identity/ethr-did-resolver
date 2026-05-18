@@ -1,3 +1,15 @@
+# [13.0.0](https://github.com/decentralized-identity/ethr-did-resolver/compare/12.0.1...13.0.0) (2026-05-18)
+
+
+### Bug Fixes
+
+* **build:** update typescript to 6.0.3 ([201a50c](https://github.com/decentralized-identity/ethr-did-resolver/commit/201a50cd7a898e044763a0e08f570dc09acc502b))
+
+
+### BREAKING CHANGES
+
+* **build:** PR #236 updated the `exports` property to match new ESM/CJS project layout
+
 ## [12.0.1](https://github.com/decentralized-identity/ethr-did-resolver/compare/12.0.0...12.0.1) (2026-05-18)
 
 
