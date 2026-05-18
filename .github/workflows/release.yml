@@ -42,7 +42,6 @@ jobs:
 
       - name: 'Run semantic-release'
         env:
-          GH_TOKEN: ${{secrets.GH_TOKEN}}
-          NPM_TOKEN: ${{secrets.NPM_TOKEN}}
-        if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/alpha'
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: pnpm run release
