@@ -1,3 +1,10 @@
+## [12.0.1](https://github.com/decentralized-identity/ethr-did-resolver/compare/12.0.0...12.0.1) (2026-05-18)
+
+
+### Bug Fixes
+
+* **build:** split ESM/CJS build steps ([#236](https://github.com/decentralized-identity/ethr-did-resolver/issues/236)) ([8eeff0e](https://github.com/decentralized-identity/ethr-did-resolver/commit/8eeff0e4ee8b1059ba39c350647587b808d0356a)), closes [#211](https://github.com/decentralized-identity/ethr-did-resolver/issues/211)
+
 # [12.0.0](https://github.com/decentralized-identity/ethr-did-resolver/compare/11.1.3...12.0.0) (2026-05-08)
 
 
