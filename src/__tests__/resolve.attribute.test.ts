@@ -504,6 +504,54 @@ describe('attributes', () => {
       })
     })
 
+    it('revokes X25519 keyAgreement key and removes keyAgreement section', async () => {
+      expect.assertions(2)
+      const { address: identity, shortDID: did, signer } = await randomAccount(provider)
+      const pubKeyBase64 = 'MCowBQYDK2VuAyEAEYVXd3/7B4d0NxpSsA/tdVYdz5deYcR1U+ZkphdmEFI='
+      const pubKeyHex = ethers.hexlify(ethers.decodeBase64(pubKeyBase64))
+      await new EthrDidController(did, registryContract, signer).setAttribute('did/pub/X25519/enc', pubKeyHex, 86404)
+      const { didDocument: didDocumentBefore } = await didResolver.resolve(did)
+      expect(didDocumentBefore).toEqual({
+        '@context': expect.anything(),
+        id: did,
+        verificationMethod: [
+          {
+            id: `${did}#controller`,
+            type: 'EcdsaSecp256k1RecoveryMethod2020',
+            controller: did,
+            blockchainAccountId: `eip155:1337:${identity}`,
+          },
+          {
+            id: `${did}#delegate-1`,
+            type: 'X25519KeyAgreementKey2020',
+            controller: did,
+            publicKeyMultibase: toMultibase(pubKeyHex, new Uint8Array([0xec, 0x01])),
+          },
+        ],
+        authentication: [`${did}#controller`],
+        assertionMethod: [`${did}#controller`],
+        keyAgreement: [`${did}#delegate-1`],
+      })
+
+      await new EthrDidController(did, registryContract, signer).revokeAttribute('did/pub/X25519/enc', pubKeyHex)
+
+      const { didDocument: didDocumentAfter } = await didResolver.resolve(did)
+      expect(didDocumentAfter).toEqual({
+        '@context': expect.anything(),
+        id: did,
+        verificationMethod: [
+          {
+            id: `${did}#controller`,
+            type: 'EcdsaSecp256k1RecoveryMethod2020',
+            controller: did,
+            blockchainAccountId: `eip155:1337:${identity}`,
+          },
+        ],
+        authentication: [`${did}#controller`],
+        assertionMethod: [`${did}#controller`],
+      })
+    })
+
     it('expires key automatically', async () => {
       expect.assertions(2)
       const { address: identity, shortDID: did, signer } = await randomAccount(provider)

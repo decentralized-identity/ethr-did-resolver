@@ -41,12 +41,14 @@ export type EthrDidRegistryDeployment = {
  */
 export const deployments: EthrDidRegistryDeployment[] = [
   { chainId: 1, registry: '0xdca7ef03e98e0dc2b855be647c39abe984fcf21b', name: 'mainnet', legacyNonce: true },
+  // // deprecated networks
   // { chainId: 3, registry: '0xdca7ef03e98e0dc2b855be647c39abe984fcf21b', name: 'ropsten', legacyNonce: true },
   // { chainId: 4, registry: '0xdca7ef03e98e0dc2b855be647c39abe984fcf21b', name: 'rinkeby', legacyNonce: true },
   // { chainId: 5, registry: '0xdca7ef03e98e0dc2b855be647c39abe984fcf21b', name: 'goerli', legacyNonce: true },
   { chainId: 11155111, registry: '0x03d5003bf0e79C5F5223588F347ebA39AfbC3818', name: 'sepolia', legacyNonce: false },
   { chainId: 100, registry: '0x03d5003bf0e79C5F5223588F347ebA39AfbC3818', name: 'gno', legacyNonce: false },
   { chainId: 17000, registry: '0x03d5003bf0e79C5F5223588F347ebA39AfbC3818', name: 'holesky', legacyNonce: false },
+  // deprecated networks
   // { chainId: 42, registry: '0xdca7ef03e98e0dc2b855be647c39abe984fcf21b', name: 'kovan', legacyNonce: true },
   // // rsk networks cause socket hang up
   // { chainId: 30, registry: '0xdca7ef03e98e0dc2b855be647c39abe984fcf21b', name: 'rsk', legacyNonce: true },
@@ -97,7 +99,7 @@ export const deployments: EthrDidRegistryDeployment[] = [
     name: 'aurora',
     legacyNonce: true,
   },
-  // deprecated
+  // // deprecated
   // {
   //   chainId: 59140,
   //   registry: '0x03d5003bf0e79C5F5223588F347ebA39AfbC3818',
