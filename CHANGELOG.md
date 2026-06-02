@@ -1,3 +1,10 @@
+## [13.0.1](https://github.com/decentralized-identity/ethr-did-resolver/compare/13.0.0...13.0.1) (2026-06-02)
+
+
+### Bug Fixes
+
+* revoke keyAgreement key removes dangling references ([#246](https://github.com/decentralized-identity/ethr-did-resolver/issues/246)) ([100bd48](https://github.com/decentralized-identity/ethr-did-resolver/commit/100bd48eab2659d78f54392081f381142907c0d7))
+
 # [13.0.0](https://github.com/decentralized-identity/ethr-did-resolver/compare/12.0.1...13.0.0) (2026-05-18)
 
 
