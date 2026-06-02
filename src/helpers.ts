@@ -20,29 +20,47 @@ export type uint256 = bigint
 export type bytes32 = string
 export type bytes = string
 
-export interface ERC1056Event {
+/**
+ * Common fields shared by all ERC-1056 events.
+ */
+type ERC1056Base = {
   identity: address
   previousChange: uint256
-  validTo?: bigint
-  _eventName: string
   blockNumber: number
 }
 
-export interface DIDOwnerChanged extends ERC1056Event {
+/**
+ * ERC-1056 owner change event — no `validTo`.
+ */
+export type DIDOwnerChanged = ERC1056Base & {
+  _eventName: 'DIDOwnerChanged'
   owner: address
 }
 
-export interface DIDAttributeChanged extends ERC1056Event {
+/**
+ * ERC-1056 attribute change event.
+ */
+export type DIDAttributeChanged = ERC1056Base & {
+  _eventName: 'DIDAttributeChanged'
   name: bytes32
   value: bytes
   validTo: uint256
 }
 
-export interface DIDDelegateChanged extends ERC1056Event {
+/**
+ * ERC-1056 delegate change event.
+ */
+export type DIDDelegateChanged = ERC1056Base & {
+  _eventName: 'DIDDelegateChanged'
   delegateType: bytes32
   delegate: address
   validTo: uint256
 }
+
+/**
+ * Discriminated union of all ERC-1056 event types.
+ */
+export type ERC1056Event = DIDOwnerChanged | DIDAttributeChanged | DIDDelegateChanged
 
 export const VMTypes = {
   EcdsaSecp256k1VerificationKey2019: 'EcdsaSecp256k1VerificationKey2019',
@@ -184,7 +202,7 @@ export function toMultibase(hexValue: string, prefix?: Uint8Array): string {
  * Decompresses a 33-byte secp256k1 public key (hex, with or without 0x prefix) and
  * returns a JWK object suitable for use as `publicKeyJwk` in a DID document.
  */
-export function compressedSecp256k1ToJwk(hex: string): JsonWebKey {
+export function secp256k1ToJwk(hex: string): JsonWebKey {
   const uncompressed = SigningKey.computePublicKey(hex.startsWith('0x') ? hex : `0x${hex}`, false)
   // uncompressed is 0x04 || x (32 bytes) || y (32 bytes)
   const raw = getBytes(uncompressed)

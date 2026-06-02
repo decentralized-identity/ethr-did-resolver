@@ -13,10 +13,7 @@ import type {
 } from 'did-resolver'
 import {
   algoToVMType,
-  compressedSecp256k1ToJwk,
-  DIDAttributeChanged,
-  DIDDelegateChanged,
-  DIDOwnerChanged,
+  secp256k1ToJwk,
   ERC1056Event,
   Errors,
   eventNames,
@@ -101,7 +98,7 @@ export function getResolver(options: ConfigurationOptions): Record<string, DIDRe
 }
 
 export class EthrDidResolver {
-  private contracts: ConfiguredNetworks
+  private readonly contracts: ConfiguredNetworks
 
   constructor(options: ConfigurationOptions) {
     this.contracts = configureResolverWithNetworks(options)
@@ -201,7 +198,6 @@ export class EthrDidResolver {
     let deactivated = false
     let delegateCount = 0
     let serviceCount = 0
-    let endpoint = ''
     const auth: Record<string, string> = {}
     const keyAgreementRefs: Record<string, string> = {}
     const signingRefs: Record<string, string> = {}
@@ -222,41 +218,54 @@ export class EthrDidResolver {
           versionId = event.blockNumber
         }
       }
-      const validTo = event.validTo || BigInt(0)
-      const eventIndex = `${event._eventName}-${
-        (event as DIDDelegateChanged).delegateType || (event as DIDAttributeChanged).name
-      }-${(event as DIDDelegateChanged).delegate || (event as DIDAttributeChanged).value}`
-      if (validTo && validTo >= now) {
-        if (event._eventName === eventNames.DIDDelegateChanged) {
-          const currentEvent = event as DIDDelegateChanged
-          delegateCount++
-          const delegateType = currentEvent.delegateType //conversion from bytes32 is done in logParser
+      if (event._eventName === eventNames.DIDOwnerChanged) {
+        controller = event.owner
+        if (event.owner === nullAddress) {
+          deactivated = true
+          break
+        }
+      } else if (event._eventName === eventNames.DIDDelegateChanged) {
+        const eventIndex = `${event._eventName}-${event.delegateType}-${event.delegate}`
+        delegateCount++
+        if (event.validTo >= now) {
+          // addition
+          const delegateType = event.delegateType //conversion from bytes32 is done in logParser
           // noinspection FallThroughInSwitchStatementJS
           switch (delegateType) {
             case 'sigAuth':
               auth[eventIndex] = `${did}#delegate-${delegateCount}`
-              signingRefs[eventIndex] = `${did}#delegate-${delegateCount}`
+            // intentionally fall through. Authoritative keys can also make assertions.
             case 'veriKey':
               pks[eventIndex] = {
                 id: `${did}#delegate-${delegateCount}`,
                 type: VMTypes.EcdsaSecp256k1RecoveryMethod2020,
                 controller: did,
-                blockchainAccountId: `eip155:${chainId}:${currentEvent.delegate}`,
+                blockchainAccountId: `eip155:${chainId}:${event.delegate}`,
               }
               signingRefs[eventIndex] = `${did}#delegate-${delegateCount}`
               break
           }
-        } else if (event._eventName === eventNames.DIDAttributeChanged) {
-          const currentEvent = event as DIDAttributeChanged
-          const name = currentEvent.name //conversion from bytes32 is done in logParser
-          const match = name.match(/^did\/(pub|svc)\/(\w+)(\/(\w+))?(\/(\w+))?$/)
-          if (match) {
-            const section = match[1]
-            const algorithm = match[2]
-            const encoding = match[6]
-            switch (section) {
-              case 'pub': {
-                delegateCount++
+        } else {
+          // revocation
+          delete auth[eventIndex]
+          delete signingRefs[eventIndex]
+          delete pks[eventIndex]
+        }
+      } else if (event._eventName === eventNames.DIDAttributeChanged) {
+        const eventIndex = `${event._eventName}-${event.name}-${event.value}`
+
+        if (/^did\/pub\//.test(event.name)) delegateCount++
+        else if (/^did\/svc\//.test(event.name)) serviceCount++
+
+        const match = event.name.match(/^did\/(pub|svc)\/(\w+)(\/(\w+))?(\/(\w+))?$/)
+        if (match) {
+          const section = match[1]
+          const algorithm = match[2]
+          const encoding = match[6]
+          switch (section) {
+            case 'pub': {
+              // addition
+              if (event.validTo >= now) {
                 // Primary lookup: algorithm token → canonical VM type.
                 // Unknown/future key types pass through as-is.
                 const vmType = algoToVMType[algorithm] ?? algorithm
@@ -268,16 +277,16 @@ export class EthrDidResolver {
                 switch (pk.type) {
                   case VMTypes.EcdsaSecp256k1VerificationKey2019:
                     // Spec mandates publicKeyJwk for Secp256k1 attribute keys regardless of encoding hint.
-                    pk.publicKeyJwk = compressedSecp256k1ToJwk(currentEvent.value)
+                    pk.publicKeyJwk = secp256k1ToJwk(event.value)
                     break
                   case VMTypes.Ed25519VerificationKey2020:
                   case VMTypes.X25519KeyAgreementKey2020:
                     // Always produce publicKeyMultibase regardless of encoding hint, to match spec.
-                    pk.publicKeyMultibase = toMultibase(currentEvent.value, multicodecPrefixes[pk.type])
+                    pk.publicKeyMultibase = toMultibase(event.value, multicodecPrefixes[pk.type])
                     break
                   case VMTypes.Multikey:
                     // On-chain value already includes the multicodec prefix; just base58btc-encode.
-                    pk.publicKeyMultibase = toMultibase(currentEvent.value)
+                    pk.publicKeyMultibase = toMultibase(event.value)
                     break
                   default:
                     // Unknown key types: honor the encoding hint for legacy compat.
@@ -285,16 +294,19 @@ export class EthrDidResolver {
                       case null:
                       case undefined:
                       case 'hex':
-                        pk.publicKeyHex = strip0x(currentEvent.value)
+                        // noinspection JSDeprecatedSymbols
+                        pk.publicKeyHex = strip0x(event.value)
                         break
                       case 'base64':
-                        pk.publicKeyBase64 = encodeBase64(currentEvent.value)
+                        // noinspection JSDeprecatedSymbols
+                        pk.publicKeyBase64 = encodeBase64(event.value)
                         break
                       case 'base58':
-                        pk.publicKeyBase58 = encodeBase58(currentEvent.value)
+                        // noinspection JSDeprecatedSymbols
+                        pk.publicKeyBase58 = encodeBase58(event.value)
                         break
                       default:
-                        pk.value = strip0x(currentEvent.value)
+                        pk.value = strip0x(event.value)
                     }
                 }
                 pks[eventIndex] = pk
@@ -306,57 +318,45 @@ export class EthrDidResolver {
                 } else {
                   signingRefs[eventIndex] = pk.id
                 }
-                break
+              } else {
+                // revocation
+                delete pks[eventIndex]
+                delete auth[eventIndex]
+                delete signingRefs[eventIndex]
+                delete keyAgreementRefs[eventIndex]
               }
-              case 'svc': {
-                serviceCount++
-                let encodedService: string | null = null
+              break
+            }
+            case 'svc': {
+              let encodedService: string | null = null
+              try {
+                encodedService = toUtf8String(event.value)
+              } catch {
+                // value is not valid UTF-8; skip this service — non-DID use of registry
+              }
+              if (encodedService !== null) {
+                let endpoint
                 try {
-                  encodedService = toUtf8String(currentEvent.value)
+                  endpoint = JSON.parse(encodedService)
                 } catch {
-                  // value is not valid UTF-8; skip this service — non-DID use of registry
+                  endpoint = encodedService
                 }
-                if (encodedService !== null) {
-                  try {
-                    endpoint = JSON.parse(encodedService)
-                  } catch {
-                    endpoint = encodedService
-                  }
+                if (event.validTo >= now) {
+                  // addition
                   services[eventIndex] = {
                     id: `${did}#service-${serviceCount}`,
                     type: algorithm,
                     serviceEndpoint: endpoint,
                   }
+                } else {
+                  // revocation
+                  delete services[eventIndex]
                 }
-                break
               }
+              break
             }
           }
         }
-      } else if (event._eventName === eventNames.DIDOwnerChanged) {
-        const currentEvent = event as DIDOwnerChanged
-        controller = currentEvent.owner
-        if (currentEvent.owner === nullAddress) {
-          deactivated = true
-          break
-        }
-      } else {
-        if (
-          event._eventName === eventNames.DIDDelegateChanged ||
-          (event._eventName === eventNames.DIDAttributeChanged &&
-            (event as DIDAttributeChanged).name.match(/^did\/pub\//))
-        ) {
-          delegateCount++
-        } else if (
-          event._eventName === eventNames.DIDAttributeChanged &&
-          (event as DIDAttributeChanged).name.match(/^did\/svc\//)
-        ) {
-          serviceCount++
-        }
-        delete auth[eventIndex]
-        delete signingRefs[eventIndex]
-        delete pks[eventIndex]
-        delete services[eventIndex]
       }
     }
 
@@ -374,7 +374,7 @@ export class EthrDidResolver {
         id: `${did}#controllerKey`,
         type: VMTypes.EcdsaSecp256k1VerificationKey2019,
         controller: did,
-        publicKeyJwk: compressedSecp256k1ToJwk(controllerKey),
+        publicKeyJwk: secp256k1ToJwk(controllerKey),
       })
       authentication.push(`${did}#controllerKey`)
       assertionMethod.push(`${did}#controllerKey`)
