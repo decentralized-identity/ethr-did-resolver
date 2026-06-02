@@ -11,8 +11,8 @@ describe('configuration', () => {
     expect(contracts['mainnet']).toBeDefined()
     expect(contracts['0x1']).toBeDefined()
     expect(contracts['dev']).toBeDefined()
-    expect(contracts['linea:goerli']).toBeDefined()
-    expect(contracts['0xe704']).toBeDefined()
+    expect(contracts['aurora']).toBeDefined()
+    expect(contracts['0x4e454152']).toBeDefined()
   })
 
   it('works with infuraProjectId and overrides', () => {
@@ -26,19 +26,19 @@ describe('configuration', () => {
 
   it('works with named network', async () => {
     const contracts = configureResolverWithNetworks({
-      networks: [{ name: 'linea:goerli', provider: new JsonRpcProvider('some goerli JSONRPC URL') }],
+      networks: [{ name: 'aurora', provider: new JsonRpcProvider('some JSONRPC URL') }],
     })
-    expect(contracts['linea:goerli']).toBeDefined()
-    expect(contracts['0xe704']).toBeDefined()
+    expect(contracts['aurora']).toBeDefined()
+    expect(contracts['0x4e454152']).toBeDefined()
   })
 
   it('works with single network', async () => {
     const contracts = configureResolverWithNetworks({
-      name: 'linea:goerli',
-      provider: new JsonRpcProvider('some goerli JSONRPC URL'),
+      name: 'aurora',
+      provider: new JsonRpcProvider('some JSONRPC URL'),
     })
-    expect(contracts['linea:goerli']).toBeDefined()
-    expect(contracts['0xe704']).toBeDefined()
+    expect(contracts['aurora']).toBeDefined()
+    expect(contracts['0x4e454152']).toBeDefined()
   })
 
   it('works with single provider', async () => {
@@ -68,24 +68,24 @@ describe('configuration', () => {
   it('throws when no configuration is provided', () => {
     expect(() => {
       configureResolverWithNetworks()
-    }).toThrowError('invalid_config: Please make sure to have at least one network')
+    }).toThrow('invalid_config: Please make sure to have at least one network')
   })
 
   it('throws when no registry is known for a network', () => {
     expect(() => {
       configureResolverWithNetworks({ networks: [{ name: 'unknown-net', rpcUrl: 'http://localhost:8545' }] })
-    }).toThrowError('invalid_config: No registry address known for network unknown-net')
+    }).toThrow('invalid_config: No registry address known for network unknown-net')
   })
 
   it('throws when no relevant configuration is provided for a network', () => {
     expect(() => {
       configureResolverWithNetworks({ networks: [{ chainId: '0xbad' }] })
-    }).toThrowError('invalid_config: No web3 provider could be determined for network')
+    }).toThrow('invalid_config: No web3 provider could be determined for network')
   })
 
   it('throws when malformed configuration is provided for a network', () => {
     expect(() => {
       configureResolverWithNetworks({ networks: [{ web3: '0xbad' }] })
-    }).toThrowError('invalid_config: No web3 provider could be determined for network')
+    }).toThrow('invalid_config: No web3 provider could be determined for network')
   })
 })

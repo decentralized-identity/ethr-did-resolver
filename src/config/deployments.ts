@@ -70,35 +70,38 @@ export const deployments: EthrDidRegistryDeployment[] = [
     description: 'energy web testnet',
     legacyNonce: false,
   },
-  {
-    chainId: 246785,
-    registry: '0xdCa7EF03e98e0DC2B855bE647C39ABe984fcF21B',
-    name: 'artis:tau1',
-    legacyNonce: true,
-  },
-  {
-    chainId: 246529,
-    registry: '0xdCa7EF03e98e0DC2B855bE647C39ABe984fcF21B',
-    name: 'artis:sigma1',
-    legacyNonce: true,
-  },
+  // // deprecated networks
+  // {
+  //   chainId: 246785,
+  //   registry: '0xdCa7EF03e98e0DC2B855bE647C39ABe984fcF21B',
+  //   name: 'artis:tau1',
+  //   legacyNonce: true,
+  // },
+  // {
+  //   chainId: 246529,
+  //   registry: '0xdCa7EF03e98e0DC2B855bE647C39ABe984fcF21B',
+  //   name: 'artis:sigma1',
+  //   legacyNonce: true,
+  // },
   { chainId: 137, registry: '0xdca7ef03e98e0dc2b855be647c39abe984fcf21b', name: 'polygon', legacyNonce: true },
-  {
-    chainId: 80001,
-    registry: '0xdca7ef03e98e0dc2b855be647c39abe984fcf21b',
-    name: 'polygon:test',
-    legacyNonce: true,
-  },
+  // // deprecated
+  // {
+  //   chainId: 80001,
+  //   registry: '0xdca7ef03e98e0dc2b855be647c39abe984fcf21b',
+  //   name: 'polygon:test',
+  //   legacyNonce: true,
+  // },
   {
     chainId: 1313161554,
     registry: '0x63eD58B671EeD12Bc1652845ba5b2CDfBff198e0',
     name: 'aurora',
     legacyNonce: true,
   },
-  {
-    chainId: 59140,
-    registry: '0x03d5003bf0e79C5F5223588F347ebA39AfbC3818',
-    name: 'linea:goerli',
-    legacyNonce: false,
-  },
+  // deprecated
+  // {
+  //   chainId: 59140,
+  //   registry: '0x03d5003bf0e79C5F5223588F347ebA39AfbC3818',
+  //   name: 'linea:goerli',
+  //   legacyNonce: false,
+  // },
 ]
