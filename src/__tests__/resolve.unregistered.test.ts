@@ -3,7 +3,7 @@ import { BrowserProvider } from 'ethers'
 import { Resolvable } from 'did-resolver'
 
 import { deployRegistry, randomAccount } from './testUtils'
-import { compressedSecp256k1ToJwk } from '../helpers'
+import { secp256k1ToJwk } from '../helpers'
 
 describe('unregistered DIDs', () => {
   let didResolver: Resolvable, provider: BrowserProvider
@@ -58,7 +58,7 @@ describe('unregistered DIDs', () => {
             id: `${longDID}#controllerKey`,
             type: 'EcdsaSecp256k1VerificationKey2019',
             controller: longDID,
-            publicKeyJwk: compressedSecp256k1ToJwk(pubKey),
+            publicKeyJwk: secp256k1ToJwk(pubKey),
           },
         ],
         authentication: [`${longDID}#controller`, `${longDID}#controllerKey`],
@@ -86,7 +86,7 @@ describe('unregistered DIDs', () => {
             id: `${pubdid}#controllerKey`,
             type: 'EcdsaSecp256k1VerificationKey2019',
             controller: pubdid,
-            publicKeyJwk: compressedSecp256k1ToJwk(pubKey),
+            publicKeyJwk: secp256k1ToJwk(pubKey),
           },
         ],
         authentication: [`${pubdid}#controller`, `${pubdid}#controllerKey`],
@@ -114,7 +114,7 @@ describe('unregistered DIDs', () => {
             id: `${pubdid}#controllerKey`,
             type: 'EcdsaSecp256k1VerificationKey2019',
             controller: pubdid,
-            publicKeyJwk: compressedSecp256k1ToJwk(pubKey),
+            publicKeyJwk: secp256k1ToJwk(pubKey),
           },
         ],
         authentication: [`${pubdid}#controller`, `${pubdid}#controllerKey`],
