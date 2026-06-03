@@ -1,3 +1,10 @@
+# [13.1.0-alpha.2](https://github.com/decentralized-identity/ethr-did-resolver/compare/13.1.0-alpha.1...13.1.0-alpha.2) (2026-06-03)
+
+
+### Features
+
+* wip: the graph indexing ([8a1c43e](https://github.com/decentralized-identity/ethr-did-resolver/commit/8a1c43ef0c698dc10d2e2b283a567fdf4cc8ac5a))
+
 # [13.1.0-alpha.1](https://github.com/decentralized-identity/ethr-did-resolver/compare/13.0.1...13.1.0-alpha.1) (2026-06-03)
 
 
