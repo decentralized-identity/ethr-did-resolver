@@ -21,7 +21,79 @@ export type bytes32 = string
 export type bytes = string
 
 /**
+ * Safely converts a uint256 bigint to a JS number.
+ * Values exceeding Number.MAX_SAFE_INTEGER are clamped to Number.MAX_SAFE_INTEGER.
+ * Used for block numbers, previousChange pointers, and validTo timestamps.
+ */
+export function clampToSafeInt(value: bigint): number {
+  return value > BigInt(Number.MAX_SAFE_INTEGER) ? Number.MAX_SAFE_INTEGER : Number(value)
+}
+
+// ---------------------------------------------------------------------------
+// Canonical DID event types
+// ---------------------------------------------------------------------------
+
+interface CanonicalDIDEventBase {
+  /** Canonical numeric EIP-155 chain ID. */
+  chainId: number
+  /** Lowercase 0x-prefixed ERC-1056 registry contract address that emitted this event. */
+  registryAddress: string
+  /** Lowercase 0x-prefixed Ethereum address. EIP-55 checksumming is NOT applied. */
+  identity: string
+  /** Block number. Safely representable as a JS number for all practical EVM networks. */
+  blockNumber: number
+  /** Unix timestamp in seconds of the block that contains this event. */
+  blockTimestamp: number
+  /** Index of this log within its block. Used for stable intra-block ordering. */
+  logIndex: number
+  /** 0x-prefixed transaction hash. */
+  transactionHash: string
+  /**
+   * Block number of the previous event block for this identity.
+   * 0 means no prior events exist.
+   */
+  previousChange: number
+}
+
+export interface CanonicalDIDOwnerChanged extends CanonicalDIDEventBase {
+  eventType: 'DIDOwnerChanged'
+  /**
+   * Lowercase 0x-prefixed address of the new owner.
+   * '0x0000000000000000000000000000000000000000' indicates deactivation.
+   */
+  owner: string
+}
+
+export interface CanonicalDIDDelegateChanged extends CanonicalDIDEventBase {
+  eventType: 'DIDDelegateChanged'
+  /** Expiry unix timestamp in seconds. */
+  validTo: number
+  /** UTF-8 decoded from bytes32, e.g. "veriKey" or "sigAuth". */
+  delegateType: string
+  /** Lowercase 0x-prefixed delegate address. */
+  delegate: string
+}
+
+export interface CanonicalDIDAttributeChanged extends CanonicalDIDEventBase {
+  eventType: 'DIDAttributeChanged'
+  /** Expiry unix timestamp in seconds. */
+  validTo: number
+  /** UTF-8 decoded from bytes32, e.g. "did/pub/Ed25519/veriKey". */
+  name: string
+  /** 0x-prefixed hex bytes (arbitrary length). */
+  value: string
+}
+
+/** Discriminated union of all canonical ERC-1056 event types. */
+export type CanonicalDIDEvent = CanonicalDIDOwnerChanged | CanonicalDIDDelegateChanged | CanonicalDIDAttributeChanged
+
+// ---------------------------------------------------------------------------
+// Legacy ERC-1056 event types (deprecated — use CanonicalDIDEvent)
+// ---------------------------------------------------------------------------
+
+/**
  * Common fields shared by all ERC-1056 events.
+ * @deprecated Use {@link CanonicalDIDEvent} instead.
  */
 type ERC1056Base = {
   identity: address
@@ -31,6 +103,7 @@ type ERC1056Base = {
 
 /**
  * ERC-1056 owner change event — no `validTo`.
+ * @deprecated Use {@link CanonicalDIDOwnerChanged} instead.
  */
 export type DIDOwnerChanged = ERC1056Base & {
   _eventName: 'DIDOwnerChanged'
@@ -39,6 +112,7 @@ export type DIDOwnerChanged = ERC1056Base & {
 
 /**
  * ERC-1056 attribute change event.
+ * @deprecated Use {@link CanonicalDIDAttributeChanged} instead.
  */
 export type DIDAttributeChanged = ERC1056Base & {
   _eventName: 'DIDAttributeChanged'
@@ -49,6 +123,7 @@ export type DIDAttributeChanged = ERC1056Base & {
 
 /**
  * ERC-1056 delegate change event.
+ * @deprecated Use {@link CanonicalDIDDelegateChanged} instead.
  */
 export type DIDDelegateChanged = ERC1056Base & {
   _eventName: 'DIDDelegateChanged'
@@ -59,6 +134,7 @@ export type DIDDelegateChanged = ERC1056Base & {
 
 /**
  * Discriminated union of all ERC-1056 event types.
+ * @deprecated Use {@link CanonicalDIDEvent} instead.
  */
 export type ERC1056Event = DIDOwnerChanged | DIDAttributeChanged | DIDDelegateChanged
 
