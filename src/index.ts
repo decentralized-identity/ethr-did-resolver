@@ -28,6 +28,16 @@ export {
   EthrDidRegistryDeployment,
 }
 
+// New canonical event and cache types
+export type {
+  CanonicalDIDEvent,
+  CanonicalDIDOwnerChanged,
+  CanonicalDIDDelegateChanged,
+  CanonicalDIDAttributeChanged,
+} from './helpers.js'
+export type { EthrDidCache, BlockMetadataEntry } from './cache.js'
+export { InMemoryEthrDidCache } from './cache.js'
+
 // workaround for esbuild/vite/hermes issues
 // This should not be needed once we move to ESM only build outputs.
 // This library now builds as a CommonJS library, with a small ESM wrapper on top.
