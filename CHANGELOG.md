@@ -1,3 +1,11 @@
+# [13.1.0-alpha.1](https://github.com/decentralized-identity/ethr-did-resolver/compare/13.0.1...13.1.0-alpha.1) (2026-06-03)
+
+
+### Features
+
+* wip: block metadata caching ([8774bdf](https://github.com/decentralized-identity/ethr-did-resolver/commit/8774bdf3123fa79446a11742ad0ebbb31588c323))
+* wip: event caching ([da8f593](https://github.com/decentralized-identity/ethr-did-resolver/commit/da8f593ae7c2d3014d591a3073fc30e93e6463e8))
+
 ## [13.0.1](https://github.com/decentralized-identity/ethr-did-resolver/compare/13.0.0...13.0.1) (2026-06-02)
 
 
