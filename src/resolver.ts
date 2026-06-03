@@ -1,5 +1,6 @@
-import { BlockTag, encodeBase58, encodeBase64, toUtf8String } from 'ethers'
-import { ConfigurationOptions, ConfiguredNetworks, configureResolverWithNetworks } from './configuration.js'
+import { BlockTag, encodeBase58, encodeBase64, getAddress, toUtf8String } from 'ethers'
+import { ConfigurationOptions, ConfiguredNetworks, MultiProviderConfiguration, configureResolverWithNetworks } from './configuration.js'
+import { EthrDidCache, InMemoryEthrDidCache } from './cache.js'
 import type {
   ContextEntry,
   DIDDocument,
@@ -13,10 +14,9 @@ import type {
 } from 'did-resolver'
 import {
   algoToVMType,
+  CanonicalDIDEvent,
   secp256k1ToJwk,
-  ERC1056Event,
   Errors,
-  eventNames,
   ExtendedVerificationMethod,
   identifierMatcher,
   interpretIdentifier,
@@ -99,9 +99,11 @@ export function getResolver(options: ConfigurationOptions): Record<string, DIDRe
 
 export class EthrDidResolver {
   private readonly contracts: ConfiguredNetworks
+  private readonly cache: EthrDidCache
 
   constructor(options: ConfigurationOptions) {
     this.contracts = configureResolverWithNetworks(options)
+    this.cache = (options as MultiProviderConfiguration).cache ?? new InMemoryEthrDidCache()
   }
 
   /**
@@ -115,7 +117,7 @@ export class EthrDidResolver {
     return await this.contracts[networkId].changed(address, { blockTag })
   }
 
-  async getBlockMetadata(blockHeight: number, networkId: string): Promise<{ height: string; isoDate: string }> {
+  async getBlockMetadata(blockHeight: number, networkId: string): Promise<{ height: string; timestamp: number }> {
     const networkContract = this.contracts[networkId]
     if (!networkContract) throw new Error(`No contract configured for network ${networkId}`)
     if (!networkContract.runner) throw new Error(`No runner configured for contract with network ${networkId}`)
@@ -123,52 +125,123 @@ export class EthrDidResolver {
       throw new Error(`No provider configured for runner in contract with network ${networkId}`)
     const block = await networkContract.runner.provider.getBlock(blockHeight)
     if (!block) throw new Error(`Block at height ${blockHeight} not found`)
-    return {
-      height: block.number.toString(),
-      isoDate: new Date(block.timestamp * 1000).toISOString().replace('.000', ''),
-    }
+    return { height: block.number.toString(), timestamp: block.timestamp }
   }
 
   async changeLog(
     identity: string,
     networkId: string,
     blockTag: BlockTag = 'latest'
-  ): Promise<{ address: string; history: ERC1056Event[]; controllerKey?: string; chainId: bigint }> {
+  ): Promise<{ address: string; history: CanonicalDIDEvent[]; controllerKey?: string; chainId: number }> {
     const contract = this.contracts[networkId]
     if (!contract) throw new Error(`No contract configured for network ${networkId}`)
     if (!contract.runner) throw new Error(`No runner configured for contract with network ${networkId}`)
     if (!contract.runner.provider)
       throw new Error(`No provider configured for runner in contract with network ${networkId}`)
     const provider = contract.runner.provider
-    const hexChainId = networkId.startsWith('0x') ? networkId : undefined
-    //TODO: this can be used to check if the configuration is ok
-    const chainId = hexChainId ? BigInt(hexChainId) : (await provider.getNetwork()).chainId
-    const history: ERC1056Event[] = []
+    const chainId = Number((await provider.getNetwork()).chainId)
+    const registryAddress = (await contract.getAddress()).toLowerCase()
+    const history: CanonicalDIDEvent[] = []
     const { address, publicKey } = interpretIdentifier(identity)
     const controllerKey = publicKey
-    let previousChange: bigint | null = await this.previousChange(address, networkId, blockTag)
-    while (previousChange) {
+
+    let previousChange = Number(await this.previousChange(address, networkId, blockTag))
+
+    // Short-circuit: no history, no RPC calls for finality
+    if (previousChange === 0) {
+      return { address, history: [], controllerKey, chainId }
+    }
+
+    // Lazy finality — determined at most once per changeLog call, only on a cache miss
+    let finalizedBlockNumber: number | undefined
+    const getFinalizedBlockNumber = async (): Promise<number> => {
+      if (finalizedBlockNumber !== undefined) return finalizedBlockNumber
+      try {
+        const finalized = await provider.getBlock('finalized')
+        if (finalized?.number !== undefined) {
+          finalizedBlockNumber = finalized.number
+          return finalizedBlockNumber
+        }
+      } catch {
+        // RPC does not support the 'finalized' block tag; use conservative fallback.
+      }
+      const latest = Number(await provider.getBlockNumber())
+      finalizedBlockNumber = Math.max(0, latest - 512)
+      return finalizedBlockNumber
+    }
+
+    while (previousChange !== 0) {
       const blockNumber = previousChange
-      const logs = await provider.getLogs({
-        address: await contract.getAddress(), // networks[networkId].registryAddress,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        topics: [null as any, `0x000000000000000000000000${address.slice(2)}`],
-        fromBlock: previousChange,
-        toBlock: previousChange,
-      })
+
+      // 1. Cache check
+      const cached = await this.cache.getEvents(chainId, registryAddress, address, blockNumber)
+      if (cached !== undefined) {
+        // Derive chain pointer from cached events (same guard as logDecoder)
+        let chainPointer = 0
+        for (const event of cached) {
+          const pc = event.previousChange
+          if (pc > 0 && pc < blockNumber && (chainPointer === 0 || pc < chainPointer)) {
+            chainPointer = pc
+          }
+        }
+        previousChange = chainPointer
+        for (const event of [...cached].reverse()) {
+          history.unshift(event)
+        }
+        continue
+      }
+
+      // 2. Cache miss: fetch logs and block in parallel
+      const [logs, block] = await Promise.all([
+        provider.getLogs({
+          address: registryAddress,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          topics: [null as any, `0x000000000000000000000000${address.slice(2)}`],
+          fromBlock: blockNumber,
+          toBlock: blockNumber,
+        }),
+        provider.getBlock(blockNumber),
+      ])
+
       if (logs.length === 0) {
         throw new Error(
           `No logs found for block ${blockNumber} but previousChange points here. ` +
             `The RPC node may not have historical log data. Use an archive node for complete DID resolution.`
         )
       }
-      const { events, previousChange: pc } = logDecoder(contract, logs, blockNumber)
-      previousChange = pc || null
+      if (!block) {
+        throw new Error(`Block ${blockNumber} not found.`)
+      }
+
+      // 3. Decode
+      const { events, previousChange: pc } = logDecoder(
+        contract,
+        logs,
+        blockNumber,
+        block.timestamp,
+        chainId,
+        registryAddress
+      )
+
+      // 4. Write to cache only if this block is finalized (lazy finality check)
+      const finalized = await getFinalizedBlockNumber()
+      if (blockNumber <= finalized) {
+        for (const event of events) {
+          await this.cache.setEvent(event)
+        }
+        await this.cache.setBlockMetadata(chainId, blockNumber, {
+          height: block.number.toString(),
+          timestamp: block.timestamp,
+        })
+      }
+
+      previousChange = pc
       events.reverse()
       for (const event of events) {
         history.unshift(event)
       }
     }
+
     return { address, history, controllerKey, chainId }
   }
 
@@ -176,10 +249,10 @@ export class EthrDidResolver {
     did: string,
     address: string,
     controllerKey: string | undefined,
-    history: ERC1056Event[],
-    chainId: bigint,
+    history: CanonicalDIDEvent[],
+    chainId: number,
     blockHeight: string | number,
-    now: bigint
+    now: number
   ): { didDocument: DIDDocument; deactivated: boolean; versionId: number; nextVersionId: number } {
     const baseDIDDocument: DIDDocument = {
       id: did,
@@ -218,14 +291,14 @@ export class EthrDidResolver {
           versionId = event.blockNumber
         }
       }
-      if (event._eventName === eventNames.DIDOwnerChanged) {
+      if (event.eventType === 'DIDOwnerChanged') {
         controller = event.owner
         if (event.owner === nullAddress) {
           deactivated = true
           break
         }
-      } else if (event._eventName === eventNames.DIDDelegateChanged) {
-        const eventIndex = `${event._eventName}-${event.delegateType}-${event.delegate}`
+      } else if (event.eventType === 'DIDDelegateChanged') {
+        const eventIndex = `${event.eventType}-${event.delegateType}-${event.delegate}`
         delegateCount++
         if (event.validTo >= now) {
           // addition
@@ -240,7 +313,7 @@ export class EthrDidResolver {
                 id: `${did}#delegate-${delegateCount}`,
                 type: VMTypes.EcdsaSecp256k1RecoveryMethod2020,
                 controller: did,
-                blockchainAccountId: `eip155:${chainId}:${event.delegate}`,
+                blockchainAccountId: `eip155:${chainId}:${getAddress(event.delegate)}`,
               }
               signingRefs[eventIndex] = `${did}#delegate-${delegateCount}`
               break
@@ -251,8 +324,8 @@ export class EthrDidResolver {
           delete signingRefs[eventIndex]
           delete pks[eventIndex]
         }
-      } else if (event._eventName === eventNames.DIDAttributeChanged) {
-        const eventIndex = `${event._eventName}-${event.name}-${event.value}`
+      } else if (event.eventType === 'DIDAttributeChanged') {
+        const eventIndex = `${event.eventType}-${event.name}-${event.value}`
 
         if (/^did\/pub\//.test(event.name)) delegateCount++
         else if (/^did\/svc\//.test(event.name)) serviceCount++
@@ -365,7 +438,7 @@ export class EthrDidResolver {
         id: `${did}#controller`,
         type: VMTypes.EcdsaSecp256k1RecoveryMethod2020,
         controller: did,
-        blockchainAccountId: `eip155:${chainId}:${controller}`,
+        blockchainAccountId: `eip155:${chainId}:${getAddress(controller)}`,
       },
     ]
 
@@ -461,12 +534,12 @@ export class EthrDidResolver {
       }
     }
 
-    let now = BigInt(Math.floor(new Date().getTime() / 1000))
+    let now: number = Math.floor(new Date().getTime() / 1000)
 
     try {
       if (typeof blockTag === 'number') {
         const block = await this.getBlockMetadata(blockTag, networkId)
-        now = BigInt(Date.parse(block.isoDate) / 1000)
+        now = block.timestamp
       }
 
       const { address, history, controllerKey, chainId } = await this.changeLog(id, networkId, 'latest')
@@ -486,14 +559,14 @@ export class EthrDidResolver {
         const block = await this.getBlockMetadata(versionId, networkId)
         versionMeta = {
           versionId: block.height,
-          updated: block.isoDate,
+          updated: new Date(block.timestamp * 1000).toISOString().replace('.000', ''),
         }
       }
       if (nextVersionId !== Number.POSITIVE_INFINITY) {
         const block = await this.getBlockMetadata(nextVersionId, networkId)
         versionMetaNext = {
           nextVersionId: block.height,
-          nextUpdate: block.isoDate,
+          nextUpdate: new Date(block.timestamp * 1000).toISOString().replace('.000', ''),
         }
       }
 
