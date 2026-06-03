@@ -55,7 +55,7 @@ function mockFinalizedAsLatest() {
 describe('resolver cache — changeLog', () => {
   it('5.1 virgin DID: getLogs called zero times, cache stays empty', async () => {
     const cache = new InMemoryEthrDidCache()
-    const { address, shortDID } = await randomAccount(provider)
+    const { shortDID } = await randomAccount(provider)
     const resolver = makeResolver(cache)
 
     const getLogsSpy = vi.spyOn(provider, 'getLogs')
@@ -158,7 +158,7 @@ describe('resolver cache — changeLog', () => {
     const r1 = await controller.addDelegate('veriKey', del1, 86400)
     const r2 = await controller.addDelegate('veriKey', del2, 86400)
     const r3 = await controller.addDelegate('veriKey', del3, 86400)
-    const [blockA, blockB, blockC] = [r1.blockNumber, r2.blockNumber, r3.blockNumber]
+    const [blockA, blockB] = [r1.blockNumber, r2.blockNumber, r3.blockNumber]
     const identity = address.toLowerCase()
 
     // First resolve to populate a full cache
@@ -248,7 +248,7 @@ describe('resolver cache — changeLog', () => {
     await controller.addDelegate('veriKey', del, 86400)
 
     const customCache: EthrDidCache = {
-      getEvents: vi.fn().mockResolvedValue(undefined),   // always miss
+      getEvents: vi.fn().mockResolvedValue(undefined), // always miss
       setEvent: vi.fn().mockResolvedValue(undefined),
       getBlockMetadata: vi.fn().mockResolvedValue(undefined),
       setBlockMetadata: vi.fn().mockResolvedValue(undefined),
@@ -294,5 +294,120 @@ describe('resolver cache — changeLog', () => {
 
     const result = await makeResolver(cache).resolve(shortDID)
     expect(result.didResolutionMetadata.error).toBe('notFound')
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Phase 6 — getBlockMetadata cache
+// ---------------------------------------------------------------------------
+
+describe('resolver cache — getBlockMetadata', () => {
+  it('6.1 block metadata populated as side effect of changeLog has correct height and timestamp', async () => {
+    const cache = new InMemoryEthrDidCache()
+    const { address, shortDID, signer } = await randomAccount(provider)
+    const { address: del } = await randomAccount(provider)
+    const controller = new EthrDidController(address, registryContract, signer)
+    const receipt = await controller.addDelegate('veriKey', del, 86400)
+    const eventBlock = receipt.blockNumber
+
+    mockFinalizedAsLatest()
+    await makeResolver(cache).resolve(shortDID)
+
+    const meta = await cache.getBlockMetadata(chainId, eventBlock)
+    expect(meta).toBeDefined()
+    expect(meta!.height).toBe(String(eventBlock))
+    // Timestamp must match what's actually on-chain
+    const block = await provider.getBlock(eventBlock)
+    expect(meta!.timestamp).toBe(block!.timestamp)
+  })
+
+  it('6.2 versionId query on an event block: getBlock not called for that block after it is cached', async () => {
+    const cache = new InMemoryEthrDidCache()
+    const { address, shortDID, signer } = await randomAccount(provider)
+    const { address: del } = await randomAccount(provider)
+    const controller = new EthrDidController(address, registryContract, signer)
+    const receipt = await controller.addDelegate('veriKey', del, 86400)
+    const eventBlock = receipt.blockNumber
+
+    // First resolve — populates cache (including block metadata for eventBlock)
+    mockFinalizedAsLatest()
+    await makeResolver(cache).resolve(shortDID)
+    vi.restoreAllMocks()
+
+    // Second resolve with versionId = eventBlock
+    // All blocks (including eventBlock) are cache hits — getBlock(eventBlock) must NOT be called
+    const getBlockSpy = vi.spyOn(provider, 'getBlock')
+    await makeResolver(cache).resolve(`did:ethr:dev:${address}?versionId=${eventBlock}`)
+
+    const callsForEventBlock = getBlockSpy.mock.calls.filter(([tag]) => tag === eventBlock)
+    expect(callsForEventBlock).toHaveLength(0)
+  })
+
+  it('6.3 versionId query on a non-event block: getBlock called once, result cached', async () => {
+    const cache = new InMemoryEthrDidCache()
+    const { address, signer } = await randomAccount(provider)
+    const { address: del } = await randomAccount(provider)
+    const controller = new EthrDidController(address, registryContract, signer)
+    const receipt = await controller.addDelegate('veriKey', del, 86400)
+    const eventBlock = receipt.blockNumber
+    // Use the block just before the event — it exists on-chain but has no DID events
+    const queryBlock = eventBlock - 1
+
+    mockFinalizedAsLatest()
+    const getBlockSpy = vi.spyOn(provider, 'getBlock')
+    await makeResolver(cache).resolve(`did:ethr:dev:${address}?versionId=${queryBlock}`)
+
+    // getBlock(queryBlock) called exactly once (for the now-computation in getBlockMetadata)
+    const callsForQueryBlock = getBlockSpy.mock.calls.filter(([tag]) => tag === queryBlock)
+    expect(callsForQueryBlock).toHaveLength(1)
+
+    // Result is cached for future calls
+    expect(await cache.getBlockMetadata(chainId, queryBlock)).toBeDefined()
+  })
+
+  it('6.4 second resolve with same finalized versionId: getBlock called at most once total', async () => {
+    const cache = new InMemoryEthrDidCache()
+    const { address, signer } = await randomAccount(provider)
+    const { address: del } = await randomAccount(provider)
+    const controller = new EthrDidController(address, registryContract, signer)
+    const receipt = await controller.addDelegate('veriKey', del, 86400)
+    const queryBlock = receipt.blockNumber - 1
+
+    mockFinalizedAsLatest()
+    // First resolve — fetches and caches queryBlock
+    await makeResolver(cache).resolve(`did:ethr:dev:${address}?versionId=${queryBlock}`)
+    vi.restoreAllMocks()
+
+    // Second resolve — queryBlock must come from cache
+    const getBlockSpy = vi.spyOn(provider, 'getBlock')
+    await makeResolver(cache).resolve(`did:ethr:dev:${address}?versionId=${queryBlock}`)
+
+    const callsForQueryBlock = getBlockSpy.mock.calls.filter(([tag]) => tag === queryBlock)
+    expect(callsForQueryBlock).toHaveLength(0)
+  })
+
+  it('6.5 versionId query walks full history from latest; newer events filtered in wrapDidDocument', async () => {
+    const cache = new InMemoryEthrDidCache()
+    const { address, signer } = await randomAccount(provider)
+    const { address: del1 } = await randomAccount(provider)
+    const { address: del2 } = await randomAccount(provider)
+    const controller = new EthrDidController(address, registryContract, signer)
+    const r1 = await controller.addDelegate('veriKey', del1, 86400) // block B1
+    const r2 = await controller.addDelegate('veriKey', del2, 86400) // block B2 > B1
+    const [blockB1, blockB2] = [r1.blockNumber, r2.blockNumber]
+    const identity = address.toLowerCase()
+
+    mockFinalizedAsLatest()
+    const result = await makeResolver(cache).resolve(`did:ethr:dev:${address}?versionId=${blockB1}`)
+
+    // Document at B1 only shows del1 (del2 is at B2 > B1, filtered by wrapDidDocument)
+    const vms = result.didDocument?.verificationMethod ?? []
+    const delegateIds = vms.filter((vm) => vm.id.includes('delegate')).map((vm) => vm.id)
+    expect(delegateIds).toHaveLength(1) // only delegate-1 (del1)
+
+    // But the FULL history was walked — B2 is in the cache
+    expect(await cache.getEvents(chainId, registryAddress, identity, blockB2)).toBeDefined()
+    // nextVersionId should be B2 (the next event after B1)
+    expect(result.didDocumentMetadata.nextVersionId).toBe(String(blockB2))
   })
 })

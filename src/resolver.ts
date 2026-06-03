@@ -1,5 +1,10 @@
 import { BlockTag, encodeBase58, encodeBase64, getAddress, toUtf8String } from 'ethers'
-import { ConfigurationOptions, ConfiguredNetworks, MultiProviderConfiguration, configureResolverWithNetworks } from './configuration.js'
+import {
+  ConfigurationOptions,
+  ConfiguredNetworks,
+  MultiProviderConfiguration,
+  configureResolverWithNetworks,
+} from './configuration.js'
 import { EthrDidCache, InMemoryEthrDidCache } from './cache.js'
 import type {
   ContextEntry,
@@ -123,9 +128,32 @@ export class EthrDidResolver {
     if (!networkContract.runner) throw new Error(`No runner configured for contract with network ${networkId}`)
     if (!networkContract.runner.provider)
       throw new Error(`No provider configured for runner in contract with network ${networkId}`)
-    const block = await networkContract.runner.provider.getBlock(blockHeight)
+    const provider = networkContract.runner.provider
+    const chainId = Number((await provider.getNetwork()).chainId)
+
+    // 1. Check cache
+    const cached = await this.cache.getBlockMetadata(chainId, blockHeight)
+    if (cached !== undefined) return cached
+
+    // 2. Cache miss: fetch block
+    const block = await provider.getBlock(blockHeight)
     if (!block) throw new Error(`Block at height ${blockHeight} not found`)
-    return { height: block.number.toString(), timestamp: block.timestamp }
+    const entry = { height: block.number.toString(), timestamp: block.timestamp }
+
+    // 3. Write to cache only if finalized
+    try {
+      const finalized = await provider.getBlock('finalized')
+      if (finalized?.number !== undefined && blockHeight <= finalized.number) {
+        await this.cache.setBlockMetadata(chainId, blockHeight, entry)
+      }
+    } catch {
+      const latest = Number(await provider.getBlockNumber())
+      if (blockHeight <= Math.max(0, latest - 512)) {
+        await this.cache.setBlockMetadata(chainId, blockHeight, entry)
+      }
+    }
+
+    return entry
   }
 
   async changeLog(
