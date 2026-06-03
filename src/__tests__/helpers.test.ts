@@ -1,9 +1,5 @@
 import { describe, it, expect, expectTypeOf } from 'vitest'
-import {
-  clampToSafeInt,
-  CanonicalDIDEvent,
-  CanonicalDIDOwnerChanged,
-} from '../helpers.js'
+import { clampToSafeInt, CanonicalDIDEvent, CanonicalDIDOwnerChanged } from '../helpers.js'
 
 describe('clampToSafeInt', () => {
   it('1.1 returns 0 for 0n', () => {

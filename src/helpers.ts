@@ -242,6 +242,34 @@ export const Errors = {
 } as const
 export type Errors = (typeof Errors)[keyof typeof Errors]
 
+export class SubgraphNetworkError extends Error {
+  readonly chainId: number
+  readonly endpoint: string
+  readonly cause: unknown
+
+  constructor(chainId: number, endpoint: string, cause: unknown) {
+    super(`Network error reaching subgraph at ${endpoint} for chainId ${chainId}`)
+    this.name = 'SubgraphNetworkError'
+    this.chainId = chainId
+    this.endpoint = endpoint
+    this.cause = cause
+  }
+}
+
+export class SubgraphIndexingError extends Error {
+  readonly chainId: number
+  readonly endpoint: string
+  readonly indexedBlock: number
+
+  constructor(chainId: number, endpoint: string, indexedBlock: number) {
+    super(`Subgraph has indexing errors at block ${indexedBlock} (chainId ${chainId}, endpoint: ${endpoint})`)
+    this.name = 'SubgraphIndexingError'
+    this.chainId = chainId
+    this.endpoint = endpoint
+    this.indexedBlock = indexedBlock
+  }
+}
+
 /**
  * Returns true when the argument is defined and not null.
  * Usable as array.filter(isDefined)

@@ -4,6 +4,7 @@ import {
   ConfiguredNetworks,
   MultiProviderConfiguration,
   configureResolverWithNetworks,
+  configureSubgraphEndpoints,
 } from './configuration.js'
 import { EthrDidCache, InMemoryEthrDidCache } from './cache.js'
 import type {
@@ -32,6 +33,7 @@ import {
   VMTypes,
 } from './helpers.js'
 import { logDecoder } from './logParser.js'
+import { subgraphChangeLog, SubgraphNetworkConfig } from './subgraph-query'
 
 /**
  * Builds the JSON-LD @context array for a DID document based on the verification method types
@@ -104,10 +106,12 @@ export function getResolver(options: ConfigurationOptions): Record<string, DIDRe
 
 export class EthrDidResolver {
   private readonly contracts: ConfiguredNetworks
+  private readonly subgraphConfigs: Record<string, SubgraphNetworkConfig>
   private readonly cache: EthrDidCache
 
   constructor(options: ConfigurationOptions) {
     this.contracts = configureResolverWithNetworks(options)
+    this.subgraphConfigs = configureSubgraphEndpoints(options as MultiProviderConfiguration)
     this.cache = (options as MultiProviderConfiguration).cache ?? new InMemoryEthrDidCache()
   }
 
@@ -570,7 +574,15 @@ export class EthrDidResolver {
         now = block.timestamp
       }
 
-      const { address, history, controllerKey, chainId } = await this.changeLog(id, networkId, 'latest')
+      let changes
+      try {
+        changes = await subgraphChangeLog(id, this.subgraphConfigs[networkId])
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      } catch (_: unknown) {
+        changes = await this.changeLog(id, networkId, 'latest')
+      }
+
+      const { address, history, controllerKey, chainId } = changes
       const { didDocument, deactivated, versionId, nextVersionId } = this.wrapDidDocument(
         did,
         address,

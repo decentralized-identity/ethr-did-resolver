@@ -2,6 +2,7 @@ import { Contract, ContractFactory, JsonRpcProvider, Provider } from 'ethers'
 import { deployments, EthrDidRegistryDeployment } from './config/deployments.js'
 import { EthereumDIDRegistry } from './config/EthereumDIDRegistry.js'
 import type { EthrDidCache } from './cache.js'
+import { SubgraphNetworkConfig } from './subgraph-query'
 
 const infuraNames: Record<string, string> = {
   polygon: 'matic',
@@ -103,6 +104,30 @@ function configureNetwork(net: ProviderConfiguration): ConfiguredNetworks {
     networks[net.name || ''] = getContractForNetwork(net)
   }
   return networks
+}
+
+export function configureSubgraphEndpoints(options: MultiProviderConfiguration): Record<string, SubgraphNetworkConfig> {
+  const networkMap: Record<string, SubgraphNetworkConfig> = {}
+  if (options.networks) {
+    options.networks.forEach((net: ProviderConfiguration) => {
+      if (net.subgraphUrl) {
+        const chainId = net.chainId || deployments.find((d) => matchesDeployment(d, net))?.chainId
+        if (chainId) {
+          const id = typeof chainId === 'bigint' || typeof chainId === 'number' ? `0x${chainId.toString(16)}` : chainId
+          const conf: SubgraphNetworkConfig = {
+            subgraphUrl: net.subgraphUrl,
+            registryAddress: net.registry,
+            chainId: Number(chainId),
+          }
+          networkMap[id] = conf
+          if (net.name) {
+            networkMap[net.name] = conf
+          }
+        }
+      }
+    })
+  }
+  return networkMap
 }
 
 function configureNetworks(conf: MultiProviderConfiguration): ConfiguredNetworks {

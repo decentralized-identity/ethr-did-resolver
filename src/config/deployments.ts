@@ -40,12 +40,24 @@ export type EthrDidRegistryDeployment = {
  * Represents the known deployments of the ERC1056 registry contract.
  */
 export const deployments: EthrDidRegistryDeployment[] = [
-  { chainId: 1, registry: '0xdca7ef03e98e0dc2b855be647c39abe984fcf21b', name: 'mainnet', legacyNonce: true },
+  {
+    chainId: 1,
+    registry: '0xdca7ef03e98e0dc2b855be647c39abe984fcf21b',
+    name: 'mainnet',
+    legacyNonce: true,
+    subgraphUrl: 'https://api.studio.thegraph.com/query/1744147/erc-1056-mainnet/version/latest',
+  },
   // // deprecated networks
   // { chainId: 3, registry: '0xdca7ef03e98e0dc2b855be647c39abe984fcf21b', name: 'ropsten', legacyNonce: true },
   // { chainId: 4, registry: '0xdca7ef03e98e0dc2b855be647c39abe984fcf21b', name: 'rinkeby', legacyNonce: true },
   // { chainId: 5, registry: '0xdca7ef03e98e0dc2b855be647c39abe984fcf21b', name: 'goerli', legacyNonce: true },
-  { chainId: 11155111, registry: '0x03d5003bf0e79C5F5223588F347ebA39AfbC3818', name: 'sepolia', legacyNonce: false },
+  {
+    chainId: 11155111,
+    registry: '0x03d5003bf0e79C5F5223588F347ebA39AfbC3818',
+    name: 'sepolia',
+    legacyNonce: false,
+    subgraphUrl: 'https://api.studio.thegraph.com/query/1744147/erc-1056-sepolia/version/latest',
+  },
   { chainId: 100, registry: '0x03d5003bf0e79C5F5223588F347ebA39AfbC3818', name: 'gno', legacyNonce: false },
   { chainId: 17000, registry: '0x03d5003bf0e79C5F5223588F347ebA39AfbC3818', name: 'holesky', legacyNonce: false },
   // deprecated networks
@@ -85,7 +97,13 @@ export const deployments: EthrDidRegistryDeployment[] = [
   //   name: 'artis:sigma1',
   //   legacyNonce: true,
   // },
-  { chainId: 137, registry: '0xdca7ef03e98e0dc2b855be647c39abe984fcf21b', name: 'polygon', legacyNonce: true },
+  {
+    chainId: 137,
+    registry: '0xdca7ef03e98e0dc2b855be647c39abe984fcf21b',
+    name: 'polygon',
+    legacyNonce: true,
+    subgraphUrl: 'https://api.studio.thegraph.com/query/1744147/erc-1056-polygon/version/latest',
+  },
   // // deprecated
   // {
   //   chainId: 80001,
