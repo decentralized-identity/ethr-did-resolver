@@ -1,6 +1,7 @@
 import { Contract, ContractFactory, JsonRpcProvider, Provider } from 'ethers'
 import { deployments, EthrDidRegistryDeployment } from './config/deployments.js'
 import { EthereumDIDRegistry } from './config/EthereumDIDRegistry.js'
+import type { EthrDidCache } from './cache.js'
 
 const infuraNames: Record<string, string> = {
   polygon: 'matic',
@@ -30,6 +31,8 @@ export interface ProviderConfiguration extends Omit<EthrDidRegistryDeployment, '
 
 export interface MultiProviderConfiguration extends ProviderConfiguration {
   networks?: ProviderConfiguration[]
+  /** Optional cache for resolved events and block metadata. Defaults to a fresh InMemoryEthrDidCache. */
+  cache?: EthrDidCache
 }
 
 export interface InfuraConfiguration {
