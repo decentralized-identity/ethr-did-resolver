@@ -1,3 +1,10 @@
+## [13.0.3](https://github.com/decentralized-identity/ethr-did-resolver/compare/13.0.2...13.0.3) (2026-06-22)
+
+
+### Bug Fixes
+
+* **build:** update repo url ([#262](https://github.com/decentralized-identity/ethr-did-resolver/issues/262)) ([f6bf43d](https://github.com/decentralized-identity/ethr-did-resolver/commit/f6bf43d4b866bc3165679c23d3c9629115f765c2))
+
 ## [13.0.2](https://github.com/decentralized-identity/ethr-did-resolver/compare/13.0.1...13.0.2) (2026-06-22)
 
 
