@@ -1,3 +1,11 @@
+## [13.0.2](https://github.com/decentralized-identity/ethr-did-resolver/compare/13.0.1...13.0.2) (2026-06-22)
+
+
+### Bug Fixes
+
+* **ci:** limit permissions for the workflow GITHUB_TOKEN, use the provided GH_TOKEN during publishing ([#261](https://github.com/decentralized-identity/ethr-did-resolver/issues/261)) ([7c076e9](https://github.com/decentralized-identity/ethr-did-resolver/commit/7c076e9b7de89141344de31bd48b56d1fd917c59))
+* **ci:** use trusting publishing in GH workflow ([#260](https://github.com/decentralized-identity/ethr-did-resolver/issues/260)) ([9e8fc05](https://github.com/decentralized-identity/ethr-did-resolver/commit/9e8fc05c719441f7c2e42c2ff0351f18a92dc5fb))
+
 ## [13.0.1](https://github.com/decentralized-identity/ethr-did-resolver/compare/13.0.0...13.0.1) (2026-06-02)
 
 
