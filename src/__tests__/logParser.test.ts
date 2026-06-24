@@ -126,10 +126,6 @@ function mockContractSequence(descs: unknown[]): Contract {
   return { interface: { parseLog } } as unknown as Contract
 }
 
-// ---------------------------------------------------------------------------
-// Phase 3 tests
-// ---------------------------------------------------------------------------
-
 describe('logDecoder', () => {
   it('3.1 sets blockTimestamp from the parameter on all returned events', () => {
     const contract = mockContract(makeOwnerChangedDesc(IDENTITY, OWNER, 0n))
@@ -209,7 +205,7 @@ describe('logDecoder', () => {
     const contract = mockContract(makeOwnerChangedDesc(IDENTITY, OWNER, 0n))
     const { events } = logDecoder(contract, [makeLog()], BLOCK_NUMBER, BLOCK_TIMESTAMP, CHAIN_ID, REGISTRY)
     expect(events[0].eventType).toBe('DIDOwnerChanged')
-    expect((events[0] as Record<string, unknown>)['_eventName']).toBeUndefined()
+    expect((events[0] as any)['_eventName']).toBeUndefined()
   })
 
   it('3.10b runtime shape matches discriminated-union variant for all three event types', () => {
@@ -251,7 +247,7 @@ describe('logDecoder', () => {
   })
 
   it('3.11 non-UTF-8 bytes32 name is excluded from events but its previousChange advances the chain pointer', () => {
-    // 0x80 is an invalid UTF-8 start byte — bytes32toString returns null
+    // 0x80 is an invalid UTF-8 start byte - bytes32toString returns null
     const invalidBytes32 = '0x8000000000000000000000000000000000000000000000000000000000000000'
     const filteredDesc = makeAttributeChangedDesc(IDENTITY, invalidBytes32, '0x', 0n, 30n)
     const validDesc = makeOwnerChangedDesc(IDENTITY, OWNER, 50n)

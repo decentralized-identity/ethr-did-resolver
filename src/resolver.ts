@@ -1,11 +1,6 @@
 import { BlockTag, encodeBase58, encodeBase64, getAddress, toUtf8String } from 'ethers'
-import {
-  ConfigurationOptions,
-  ConfiguredNetworks,
-  MultiProviderConfiguration,
-  configureResolverWithNetworks,
-} from './configuration.js'
-import { EthrDidCache, InMemoryEthrDidCache } from './cache.js'
+import { ConfigurationOptions, ConfiguredNetworks, configureResolverWithNetworks } from './configuration.js'
+
 import type {
   ContextEntry,
   DIDDocument,
@@ -87,7 +82,7 @@ function buildLdContext(didDocument: DIDDocument): ContextEntry[] {
   if (hasPublicKeyBase58 && !securityV2Included) {
     inline['publicKeyBase58'] = 'https://w3id.org/security#publicKeyBase58'
   }
-  // publicKeyBase64 is not defined by any suite context — always inline when present.
+  // publicKeyBase64 is not defined by any suite context - always inline when present.
   if (hasPublicKeyBase64) {
     inline['publicKeyBase64'] = 'https://w3id.org/security#publicKeyBase64'
   }
@@ -104,11 +99,9 @@ export function getResolver(options: ConfigurationOptions): Record<string, DIDRe
 
 export class EthrDidResolver {
   private readonly contracts: ConfiguredNetworks
-  private readonly cache: EthrDidCache
 
-  constructor(options: ConfigurationOptions) {
-    this.contracts = configureResolverWithNetworks(options)
-    this.cache = (options as MultiProviderConfiguration).cache ?? new InMemoryEthrDidCache()
+  constructor(_options: ConfigurationOptions) {
+    this.contracts = configureResolverWithNetworks(_options)
   }
 
   /**
@@ -129,31 +122,9 @@ export class EthrDidResolver {
     if (!networkContract.runner.provider)
       throw new Error(`No provider configured for runner in contract with network ${networkId}`)
     const provider = networkContract.runner.provider
-    const chainId = Number((await provider.getNetwork()).chainId)
-
-    // 1. Check cache
-    const cached = await this.cache.getBlockMetadata(chainId, blockHeight)
-    if (cached !== undefined) return cached
-
-    // 2. Cache miss: fetch block
     const block = await provider.getBlock(blockHeight)
     if (!block) throw new Error(`Block at height ${blockHeight} not found`)
-    const entry = { height: block.number.toString(), timestamp: block.timestamp }
-
-    // 3. Write to cache only if finalized
-    try {
-      const finalized = await provider.getBlock('finalized')
-      if (finalized?.number !== undefined && blockHeight <= finalized.number) {
-        await this.cache.setBlockMetadata(chainId, blockHeight, entry)
-      }
-    } catch {
-      const latest = Number(await provider.getBlockNumber())
-      if (blockHeight <= Math.max(0, latest - 512)) {
-        await this.cache.setBlockMetadata(chainId, blockHeight, entry)
-      }
-    }
-
-    return entry
+    return { height: block.number.toString(), timestamp: block.timestamp }
   }
 
   async changeLog(
@@ -175,51 +146,8 @@ export class EthrDidResolver {
 
     let previousChange = Number(await this.previousChange(address, networkId, blockTag))
 
-    // Short-circuit: no history, no RPC calls for finality
-    if (previousChange === 0) {
-      return { address, history: [], controllerKey, chainId }
-    }
-
-    // Lazy finality — determined at most once per changeLog call, only on a cache miss
-    let finalizedBlockNumber: number | undefined
-    const getFinalizedBlockNumber = async (): Promise<number> => {
-      if (finalizedBlockNumber !== undefined) return finalizedBlockNumber
-      try {
-        const finalized = await provider.getBlock('finalized')
-        if (finalized?.number !== undefined) {
-          finalizedBlockNumber = finalized.number
-          return finalizedBlockNumber
-        }
-      } catch {
-        // RPC does not support the 'finalized' block tag; use conservative fallback.
-      }
-      const latest = Number(await provider.getBlockNumber())
-      finalizedBlockNumber = Math.max(0, latest - 512)
-      return finalizedBlockNumber
-    }
-
     while (previousChange !== 0) {
       const blockNumber = previousChange
-
-      // 1. Cache check
-      const cached = await this.cache.getEvents(chainId, registryAddress, address, blockNumber)
-      if (cached !== undefined) {
-        // Derive chain pointer from cached events (same guard as logDecoder)
-        let chainPointer = 0
-        for (const event of cached) {
-          const pc = event.previousChange
-          if (pc > 0 && pc < blockNumber && (chainPointer === 0 || pc < chainPointer)) {
-            chainPointer = pc
-          }
-        }
-        previousChange = chainPointer
-        for (const event of [...cached].reverse()) {
-          history.unshift(event)
-        }
-        continue
-      }
-
-      // 2. Cache miss: fetch logs and block in parallel
       const [logs, block] = await Promise.all([
         provider.getLogs({
           address: registryAddress,
@@ -230,7 +158,6 @@ export class EthrDidResolver {
         }),
         provider.getBlock(blockNumber),
       ])
-
       if (logs.length === 0) {
         throw new Error(
           `No logs found for block ${blockNumber} but previousChange points here. ` +
@@ -240,8 +167,6 @@ export class EthrDidResolver {
       if (!block) {
         throw new Error(`Block ${blockNumber} not found.`)
       }
-
-      // 3. Decode
       const { events, previousChange: pc } = logDecoder(
         contract,
         logs,
@@ -250,24 +175,9 @@ export class EthrDidResolver {
         chainId,
         registryAddress
       )
-
-      // 4. Write to cache only if this block is finalized (lazy finality check)
-      const finalized = await getFinalizedBlockNumber()
-      if (blockNumber <= finalized) {
-        for (const event of events) {
-          await this.cache.setEvent(event)
-        }
-        await this.cache.setBlockMetadata(chainId, blockNumber, {
-          height: block.number.toString(),
-          timestamp: block.timestamp,
-        })
-      }
-
       previousChange = pc
       events.reverse()
-      for (const event of events) {
-        history.unshift(event)
-      }
+      for (const event of events) history.unshift(event)
     }
 
     return { address, history, controllerKey, chainId }
@@ -433,7 +343,7 @@ export class EthrDidResolver {
               try {
                 encodedService = toUtf8String(event.value)
               } catch {
-                // value is not valid UTF-8; skip this service — non-DID use of registry
+                // value is not valid UTF-8; skip this service - non-DID use of registry
               }
               if (encodedService !== null) {
                 let endpoint
@@ -618,13 +528,13 @@ export class EthrDidResolver {
         message.includes('pruned history unavailable') ||
         message.includes('beyond current head block') ||
         message.includes('historical state not available')
-      // Pure connectivity/timeout failures — the endpoint is not reachable at all
+      // Pure connectivity/timeout failures - the endpoint is not reachable at all
       const isConnectivityError =
         message.includes('could not detect network') ||
         message.includes('timeout') ||
         e?.code === 'NETWORK_ERROR' ||
         e?.code === 'TIMEOUT'
-      // Server responded but with an error — may indicate missing historical data on non-archive nodes
+      // Server responded but with an error - may indicate missing historical data on non-archive nodes
       const isServerError =
         message.includes('missing response') || message.includes('SERVER_ERROR') || e?.code === 'SERVER_ERROR'
       const isRpcError = isConnectivityError || isServerError

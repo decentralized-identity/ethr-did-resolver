@@ -28,15 +28,15 @@ export {
   EthrDidRegistryDeployment,
 }
 
-// New canonical event and cache types
+// Canonical event types
 export type {
   CanonicalDIDEvent,
   CanonicalDIDOwnerChanged,
   CanonicalDIDDelegateChanged,
   CanonicalDIDAttributeChanged,
 } from './helpers.js'
-export type { EthrDidCache, BlockMetadataEntry } from './cache.js'
-export { InMemoryEthrDidCache } from './cache.js'
+// Provider-wrapping cache types
+export type { KVStore, CachedBlock, WrapProviderOptions } from './cachedProvider.js'
 
 // workaround for esbuild/vite/hermes issues
 // This should not be needed once we move to ESM only build outputs.

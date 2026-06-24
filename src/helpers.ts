@@ -86,57 +86,57 @@ export interface CanonicalDIDAttributeChanged extends CanonicalDIDEventBase {
 
 /** Discriminated union of all canonical ERC-1056 event types. */
 export type CanonicalDIDEvent = CanonicalDIDOwnerChanged | CanonicalDIDDelegateChanged | CanonicalDIDAttributeChanged
-
-// ---------------------------------------------------------------------------
-// Legacy ERC-1056 event types (deprecated — use CanonicalDIDEvent)
-// ---------------------------------------------------------------------------
-
-/**
- * Common fields shared by all ERC-1056 events.
- * @deprecated Use {@link CanonicalDIDEvent} instead.
- */
-type ERC1056Base = {
-  identity: address
-  previousChange: uint256
-  blockNumber: number
-}
-
-/**
- * ERC-1056 owner change event — no `validTo`.
- * @deprecated Use {@link CanonicalDIDOwnerChanged} instead.
- */
-export type DIDOwnerChanged = ERC1056Base & {
-  _eventName: 'DIDOwnerChanged'
-  owner: address
-}
-
-/**
- * ERC-1056 attribute change event.
- * @deprecated Use {@link CanonicalDIDAttributeChanged} instead.
- */
-export type DIDAttributeChanged = ERC1056Base & {
-  _eventName: 'DIDAttributeChanged'
-  name: bytes32
-  value: bytes
-  validTo: uint256
-}
-
-/**
- * ERC-1056 delegate change event.
- * @deprecated Use {@link CanonicalDIDDelegateChanged} instead.
- */
-export type DIDDelegateChanged = ERC1056Base & {
-  _eventName: 'DIDDelegateChanged'
-  delegateType: bytes32
-  delegate: address
-  validTo: uint256
-}
-
-/**
- * Discriminated union of all ERC-1056 event types.
- * @deprecated Use {@link CanonicalDIDEvent} instead.
- */
-export type ERC1056Event = DIDOwnerChanged | DIDAttributeChanged | DIDDelegateChanged
+//
+// // ---------------------------------------------------------------------------
+// // Legacy ERC-1056 event types (deprecated - use CanonicalDIDEvent)
+// // ---------------------------------------------------------------------------
+//
+// /**
+//  * Common fields shared by all ERC-1056 events.
+//  * @deprecated Use {@link CanonicalDIDEvent} instead.
+//  */
+// type ERC1056Base = {
+//   identity: address
+//   previousChange: uint256
+//   blockNumber: number
+// }
+//
+// /**
+//  * ERC-1056 owner change event - no `validTo`.
+//  * @deprecated Use {@link CanonicalDIDOwnerChanged} instead.
+//  */
+// export type DIDOwnerChanged = ERC1056Base & {
+//   _eventName: 'DIDOwnerChanged'
+//   owner: address
+// }
+//
+// /**
+//  * ERC-1056 attribute change event.
+//  * @deprecated Use {@link CanonicalDIDAttributeChanged} instead.
+//  */
+// export type DIDAttributeChanged = ERC1056Base & {
+//   _eventName: 'DIDAttributeChanged'
+//   name: bytes32
+//   value: bytes
+//   validTo: uint256
+// }
+//
+// /**
+//  * ERC-1056 delegate change event.
+//  * @deprecated Use {@link CanonicalDIDDelegateChanged} instead.
+//  */
+// export type DIDDelegateChanged = ERC1056Base & {
+//   _eventName: 'DIDDelegateChanged'
+//   delegateType: bytes32
+//   delegate: address
+//   validTo: uint256
+// }
+//
+// /**
+//  * Discriminated union of all ERC-1056 event types.
+//  * @deprecated Use {@link CanonicalDIDEvent} instead.
+//  */
+// export type ERC1056Event = DIDOwnerChanged | DIDAttributeChanged | DIDDelegateChanged
 
 export const VMTypes = {
   EcdsaSecp256k1VerificationKey2019: 'EcdsaSecp256k1VerificationKey2019',
@@ -147,12 +147,12 @@ export const VMTypes = {
 } as const
 export type VMTypes = (typeof VMTypes)[keyof typeof VMTypes]
 
-export const eventNames = {
-  DIDOwnerChanged: 'DIDOwnerChanged',
-  DIDAttributeChanged: 'DIDAttributeChanged',
-  DIDDelegateChanged: 'DIDDelegateChanged',
-} as const
-export type eventNames = (typeof eventNames)[keyof typeof eventNames]
+// export const eventNames = {
+//   DIDOwnerChanged: 'DIDOwnerChanged',
+//   DIDAttributeChanged: 'DIDAttributeChanged',
+//   DIDDelegateChanged: 'DIDDelegateChanged',
+// } as const
+// export type eventNames = (typeof eventNames)[keyof typeof eventNames]
 
 /**
  * Verification Method definitions that allow extra properties

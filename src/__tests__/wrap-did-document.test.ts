@@ -6,7 +6,7 @@ import type { CanonicalDIDEvent } from '../helpers.js'
 // Helpers
 // ---------------------------------------------------------------------------
 
-// wrapDidDocument uses no `this` state — we can call it without a real constructor.
+// wrapDidDocument uses no `this` state - we can call it without a real constructor.
 const resolver = Object.create(EthrDidResolver.prototype) as EthrDidResolver
 
 const CHAIN_ID = 1
@@ -34,10 +34,6 @@ function makeDelegateEvent(overrides: Partial<CanonicalDIDEvent> = {}): Canonica
   return { ...base, ...overrides } as CanonicalDIDEvent
 }
 
-// ---------------------------------------------------------------------------
-// Phase 4 tests
-// ---------------------------------------------------------------------------
-
 describe('wrapDidDocument', () => {
   it('4.1 event with validTo === Number.MAX_SAFE_INTEGER is treated as non-expired (key appears in document)', () => {
     const event = makeDelegateEvent({ validTo: Number.MAX_SAFE_INTEGER })
@@ -55,7 +51,7 @@ describe('wrapDidDocument', () => {
     expect(didDocument.assertionMethod).not.toContain(`${DID}#delegate-1`)
   })
 
-  it('4.3 wrapDidDocument does not sort its input — event order determines the final document state', () => {
+  it('4.3 wrapDidDocument does not sort its input - event order determines the final document state', () => {
     // Correct order: add at block 50, then revoke at block 100
     const add = makeDelegateEvent({ blockNumber: 50, validTo: Number.MAX_SAFE_INTEGER })
     const revoke = makeDelegateEvent({ blockNumber: 100, validTo: 0 })

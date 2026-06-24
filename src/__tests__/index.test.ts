@@ -5,8 +5,9 @@ import type {
   CanonicalDIDOwnerChanged,
   CanonicalDIDDelegateChanged,
   CanonicalDIDAttributeChanged,
-  EthrDidCache,
-  BlockMetadataEntry,
+  KVStore,
+  CachedBlock,
+  WrapProviderOptions,
 } from '../index'
 
 test('has export definitions', () => {
@@ -18,8 +19,8 @@ test('has export definitions', () => {
   expect(index.verificationMethodTypes).toBeDefined()
 })
 
-describe('Phase 7 — public exports', () => {
-  test('7.1 CanonicalDIDEvent union and its three variants are importable as types', () => {
+describe('public exports', () => {
+  test('CanonicalDIDEvent union and its three variants are importable as types', () => {
     // Build one of each variant to confirm the type is in scope and correct
     const owner: CanonicalDIDOwnerChanged = {
       eventType: 'DIDOwnerChanged',
@@ -62,7 +63,7 @@ describe('Phase 7 — public exports', () => {
       value: '0xabcd',
     }
 
-    // CanonicalDIDEvent is the union — all three are assignable to it
+    // CanonicalDIDEvent is the union - all three are assignable to it
     const events: CanonicalDIDEvent[] = [owner, delegate, attr]
     expect(events).toHaveLength(3)
 
@@ -78,33 +79,27 @@ describe('Phase 7 — public exports', () => {
     }
   })
 
-  test('7.2 EthrDidCache is importable as a type and satisfied by a custom object', () => {
-    // If EthrDidCache were not exported, this type annotation would fail to compile.
-    const custom: EthrDidCache = {
-      getEvents: async () => undefined,
-      setEvent: async () => undefined,
-      getBlockMetadata: async () => undefined,
-      setBlockMetadata: async () => undefined,
+  test('KVStore is importable as a type', () => {
+    const store: KVStore = {
+      get: async () => undefined,
+      set: async () => store,
     }
-    expect(custom).toBeDefined()
+    expect(store).toBeDefined()
   })
 
-  test('7.3 InMemoryEthrDidCache is importable as a value and constructable', () => {
-    expect(index.InMemoryEthrDidCache).toBeDefined()
-    const cache = new index.InMemoryEthrDidCache()
-    expect(cache).toBeInstanceOf(index.InMemoryEthrDidCache)
-    // Spot-check the async interface
-    expect(typeof cache.getEvents).toBe('function')
-    expect(typeof cache.setEvent).toBe('function')
-    expect(typeof cache.getBlockMetadata).toBe('function')
-    expect(typeof cache.setBlockMetadata).toBe('function')
+  test('CachedBlock is importable as a type', () => {
+    const block: CachedBlock = { number: 100, timestamp: 1700000000, hash: '0xabc' }
+    expectTypeOf(block.number).toBeNumber()
+    expectTypeOf(block.timestamp).toBeNumber()
+    expectTypeOf(block.hash).toBeString()
+    expect(block.number).toBe(100)
+    expect(block.timestamp).toBe(1700000000)
+    expect(block.hash).toBe('0xabc')
   })
 
-  test('7.4 BlockMetadataEntry is importable as a type', () => {
-    const entry: BlockMetadataEntry = { height: '100', timestamp: 1700000000 }
-    expectTypeOf(entry.height).toBeString()
-    expectTypeOf(entry.timestamp).toBeNumber()
-    expect(entry.height).toBe('100')
-    expect(entry.timestamp).toBe(1700000000)
+  test('WrapProviderOptions is importable as a type', () => {
+    const options: WrapProviderOptions = { finalizedTtlMs: 10000, fallbackDepth: 256 }
+    expect(options.finalizedTtlMs).toBe(10000)
+    expect(options.fallbackDepth).toBe(256)
   })
 })

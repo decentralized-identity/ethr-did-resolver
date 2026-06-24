@@ -1,9 +1,5 @@
 import { describe, it, expect, expectTypeOf } from 'vitest'
-import {
-  clampToSafeInt,
-  CanonicalDIDEvent,
-  CanonicalDIDOwnerChanged,
-} from '../helpers.js'
+import { clampToSafeInt, CanonicalDIDEvent, CanonicalDIDOwnerChanged } from '../helpers.js'
 
 describe('clampToSafeInt', () => {
   it('1.1 returns 0 for 0n', () => {
@@ -31,7 +27,7 @@ describe('clampToSafeInt', () => {
   })
 })
 
-describe('CanonicalDIDEvent — discriminated union', () => {
+describe('CanonicalDIDEvent - discriminated union', () => {
   it('1.7 narrowing on DIDDelegateChanged exposes delegateType, delegate, and validTo', () => {
     // Build a concrete delegate event to verify the runtime shape
     const event: CanonicalDIDEvent = {
@@ -77,13 +73,13 @@ describe('CanonicalDIDEvent — discriminated union', () => {
     }
 
     // The type should NOT have delegateType, delegate, or validTo
-    // @ts-expect-error — delegateType does not exist on CanonicalDIDOwnerChanged
+    // @ts-expect-error - delegateType does not exist on CanonicalDIDOwnerChanged
     const _delegateType = event.delegateType
-    // @ts-expect-error — delegate does not exist on CanonicalDIDOwnerChanged
+    // @ts-expect-error - delegate does not exist on CanonicalDIDOwnerChanged
     const _delegate = event.delegate
-    // @ts-expect-error — validTo does not exist on CanonicalDIDOwnerChanged
+    // @ts-expect-error - validTo does not exist on CanonicalDIDOwnerChanged
     const _validTo = event.validTo
-    // @ts-expect-error — name does not exist on CanonicalDIDOwnerChanged
+    // @ts-expect-error - name does not exist on CanonicalDIDOwnerChanged
     const _name = event.name
 
     expect(event.owner).toBe('0xf3beac30c498d9e26865f34fcaa57dbb935b0d74')

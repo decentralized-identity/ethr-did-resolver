@@ -1,7 +1,7 @@
 import { Contract, ContractFactory, JsonRpcProvider, Provider } from 'ethers'
 import { deployments, EthrDidRegistryDeployment } from './config/deployments.js'
 import { EthereumDIDRegistry } from './config/EthereumDIDRegistry.js'
-import type { EthrDidCache } from './cache.js'
+import { type KVStore, type WrapProviderOptions, wrapProvider } from './cachedProvider.js'
 
 const infuraNames: Record<string, string> = {
   polygon: 'matic',
@@ -31,8 +31,10 @@ export interface ProviderConfiguration extends Omit<EthrDidRegistryDeployment, '
 
 export interface MultiProviderConfiguration extends ProviderConfiguration {
   networks?: ProviderConfiguration[]
-  /** Optional cache for resolved events and block metadata. Defaults to a fresh InMemoryEthrDidCache. */
-  cache?: EthrDidCache
+  /** Optional KVStore for the provider-wrapping cache. `null` disables caching; `undefined` defaults to a fresh Map. */
+  cache?: KVStore | null
+  /** Options for the provider-wrapping cache. */
+  cacheOptions?: WrapProviderOptions
 }
 
 export interface InfuraConfiguration {
@@ -69,7 +71,11 @@ function matchesDeployment(d: (typeof deployments)[number], conf: ProviderConfig
   return false
 }
 
-export function getContractForNetwork(conf: ProviderConfiguration): Contract {
+export function getContractForNetwork(
+  conf: ProviderConfiguration,
+  store?: KVStore,
+  cacheOptions?: WrapProviderOptions
+): Contract {
   let provider: Provider = conf.provider || conf.web3?.currentProvider
   if (!provider) {
     if (conf.rpcUrl) {
@@ -80,36 +86,45 @@ export function getContractForNetwork(conf: ProviderConfiguration): Contract {
       throw new Error(`invalid_config: No web3 provider could be determined for network ${conf.name || conf.chainId}`)
     }
   }
+  const finalProvider = store ? wrapProvider(provider, store, cacheOptions) : provider
   const registryAddress = conf.registry || deployments.find((d) => matchesDeployment(d, conf))?.registry
   if (!registryAddress) {
     throw new Error(
       `invalid_config: No registry address known for network ${conf.name || conf.chainId}. Please provide a registry address.`
     )
   }
-  const contract = ContractFactory.fromSolidity(EthereumDIDRegistry).attach(registryAddress).connect(provider)
+  const contract = ContractFactory.fromSolidity(EthereumDIDRegistry).attach(registryAddress).connect(finalProvider)
   return contract as Contract
 }
 
-function configureNetwork(net: ProviderConfiguration): ConfiguredNetworks {
+function configureNetwork(
+  net: ProviderConfiguration,
+  store?: KVStore,
+  cacheOptions?: WrapProviderOptions
+): ConfiguredNetworks {
   const networks: ConfiguredNetworks = {}
   const chainId = net.chainId || deployments.find((d) => matchesDeployment(d, net))?.chainId
   if (chainId) {
     if (net.name) {
-      networks[net.name] = getContractForNetwork(net)
+      networks[net.name] = getContractForNetwork(net, store, cacheOptions)
     }
     const id = typeof chainId === 'bigint' || typeof chainId === 'number' ? `0x${chainId.toString(16)}` : chainId
-    networks[id] = getContractForNetwork(net)
+    networks[id] = getContractForNetwork(net, store, cacheOptions)
   } else if (net.provider || net.web3 || net.rpcUrl) {
-    networks[net.name || ''] = getContractForNetwork(net)
+    networks[net.name || ''] = getContractForNetwork(net, store, cacheOptions)
   }
   return networks
 }
 
-function configureNetworks(conf: MultiProviderConfiguration): ConfiguredNetworks {
+function configureNetworks(
+  conf: MultiProviderConfiguration,
+  store?: KVStore,
+  cacheOptions?: WrapProviderOptions
+): ConfiguredNetworks {
   return {
-    ...configureNetwork(conf),
+    ...configureNetwork(conf, store, cacheOptions),
     ...conf.networks?.reduce<ConfiguredNetworks>((networks, net) => {
-      return { ...networks, ...configureNetwork(net) }
+      return { ...networks, ...configureNetwork(net, store, cacheOptions) }
     }, {}),
   }
 }
@@ -132,9 +147,13 @@ function configureNetworks(conf: MultiProviderConfiguration): ConfiguredNetworks
  * ```
  */
 export function configureResolverWithNetworks(conf: ConfigurationOptions = {}): ConfiguredNetworks {
+  const conf2 = conf as MultiProviderConfiguration
+  const store = conf2.cache === null ? undefined : (conf2.cache ?? new Map<string, string>())
+  const cacheOptions = conf2.cacheOptions
+
   const networks = {
     ...configureNetworksWithInfura((<InfuraConfiguration>conf).infuraProjectId),
-    ...configureNetworks(<MultiProviderConfiguration>conf),
+    ...configureNetworks(conf2, store, cacheOptions),
   }
   if (Object.keys(networks).length === 0) {
     throw new Error('invalid_config: Please make sure to have at least one network')
