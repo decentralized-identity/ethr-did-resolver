@@ -1,4 +1,4 @@
-import { Contract, Log, LogDescription } from 'ethers'
+import { Contract, LogDescription, LogParams } from 'ethers'
 import { bytes32toString, CanonicalDIDEvent, clampToSafeInt } from './helpers.js'
 
 function extractPreviousChange(logResult: LogDescription): number {
@@ -8,7 +8,7 @@ function extractPreviousChange(logResult: LogDescription): number {
 
 function toCanonicalEvent(
   logResult: LogDescription,
-  log: Log,
+  log: LogParams,
   blockTimestamp: number,
   chainId: number,
   registryAddress: string
@@ -73,7 +73,7 @@ export interface DecodedLogs {
  */
 export function logDecoder(
   contract: Contract,
-  logs: Log[],
+  logs: LogParams[],
   blockNumber: number,
   blockTimestamp: number,
   chainId: number,

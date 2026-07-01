@@ -18,7 +18,6 @@ const knownInfuraNames = ['mainnet', 'aurora', 'sepolia']
  * @example ```js
  * { name: 'development', registry: '0x9af37603e98e0dc2b855be647c39abe984fc2445', rpcUrl: 'http://127.0.0.1:8545/' }
  * { name: 'sepolia', chainId: 11155111, provider: new InfuraProvider('sepolia') }
- * { name: 'goerli', provider: new AlchemyProvider('goerli') }
  * { name: 'rsk:testnet', chainId: '0x1f', rpcUrl: 'https://public-node.testnet.rsk.co' }
  * ```
  */
@@ -31,21 +30,26 @@ export interface ProviderConfiguration extends Omit<EthrDidRegistryDeployment, '
 
 export interface MultiProviderConfiguration extends ProviderConfiguration {
   networks?: ProviderConfiguration[]
-  /** Optional KVStore for the provider-wrapping cache. `null` disables caching; `undefined` defaults to a fresh Map. */
-  cache?: KVStore | null
-  /** Options for the provider-wrapping cache. */
-  cacheOptions?: WrapProviderOptions
 }
 
 export interface InfuraConfiguration {
   infuraProjectId: string
 }
 
-export type ConfigurationOptions = MultiProviderConfiguration | InfuraConfiguration
+export type ConfigurationOptions = (MultiProviderConfiguration | InfuraConfiguration) & {
+  /** Optional KVStore for the provider-wrapping cache. `null` disables caching; `undefined` defaults to a fresh Map. */
+  cache?: KVStore | null
+  /** Options for the provider-wrapping cache. */
+  cacheOptions?: WrapProviderOptions
+}
 
 export type ConfiguredNetworks = Record<string, Contract>
 
-function configureNetworksWithInfura(projectId?: string): ConfiguredNetworks {
+function configureNetworksWithInfura(
+  projectId?: string,
+  store?: KVStore,
+  cacheOptions?: WrapProviderOptions
+): ConfiguredNetworks {
   if (!projectId) {
     return {}
   }
@@ -61,7 +65,7 @@ function configureNetworksWithInfura(projectId?: string): ConfiguredNetworks {
     })
     .filter((conf) => !!conf) as ProviderConfiguration[]
 
-  return configureNetworks({ networks })
+  return configureNetworks({ networks }, store, cacheOptions)
 }
 
 /** Returns true when a deployment matches the given conf by chainId or by name/description alias. */
@@ -140,20 +144,18 @@ function configureNetworks(
  * @example ```js
  * [
  *   { name: 'development', registry: '0x9af37603e98e0dc2b855be647c39abe984fc2445', rpcUrl: 'http://127.0.0.1:8545/' },
- *   { name: 'goerli', chainId: 5, provider: new InfuraProvider('goerli') },
  *   { name: 'sepolia', provider: new AlchemyProvider('sepolia') },
  *   { name: 'rsk:testnet', chainId: '0x1f', rpcUrl: 'https://public-node.testnet.rsk.co' },
  * ]
  * ```
  */
 export function configureResolverWithNetworks(conf: ConfigurationOptions = {}): ConfiguredNetworks {
-  const conf2 = conf as MultiProviderConfiguration
-  const store = conf2.cache === null ? undefined : (conf2.cache ?? new Map<string, string>())
-  const cacheOptions = conf2.cacheOptions
+  const store = conf.cache === null ? undefined : (conf.cache ?? new Map<string, string>())
+  const cacheOptions = conf.cacheOptions
 
   const networks = {
-    ...configureNetworksWithInfura((<InfuraConfiguration>conf).infuraProjectId),
-    ...configureNetworks(conf2, store, cacheOptions),
+    ...configureNetworksWithInfura((<InfuraConfiguration>conf).infuraProjectId, store, cacheOptions),
+    ...configureNetworks(conf, store, cacheOptions),
   }
   if (Object.keys(networks).length === 0) {
     throw new Error('invalid_config: Please make sure to have at least one network')
