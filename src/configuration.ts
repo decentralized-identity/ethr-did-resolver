@@ -1,6 +1,7 @@
 import { Contract, ContractFactory, JsonRpcProvider, Provider } from 'ethers'
 import { deployments, EthrDidRegistryDeployment } from './config/deployments.js'
 import { EthereumDIDRegistry } from './config/EthereumDIDRegistry.js'
+import { type KVStore, type WrapProviderOptions, wrapProvider } from './cachedProvider.js'
 
 const infuraNames: Record<string, string> = {
   polygon: 'matic',
@@ -17,7 +18,6 @@ const knownInfuraNames = ['mainnet', 'aurora', 'sepolia']
  * @example ```js
  * { name: 'development', registry: '0x9af37603e98e0dc2b855be647c39abe984fc2445', rpcUrl: 'http://127.0.0.1:8545/' }
  * { name: 'sepolia', chainId: 11155111, provider: new InfuraProvider('sepolia') }
- * { name: 'goerli', provider: new AlchemyProvider('goerli') }
  * { name: 'rsk:testnet', chainId: '0x1f', rpcUrl: 'https://public-node.testnet.rsk.co' }
  * ```
  */
@@ -36,11 +36,20 @@ export interface InfuraConfiguration {
   infuraProjectId: string
 }
 
-export type ConfigurationOptions = MultiProviderConfiguration | InfuraConfiguration
+export type ConfigurationOptions = (MultiProviderConfiguration | InfuraConfiguration) & {
+  /** Optional KVStore for the provider-wrapping cache. `null` disables caching; `undefined` defaults to a fresh Map. */
+  cache?: KVStore | null
+  /** Options for the provider-wrapping cache. */
+  cacheOptions?: WrapProviderOptions
+}
 
 export type ConfiguredNetworks = Record<string, Contract>
 
-function configureNetworksWithInfura(projectId?: string): ConfiguredNetworks {
+function configureNetworksWithInfura(
+  projectId?: string,
+  store?: KVStore,
+  cacheOptions?: WrapProviderOptions
+): ConfiguredNetworks {
   if (!projectId) {
     return {}
   }
@@ -56,7 +65,7 @@ function configureNetworksWithInfura(projectId?: string): ConfiguredNetworks {
     })
     .filter((conf) => !!conf) as ProviderConfiguration[]
 
-  return configureNetworks({ networks })
+  return configureNetworks({ networks }, store, cacheOptions)
 }
 
 /** Returns true when a deployment matches the given conf by chainId or by name/description alias. */
@@ -66,7 +75,11 @@ function matchesDeployment(d: (typeof deployments)[number], conf: ProviderConfig
   return false
 }
 
-export function getContractForNetwork(conf: ProviderConfiguration): Contract {
+export function getContractForNetwork(
+  conf: ProviderConfiguration,
+  store?: KVStore,
+  cacheOptions?: WrapProviderOptions
+): Contract {
   let provider: Provider = conf.provider || conf.web3?.currentProvider
   if (!provider) {
     if (conf.rpcUrl) {
@@ -77,36 +90,45 @@ export function getContractForNetwork(conf: ProviderConfiguration): Contract {
       throw new Error(`invalid_config: No web3 provider could be determined for network ${conf.name || conf.chainId}`)
     }
   }
+  const finalProvider = store ? wrapProvider(provider, store, cacheOptions) : provider
   const registryAddress = conf.registry || deployments.find((d) => matchesDeployment(d, conf))?.registry
   if (!registryAddress) {
     throw new Error(
       `invalid_config: No registry address known for network ${conf.name || conf.chainId}. Please provide a registry address.`
     )
   }
-  const contract = ContractFactory.fromSolidity(EthereumDIDRegistry).attach(registryAddress).connect(provider)
+  const contract = ContractFactory.fromSolidity(EthereumDIDRegistry).attach(registryAddress).connect(finalProvider)
   return contract as Contract
 }
 
-function configureNetwork(net: ProviderConfiguration): ConfiguredNetworks {
+function configureNetwork(
+  net: ProviderConfiguration,
+  store?: KVStore,
+  cacheOptions?: WrapProviderOptions
+): ConfiguredNetworks {
   const networks: ConfiguredNetworks = {}
   const chainId = net.chainId || deployments.find((d) => matchesDeployment(d, net))?.chainId
   if (chainId) {
     if (net.name) {
-      networks[net.name] = getContractForNetwork(net)
+      networks[net.name] = getContractForNetwork(net, store, cacheOptions)
     }
     const id = typeof chainId === 'bigint' || typeof chainId === 'number' ? `0x${chainId.toString(16)}` : chainId
-    networks[id] = getContractForNetwork(net)
+    networks[id] = getContractForNetwork(net, store, cacheOptions)
   } else if (net.provider || net.web3 || net.rpcUrl) {
-    networks[net.name || ''] = getContractForNetwork(net)
+    networks[net.name || ''] = getContractForNetwork(net, store, cacheOptions)
   }
   return networks
 }
 
-function configureNetworks(conf: MultiProviderConfiguration): ConfiguredNetworks {
+function configureNetworks(
+  conf: MultiProviderConfiguration,
+  store?: KVStore,
+  cacheOptions?: WrapProviderOptions
+): ConfiguredNetworks {
   return {
-    ...configureNetwork(conf),
+    ...configureNetwork(conf, store, cacheOptions),
     ...conf.networks?.reduce<ConfiguredNetworks>((networks, net) => {
-      return { ...networks, ...configureNetwork(net) }
+      return { ...networks, ...configureNetwork(net, store, cacheOptions) }
     }, {}),
   }
 }
@@ -122,16 +144,18 @@ function configureNetworks(conf: MultiProviderConfiguration): ConfiguredNetworks
  * @example ```js
  * [
  *   { name: 'development', registry: '0x9af37603e98e0dc2b855be647c39abe984fc2445', rpcUrl: 'http://127.0.0.1:8545/' },
- *   { name: 'goerli', chainId: 5, provider: new InfuraProvider('goerli') },
  *   { name: 'sepolia', provider: new AlchemyProvider('sepolia') },
  *   { name: 'rsk:testnet', chainId: '0x1f', rpcUrl: 'https://public-node.testnet.rsk.co' },
  * ]
  * ```
  */
 export function configureResolverWithNetworks(conf: ConfigurationOptions = {}): ConfiguredNetworks {
+  const store = conf.cache === null ? undefined : (conf.cache ?? new Map<string, string>())
+  const cacheOptions = conf.cacheOptions
+
   const networks = {
-    ...configureNetworksWithInfura((<InfuraConfiguration>conf).infuraProjectId),
-    ...configureNetworks(<MultiProviderConfiguration>conf),
+    ...configureNetworksWithInfura((<InfuraConfiguration>conf).infuraProjectId, store, cacheOptions),
+    ...configureNetworks(conf, store, cacheOptions),
   }
   if (Object.keys(networks).length === 0) {
     throw new Error('invalid_config: Please make sure to have at least one network')

@@ -28,6 +28,16 @@ export {
   EthrDidRegistryDeployment,
 }
 
+// Canonical event types
+export type {
+  CanonicalDIDEvent,
+  CanonicalDIDOwnerChanged,
+  CanonicalDIDDelegateChanged,
+  CanonicalDIDAttributeChanged,
+} from './helpers.js'
+// Provider-wrapping cache types
+export type { KVStore, CachedBlock, WrapProviderOptions } from './cachedProvider.js'
+
 // workaround for esbuild/vite/hermes issues
 // This should not be needed once we move to ESM only build outputs.
 // This library now builds as a CommonJS library, with a small ESM wrapper on top.

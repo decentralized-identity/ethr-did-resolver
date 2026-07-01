@@ -145,7 +145,7 @@ describe('RPC failure handling', () => {
     const registry = registryResolver['contracts']['dev'] as Contract
     const connected = registry.connect(signer) as Contract
     await connected['addDelegate'](address, stringToBytes32('veriKey'), delegate, 86400)
-    // Spy on provider.getLogs to return empty — simulating a non-archive node
+    // Spy on provider.getLogs to return empty - simulating a non-archive node
     const realProvider = registry.runner!.provider!
     const getLogsSpy = vi.spyOn(realProvider, 'getLogs').mockResolvedValueOnce([])
     const parsed = { did, id: `dev:${address}`, method: 'ethr', didUrl: did }
@@ -181,7 +181,7 @@ describe('non-DID registry events', () => {
     const connected = registryContract.connect(signer) as Contract
     await connected['addDelegate'](identity, INVALID_UTF8_BYTES32, delegate, 86400)
     const result = await didResolver.resolve(did)
-    // Resolution must succeed — the event is non-DID data and is silently skipped
+    // Resolution must succeed - the event is non-DID data and is silently skipped
     expect(result.didResolutionMetadata.error).toBeUndefined()
     // The invalid delegate must NOT appear in the document
     expect(result.didDocument?.verificationMethod).toHaveLength(1) // controller only
