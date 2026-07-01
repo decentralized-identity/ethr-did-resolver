@@ -1,3 +1,10 @@
+# [13.1.0](https://github.com/decentralized-identity/ethr-did-resolver/compare/13.0.3...13.1.0) (2026-07-01)
+
+
+### Features
+
+* event caching ([#247](https://github.com/decentralized-identity/ethr-did-resolver/issues/247)) ([60c6e58](https://github.com/decentralized-identity/ethr-did-resolver/commit/60c6e586ef91ea2c5f9d4679455df91938828de0))
+
 ## [13.0.3](https://github.com/decentralized-identity/ethr-did-resolver/compare/13.0.2...13.0.3) (2026-06-22)
 
 
