@@ -218,6 +218,174 @@ describe('versioning', () => {
     })
   })
 
+  it('can resolve did with versionTime before delegate creation excludes delegate', async () => {
+    expect.assertions(1)
+    const delegate = '0xde1E9a7e00000000000000000000000000000001'
+    const { address, shortDID: identifier, signer } = await randomAccount(provider)
+    const validitySeconds = 100_000
+    await new EthrDidController(identifier, registryContract, signer).addDelegate('sigAuth', delegate, validitySeconds)
+    const block = await provider.getBlock('latest')
+    const blockTs = block!.timestamp
+    // versionTime set to 1 second before the delegate was added
+    const before = blockTs - 1
+
+    const result = await didResolver.resolve(`${identifier}?versionTime=${before}`)
+    expect(result).toEqual({
+      didDocumentMetadata: { nextVersionId: expect.anything(), nextUpdate: expect.anything() },
+      didResolutionMetadata: expect.anything(),
+      didDocument: {
+        '@context': expect.anything(),
+        id: identifier,
+        verificationMethod: [
+          {
+            id: `${identifier}#controller`,
+            type: 'EcdsaSecp256k1RecoveryMethod2020',
+            controller: identifier,
+            blockchainAccountId: `eip155:1337:${address}`,
+          },
+        ],
+        authentication: [`${identifier}#controller`],
+        assertionMethod: [`${identifier}#controller`],
+      },
+    })
+  })
+
+  it('can resolve did with versionTime before delegate creation as ISO 8601 string excludes delegate', async () => {
+    expect.assertions(1)
+    const delegate = '0xde1E9a7e00000000000000000000000000000001'
+    const { address, shortDID: identifier, signer } = await randomAccount(provider)
+    const validitySeconds = 100_000
+    await new EthrDidController(identifier, registryContract, signer).addDelegate('sigAuth', delegate, validitySeconds)
+    const block = await provider.getBlock('latest')
+    const blockTs = block!.timestamp
+    const before = new Date((blockTs - 1) * 1000).toISOString().replace('.000Z', 'Z')
+
+    const result = await didResolver.resolve(`${identifier}?versionTime=${before}`)
+    expect(result).toEqual({
+      didDocumentMetadata: { nextVersionId: expect.anything(), nextUpdate: expect.anything() },
+      didResolutionMetadata: expect.anything(),
+      didDocument: {
+        '@context': expect.anything(),
+        id: identifier,
+        verificationMethod: [
+          {
+            id: `${identifier}#controller`,
+            type: 'EcdsaSecp256k1RecoveryMethod2020',
+            controller: identifier,
+            blockchainAccountId: `eip155:1337:${address}`,
+          },
+        ],
+        authentication: [`${identifier}#controller`],
+        assertionMethod: [`${identifier}#controller`],
+      },
+    })
+  })
+
+  it('can resolve did with versionTime at block timestamp includes delegate', async () => {
+    expect.assertions(1)
+    const delegate = '0xde1E9a7e00000000000000000000000000000001'
+    const { address, shortDID: identifier, signer } = await randomAccount(provider)
+    const validitySeconds = 100_000
+    await new EthrDidController(identifier, registryContract, signer).addDelegate('sigAuth', delegate, validitySeconds)
+    const block = await provider.getBlock('latest')
+    const blockTs = block!.timestamp
+
+    const result = await didResolver.resolve(`${identifier}?versionTime=${blockTs}`)
+    expect(result).toEqual({
+      didDocumentMetadata: { versionId: expect.anything(), updated: expect.anything() },
+      didResolutionMetadata: expect.anything(),
+      didDocument: {
+        '@context': expect.anything(),
+        id: identifier,
+        verificationMethod: [
+          {
+            id: `${identifier}#controller`,
+            type: 'EcdsaSecp256k1RecoveryMethod2020',
+            controller: identifier,
+            blockchainAccountId: `eip155:1337:${address}`,
+          },
+          {
+            id: `${identifier}#delegate-1`,
+            type: 'EcdsaSecp256k1RecoveryMethod2020',
+            controller: identifier,
+            blockchainAccountId: `eip155:1337:${delegate}`,
+          },
+        ],
+        authentication: [`${identifier}#controller`, `${identifier}#delegate-1`],
+        assertionMethod: [`${identifier}#controller`, `${identifier}#delegate-1`],
+      },
+    })
+  })
+
+  it('can resolve did with versionTime after delegate expiry excludes the delegate', async () => {
+    expect.assertions(1)
+    const delegate = '0xde1E9a7e00000000000000000000000000000001'
+    const { address, shortDID: identifier, signer } = await randomAccount(provider)
+    const validitySeconds = 100_000
+    await new EthrDidController(identifier, registryContract, signer).addDelegate('sigAuth', delegate, validitySeconds)
+    const block = await provider.getBlock('latest')
+    const blockTs = block!.timestamp
+    // validTo = blockTs + validitySeconds, so afterExpiry is past validTo
+    const afterExpiry = blockTs + validitySeconds + 1
+
+    const result = await didResolver.resolve(`${identifier}?versionTime=${afterExpiry}`)
+    expect(result).toEqual({
+      didDocumentMetadata: { versionId: expect.anything(), updated: expect.anything() },
+      didResolutionMetadata: expect.anything(),
+      didDocument: {
+        '@context': expect.anything(),
+        id: identifier,
+        verificationMethod: [
+          {
+            id: `${identifier}#controller`,
+            type: 'EcdsaSecp256k1RecoveryMethod2020',
+            controller: identifier,
+            blockchainAccountId: `eip155:1337:${address}`,
+          },
+        ],
+        authentication: [`${identifier}#controller`],
+        assertionMethod: [`${identifier}#controller`],
+      },
+    })
+  })
+
+  it('can resolve did with versionTime as ISO 8601 string', async () => {
+    expect.assertions(1)
+    const delegate = '0xde1E9a7e00000000000000000000000000000001'
+    const { address, shortDID: identifier, signer } = await randomAccount(provider)
+    const validitySeconds = 100_000
+    await new EthrDidController(identifier, registryContract, signer).addDelegate('sigAuth', delegate, validitySeconds)
+    const block = await provider.getBlock('latest')
+    const blockTs = block!.timestamp
+    const blockTsIso = new Date(blockTs * 1000).toISOString().replace('.000Z', 'Z')
+
+    const result = await didResolver.resolve(`${identifier}?versionTime=${blockTsIso}`)
+    expect(result).toEqual({
+      didDocumentMetadata: { versionId: expect.anything(), updated: expect.anything() },
+      didResolutionMetadata: expect.anything(),
+      didDocument: {
+        '@context': expect.anything(),
+        id: identifier,
+        verificationMethod: [
+          {
+            id: `${identifier}#controller`,
+            type: 'EcdsaSecp256k1RecoveryMethod2020',
+            controller: identifier,
+            blockchainAccountId: `eip155:1337:${address}`,
+          },
+          {
+            id: `${identifier}#delegate-1`,
+            type: 'EcdsaSecp256k1RecoveryMethod2020',
+            controller: identifier,
+            blockchainAccountId: `eip155:1337:${delegate}`,
+          },
+        ],
+        authentication: [`${identifier}#controller`, `${identifier}#delegate-1`],
+        assertionMethod: [`${identifier}#controller`, `${identifier}#delegate-1`],
+      },
+    })
+  })
+
   it('can resolve did with versionId before an attribute expiration', async () => {
     expect.assertions(3)
     const delegate = '0xde1E9a7e00000000000000000000000000000001'

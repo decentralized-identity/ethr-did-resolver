@@ -224,10 +224,15 @@ export class EthrDidResolver {
           nextVersionId = event.blockNumber
         }
         continue
-      } else {
-        if (versionId < event.blockNumber) {
-          versionId = event.blockNumber
+      }
+      if (event.blockTimestamp > now) {
+        if (nextVersionId > event.blockNumber) {
+          nextVersionId = event.blockNumber
         }
+        continue
+      }
+      if (versionId < event.blockNumber) {
+        versionId = event.blockNumber
       }
       if (event.eventType === 'DIDOwnerChanged') {
         controller = event.owner
@@ -450,14 +455,31 @@ export class EthrDidResolver {
     const id = fullId[2]
     const networkId = !fullId[1] ? 'mainnet' : fullId[1].slice(0, -1)
     let blockTag: string | number = options.blockTag || 'latest'
+    let versionTimeTimestamp: number | undefined
     if (typeof parsed.query === 'string') {
       const qParams = new URLSearchParams(parsed.query)
-      blockTag = qParams.get('versionId') ?? blockTag
-      const parsedBlockTag = Number.parseInt(blockTag as string)
-      if (!Number.isNaN(parsedBlockTag)) {
-        blockTag = parsedBlockTag
-      } else {
-        blockTag = 'latest'
+      const versionIdStr = qParams.get('versionId')
+      const versionTimeStr = qParams.get('versionTime')
+
+      if (versionIdStr) {
+        blockTag = versionIdStr
+        const parsedBlockTag = Number.parseInt(blockTag as string)
+        if (!Number.isNaN(parsedBlockTag)) {
+          blockTag = parsedBlockTag
+        } else {
+          blockTag = 'latest'
+        }
+      }
+
+      if (!versionIdStr && versionTimeStr) {
+        if (/^\d+$/.test(versionTimeStr)) {
+          versionTimeTimestamp = parseInt(versionTimeStr)
+        } else {
+          versionTimeTimestamp = Math.floor(new Date(versionTimeStr).getTime() / 1000)
+        }
+        if (isNaN(versionTimeTimestamp)) {
+          versionTimeTimestamp = undefined
+        }
       }
     }
 
@@ -475,12 +497,15 @@ export class EthrDidResolver {
     let now: number = Math.floor(new Date().getTime() / 1000)
 
     try {
-      if (typeof blockTag === 'number') {
+      if (versionTimeTimestamp !== undefined) {
+        now = versionTimeTimestamp
+      } else if (typeof blockTag === 'number') {
         const block = await this.getBlockMetadata(blockTag, networkId)
         now = block.timestamp
       }
 
       const { address, history, controllerKey, chainId } = await this.changeLog(id, networkId, 'latest')
+
       const { didDocument, deactivated, versionId, nextVersionId } = this.wrapDidDocument(
         did,
         address,
@@ -519,7 +544,7 @@ export class EthrDidResolver {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       const message: string = e?.message ?? e?.toString() ?? 'unknown error'
-      const isHistoricalQuery = typeof blockTag === 'number'
+      const isHistoricalQuery = typeof blockTag === 'number' || versionTimeTimestamp !== undefined
       // Errors that indicate the node lacks historical state (non-archive node)
       const isArchiveError =
         message.includes('missing trie node') ||
@@ -542,7 +567,7 @@ export class EthrDidResolver {
       let hint = ''
       if (isArchiveError || (isHistoricalQuery && isServerError)) {
         hint =
-          ' The RPC node does not have the requested historical state. Use an archive node to resolve historical DID versions (versionId queries).'
+          ' The RPC node does not have the requested historical state. Use an archive node to resolve historical DID versions (versionId/versionTime queries).'
       } else if (isRpcError) {
         hint = ' Ensure the RPC endpoint is reachable.'
       }
