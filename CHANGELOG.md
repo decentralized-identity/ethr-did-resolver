@@ -1,3 +1,15 @@
+# [14.0.0](https://github.com/decentralized-identity/ethr-did-resolver/compare/13.2.0...14.0.0) (2026-07-24)
+
+
+### Bug Fixes
+
+* replace `unsupportedFormat` error with `representationNotSupported` ([#274](https://github.com/decentralized-identity/ethr-did-resolver/issues/274)) ([467b72d](https://github.com/decentralized-identity/ethr-did-resolver/commit/467b72d6bb92dc534140bb3c75faa85a2f6a952e))
+
+
+### BREAKING CHANGES
+
+* the exported API is being updated. `Errors.unsupportedFormat` is now `Errors.representationNotSupported`
+
 # [13.2.0](https://github.com/decentralized-identity/ethr-did-resolver/compare/13.1.0...13.2.0) (2026-07-24)
 
 
