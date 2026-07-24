@@ -101,6 +101,30 @@ describe('RPC failure handling', () => {
     expect(result.didResolutionMetadata.message).toMatch(/archive node/)
   })
 
+  it('instructs user to use an archive node when error mentions archive generically', async () => {
+    expect.assertions(2)
+    const { shortDID: did, address } = await randomAccount(provider)
+    vi.spyOn(registryResolver, 'changeLog').mockRejectedValueOnce(
+      new Error('Archive requests require a personal token')
+    )
+    const parsed = { did, id: `dev:${address}`, method: 'ethr', didUrl: did }
+    const result = await registryResolver.resolve(did, parsed as never, null as never, {})
+    expect(result.didResolutionMetadata.error).toBe('notFound')
+    expect(result.didResolutionMetadata.message).toMatch(/archive node/)
+  })
+
+  it('instructs user to use an archive node when drpc upstream is unavailable', async () => {
+    expect.assertions(2)
+    const { shortDID: did, address } = await randomAccount(provider)
+    vi.spyOn(registryResolver, 'changeLog').mockRejectedValueOnce(
+      new Error('no available upstreams to process a request. Cause - Upstream lower height')
+    )
+    const parsed = { did, id: `dev:${address}`, method: 'ethr', didUrl: did }
+    const result = await registryResolver.resolve(did, parsed as never, null as never, {})
+    expect(result.didResolutionMetadata.error).toBe('notFound')
+    expect(result.didResolutionMetadata.message).toMatch(/archive node/)
+  })
+
   it('instructs user to use an archive node for historical queries that fail with server-side RPC error', async () => {
     expect.assertions(2)
     const { shortDID: did, address } = await randomAccount(provider)
