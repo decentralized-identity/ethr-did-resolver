@@ -63,8 +63,8 @@
     "release": "semantic-release --debug"
   },
   "devDependencies": {
-    "@semantic-release/changelog": "6.0.3",
-    "@semantic-release/git": "10.0.1",
+    "@semantic-release/changelog": "7.0.0",
+    "@semantic-release/git": "11.0.1",
     "@typescript-eslint/eslint-plugin": "8.64.0",
     "@typescript-eslint/parser": "8.64.0",
     "@vitest/coverage-v8": "4.1.10",
@@ -75,7 +75,7 @@
     "hardhat": "3.9.1",
     "prettier": "3.9.5",
     "semantic-release": "25.0.7",
-    "typescript": "6.0.3",
+    "typescript": "7.0.2",
     "vitest": "4.1.10"
   },
   "dependencies": {
