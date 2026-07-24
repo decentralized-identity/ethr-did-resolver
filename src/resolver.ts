@@ -563,7 +563,9 @@ export class EthrDidResolver {
         message.includes('missing revert data') ||
         message.includes('pruned history unavailable') ||
         message.includes('beyond current head block') ||
-        message.includes('historical state not available')
+        message.includes('historical state not available') ||
+        message.toLowerCase().includes('archive') ||
+        message.includes('no available upstreams')
       // Pure connectivity/timeout failures - the endpoint is not reachable at all
       const isConnectivityError =
         message.includes('could not detect network') ||
