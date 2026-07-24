@@ -1,3 +1,10 @@
+# [13.2.0](https://github.com/decentralized-identity/ethr-did-resolver/compare/13.1.0...13.2.0) (2026-07-24)
+
+
+### Features
+
+* add support for versionTime in DIDResolutionOptions ([#273](https://github.com/decentralized-identity/ethr-did-resolver/issues/273)) ([c02030e](https://github.com/decentralized-identity/ethr-did-resolver/commit/c02030ef2edf1b802b3d63a15d8221f563591d6b))
+
 # [13.1.0](https://github.com/decentralized-identity/ethr-did-resolver/compare/13.0.3...13.1.0) (2026-07-01)
 
 
