@@ -461,9 +461,20 @@ export class EthrDidResolver {
       const versionIdStr = qParams.get('versionId')
       const versionTimeStr = qParams.get('versionTime')
 
+      if (versionIdStr && versionTimeStr) {
+        return {
+          didResolutionMetadata: {
+            error: Errors.invalidOptions,
+            message: 'Conflicting options: versionId and versionTime cannot both be set.',
+          },
+          didDocumentMetadata: {},
+          didDocument: null,
+        }
+      }
+
       if (versionIdStr) {
         blockTag = versionIdStr
-        const parsedBlockTag = Number.parseInt(blockTag as string)
+        const parsedBlockTag = Number.parseInt(blockTag as string, 10)
         if (!Number.isNaN(parsedBlockTag)) {
           blockTag = parsedBlockTag
         } else {
@@ -471,9 +482,9 @@ export class EthrDidResolver {
         }
       }
 
-      if (!versionIdStr && versionTimeStr) {
+      if (versionTimeStr) {
         if (/^\d+$/.test(versionTimeStr)) {
-          versionTimeTimestamp = parseInt(versionTimeStr)
+          versionTimeTimestamp = parseInt(versionTimeStr, 10)
         } else {
           versionTimeTimestamp = Math.floor(new Date(versionTimeStr).getTime() / 1000)
         }

@@ -434,4 +434,15 @@ describe('versioning', () => {
       },
     })
   })
+
+  it('returns invalidOptions error when both versionId and versionTime are set', async () => {
+    expect.assertions(1)
+    const { shortDID: identifier } = await randomAccount(provider)
+    const result = await didResolver.resolve(`${identifier}?versionId=1&versionTime=1000000000`)
+    expect(result).toEqual({
+      didResolutionMetadata: { error: 'invalidOptions', message: 'Conflicting options: versionId and versionTime cannot both be set.' },
+      didDocumentMetadata: {},
+      didDocument: null,
+    })
+  })
 })

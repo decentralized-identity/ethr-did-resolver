@@ -239,6 +239,11 @@ export const Errors = {
    * The resolver does not support the 'accept' format requested with `DIDResolutionOptions`
    */
   unsupportedFormat: 'unsupportedFormat',
+
+  /**
+   * The DID URL contains conflicting options, e.g. both versionId and versionTime.
+   */
+  invalidOptions: 'invalidOptions',
 } as const
 export type Errors = (typeof Errors)[keyof typeof Errors]
 
