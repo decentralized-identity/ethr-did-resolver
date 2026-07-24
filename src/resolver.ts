@@ -433,7 +433,7 @@ export class EthrDidResolver {
     } else {
       return {
         didResolutionMetadata: {
-          error: Errors.unsupportedFormat,
+          error: Errors.representationNotSupported,
           message: `The DID resolver does not support the requested 'accept' format: ${options.accept}`,
         },
         didDocumentMetadata: {},

@@ -233,12 +233,12 @@ export const Errors = {
   /**
    * The resolver is misconfigured or is being asked to resolve a `DID` anchored on an unknown network
    */
-  unknownNetwork: 'unknownNetwork',
+  unknownNetwork: 'internalError',
 
   /**
    * The resolver does not support the 'accept' format requested with `DIDResolutionOptions`
    */
-  unsupportedFormat: 'unsupportedFormat',
+  representationNotSupported: 'representationNotSupported',
 
   /**
    * The DID URL contains conflicting options, e.g. both versionId and versionTime.

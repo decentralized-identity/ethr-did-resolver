@@ -32,7 +32,7 @@ describe('error handling', () => {
       didDocument: null,
       didDocumentMetadata: {},
       didResolutionMetadata: {
-        error: 'unknownNetwork',
+        error: 'internalError',
         message: 'The DID resolver does not have a configuration for network: zrx',
       },
     })
@@ -49,7 +49,7 @@ describe('error handling', () => {
       didDocument: null,
       didDocumentMetadata: {},
       didResolutionMetadata: {
-        error: 'unsupportedFormat',
+        error: 'representationNotSupported',
         message: `The DID resolver does not support the requested 'accept' format: ${accept}`,
       },
     })
