@@ -1,3 +1,10 @@
+## [14.0.1](https://github.com/decentralized-identity/ethr-did-resolver/compare/14.0.0...14.0.1) (2026-07-24)
+
+
+### Bug Fixes
+
+* detect more archive node failures ([#276](https://github.com/decentralized-identity/ethr-did-resolver/issues/276)) ([6605693](https://github.com/decentralized-identity/ethr-did-resolver/commit/6605693153b80f09c6ff49a6c1ae15e00427bdb8))
+
 # [14.0.0](https://github.com/decentralized-identity/ethr-did-resolver/compare/13.2.0...14.0.0) (2026-07-24)
 
 
