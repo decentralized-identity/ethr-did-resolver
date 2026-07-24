@@ -742,6 +742,41 @@ Example:
 }
 ```
 
+### `versionTime` query string parameter
+
+This DID method supports resolving the DID document as it was at a specific point in time by specifying a `versionTime` parameter.
+
+Example: `did:ethr:0x26bf14321004e770e7a8b080b7a526d8eed8b388?versionTime=2021-03-22T18:14:29Z`
+
+The `versionTime` value MUST be a Unix timestamp (in seconds) or an ISO 8601 date/time string.
+
+`versionTime` is mutually exclusive with `versionId`. If both are specified, the resolver MUST return an `invalidOptions` error.
+
+The `versionTime` parameter sets the reference timestamp for DID resolution. Only ERC1056 events whose block timestamp is less than or equal to `versionTime` are to be considered when building the event history.
+
+All `validTo` comparisons of delegates, attributes, and services MUST be performed against the `versionTime` value. Entries whose `validTo` is less than `versionTime` MUST be excluded from the DID document.
+
+If there are any events with a block timestamp after the `versionTime` value that mutate the DID, the earliest such event SHOULD be used to populate the `didDocumentMetadata`:
+
+- `nextVersionId` MUST be the block number of the next update to the DID document.
+- `nextUpdate` MUST be the ISO date string of the block time of the next update (without sub-second resolution).
+
+In case the DID has had updates prior to or at the `versionTime` value, the `updated` and `versionId` properties of the `didDocumentMetadata` MUST correspond to the latest block prior to the `versionTime`.
+
+Example:
+`?versionTime=1616436869`
+
+```json
+{
+  "didDocumentMetadata": {
+    "versionId": "12090175",
+    "updated": "2021-03-22T18:14:29Z",
+    "nextVersionId": "12276565",
+    "nextUpdate": "2021-04-20T10:48:42Z"
+  }
+}
+```
+
 ## Security Considerations
 
 as required by the [W3C DID specification](https://www.w3.org/TR/did-core/#security-requirements), guided
