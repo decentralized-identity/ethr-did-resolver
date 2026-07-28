@@ -88,4 +88,45 @@ describe('configuration', () => {
       configureResolverWithNetworks({ networks: [{ web3: '0xbad' }] })
     }).toThrow('invalid_config: No web3 provider could be determined for network')
   })
+
+  it('known network by name + rpcUrl inherits registry and registers both name and hex key', () => {
+    const contracts = configureResolverWithNetworks({
+      networks: [{ name: 'mainnet', rpcUrl: 'http://localhost:8545' }],
+    })
+    expect(contracts['mainnet']).toBeDefined()
+    expect(contracts['0x1']).toBeDefined()
+  })
+
+  it('known network by chainId + rpcUrl auto-registers deployment name', () => {
+    const contracts = configureResolverWithNetworks({
+      networks: [{ chainId: 1, rpcUrl: 'http://localhost:8545' }],
+    })
+    expect(contracts['mainnet']).toBeDefined()
+    expect(contracts['0x1']).toBeDefined()
+  })
+
+  it('known network by chainId + rpcUrl auto-registers deployment name for non-mainnet', () => {
+    const contracts = configureResolverWithNetworks({
+      networks: [{ chainId: 1313161554, rpcUrl: 'http://localhost:8545' }],
+    })
+    expect(contracts['aurora']).toBeDefined()
+    expect(contracts['0x4e454152']).toBeDefined()
+  })
+
+  it('override deployment registry address', () => {
+    const contracts = configureResolverWithNetworks({
+      networks: [{ name: 'mainnet', rpcUrl: 'http://localhost:8545', registry: '0x9af37603e98e0dc2b855be647c39abe984fc2445' }],
+    })
+    expect(contracts['mainnet']).toBeDefined()
+    expect(contracts['0x1']).toBeDefined()
+    expect(contracts['mainnet'].target).toBe('0x9af37603e98e0dc2b855be647c39abe984fc2445')
+  })
+
+  it('override legacyNonce in config', () => {
+    const contracts = configureResolverWithNetworks({
+      networks: [{ name: 'mainnet', rpcUrl: 'http://localhost:8545', legacyNonce: false }],
+    })
+    expect(contracts['mainnet']).toBeDefined()
+    expect(contracts['0x1']).toBeDefined()
+  })
 })
