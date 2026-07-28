@@ -1,3 +1,10 @@
+# [14.1.0](https://github.com/decentralized-identity/ethr-did-resolver/compare/14.0.1...14.1.0) (2026-07-28)
+
+
+### Features
+
+* infer network config from known deployments ([#280](https://github.com/decentralized-identity/ethr-did-resolver/issues/280)) ([57167f4](https://github.com/decentralized-identity/ethr-did-resolver/commit/57167f441b4335cd45fa8c8dc1bf4ede041533df)), closes [#279](https://github.com/decentralized-identity/ethr-did-resolver/issues/279)
+
 ## [14.0.1](https://github.com/decentralized-identity/ethr-did-resolver/compare/14.0.0...14.0.1) (2026-07-24)
 
 
