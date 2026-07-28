@@ -18,6 +18,7 @@ import {
   TransactionReceipt,
   zeroPadValue,
 } from 'ethers'
+import { deployments } from './config/deployments.js'
 import { getContractForNetwork } from './configuration.js'
 import { address, interpretIdentifier, MESSAGE_PREFIX, MetaSignature, stringToBytes32 } from './helpers.js'
 
@@ -55,12 +56,20 @@ export class EthrDidController {
     provider?: Provider,
     rpcUrl?: string,
     registry?: string,
-    legacyNonce = true
+    legacyNonce?: boolean
   ) {
-    this.legacyNonce = legacyNonce
-    // initialize identifier
     const { address, publicKey, network } = interpretIdentifier(identifier)
     const net = network || chainNameOrId
+    const matchedDeployment = deployments.find((d) => {
+      if (d.name === net || d.description === net) return true
+      if (net == null) return false
+      try {
+        return BigInt(d.chainId) === BigInt(net)
+      } catch {
+        return false
+      }
+    })
+    this.legacyNonce = legacyNonce ?? matchedDeployment?.legacyNonce ?? true
     // initialize contract connection
     if (contract) {
       this.contract = contract

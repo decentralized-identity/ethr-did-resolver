@@ -227,9 +227,7 @@ describe('ethrResolver (alt-chains)', () => {
         networks: [
           {
             name: 'aurora',
-            chainId: 1313161554,
             rpcUrl: 'https://mainnet.aurora.dev',
-            registry: '0x63eD58B671EeD12Bc1652845ba5b2CDfBff198e0',
           },
         ],
       })

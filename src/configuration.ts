@@ -107,10 +107,12 @@ function configureNetwork(
   cacheOptions?: WrapProviderOptions
 ): ConfiguredNetworks {
   const networks: ConfiguredNetworks = {}
-  const chainId = net.chainId || deployments.find((d) => matchesDeployment(d, net))?.chainId
+  const matchingDeployment = deployments.find((d) => matchesDeployment(d, net))
+  const chainId = net.chainId || matchingDeployment?.chainId
   if (chainId) {
-    if (net.name) {
-      networks[net.name] = getContractForNetwork(net, store, cacheOptions)
+    const netName = net.name || matchingDeployment?.name
+    if (netName) {
+      networks[netName] = getContractForNetwork(net, store, cacheOptions)
     }
     const id = typeof chainId === 'bigint' || typeof chainId === 'number' ? `0x${chainId.toString(16)}` : chainId
     networks[id] = getContractForNetwork(net, store, cacheOptions)
