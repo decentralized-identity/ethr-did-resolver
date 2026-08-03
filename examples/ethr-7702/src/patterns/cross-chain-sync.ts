@@ -112,15 +112,15 @@ export async function signCrossChainUpdate(
 }
 
 /**
- * Step 3: Relayer submits the signed update to Chain B.
+ * Step 3: Broadcaster submits the signed update to Chain B (pays gas).
  *
  * If `authorization` is provided, the delegation is set (or refreshed) atomically
  * in the same tx — no prior EOA tx needed on this chain.
  *
- * For subsequent updates the relayer omits `authorization` (delegation already set).
+ * For subsequent updates the broadcaster omits `authorization` (delegation already set).
  */
-export async function relayerSubmitUpdate(
-  relayerWalletClient: WalletClient,
+export async function broadcasterSubmitUpdate(
+  broadcasterWalletClient: WalletClient,
   publicClient: PublicClient,
   params: CrossChainUpdateParams
 ): Promise<Hash> {
@@ -133,23 +133,23 @@ export async function relayerSubmitUpdate(
     args: [registry, attrName, valueHex, validity, signature],
   })
 
-  const txParams: Parameters<typeof relayerWalletClient.sendTransaction>[0] = {
+  const txParams: Parameters<typeof broadcasterWalletClient.sendTransaction>[0] = {
     to: eoaAddress,
     data,
     gas: 300_000n,
-    chain: relayerWalletClient.chain,
-    account: relayerWalletClient.account!,
+    chain: broadcasterWalletClient.chain,
+    account: broadcasterWalletClient.account!,
   }
 
   if (authorization) {
     txParams.authorizationList = [authorization]
   }
 
-  const hash = await relayerWalletClient.sendTransaction(txParams)
+  const hash = await broadcasterWalletClient.sendTransaction(txParams)
 
   const receipt = await publicClient.waitForTransactionReceipt({ hash })
   if (receipt.status === 'reverted') {
-    throw new Error(`relayerSubmitUpdate reverted (txHash: ${hash})`)
+    throw new Error(`broadcasterSubmitUpdate reverted (txHash: ${hash})`)
   }
   return hash
 }

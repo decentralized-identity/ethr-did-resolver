@@ -22,6 +22,7 @@ import {
   getUpdateDigest,
   multiSigDidUpdate,
 } from '../src/patterns/multisig-updates.js'
+import { MULTISIG_DID_MANAGER_ABI } from '../src/utils/abis.js'
 
 type TestEnv = {
   rpcUrl: string
@@ -48,6 +49,19 @@ async function signDigest(account: ReturnType<typeof privateKeyToAccount>, diges
   return account.sign({ hash: digest })
 }
 
+
+/** Read the current multi-sig nonce for the EOA via the delegated manager. */
+async function currentNonce(
+  publicClient: ReturnType<typeof createPublicClient>,
+  eoaAddress: `0x${string}`
+): Promise<bigint> {
+  return publicClient.readContract({
+    address: eoaAddress,
+    abi: MULTISIG_DID_MANAGER_ABI,
+    functionName: 'nonce',
+  })
+}
+
 describe('Pattern 4: Multi-Sig 7702 DID Updates', () => {
   it('2-of-3 multi-sig updates DID attribute when threshold met', async () => {
     const { rpcUrl, chainId, contracts } = loadEnv()
@@ -70,12 +84,16 @@ describe('Pattern 4: Multi-Sig 7702 DID Updates', () => {
       chain: anvilChain, transport: http(rpcUrl), account: eoaAccount,
     })
 
+    const broadcasterWallet = createWalletClient({
+      chain: anvilChain, transport: http(rpcUrl), account: privateKeyToAccount(keys[0]),
+    })
+
     const signerWallets = signerAccounts.map((acc) =>
       createWalletClient({ chain: anvilChain, transport: http(rpcUrl), account: acc })
     )
 
     // Step 1+2: configure 2-of-3 multi-sig delegation
-    await configureMultiSigDelegation(eoaWalletClient, publicClient, {
+    await configureMultiSigDelegation(eoaWalletClient, broadcasterWallet, publicClient, {
       multiSigDidManagerAddress: contracts.multiSigDidManager,
       signers: signerAccounts.map((a) => a.address),
       threshold: 2n,
@@ -92,7 +110,7 @@ describe('Pattern 4: Multi-Sig 7702 DID Updates', () => {
       attrName,
       attrValue,
       validity,
-      nonce: 0n,
+      nonce: await currentNonce(publicClient, eoaAddress),
     })
 
     // Collect sigs from signers[0] and signers[1] — accounts already sorted ascending
@@ -104,8 +122,8 @@ describe('Pattern 4: Multi-Sig 7702 DID Updates', () => {
     const addr1 = signerAccounts[1].address.toLowerCase()
     const [orderedSig0, orderedSig1] = addr0 < addr1 ? [sig0, sig1] : [sig1, sig0]
 
-    // Step 4: any submitter broadcasts (use EOA itself here)
-    await multiSigDidUpdate(eoaWalletClient, publicClient, {
+    // Step 4: any submitter broadcasts (use the broadcaster here)
+    await multiSigDidUpdate(broadcasterWallet, publicClient, {
       registry: contracts.registry,
       multiSigDidManagerAddress: contracts.multiSigDidManager,
       eoaAddress,
@@ -148,8 +166,9 @@ describe('Pattern 4: Multi-Sig 7702 DID Updates', () => {
 
     const publicClient = createPublicClient({ chain: anvilChain, transport: http(rpcUrl) })
     const eoaWalletClient = createWalletClient({ chain: anvilChain, transport: http(rpcUrl), account: eoaAccount })
+    const broadcasterWallet = createWalletClient({ chain: anvilChain, transport: http(rpcUrl), account: privateKeyToAccount(keys[0]) })
 
-    await configureMultiSigDelegation(eoaWalletClient, publicClient, {
+    await configureMultiSigDelegation(eoaWalletClient, broadcasterWallet, publicClient, {
       multiSigDidManagerAddress: contracts.multiSigDidManager,
       signers: signerAccounts.map((a) => a.address),
       threshold: 2n,
@@ -160,14 +179,14 @@ describe('Pattern 4: Multi-Sig 7702 DID Updates', () => {
     const validity = 3600n
 
     const digest = await getUpdateDigest(publicClient, {
-      eoaAddress, registry: contracts.registry, attrName, attrValue, validity, nonce: 0n,
+      eoaAddress, registry: contracts.registry, attrName, attrValue, validity, nonce: await currentNonce(publicClient, eoaAddress),
     })
 
     const sig = await signDigest(signerAccounts[0], digest)
 
     // Submit only 1 signature for a 2-of-3 threshold — should revert
     await expect(
-      multiSigDidUpdate(eoaWalletClient, publicClient, {
+      multiSigDidUpdate(broadcasterWallet, publicClient, {
         registry: contracts.registry,
         multiSigDidManagerAddress: contracts.multiSigDidManager,
         eoaAddress,
@@ -196,8 +215,9 @@ describe('Pattern 4: Multi-Sig 7702 DID Updates', () => {
 
     const publicClient = createPublicClient({ chain: anvilChain, transport: http(rpcUrl) })
     const eoaWalletClient = createWalletClient({ chain: anvilChain, transport: http(rpcUrl), account: eoaAccount })
+    const broadcasterWallet = createWalletClient({ chain: anvilChain, transport: http(rpcUrl), account: privateKeyToAccount(keys[0]) })
 
-    await configureMultiSigDelegation(eoaWalletClient, publicClient, {
+    await configureMultiSigDelegation(eoaWalletClient, broadcasterWallet, publicClient, {
       multiSigDidManagerAddress: contracts.multiSigDidManager,
       signers: signerAccounts.map((a) => a.address),
       threshold: 2n,
@@ -208,7 +228,7 @@ describe('Pattern 4: Multi-Sig 7702 DID Updates', () => {
     const validity = 3600n
 
     const digest = await getUpdateDigest(publicClient, {
-      eoaAddress, registry: contracts.registry, attrName, attrValue, validity, nonce: 0n,
+      eoaAddress, registry: contracts.registry, attrName, attrValue, validity, nonce: await currentNonce(publicClient, eoaAddress),
     })
 
     const sig0 = await signDigest(signerAccounts[0], digest)
@@ -221,7 +241,7 @@ describe('Pattern 4: Multi-Sig 7702 DID Updates', () => {
 
     // 1 valid signer + 1 outsider — threshold is 2 but outsider doesn't count
     await expect(
-      multiSigDidUpdate(eoaWalletClient, publicClient, {
+      multiSigDidUpdate(broadcasterWallet, publicClient, {
         registry: contracts.registry,
         multiSigDidManagerAddress: contracts.multiSigDidManager,
         eoaAddress,

@@ -47,6 +47,18 @@ export const POLICY_DID_MANAGER_ABI = [
     stateMutability: 'nonpayable',
   },
   {
+    name: 'configureBySig',
+    type: 'function',
+    inputs: [
+      { name: '_sessionKey', type: 'address' },
+      { name: '_maxValidity', type: 'uint256' },
+      { name: '_allowedPrefix', type: 'bytes32' },
+      { name: '_signature', type: 'bytes' },
+    ],
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
     name: 'setAttributeViaSessionKey',
     type: 'function',
     inputs: [
@@ -57,6 +69,33 @@ export const POLICY_DID_MANAGER_ABI = [
     ],
     outputs: [],
     stateMutability: 'nonpayable',
+  },
+  {
+    name: 'setAttributeViaSessionKeyBySig',
+    type: 'function',
+    inputs: [
+      { name: 'registry', type: 'address' },
+      { name: 'name', type: 'bytes32' },
+      { name: 'value', type: 'bytes' },
+      { name: 'validity', type: 'uint256' },
+      { name: '_signature', type: 'bytes' },
+    ],
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    name: 'getNonce',
+    type: 'function',
+    inputs: [],
+    outputs: [{ name: '', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    name: 'getSessionNonce',
+    type: 'function',
+    inputs: [],
+    outputs: [{ name: '', type: 'uint256' }],
+    stateMutability: 'view',
   },
   {
     name: 'sessionKey',
@@ -88,6 +127,17 @@ export const MULTISIG_DID_MANAGER_ABI = [
     inputs: [
       { name: '_signers', type: 'address[]' },
       { name: '_threshold', type: 'uint256' },
+    ],
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    name: 'configureBySig',
+    type: 'function',
+    inputs: [
+      { name: '_signers', type: 'address[]' },
+      { name: '_threshold', type: 'uint256' },
+      { name: '_signature', type: 'bytes' },
     ],
     outputs: [],
     stateMutability: 'nonpayable',
@@ -155,6 +205,19 @@ export const REVOCATION_DID_MANAGER_ABI = [
     stateMutability: 'nonpayable',
   },
   {
+    name: 'setAttributeForIdentityBySig',
+    type: 'function',
+    inputs: [
+      { name: 'registry', type: 'address' },
+      { name: 'name', type: 'bytes32' },
+      { name: 'value', type: 'bytes' },
+      { name: 'validity', type: 'uint256' },
+      { name: '_signature', type: 'bytes' },
+    ],
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
     name: 'revokeAttributeForIdentity',
     type: 'function',
     inputs: [
@@ -166,11 +229,40 @@ export const REVOCATION_DID_MANAGER_ABI = [
     stateMutability: 'nonpayable',
   },
   {
+    name: 'revokeAttributeForIdentityBySig',
+    type: 'function',
+    inputs: [
+      { name: 'registry', type: 'address' },
+      { name: 'name', type: 'bytes32' },
+      { name: 'value', type: 'bytes' },
+      { name: '_signature', type: 'bytes' },
+    ],
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
     name: 'revokeCredential',
     type: 'function',
     inputs: [{ name: 'credentialId', type: 'bytes32' }],
     outputs: [],
     stateMutability: 'nonpayable',
+  },
+  {
+    name: 'revokeCredentialBySig',
+    type: 'function',
+    inputs: [
+      { name: 'credentialId', type: 'bytes32' },
+      { name: '_signature', type: 'bytes' },
+    ],
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    name: 'getNonce',
+    type: 'function',
+    inputs: [],
+    outputs: [{ name: '', type: 'uint256' }],
+    stateMutability: 'view',
   },
   {
     name: 'isRevoked',
@@ -307,6 +399,16 @@ export const EXPIRING_DID_MANAGER_ABI = [
     stateMutability: 'nonpayable',
   },
   {
+    name: 'configureBySig',
+    type: 'function',
+    inputs: [
+      { name: '_expiry', type: 'uint256' },
+      { name: '_signature', type: 'bytes' },
+    ],
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
     name: 'setAttributeForIdentity',
     type: 'function',
     inputs: [
@@ -317,6 +419,13 @@ export const EXPIRING_DID_MANAGER_ABI = [
     ],
     outputs: [],
     stateMutability: 'nonpayable',
+  },
+  {
+    name: 'getNonce',
+    type: 'function',
+    inputs: [],
+    outputs: [{ name: '', type: 'uint256' }],
+    stateMutability: 'view',
   },
   {
     name: 'expiry',

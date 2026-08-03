@@ -43,13 +43,20 @@ describe('Pattern 0: Simple 7702 DID Update', () => {
       account,
     })
 
+    // Broadcaster pays the gas; here a dedicated Anvil dev key.
+    const broadcasterWallet = createWalletClient({
+      chain: anvilChain,
+      transport: http(rpcUrl),
+      account: privateKeyToAccount(getAnvilPrivateKeys()[0]), // broadcaster pays gas
+    })
+
     const attrName = stringToBytes32('did/pub/Ed25519/veriKey/base64') as `0x${string}`
     // The resolver v14 encodes the raw bytes as publicKeyMultibase
     // (base58btc of 0xed01 || bytes). 'base64encodedpubkey' → zFaHNPrHzCnSudUfDV1Vfo1hkkrR4t
     const attrValue = new TextEncoder().encode('base64encodedpubkey')
     const validity = 86400n // 1 day
 
-    const txHash = await simpleDidUpdate(walletClient, publicClient, {
+    const txHash = await simpleDidUpdate(walletClient, broadcasterWallet, publicClient, {
       registry: contracts.registry,
       didManagerAddress: contracts.didManager,
       attrName,

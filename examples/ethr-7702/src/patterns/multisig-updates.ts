@@ -6,11 +6,13 @@
 // M ECDSA signatures over the canonical update digest — no single key has unilateral
 // control.
 //
-// Flow:
-//   1. EOA signs 7702 auth pointing to MultiSigDIDManager7702 (executor: 'self')
-//   2. EOA sends a config tx: sets delegation + calls configure([signers], threshold)
-//   3. Off-chain: M co-signers sign the update digest (fetchable via updateDigest())
-//   4. Any submitter calls setAttributeWithMultiSig(..., sigs) — EOA involvement: zero
+// Flow (fully gasless for the EOA):
+//   1. EOA signs the 7702 auth + an EIP-712 Configure intent; a broadcaster
+//      relays configureBySig (delegation + signer set set atomically).
+//   2. Off-chain: M co-signers sign the update digest (fetchable via updateDigest()).
+//   3. Any caller (here: the broadcaster) submits setAttributeWithMultiSig(..., sigs).
+//
+// EIP-712 domain: name "MultiSigDIDManager7702", verifyingContract = the EOA.
 
 import {
   type WalletClient,
@@ -20,6 +22,8 @@ import {
   type Hash,
 } from 'viem'
 import { MULTISIG_DID_MANAGER_ABI } from '../utils/abis.js'
+import { managerDomain } from '../utils/eip712.js'
+import { readNamespacedField } from '../utils/storage.js'
 
 export type MultiSigConfigParams = {
   multiSigDidManagerAddress: `0x${string}`
@@ -38,36 +42,87 @@ export type MultiSigUpdateParams = {
   signatures: `0x${string}`[]
 }
 
+const MULTISIG_NONCE_OFFSET = 2
+
+// -----------------------------------------------------------------------
+// Off-chain signing (EOA side)
+// -----------------------------------------------------------------------
+
+/** EOA signs an EIP-712 Configure intent for the gasless configure relay. */
+export async function signMultiSigConfigure(
+  eoaWalletClient: WalletClient,
+  params: {
+    eoaAddress: `0x${string}`
+    signers: `0x${string}`[]
+    threshold: bigint
+    nonce: bigint
+    chainId: number
+  }
+): Promise<`0x${string}`> {
+  const { eoaAddress, signers, threshold, nonce, chainId } = params
+  return eoaWalletClient.signTypedData({
+    account: eoaWalletClient.account!,
+    domain: managerDomain('MultiSigDIDManager7702', chainId, eoaAddress),
+    types: {
+      Configure: [
+        { name: 'signers', type: 'address[]' },
+        { name: 'threshold', type: 'uint256' },
+        { name: 'nonce', type: 'uint256' },
+      ],
+    },
+    primaryType: 'Configure',
+    message: { signers, threshold, nonce },
+  })
+}
+
+// -----------------------------------------------------------------------
+// Broadcast (relay) side
+// -----------------------------------------------------------------------
+
 /**
- * Step 1+2: EOA delegates to MultiSigDIDManager7702 and configures the signer set.
+ * Step 1: EOA signs the 7702 auth + a Configure intent; a broadcaster sends one
+ * type-4 tx that sets the delegation and calls configureBySig. Gasless.
  */
 export async function configureMultiSigDelegation(
-  eoaWalletClient: WalletClient,
+  signerWallet: WalletClient,
+  broadcasterWallet: WalletClient,
   publicClient: PublicClient,
   params: MultiSigConfigParams
 ): Promise<Hash> {
   const { multiSigDidManagerAddress, signers, threshold } = params
-  const eoaAddress = eoaWalletClient.account!.address
+  const eoaAddress = signerWallet.account!.address
+  const broadcasterAddress = broadcasterWallet.account!.address
+  const chainId = signerWallet.chain!.id
 
-  const authorization = await eoaWalletClient.signAuthorization({
+  const nonce = await readNamespacedField(publicClient, eoaAddress, 'MultiSigDIDManager7702', MULTISIG_NONCE_OFFSET)
+
+  const authorization = await signerWallet.signAuthorization({
     contractAddress: multiSigDidManagerAddress,
-    executor: 'self',
-    account: eoaWalletClient.account!,
+    executor: broadcasterAddress,
+    account: signerWallet.account!,
+  })
+
+  const signature = await signMultiSigConfigure(signerWallet, {
+    eoaAddress,
+    signers,
+    threshold,
+    nonce,
+    chainId,
   })
 
   const data = encodeFunctionData({
     abi: MULTISIG_DID_MANAGER_ABI,
-    functionName: 'configure',
-    args: [signers, threshold],
+    functionName: 'configureBySig',
+    args: [signers, threshold, signature],
   })
 
-  const hash = await eoaWalletClient.sendTransaction({
+  const hash = await broadcasterWallet.sendTransaction({
     authorizationList: [authorization],
     to: eoaAddress,
     data,
     gas: 300_000n,
-    chain: eoaWalletClient.chain,
-    account: eoaWalletClient.account!,
+    chain: broadcasterWallet.chain,
+    account: broadcasterWallet.account!,
   })
 
   const receipt = await publicClient.waitForTransactionReceipt({ hash })
@@ -107,11 +162,11 @@ export async function getUpdateDigest(
 
 /**
  * Step 4: Submit a multi-sig DID attribute update.
- * The submitter can be anyone (EOA, relayer, etc.).
- * Signatures must be ordered by ascending signer address.
+ * The submitter can be anyone (EOA, relayer, etc.) — here the broadcaster,
+ * which pays the gas. Signatures must be ordered by ascending signer address.
  */
 export async function multiSigDidUpdate(
-  submitterWalletClient: WalletClient,
+  broadcasterWallet: WalletClient,
   publicClient: PublicClient,
   params: MultiSigUpdateParams
 ): Promise<Hash> {
@@ -125,12 +180,12 @@ export async function multiSigDidUpdate(
     args: [registry, attrName, valueHex, validity, signatures],
   })
 
-  const hash = await submitterWalletClient.sendTransaction({
+  const hash = await broadcasterWallet.sendTransaction({
     to: eoaAddress,
     data,
     gas: 300_000n,
-    chain: submitterWalletClient.chain,
-    account: submitterWalletClient.account!,
+    chain: broadcasterWallet.chain,
+    account: broadcasterWallet.account!,
   })
 
   const receipt = await publicClient.waitForTransactionReceipt({ hash })

@@ -64,8 +64,15 @@ describe('Pattern 3: Policy-Enforced 7702 DID Updates', () => {
       account: sessionKeyAccount,
     })
 
+    // Broadcaster pays gas; here a dedicated Anvil dev key (account[0]).
+    const broadcasterWallet = createWalletClient({
+      chain: anvilChain,
+      transport: http(rpcUrl),
+      account: privateKeyToAccount(getAnvilPrivateKeys()[0]),
+    })
+
     // Step 1+2: EOA delegates to PolicyDIDManager7702 and registers session key
-    const configHash = await configurePolicyDelegation(eoaWalletClient, publicClient, {
+    const configHash = await configurePolicyDelegation(eoaWalletClient, broadcasterWallet, publicClient, {
       policyDidManagerAddress: contracts.policyDidManager,
       sessionKey: sessionKeyAddress,
       maxValidity: MAX_VALIDITY,
@@ -79,7 +86,7 @@ describe('Pattern 3: Policy-Enforced 7702 DID Updates', () => {
     const attrValue = new TextEncoder().encode('sessionkeydata')
     const validity = 1800n // 30 min — within the 1hr cap
 
-    const updateHash = await sessionKeyDidUpdate(sessionKeyWalletClient, publicClient, {
+    const updateHash = await sessionKeyDidUpdate(sessionKeyWalletClient, broadcasterWallet, publicClient, {
       registry: contracts.registry,
       policyDidManagerAddress: contracts.policyDidManager,
       eoaAddress,
@@ -142,8 +149,15 @@ describe('Pattern 3: Policy-Enforced 7702 DID Updates', () => {
       account: sessionKeyAccount,
     })
 
+    // Broadcaster pays gas; here a dedicated Anvil dev key (account[0]).
+    const broadcasterWallet = createWalletClient({
+      chain: anvilChain,
+      transport: http(rpcUrl),
+      account: privateKeyToAccount(getAnvilPrivateKeys()[0]),
+    })
+
     // Configure policy with 1hr max validity
-    await configurePolicyDelegation(eoaWalletClient, publicClient, {
+    await configurePolicyDelegation(eoaWalletClient, broadcasterWallet, publicClient, {
       policyDidManagerAddress: contracts.policyDidManager,
       sessionKey: sessionKeyAddress,
       maxValidity: MAX_VALIDITY,
@@ -154,7 +168,7 @@ describe('Pattern 3: Policy-Enforced 7702 DID Updates', () => {
     const attrName = stringToBytes32('did/pub/Ed25519/veriKey/base64') as `0x${string}`
 
     await expect(
-      sessionKeyDidUpdate(sessionKeyWalletClient, publicClient, {
+      sessionKeyDidUpdate(sessionKeyWalletClient, broadcasterWallet, publicClient, {
         registry: contracts.registry,
         policyDidManagerAddress: contracts.policyDidManager,
         eoaAddress,
@@ -194,8 +208,15 @@ describe('Pattern 3: Policy-Enforced 7702 DID Updates', () => {
       account: sessionKeyAccount,
     })
 
+    // Broadcaster pays gas; here a dedicated Anvil dev key (account[0]).
+    const broadcasterWallet = createWalletClient({
+      chain: anvilChain,
+      transport: http(rpcUrl),
+      account: privateKeyToAccount(getAnvilPrivateKeys()[0]),
+    })
+
     // Configure policy: only did/pub/* allowed
-    await configurePolicyDelegation(eoaWalletClient, publicClient, {
+    await configurePolicyDelegation(eoaWalletClient, broadcasterWallet, publicClient, {
       policyDidManagerAddress: contracts.policyDidManager,
       sessionKey: sessionKeyAddress,
       maxValidity: MAX_VALIDITY,
@@ -206,7 +227,7 @@ describe('Pattern 3: Policy-Enforced 7702 DID Updates', () => {
     const disallowedAttrName = stringToBytes32('did/svc/HubService') as `0x${string}`
 
     await expect(
-      sessionKeyDidUpdate(sessionKeyWalletClient, publicClient, {
+      sessionKeyDidUpdate(sessionKeyWalletClient, broadcasterWallet, publicClient, {
         registry: contracts.registry,
         policyDidManagerAddress: contracts.policyDidManager,
         eoaAddress,

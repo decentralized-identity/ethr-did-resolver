@@ -2,7 +2,8 @@
 // Pattern 1: Batched DID attribute updates via EIP-7702 delegation
 //
 // One EIP-7702 authorization + one type-4 tx sets N DID attributes atomically.
-// Gas-efficient vs N separate transactions; all-or-nothing semantics.
+// Gasless: the EOA signs the auth off-chain; a broadcaster sends the type-4 tx
+// and pays all gas. Gas-efficient vs N separate transactions; all-or-nothing.
 
 import { type WalletClient, type PublicClient, encodeFunctionData, toHex, type Hash } from 'viem'
 import { DID_MANAGER_ABI } from '../utils/abis.js'
@@ -19,21 +20,32 @@ export type BatchedUpdateParams = {
   updates: AttributeUpdate[]
 }
 
+/**
+ * Performs a gasless batched DID attribute update via DIDManager7702 delegation.
+ *
+ * @param signerWallet - The EOA whose DID document is updated. Signs the 7702 auth only.
+ * @param broadcasterWallet - Pays gas and broadcasts the type-4 tx (any funded key/wallet).
+ * @param publicClient - Read-only client.
+ * @param params - Registry, DIDManager address, attribute updates.
+ * @returns tx hash
+ */
 export async function batchedDidUpdates(
-  eoaWalletClient: WalletClient,
+  signerWallet: WalletClient,
+  broadcasterWallet: WalletClient,
   publicClient: PublicClient,
   params: BatchedUpdateParams
 ): Promise<Hash> {
   const { registry, didManagerAddress, updates } = params
-  const eoaAddress = eoaWalletClient.account!.address
+  const eoaAddress = signerWallet.account!.address
+  const broadcasterAddress = broadcasterWallet.account!.address
 
   if (updates.length === 0) throw new Error('updates must be non-empty')
 
-  // 1. Sign a single EIP-7702 authorization
-  const authorization = await eoaWalletClient.signAuthorization({
+  // 1. Sign a single EIP-7702 authorization (executor: the broadcaster)
+  const authorization = await signerWallet.signAuthorization({
     contractAddress: didManagerAddress,
-    executor: 'self',
-    account: eoaWalletClient.account!,
+    executor: broadcasterAddress,
+    account: signerWallet.account!,
   })
 
   // 2. Encode the batch call — convert any Uint8Array values to hex
@@ -49,13 +61,13 @@ export async function batchedDidUpdates(
     args: [registry, encodedUpdates],
   })
 
-  // 3. One type-4 tx: delegation + batch call
-  const hash = await eoaWalletClient.sendTransaction({
+  // 3. Broadcaster sends one type-4 tx: delegation + batch call
+  const hash = await broadcasterWallet.sendTransaction({
     authorizationList: [authorization],
     to: eoaAddress,
     data,
-    chain: eoaWalletClient.chain,
-    account: eoaWalletClient.account!,
+    chain: broadcasterWallet.chain,
+    account: broadcasterWallet.account!,
   })
 
   const receipt = await publicClient.waitForTransactionReceipt({ hash })

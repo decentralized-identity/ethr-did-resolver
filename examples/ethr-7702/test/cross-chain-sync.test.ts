@@ -20,7 +20,7 @@ import { getAnvilPrivateKeys } from '../src/utils/anvil.js'
 import {
   signCrossChainAuthorization,
   signCrossChainUpdate,
-  relayerSubmitUpdate,
+  broadcasterSubmitUpdate,
 } from '../src/patterns/cross-chain-sync.js'
 
 type TestEnv = {
@@ -78,7 +78,7 @@ describe('Pattern 7: Cross-Chain DID Sync', () => {
     expect(signature).toMatch(/^0x[0-9a-f]{130}$/i) // 65 bytes = 130 hex chars
 
     // Step 3: Relayer submits ONE tx: sets delegation + calls setAttributeCrossChain atomically
-    await relayerSubmitUpdate(relayerWalletClient, publicClient, {
+    await broadcasterSubmitUpdate(relayerWalletClient, publicClient, {
       registry: contracts.registry,
       eoaAddress,
       attrName,
@@ -133,14 +133,14 @@ describe('Pattern 7: Cross-Chain DID Sync', () => {
     })
 
     // First submission: delegation set + update at nonce=0 — succeeds
-    await relayerSubmitUpdate(relayerWalletClient, publicClient, {
+    await broadcasterSubmitUpdate(relayerWalletClient, publicClient, {
       registry: contracts.registry, eoaAddress, attrName, attrValue, validity,
       signature: sig, authorization,
     })
 
     // Second submission of the same signature — contract nonce is now 1, should revert
     await expect(
-      relayerSubmitUpdate(relayerWalletClient, publicClient, {
+      broadcasterSubmitUpdate(relayerWalletClient, publicClient, {
         registry: contracts.registry, eoaAddress, attrName, attrValue, validity,
         signature: sig, // same sig signed with nonce=0, but contract nonce is now 1
       })
@@ -177,7 +177,7 @@ describe('Pattern 7: Cross-Chain DID Sync', () => {
     })
 
     await expect(
-      relayerSubmitUpdate(relayerWalletClient, publicClient, {
+      broadcasterSubmitUpdate(relayerWalletClient, publicClient, {
         registry: contracts.registry, eoaAddress, attrName, attrValue, validity,
         signature: wrongChainSig, authorization,
       })

@@ -2,9 +2,9 @@
 // Pattern: Gasless DID updates via EIP-712 signed meta-transactions
 //
 // The EOA (identity owner) signs an EIP-712 typed-data intent off-chain.
-// A relayer submits the transaction and pays all gas — the EOA needs zero ETH.
+// A broadcaster submits the transaction and pays all gas — the EOA needs zero ETH.
 //
-// For the first use, the relayer can include the EOA's EIP-7702 authorization
+// For the first use, the broadcaster can include the EOA's EIP-7702 authorization
 // tuple in the same type-4 tx, atomically setting the delegation and executing
 // the update in a single transaction.
 //
@@ -165,17 +165,17 @@ export async function signMetaTxBatchAttributes(
 }
 
 // -----------------------------------------------------------------------
-// Relayer submission functions
+// Broadcaster (relay) submission functions
 // -----------------------------------------------------------------------
 
 /**
- * Relayer submits a signed single-attribute update to the network.
+ * Broadcaster submits a signed single-attribute update to the network.
  *
  * If `authorization` is provided, the EOA delegation is set (or refreshed)
  * atomically in the same tx — no prior EOA tx needed.
  */
 export async function relayMetaTxSetAttribute(
-  relayerWalletClient: WalletClient,
+  broadcasterWalletClient: WalletClient,
   publicClient: PublicClient,
   params: RelayMetaTxSetAttributeParams
 ): Promise<Hash> {
@@ -188,19 +188,19 @@ export async function relayMetaTxSetAttribute(
     args: [registry, attrName, valueHex, validity, signature],
   })
 
-  const txParams: Parameters<typeof relayerWalletClient.sendTransaction>[0] = {
+  const txParams: Parameters<typeof broadcasterWalletClient.sendTransaction>[0] = {
     to: eoaAddress,
     data,
     gas: 300_000n,
-    chain: relayerWalletClient.chain,
-    account: relayerWalletClient.account!,
+    chain: broadcasterWalletClient.chain,
+    account: broadcasterWalletClient.account!,
   }
 
   if (authorization) {
     txParams.authorizationList = [authorization]
   }
 
-  const hash = await relayerWalletClient.sendTransaction(txParams)
+  const hash = await broadcasterWalletClient.sendTransaction(txParams)
   const receipt = await publicClient.waitForTransactionReceipt({ hash })
   if (receipt.status === 'reverted') {
     throw new Error(`relayMetaTxSetAttribute reverted (txHash: ${hash})`)
@@ -209,13 +209,13 @@ export async function relayMetaTxSetAttribute(
 }
 
 /**
- * Relayer submits a signed batch-attribute update to the network.
+ * Broadcaster submits a signed batch-attribute update to the network.
  *
  * If `authorization` is provided, the EOA delegation is set (or refreshed)
  * atomically in the same tx — no prior EOA tx needed.
  */
 export async function relayMetaTxBatchAttributes(
-  relayerWalletClient: WalletClient,
+  broadcasterWalletClient: WalletClient,
   publicClient: PublicClient,
   params: RelayMetaTxSetBatchAttributesParams
 ): Promise<Hash> {
@@ -233,19 +233,19 @@ export async function relayMetaTxBatchAttributes(
     args: [registry, encodedUpdates, signature],
   })
 
-  const txParams: Parameters<typeof relayerWalletClient.sendTransaction>[0] = {
+  const txParams: Parameters<typeof broadcasterWalletClient.sendTransaction>[0] = {
     to: eoaAddress,
     data,
     gas: 500_000n,
-    chain: relayerWalletClient.chain,
-    account: relayerWalletClient.account!,
+    chain: broadcasterWalletClient.chain,
+    account: broadcasterWalletClient.account!,
   }
 
   if (authorization) {
     txParams.authorizationList = [authorization]
   }
 
-  const hash = await relayerWalletClient.sendTransaction(txParams)
+  const hash = await broadcasterWalletClient.sendTransaction(txParams)
   const receipt = await publicClient.waitForTransactionReceipt({ hash })
   if (receipt.status === 'reverted') {
     throw new Error(`relayMetaTxBatchAttributes reverted (txHash: ${hash})`)

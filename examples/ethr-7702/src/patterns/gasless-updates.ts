@@ -2,7 +2,7 @@
 // Pattern 2: Gasless/Sponsored DID update via EIP-7702
 //
 // The EOA signs a 7702 authorization tuple (off-chain).
-// A relayer/sponsor broadcasts the type-4 tx and pays gas.
+// A broadcaster sends the type-4 tx and pays gas.
 // The EOA's DID document is updated without the EOA holding ETH.
 
 import { type WalletClient, type PublicClient, encodeFunctionData, toHex, type Hash } from 'viem'
@@ -20,26 +20,25 @@ export type GaslessUpdateParams = {
  * Performs a gasless DID attribute update.
  *
  * @param eoaWalletClient  - The EOA whose DID document is being updated. Signs the 7702 auth only.
- * @param sponsorWalletClient - The relayer/sponsor that pays gas and sends the tx.
+ * @param broadcasterWalletClient - The broadcaster that pays gas and sends the tx.
  * @param publicClient     - Read-only client.
  * @param params           - Registry, DIDManager address, attribute details.
  * @returns tx hash
  */
 export async function gaslessDidUpdate(
   eoaWalletClient: WalletClient,
-  sponsorWalletClient: WalletClient,
+  broadcasterWalletClient: WalletClient,
   publicClient: PublicClient,
   params: GaslessUpdateParams
 ): Promise<Hash> {
   const { registry, didManagerAddress, attrName, attrValue, validity } = params
   const eoaAddress = eoaWalletClient.account!.address
 
-  // 1. EOA signs the 7702 authorization — designates sponsor as the executor
-  //    executor: sponsor account address means the sponsor will send the tx
-  const sponsorAddress = sponsorWalletClient.account!.address
+  // 1. EOA signs the 7702 authorization — designates the broadcaster as the executor
+  const broadcasterAddress = broadcasterWalletClient.account!.address
   const authorization = await eoaWalletClient.signAuthorization({
     contractAddress: didManagerAddress,
-    executor: sponsorAddress,
+    executor: broadcasterAddress,
     account: eoaWalletClient.account!,
   })
 
@@ -51,14 +50,13 @@ export async function gaslessDidUpdate(
     args: [registry, attrName, valueHex, validity],
   })
 
-  // 3. Sponsor broadcasts the type-4 tx — calls the EOA, pays gas
-  //    to: eoaAddress — triggers the delegated DIDManager7702 code on the EOA
-  const hash = await sponsorWalletClient.sendTransaction({
+  // 3. Broadcaster sends the type-4 tx — calls the EOA, pays gas
+  const hash = await broadcasterWalletClient.sendTransaction({
     authorizationList: [authorization],
     to: eoaAddress,
     data,
-    chain: sponsorWalletClient.chain,
-    account: sponsorWalletClient.account!,
+    chain: broadcasterWalletClient.chain,
+    account: broadcasterWalletClient.account!,
   })
 
   const receipt = await publicClient.waitForTransactionReceipt({ hash })

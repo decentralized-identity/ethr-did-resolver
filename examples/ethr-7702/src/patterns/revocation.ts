@@ -7,12 +7,11 @@
 //   - revokeCredential: write a boolean revocation flag in EOA storage keyed by credentialId
 //   - isRevoked: read the revocation flag (verifiers check this on-chain)
 //
-// Flow:
-//   1. EOA signs 7702 auth + delegates (no extra config step needed)
-//   2. EOA calls setAttributeForIdentity to add a key
-//   3. EOA calls revokeAttributeForIdentity to signal ERC-1056 expiry
-//   4. EOA calls revokeCredential(credentialId) to record credential revocation
-//   5. Anyone calls isRevoked(credentialId) on the EOA address to check status
+// Flow (fully gasless): the EOA signs EIP-712 intents off-chain; a broadcaster
+// relays the BySig variants and pays all gas. The first tx also carries the
+// EOA's 7702 authorization so delegation is set atomically.
+//
+// EIP-712 domain: name "RevocationDIDManager7702", verifyingContract = the EOA.
 
 import {
   type WalletClient,
@@ -23,18 +22,112 @@ import {
   type Hash,
 } from 'viem'
 import { REVOCATION_DID_MANAGER_ABI } from '../utils/abis.js'
+import { managerDomain } from '../utils/eip712.js'
+import { readNamespacedField } from '../utils/storage.js'
 
 export type RevocationDelegateParams = {
   revocationDidManagerAddress: `0x${string}`
 }
 
+const REVOCATION_NONCE_OFFSET = 1
+
+// -----------------------------------------------------------------------
+// Off-chain signing (EOA side)
+// -----------------------------------------------------------------------
+
+export async function signRevocationSetAttribute(
+  eoaWalletClient: WalletClient,
+  params: {
+    eoaAddress: `0x${string}`
+    registry: `0x${string}`
+    attrName: `0x${string}`
+    attrValue: `0x${string}`
+    validity: bigint
+    nonce: bigint
+    chainId: number
+  }
+): Promise<`0x${string}`> {
+  const { eoaAddress, registry, attrName, attrValue, validity, nonce, chainId } = params
+  return eoaWalletClient.signTypedData({
+    account: eoaWalletClient.account!,
+    domain: managerDomain('RevocationDIDManager7702', chainId, eoaAddress),
+    types: {
+      SetAttribute: [
+        { name: 'registry', type: 'address' },
+        { name: 'name', type: 'bytes32' },
+        { name: 'value', type: 'bytes' },
+        { name: 'validity', type: 'uint256' },
+        { name: 'nonce', type: 'uint256' },
+      ],
+    },
+    primaryType: 'SetAttribute',
+    message: { registry, name: attrName, value: attrValue, validity, nonce },
+  })
+}
+
+export async function signRevocationRevokeAttribute(
+  eoaWalletClient: WalletClient,
+  params: {
+    eoaAddress: `0x${string}`
+    registry: `0x${string}`
+    attrName: `0x${string}`
+    attrValue: `0x${string}`
+    nonce: bigint
+    chainId: number
+  }
+): Promise<`0x${string}`> {
+  const { eoaAddress, registry, attrName, attrValue, nonce, chainId } = params
+  return eoaWalletClient.signTypedData({
+    account: eoaWalletClient.account!,
+    domain: managerDomain('RevocationDIDManager7702', chainId, eoaAddress),
+    types: {
+      RevokeAttribute: [
+        { name: 'registry', type: 'address' },
+        { name: 'name', type: 'bytes32' },
+        { name: 'value', type: 'bytes' },
+        { name: 'nonce', type: 'uint256' },
+      ],
+    },
+    primaryType: 'RevokeAttribute',
+    message: { registry, name: attrName, value: attrValue, nonce },
+  })
+}
+
+export async function signRevocationRevokeCredential(
+  eoaWalletClient: WalletClient,
+  params: {
+    eoaAddress: `0x${string}`
+    credentialId: `0x${string}`
+    nonce: bigint
+    chainId: number
+  }
+): Promise<`0x${string}`> {
+  const { eoaAddress, credentialId, nonce, chainId } = params
+  return eoaWalletClient.signTypedData({
+    account: eoaWalletClient.account!,
+    domain: managerDomain('RevocationDIDManager7702', chainId, eoaAddress),
+    types: {
+      RevokeCredential: [
+        { name: 'credentialId', type: 'bytes32' },
+        { name: 'nonce', type: 'uint256' },
+      ],
+    },
+    primaryType: 'RevokeCredential',
+    message: { credentialId, nonce },
+  })
+}
+
+// -----------------------------------------------------------------------
+// Broadcast (relay) side
+// -----------------------------------------------------------------------
+
 /**
- * Step 1: EOA delegates to RevocationDIDManager7702 and adds an initial DID attribute.
- * Combining delegation + first action in one tx avoids the Anvil gas estimation issue
- * with no-op 0x calls on accounts with nonce=0.
+ * Step 1: EOA signs the 7702 auth + a SetAttribute intent; a broadcaster sends
+ * one type-4 tx that sets the delegation and calls setAttributeForIdentityBySig.
  */
 export async function setupRevocationDelegation(
-  eoaWalletClient: WalletClient,
+  signerWallet: WalletClient,
+  broadcasterWallet: WalletClient,
   publicClient: PublicClient,
   params: RevocationDelegateParams & {
     registry: `0x${string}`
@@ -44,29 +137,43 @@ export async function setupRevocationDelegation(
   }
 ): Promise<Hash> {
   const { revocationDidManagerAddress, registry, attrName, attrValue, validity } = params
-  const eoaAddress = eoaWalletClient.account!.address
+  const eoaAddress = signerWallet.account!.address
+  const broadcasterAddress = broadcasterWallet.account!.address
+  const chainId = signerWallet.chain!.id
   const valueHex = attrValue instanceof Uint8Array ? toHex(attrValue) : attrValue
 
-  const authorization = await eoaWalletClient.signAuthorization({
+  const nonce = await readNamespacedField(publicClient, eoaAddress, 'RevocationDIDManager7702', REVOCATION_NONCE_OFFSET)
+
+  const authorization = await signerWallet.signAuthorization({
     contractAddress: revocationDidManagerAddress,
-    executor: 'self',
-    account: eoaWalletClient.account!,
+    executor: broadcasterAddress,
+    account: signerWallet.account!,
+  })
+
+  const signature = await signRevocationSetAttribute(signerWallet, {
+    eoaAddress,
+    registry,
+    attrName,
+    attrValue: valueHex,
+    validity,
+    nonce,
+    chainId,
   })
 
   // Combine delegation + first setAttribute in one tx
   const data = encodeFunctionData({
     abi: REVOCATION_DID_MANAGER_ABI,
-    functionName: 'setAttributeForIdentity',
-    args: [registry, attrName, valueHex, validity],
+    functionName: 'setAttributeForIdentityBySig',
+    args: [registry, attrName, valueHex, validity, signature],
   })
 
-  const hash = await eoaWalletClient.sendTransaction({
+  const hash = await broadcasterWallet.sendTransaction({
     authorizationList: [authorization],
     to: eoaAddress,
     data,
     gas: 200_000n,
-    chain: eoaWalletClient.chain,
-    account: eoaWalletClient.account!,
+    chain: broadcasterWallet.chain,
+    account: broadcasterWallet.account!,
   })
 
   const receipt = await publicClient.waitForTransactionReceipt({ hash })
@@ -77,10 +184,11 @@ export async function setupRevocationDelegation(
 }
 
 /**
- * Step 2: Add a DID attribute.
+ * Step 2: Add a DID attribute. EOA signs the intent; broadcaster relays.
  */
 export async function addDIDAttribute(
-  eoaWalletClient: WalletClient,
+  signerWallet: WalletClient,
+  broadcasterWallet: WalletClient,
   publicClient: PublicClient,
   params: {
     registry: `0x${string}`
@@ -89,18 +197,34 @@ export async function addDIDAttribute(
     validity: bigint
   }
 ): Promise<Hash> {
-  const eoaAddress = eoaWalletClient.account!.address
-  const valueHex = params.attrValue instanceof Uint8Array ? toHex(params.attrValue) : params.attrValue
+  const { registry, attrName, attrValue, validity } = params
+  const eoaAddress = signerWallet.account!.address
+  const chainId = signerWallet.chain!.id
+  const valueHex = attrValue instanceof Uint8Array ? toHex(attrValue) : attrValue
+
+  const nonce = await readNamespacedField(publicClient, eoaAddress, 'RevocationDIDManager7702', REVOCATION_NONCE_OFFSET)
+  const signature = await signRevocationSetAttribute(signerWallet, {
+    eoaAddress,
+    registry,
+    attrName,
+    attrValue: valueHex,
+    validity,
+    nonce,
+    chainId,
+  })
 
   const data = encodeFunctionData({
     abi: REVOCATION_DID_MANAGER_ABI,
-    functionName: 'setAttributeForIdentity',
-    args: [params.registry, params.attrName, valueHex, params.validity],
+    functionName: 'setAttributeForIdentityBySig',
+    args: [registry, attrName, valueHex, validity, signature],
   })
 
-  const hash = await eoaWalletClient.sendTransaction({
-    to: eoaAddress, data, gas: 200_000n,
-    chain: eoaWalletClient.chain, account: eoaWalletClient.account!,
+  const hash = await broadcasterWallet.sendTransaction({
+    to: eoaAddress,
+    data,
+    gas: 200_000n,
+    chain: broadcasterWallet.chain,
+    account: broadcasterWallet.account!,
   })
 
   const receipt = await publicClient.waitForTransactionReceipt({ hash })
@@ -110,9 +234,11 @@ export async function addDIDAttribute(
 
 /**
  * Step 3: Revoke a DID attribute via ERC-1056 (sets validTo=0 in the registry).
+ * EOA signs the intent; broadcaster relays.
  */
 export async function revokeAttribute(
-  eoaWalletClient: WalletClient,
+  signerWallet: WalletClient,
+  broadcasterWallet: WalletClient,
   publicClient: PublicClient,
   params: {
     registry: `0x${string}`
@@ -120,18 +246,33 @@ export async function revokeAttribute(
     attrValue: Uint8Array | `0x${string}`
   }
 ): Promise<Hash> {
-  const eoaAddress = eoaWalletClient.account!.address
-  const valueHex = params.attrValue instanceof Uint8Array ? toHex(params.attrValue) : params.attrValue
+  const { registry, attrName, attrValue } = params
+  const eoaAddress = signerWallet.account!.address
+  const chainId = signerWallet.chain!.id
+  const valueHex = attrValue instanceof Uint8Array ? toHex(attrValue) : attrValue
+
+  const nonce = await readNamespacedField(publicClient, eoaAddress, 'RevocationDIDManager7702', REVOCATION_NONCE_OFFSET)
+  const signature = await signRevocationRevokeAttribute(signerWallet, {
+    eoaAddress,
+    registry,
+    attrName,
+    attrValue: valueHex,
+    nonce,
+    chainId,
+  })
 
   const data = encodeFunctionData({
     abi: REVOCATION_DID_MANAGER_ABI,
-    functionName: 'revokeAttributeForIdentity',
-    args: [params.registry, params.attrName, valueHex],
+    functionName: 'revokeAttributeForIdentityBySig',
+    args: [registry, attrName, valueHex, signature],
   })
 
-  const hash = await eoaWalletClient.sendTransaction({
-    to: eoaAddress, data, gas: 200_000n,
-    chain: eoaWalletClient.chain, account: eoaWalletClient.account!,
+  const hash = await broadcasterWallet.sendTransaction({
+    to: eoaAddress,
+    data,
+    gas: 200_000n,
+    chain: broadcasterWallet.chain,
+    account: broadcasterWallet.account!,
   })
 
   const receipt = await publicClient.waitForTransactionReceipt({ hash })
@@ -140,26 +281,40 @@ export async function revokeAttribute(
 }
 
 /**
- * Step 4: Record credential revocation in EOA storage.
+ * Step 4: Record credential revocation in EOA storage. EOA signs; broadcaster relays.
  */
 export async function revokeCredential(
-  eoaWalletClient: WalletClient,
+  signerWallet: WalletClient,
+  broadcasterWallet: WalletClient,
   publicClient: PublicClient,
   params: {
     credentialId: `0x${string}`
   }
 ): Promise<Hash> {
-  const eoaAddress = eoaWalletClient.account!.address
+  const { credentialId } = params
+  const eoaAddress = signerWallet.account!.address
+  const chainId = signerWallet.chain!.id
+
+  const nonce = await readNamespacedField(publicClient, eoaAddress, 'RevocationDIDManager7702', REVOCATION_NONCE_OFFSET)
+  const signature = await signRevocationRevokeCredential(signerWallet, {
+    eoaAddress,
+    credentialId,
+    nonce,
+    chainId,
+  })
 
   const data = encodeFunctionData({
     abi: REVOCATION_DID_MANAGER_ABI,
-    functionName: 'revokeCredential',
-    args: [params.credentialId],
+    functionName: 'revokeCredentialBySig',
+    args: [credentialId, signature],
   })
 
-  const hash = await eoaWalletClient.sendTransaction({
-    to: eoaAddress, data, gas: 100_000n,
-    chain: eoaWalletClient.chain, account: eoaWalletClient.account!,
+  const hash = await broadcasterWallet.sendTransaction({
+    to: eoaAddress,
+    data,
+    gas: 100_000n,
+    chain: broadcasterWallet.chain,
+    account: broadcasterWallet.account!,
   })
 
   const receipt = await publicClient.waitForTransactionReceipt({ hash })

@@ -42,6 +42,13 @@ describe('Pattern 1: Batched 7702 DID Updates', () => {
       account,
     })
 
+    // Broadcaster pays the gas; here a dedicated Anvil dev key.
+    const broadcasterWallet = createWalletClient({
+      chain: anvilChain,
+      transport: http(rpcUrl),
+      account: privateKeyToAccount(getAnvilPrivateKeys()[0]), // broadcaster pays gas
+    })
+
     // Two different key types set in one transaction.
     // ethr-did-resolver v14 validates Secp256k1 attribute values as real
     // secp256k1 public keys (33 compressed / 65 uncompressed bytes), so use an
@@ -60,7 +67,7 @@ describe('Pattern 1: Batched 7702 DID Updates', () => {
       },
     ]
 
-    const txHash = await batchedDidUpdates(walletClient, publicClient, {
+    const txHash = await batchedDidUpdates(walletClient, broadcasterWallet, publicClient, {
       registry: contracts.registry,
       didManagerAddress: contracts.didManager,
       updates,

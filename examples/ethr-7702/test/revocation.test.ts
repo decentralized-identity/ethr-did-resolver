@@ -45,13 +45,14 @@ describe('Pattern 6: Revocation Registry Integration', () => {
 
     const publicClient = createPublicClient({ chain: anvilChain, transport: http(rpcUrl) })
     const eoaWalletClient = createWalletClient({ chain: anvilChain, transport: http(rpcUrl), account: eoaAccount })
+    const broadcasterWallet = createWalletClient({ chain: anvilChain, transport: http(rpcUrl), account: privateKeyToAccount(keys[0]) })
 
     const attrName = stringToBytes32('did/pub/Ed25519/veriKey/base64') as `0x${string}`
     const attrValue = new TextEncoder().encode('revocablepubkey')
     const validity = 3600n
 
     // Step 1+2: delegate and add attribute in one tx
-    await setupRevocationDelegation(eoaWalletClient, publicClient, {
+    await setupRevocationDelegation(eoaWalletClient, broadcasterWallet, publicClient, {
       revocationDidManagerAddress: contracts.revocationDidManager,
       registry: contracts.registry,
       attrName,
@@ -69,7 +70,7 @@ describe('Pattern 6: Revocation Registry Integration', () => {
     expect(beforeResult.didDocument!.verificationMethod).toHaveLength(2)
 
     // Step 3: revoke the attribute via ERC-1056
-    await revokeAttribute(eoaWalletClient, publicClient, {
+    await revokeAttribute(eoaWalletClient, broadcasterWallet, publicClient, {
       registry: contracts.registry,
       attrName,
       attrValue,
@@ -93,10 +94,11 @@ describe('Pattern 6: Revocation Registry Integration', () => {
 
     const publicClient = createPublicClient({ chain: anvilChain, transport: http(rpcUrl) })
     const eoaWalletClient = createWalletClient({ chain: anvilChain, transport: http(rpcUrl), account: eoaAccount })
+    const broadcasterWallet = createWalletClient({ chain: anvilChain, transport: http(rpcUrl), account: privateKeyToAccount(keys[0]) })
 
     const attrName = stringToBytes32('did/pub/Ed25519/veriKey/base64') as `0x${string}`
     // Delegate + add an attribute to establish delegation
-    await setupRevocationDelegation(eoaWalletClient, publicClient, {
+    await setupRevocationDelegation(eoaWalletClient, broadcasterWallet, publicClient, {
       revocationDidManagerAddress: contracts.revocationDidManager,
       registry: contracts.registry,
       attrName,
@@ -111,7 +113,7 @@ describe('Pattern 6: Revocation Registry Integration', () => {
     expect(beforeRevoke).toBe(false)
 
     // Revoke the credential
-    await revokeCredential(eoaWalletClient, publicClient, { credentialId })
+    await revokeCredential(eoaWalletClient, broadcasterWallet, publicClient, { credentialId })
 
     // Now should be revoked
     const afterRevoke = await checkIsRevoked(publicClient, { eoaAddress, credentialId })
@@ -134,10 +136,11 @@ describe('Pattern 6: Revocation Registry Integration', () => {
     const publicClient = createPublicClient({ chain: anvilChain, transport: http(rpcUrl) })
     const eoaWalletClient = createWalletClient({ chain: anvilChain, transport: http(rpcUrl), account: eoaAccount })
     const attackerWalletClient = createWalletClient({ chain: anvilChain, transport: http(rpcUrl), account: attackerAccount })
+    const broadcasterWallet = createWalletClient({ chain: anvilChain, transport: http(rpcUrl), account: privateKeyToAccount(keys[0]) })
 
     const attrName = stringToBytes32('did/pub/Ed25519/veriKey/base64') as `0x${string}`
     // EOA delegates and establishes delegation
-    await setupRevocationDelegation(eoaWalletClient, publicClient, {
+    await setupRevocationDelegation(eoaWalletClient, broadcasterWallet, publicClient, {
       revocationDidManagerAddress: contracts.revocationDidManager,
       registry: contracts.registry,
       attrName,

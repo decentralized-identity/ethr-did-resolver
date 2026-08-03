@@ -74,6 +74,16 @@ contract MultiSigDIDManager7702 {
     }
 
     // -----------------------------------------------------------------------
+    // EIP-712 type hashes (for the gasless configure relay)
+    // -----------------------------------------------------------------------
+
+    bytes32 private constant DOMAIN_TYPE_HASH =
+        keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)");
+
+    bytes32 private constant CONFIGURE_TYPE_HASH =
+        keccak256("Configure(address[] signers,uint256 threshold,uint256 nonce)");
+
+    // -----------------------------------------------------------------------
     // Configuration — only callable by the EOA itself (via 7702 self-call)
     // -----------------------------------------------------------------------
 
@@ -83,6 +93,41 @@ contract MultiSigDIDManager7702 {
     /// @param _threshold  Minimum number of signatures required (1 <= _threshold <= len(_signers)).
     function configure(address[] calldata _signers, uint256 _threshold) external {
         require(msg.sender == address(this), "only owner");
+        _configure(_signers, _threshold);
+    }
+
+    /// @notice Gasless variant of `configure`. The EOA signs an EIP-712 intent
+    ///         off-chain; a broadcaster relays it and pays gas. Replay protection
+    ///         reuses the per-EOA update nonce (State.nonce).
+    function configureBySig(
+        address[] calldata _signers,
+        uint256 _threshold,
+        bytes calldata _signature
+    ) external {
+        State storage s = _state();
+
+        bytes32 signersHash = keccak256(abi.encodePacked(_signers));
+        bytes32 structHash = keccak256(
+            abi.encode(CONFIGURE_TYPE_HASH, signersHash, _threshold, s.nonce)
+        );
+        bytes32 domainSeparator = keccak256(
+            abi.encode(
+                DOMAIN_TYPE_HASH,
+                keccak256("MultiSigDIDManager7702"),
+                keccak256("1"),
+                block.chainid,
+                address(this)
+            )
+        );
+        bytes32 digest = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
+
+        require(_recoverSigner(digest, _signature) == address(this), "invalid signature");
+
+        s.nonce++;
+        _configure(_signers, _threshold);
+    }
+
+    function _configure(address[] calldata _signers, uint256 _threshold) internal {
         require(_threshold >= 1 && _threshold <= _signers.length, "invalid threshold");
 
         State storage s = _state();

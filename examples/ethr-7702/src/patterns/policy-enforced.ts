@@ -6,10 +6,13 @@
 //   - Attribute names must match an allowed prefix
 //   - Validity is capped at a maximum value
 //
-// Flow:
-//   1. EOA signs 7702 auth pointing to PolicyDIDManager7702
-//   2. EOA sends a config tx (delegated self-call) to register the session key + policy
-//   3. Session key sends attribute updates — no further EOA involvement needed
+// Flow (fully gasless):
+//   1. EOA signs the 7702 auth + an EIP-712 Configure intent; a broadcaster
+//      relays configureBySig (delegation + policy set atomically, EOA pays zero gas).
+//   2. The registered session key signs an EIP-712 SetAttributeViaSessionKey
+//      intent; a broadcaster relays setAttributeViaSessionKeyBySig.
+//
+// EIP-712 domain: name "PolicyDIDManager7702", verifyingContract = the EOA.
 
 import {
   type WalletClient,
@@ -19,6 +22,8 @@ import {
   type Hash,
 } from 'viem'
 import { POLICY_DID_MANAGER_ABI } from '../utils/abis.js'
+import { managerDomain } from '../utils/eip712.js'
+import { readNamespacedField } from '../utils/storage.js'
 
 export type PolicyConfigParams = {
   policyDidManagerAddress: `0x${string}`
@@ -37,39 +42,125 @@ export type PolicyUpdateParams = {
   validity: bigint
 }
 
+const POLICY_NONCE_OFFSET = 3
+const POLICY_SESSION_NONCE_OFFSET = 4
+
+// -----------------------------------------------------------------------
+// Off-chain signing (EOA / session key side)
+// -----------------------------------------------------------------------
+
+/** EOA signs an EIP-712 Configure intent for the policy relay. */
+export async function signPolicyConfigure(
+  eoaWalletClient: WalletClient,
+  params: {
+    eoaAddress: `0x${string}`
+    sessionKey: `0x${string}`
+    maxValidity: bigint
+    allowedPrefix: `0x${string}`
+    nonce: bigint
+    chainId: number
+  }
+): Promise<`0x${string}`> {
+  const { eoaAddress, sessionKey, maxValidity, allowedPrefix, nonce, chainId } = params
+  return eoaWalletClient.signTypedData({
+    account: eoaWalletClient.account!,
+    domain: managerDomain('PolicyDIDManager7702', chainId, eoaAddress),
+    types: {
+      Configure: [
+        { name: 'sessionKey', type: 'address' },
+        { name: 'maxValidity', type: 'uint256' },
+        { name: 'allowedPrefix', type: 'bytes32' },
+        { name: 'nonce', type: 'uint256' },
+      ],
+    },
+    primaryType: 'Configure',
+    message: { sessionKey, maxValidity, allowedPrefix, nonce },
+  })
+}
+
+/** Session key signs an EIP-712 SetAttributeViaSessionKey intent for the relay. */
+export async function signPolicySessionKeyUpdate(
+  sessionKeyWalletClient: WalletClient,
+  params: {
+    eoaAddress: `0x${string}`
+    registry: `0x${string}`
+    attrName: `0x${string}`
+    attrValue: `0x${string}`
+    validity: bigint
+    nonce: bigint
+    chainId: number
+  }
+): Promise<`0x${string}`> {
+  const { eoaAddress, registry, attrName, attrValue, validity, nonce, chainId } = params
+  return sessionKeyWalletClient.signTypedData({
+    account: sessionKeyWalletClient.account!,
+    domain: managerDomain('PolicyDIDManager7702', chainId, eoaAddress),
+    types: {
+      SetAttributeViaSessionKey: [
+        { name: 'registry', type: 'address' },
+        { name: 'name', type: 'bytes32' },
+        { name: 'value', type: 'bytes' },
+        { name: 'validity', type: 'uint256' },
+        { name: 'nonce', type: 'uint256' },
+      ],
+    },
+    primaryType: 'SetAttributeViaSessionKey',
+    message: { registry, name: attrName, value: attrValue, validity, nonce },
+  })
+}
+
+// -----------------------------------------------------------------------
+// Broadcast (relay) side
+// -----------------------------------------------------------------------
+
 /**
- * Step 1+2: EOA delegates to PolicyDIDManager7702 and configures the session key policy.
- * Both the delegation and the configure() call happen in one type-4 tx.
+ * Step 1+2: EOA signs the 7702 auth + a Configure intent; a broadcaster sends
+ * one type-4 tx that sets the delegation and calls configureBySig. Gasless.
  */
 export async function configurePolicyDelegation(
-  eoaWalletClient: WalletClient,
+  signerWallet: WalletClient,
+  broadcasterWallet: WalletClient,
   publicClient: PublicClient,
   params: PolicyConfigParams
 ): Promise<Hash> {
   const { policyDidManagerAddress, sessionKey, maxValidity, allowedPrefix } = params
-  const eoaAddress = eoaWalletClient.account!.address
+  const eoaAddress = signerWallet.account!.address
+  const broadcasterAddress = broadcasterWallet.account!.address
+  const chainId = signerWallet.chain!.id
 
-  // Sign 7702 auth — executor: 'self' (EOA sends this config tx itself)
-  const authorization = await eoaWalletClient.signAuthorization({
+  const nonce = await readNamespacedField(publicClient, eoaAddress, 'PolicyDIDManager7702', POLICY_NONCE_OFFSET)
+
+  // 7702 auth — executor: the broadcaster
+  const authorization = await signerWallet.signAuthorization({
     contractAddress: policyDidManagerAddress,
-    executor: 'self',
-    account: eoaWalletClient.account!,
+    executor: broadcasterAddress,
+    account: signerWallet.account!,
   })
 
-  // Encode configure() call
+  // EIP-712 Configure intent
+  const signature = await signPolicyConfigure(signerWallet, {
+    eoaAddress,
+    sessionKey,
+    maxValidity,
+    allowedPrefix,
+    nonce,
+    chainId,
+  })
+
   const data = encodeFunctionData({
     abi: POLICY_DID_MANAGER_ABI,
-    functionName: 'configure',
-    args: [sessionKey, maxValidity, allowedPrefix],
+    functionName: 'configureBySig',
+    args: [sessionKey, maxValidity, allowedPrefix, signature],
   })
 
   // One type-4 tx: delegation + configure
-  const hash = await eoaWalletClient.sendTransaction({
+  const hash = await broadcasterWallet.sendTransaction({
     authorizationList: [authorization],
     to: eoaAddress,
     data,
-    chain: eoaWalletClient.chain,
-    account: eoaWalletClient.account!,
+    gas: 200_000n,
+    chain: broadcasterWallet.chain,
+    account: broadcasterWallet.account!,
   })
 
   const receipt = await publicClient.waitForTransactionReceipt({ hash })
@@ -81,34 +172,44 @@ export async function configurePolicyDelegation(
 }
 
 /**
- * Step 3: Session key updates a DID attribute on behalf of the delegating EOA.
- * The session key sends a normal (type-2) tx to the EOA address; the policy
- * contract code (delegated via 7702) enforces the rules.
+ * Step 3: The session key signs an EIP-712 SetAttributeViaSessionKey intent; a
+ * broadcaster relays setAttributeViaSessionKeyBySig to the EOA. Gasless for the
+ * session key. The delegated PolicyDIDManager7702 code enforces the policy.
  */
 export async function sessionKeyDidUpdate(
   sessionKeyWalletClient: WalletClient,
+  broadcasterWallet: WalletClient,
   publicClient: PublicClient,
   params: PolicyUpdateParams
 ): Promise<Hash> {
-  const { registry, eoaAddress, attrName, attrValue, validity } = params
+  const { registry, policyDidManagerAddress, eoaAddress, attrName, attrValue, validity } = params
+  const chainId = sessionKeyWalletClient.chain!.id
 
   const valueHex = attrValue instanceof Uint8Array ? toHex(attrValue) : attrValue
-  const data = encodeFunctionData({
-    abi: POLICY_DID_MANAGER_ABI,
-    functionName: 'setAttributeViaSessionKey',
-    args: [registry, attrName, valueHex, validity],
+  const nonce = await readNamespacedField(publicClient, eoaAddress, 'PolicyDIDManager7702', POLICY_SESSION_NONCE_OFFSET)
+
+  const signature = await signPolicySessionKeyUpdate(sessionKeyWalletClient, {
+    eoaAddress,
+    registry,
+    attrName,
+    attrValue: valueHex,
+    validity,
+    nonce,
+    chainId,
   })
 
-  // Call the EOA directly — its code is now PolicyDIDManager7702 via 7702 delegation
-  // Provide explicit gas since eth_estimateGas may fail when calling a 7702-delegated EOA
-  // from an account that has never sent a tx (nonce=0) — Anvil cannot simulate the delegation
-  // in gas estimation context without a prior tx from the session key.
-  const hash = await sessionKeyWalletClient.sendTransaction({
+  const data = encodeFunctionData({
+    abi: POLICY_DID_MANAGER_ABI,
+    functionName: 'setAttributeViaSessionKeyBySig',
+    args: [registry, attrName, valueHex, validity, signature],
+  })
+
+  const hash = await broadcasterWallet.sendTransaction({
     to: eoaAddress,
     data,
     gas: 200_000n,
-    chain: sessionKeyWalletClient.chain,
-    account: sessionKeyWalletClient.account!,
+    chain: broadcasterWallet.chain,
+    account: broadcasterWallet.account!,
   })
 
   const receipt = await publicClient.waitForTransactionReceipt({ hash })
