@@ -52,6 +52,7 @@ export async function configureMultiSigDelegation(
   const authorization = await eoaWalletClient.signAuthorization({
     contractAddress: multiSigDidManagerAddress,
     executor: 'self',
+    account: eoaWalletClient.account!,
   })
 
   const data = encodeFunctionData({

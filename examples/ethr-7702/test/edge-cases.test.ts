@@ -83,6 +83,7 @@ async function delegateAndCall(
   const auth = await eoaWalletClient.signAuthorization({
     contractAddress,
     executor: 'self',
+    account: eoaWalletClient.account!,
   })
   return sendToEoa(eoaWalletClient, publicClient, {
     to: eoaWalletClient.account!.address,

@@ -25,6 +25,7 @@ export async function simpleDidUpdate(
   const authorization = await eoaWalletClient.signAuthorization({
     contractAddress: didManagerAddress,
     executor: 'self',
+    account: eoaWalletClient.account!,
   })
 
   // 2. Encode the call to setAttributeForIdentity

@@ -1,0 +1,85 @@
+{
+  "abi": [
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "expiry",
+          "type": "uint256"
+        }
+      ],
+      "name": "ExpiryConfigured",
+      "type": "event"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_expiry",
+          "type": "uint256"
+        }
+      ],
+      "name": "configure",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "expiry",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "isActive",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "registry",
+          "type": "address"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "name",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "bytes",
+          "name": "value",
+          "type": "bytes"
+        },
+        {
+          "internalType": "uint256",
+          "name": "validity",
+          "type": "uint256"
+        }
+      ],
+      "name": "setAttributeForIdentity",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x6080604052348015600e575f5ffd5b5061035e8061001c5f395ff3fe608060405234801561000f575f5ffd5b506004361061004a575f3560e01c80630e99aa291461004e5780631eb25e0a1461006357806322f3e2d414610076578063e184c9be14610093575b5f5ffd5b61006161005c36600461022a565b6100a9565b005b6100616100713660046102c1565b61019d565b61007e610213565b60405190151581526020015b60405180910390f35b61009b5f5481565b60405190815260200161008a565b5f545f036100ef5760405162461bcd60e51b815260206004820152600e60248201526d1b9bdd0818dbdb999a59dd5c995960921b60448201526064015b60405180910390fd5b5f544211156101355760405162461bcd60e51b815260206004820152601260248201527119195b1959d85d1a5bdb88195e1c1a5c995960721b60448201526064016100e6565b604051631eb52c2960e21b81526001600160a01b03861690637ad4b0a49061016990309088908890889088906004016102d8565b5f604051808303815f87803b158015610180575f5ffd5b505af1158015610192573d5f5f3e3d5ffd5b505050505050505050565b3330146101d95760405162461bcd60e51b815260206004820152600a60248201526937b7363c9037bbb732b960b11b60448201526064016100e6565b5f8190556040518181527f6cc2a95bc75fa7392da5e1c97b9f9da578bd74b65cca3c485ab0200517c58b829060200160405180910390a150565b5f80541580159061022557505f544211155b905090565b5f5f5f5f5f6080868803121561023e575f5ffd5b85356001600160a01b0381168114610254575f5ffd5b945060208601359350604086013567ffffffffffffffff811115610276575f5ffd5b8601601f81018813610286575f5ffd5b803567ffffffffffffffff81111561029c575f5ffd5b8860208284010111156102ad575f5ffd5b959894975060200195606001359392505050565b5f602082840312156102d1575f5ffd5b5035919050565b6001600160a01b0386168152602081018590526080604082018190528101839052828460a08301375f60a084830101525f60a0601f19601f8601168301019050826060830152969550505050505056fea2646970667358221220fd0997d957b8d3c5220a5ab48ede4db95eb8d611df480c103b7c2fb7ee08e1f364736f6c634300081c0033"
+}

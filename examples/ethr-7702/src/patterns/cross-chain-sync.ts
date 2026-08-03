@@ -60,6 +60,7 @@ export async function signCrossChainAuthorization(
   return eoaWalletClient.signAuthorization({
     contractAddress: params.crossChainDidManagerAddress,
     executor: params.relayerAddress,
+    account: eoaWalletClient.account!,
   })
 }
 

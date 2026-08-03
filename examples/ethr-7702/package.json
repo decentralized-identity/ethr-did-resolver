@@ -7,7 +7,11 @@
     "build:contracts": "tsx scripts/compile.ts",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "dev:webapp": "vite --config webapp/vite.config.ts",
+    "build:webapp": "vite build --config webapp/vite.config.ts",
+    "preview:webapp": "vite preview --config webapp/vite.config.ts",
+    "typecheck:webapp": "tsc -p webapp/tsconfig.json --noEmit"
   },
   "dependencies": {
     "@metamask/smart-accounts-kit": "0.4.0-beta.1",
@@ -18,10 +22,16 @@
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
+    "@vitejs/plugin-react": "^5.2.0",
     "@vitest/coverage-v8": "^3.2.4",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
     "solc": "0.8.28",
     "tsx": "^4.19.0",
     "typescript": "^5.6.0",
+    "vite": "7.3.1",
     "vitest": "^3.0.0"
   }
 }

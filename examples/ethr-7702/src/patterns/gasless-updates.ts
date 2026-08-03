@@ -40,6 +40,7 @@ export async function gaslessDidUpdate(
   const authorization = await eoaWalletClient.signAuthorization({
     contractAddress: didManagerAddress,
     executor: sponsorAddress,
+    account: eoaWalletClient.account!,
   })
 
   // 2. Encode the call targeting the EOA's identity

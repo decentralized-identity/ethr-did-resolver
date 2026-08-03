@@ -50,6 +50,7 @@ export async function setupRevocationDelegation(
   const authorization = await eoaWalletClient.signAuthorization({
     contractAddress: revocationDidManagerAddress,
     executor: 'self',
+    account: eoaWalletClient.account!,
   })
 
   // Combine delegation + first setAttribute in one tx

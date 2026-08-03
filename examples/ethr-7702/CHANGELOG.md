@@ -1,5 +1,25 @@
 # Changelog
 
+## [1.7.0] — Phase 15 — Interactive Webapp Explainer
+
+### Added
+- `webapp/` — static Vite + React interactive explainer for the EIP-7702 × did:ethr patterns:
+  - `index.html`, `vite.config.ts` (base `./`, root `webapp/`, aliases `@patterns`/`@utils` → `src/patterns`/`src/utils`), `tsconfig.json`
+  - `src/App.tsx` — network picker (Local Anvil / Sepolia / Gnosis), deploy card, per-step run buttons, DID document viewer, in-memory key panel
+  - `src/config/chains.ts` — network config (RPC URLs, EIP-7702 registry addresses, faucets); `src/config/deployed.json` — placeholder for pre-deployed testnet addresses
+  - `src/lib/keys.ts` — in-memory `KeyManager` (burner keys seeded with Anvil dev keys on local; MetaMask cannot sign 7702 auth tuples, so keys stay in-browser)
+  - `src/lib/clients.ts`, `src/lib/deploy.ts` (sequential in-browser deploys to avoid nonce collisions), `src/lib/resolve.ts` (browser `ethr-did-resolver`)
+  - `src/patterns/types.ts` + `src/patterns/registry.ts` — 12 patterns (0, 1, 2, 3, 4, 1a, 6, 7, 8, 9, 10, 11) wired to the shared `src/patterns/*` implementations
+- `package.json` scripts: `dev:webapp`, `build:webapp`, `preview:webapp`, `typecheck:webapp`; devDeps vite 7.3.1, @vitejs/plugin-react 5.2.0, react 19.2.8
+
+### Fixed
+- `src/patterns/*.ts` (7 files) + 2 test files — `signAuthorization`/`signTypedData` calls now pass `account: client.account!` explicitly (viem 2.47 made `account` required when the client's account generic is unresolved); repo now typechecks clean (root + webapp)
+
+### Test suite
+- 61/61 tests passing (12 files); webapp typecheck clean; production build succeeds
+
+---
+
 ## [1.6.0] — Phase 14 — MetaTx Pattern, H-1 Security Fix, Article Update
 
 ### Added

@@ -1,0 +1,126 @@
+{
+  "abi": [
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "bytes32",
+          "name": "credentialId",
+          "type": "bytes32"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "revokedAt",
+          "type": "uint256"
+        }
+      ],
+      "name": "CredentialRevoked",
+      "type": "event"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "credentialId",
+          "type": "bytes32"
+        }
+      ],
+      "name": "isRevoked",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "name": "revocations",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "registry",
+          "type": "address"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "name",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "bytes",
+          "name": "value",
+          "type": "bytes"
+        }
+      ],
+      "name": "revokeAttributeForIdentity",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "credentialId",
+          "type": "bytes32"
+        }
+      ],
+      "name": "revokeCredential",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "registry",
+          "type": "address"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "name",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "bytes",
+          "name": "value",
+          "type": "bytes"
+        },
+        {
+          "internalType": "uint256",
+          "name": "validity",
+          "type": "uint256"
+        }
+      ],
+      "name": "setAttributeForIdentity",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x6080604052348015600e575f5ffd5b5061048a8061001c5f395ff3fe608060405234801561000f575f5ffd5b5060043610610055575f3560e01c80630e99aa29146100595780634294857f1461006e578063bbe48780146100a4578063ca6eec78146100c6578063f55b8ed8146100d9575b5f5ffd5b61006c6100673660046102d4565b6100ec565b005b61009061007c366004610331565b5f9081526020819052604090205460ff1690565b604051901515815260200160405180910390f35b6100906100b2366004610331565b5f6020819052908152604090205460ff1681565b61006c6100d4366004610331565b61017c565b61006c6100e7366004610348565b6101f2565b3330146101145760405162461bcd60e51b815260040161010b9061039e565b60405180910390fd5b604051631eb52c2960e21b81526001600160a01b03861690637ad4b0a49061014890309088908890889088906004016103ea565b5f604051808303815f87803b15801561015f575f5ffd5b505af1158015610171573d5f5f3e3d5ffd5b505050505050505050565b33301461019b5760405162461bcd60e51b815260040161010b9061039e565b5f8181526020819052604090819020805460ff191660011790555181907f75f6605999947515f809e45f97b7200bd8afc73fe9f88ea28987627467dbac84906101e79042815260200190565b60405180910390a250565b3330146102115760405162461bcd60e51b815260040161010b9061039e565b604051626011ed60e11b81526001600160a01b0385169062c023da90610241903090879087908790600401610423565b5f604051808303815f87803b158015610258575f5ffd5b505af115801561026a573d5f5f3e3d5ffd5b5050505050505050565b80356001600160a01b038116811461028a575f5ffd5b919050565b5f5f83601f84011261029f575f5ffd5b50813567ffffffffffffffff8111156102b6575f5ffd5b6020830191508360208285010111156102cd575f5ffd5b9250929050565b5f5f5f5f5f608086880312156102e8575f5ffd5b6102f186610274565b945060208601359350604086013567ffffffffffffffff811115610313575f5ffd5b61031f8882890161028f565b96999598509660600135949350505050565b5f60208284031215610341575f5ffd5b5035919050565b5f5f5f5f6060858703121561035b575f5ffd5b61036485610274565b935060208501359250604085013567ffffffffffffffff811115610386575f5ffd5b6103928782880161028f565b95989497509550505050565b6020808252600a908201526937b7363c9037bbb732b960b11b604082015260600190565b81835281816020850137505f828201602090810191909152601f909101601f19169091010190565b60018060a01b0386168152846020820152608060408201525f6104116080830185876103c2565b90508260608301529695505050505050565b60018060a01b0385168152836020820152606060408201525f61044a6060830184866103c2565b969550505050505056fea2646970667358221220d6326a0b52a4195d75ae101452fc93c10b0df9b941ee58883f36e3221776ee4f64736f6c634300081c0033"
+}

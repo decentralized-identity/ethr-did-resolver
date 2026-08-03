@@ -53,6 +53,7 @@ export async function configurePolicyDelegation(
   const authorization = await eoaWalletClient.signAuthorization({
     contractAddress: policyDidManagerAddress,
     executor: 'self',
+    account: eoaWalletClient.account!,
   })
 
   // Encode configure() call

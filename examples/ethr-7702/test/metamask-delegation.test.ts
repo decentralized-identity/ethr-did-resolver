@@ -168,6 +168,7 @@ async function signDelegation(
       caveats: delegation.caveats,
       salt: delegation.salt,
     },
+    account: walletClient.account!,
   })
 
   return signature

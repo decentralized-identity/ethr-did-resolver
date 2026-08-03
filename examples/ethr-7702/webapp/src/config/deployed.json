@@ -1,0 +1,20 @@
+{
+  "sepolia": {
+    "didManager": "",
+    "policyDidManager": "",
+    "multiSigDidManager": "",
+    "revocationDidManager": "",
+    "crossChainDidManager": "",
+    "metaTxDidManager": "",
+    "expiringDidManager": ""
+  },
+  "gnosis": {
+    "didManager": "",
+    "policyDidManager": "",
+    "multiSigDidManager": "",
+    "revocationDidManager": "",
+    "crossChainDidManager": "",
+    "metaTxDidManager": "",
+    "expiringDidManager": ""
+  }
+}

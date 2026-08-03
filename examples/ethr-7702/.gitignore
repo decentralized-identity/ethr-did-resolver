@@ -1,7 +1,8 @@
 node_modules/
 dist/
-artifacts/
 coverage/
+webapp/dist/
+artifacts/TimelockDIDManager7702.json
 .env
 *.log
 .DS_Store
