@@ -13,15 +13,17 @@ export type DidDoc = {
   [key: string]: unknown
 }
 
-export function makeDidResolver(network: NetworkConfig) {
-  const registry = network.registry as string | undefined
+export function makeDidResolver(network: NetworkConfig, registry?: `0x${string}`) {
+  // Local (Anvil) mode has no pre-known registry — it is deployed at runtime, so
+  // the resolver must target the actual deployed address.
+  const registryAddress = registry ?? (network.registry as string | undefined)
   const providerConfig = {
     networks: [
       {
         name: network.didNetworkName,
         chainId: network.chain.id,
         rpcUrl: network.resolverRpcUrl,
-        ...(registry ? { registry } : {}),
+        ...(registryAddress ? { registry: registryAddress } : {}),
       },
     ],
   }
@@ -31,9 +33,14 @@ export function makeDidResolver(network: NetworkConfig) {
 /**
  * Resolve a DID and throw if resolution failed.
  * network: used to construct `did:ethr:<name>:0x<address>`.
+ * registry: optional runtime-deployed registry address (required for local/Anvil).
  */
-export async function resolveDid(network: NetworkConfig, address: string): Promise<DidDoc> {
-  const resolver = makeDidResolver(network)
+export async function resolveDid(
+  network: NetworkConfig,
+  address: string,
+  registry?: `0x${string}`
+): Promise<DidDoc> {
+  const resolver = makeDidResolver(network, registry)
   const did = `did:ethr:${network.didNetworkName}:${address}`
   const result = await resolver.resolve(did)
   if (result.didResolutionMetadata.error || !result.didDocument) {

@@ -4,6 +4,7 @@
 
 import { toHex, encodeFunctionData, zeroAddress } from 'viem'
 import { stringToBytes32 } from 'ethr-did-resolver'
+import { EXPIRING_DID_MANAGER_ABI } from '@utils/abis.js'
 import { simpleDidUpdate } from '@patterns/simple-update.js'
 import { batchedDidUpdates } from '@patterns/batched-updates.js'
 import { gaslessDidUpdate } from '@patterns/gasless-updates.js'
@@ -32,7 +33,7 @@ import {
   signCrossChainUpdate,
   relayerSubmitUpdate,
 } from '@patterns/cross-chain-sync.js'
-import type { Pattern, StepResult } from './types'
+import type { StepContext, Pattern, StepResult } from './types'
 
 export type { Pattern, StepContext, StepResult } from './types'
 
@@ -59,6 +60,33 @@ async function txResult(
     summary,
     detail: extra ? JSON.stringify(extra, null, 2) : undefined,
   }
+}
+
+/** Read the live multisig nonce from the EOA's storage slot 2. */
+async function readMultiSigNonce(ctx: StepContext): Promise<bigint> {
+  const raw = await ctx.publicClient.getStorageAt({
+    address: ctx.identityAddress,
+    slot: '0x2',
+  })
+  return raw === null ? 0n : BigInt(raw as `0x${string}`)
+}
+
+/** Read the live meta-tx nonce from the EOA's storage slot 0. */
+async function readMetaTxNonce(ctx: StepContext): Promise<bigint> {
+  const raw = await ctx.publicClient.getStorageAt({
+    address: ctx.identityAddress,
+    slot: '0x0',
+  })
+  return raw === null ? 0n : BigInt(raw as `0x${string}`)
+}
+
+/** Read the live cross-chain nonce from the EOA's storage slot 0. */
+async function readCrossChainNonce(ctx: StepContext): Promise<bigint> {
+  const raw = await ctx.publicClient.getStorageAt({
+    address: ctx.identityAddress,
+    slot: '0x0',
+  })
+  return raw === null ? 0n : BigInt(raw as `0x${string}`)
 }
 
 // ---------------------------------------------------------------------------
@@ -262,7 +290,7 @@ export const patternMultiSig: Pattern = {
         const attrName = ATTR_DID_KEY
         const attrValue = keyValue('multisigkey')
         const validity = VALIDITY
-        const nonce = 0n
+        const nonce = await readMultiSigNonce(ctx)
 
         const digest = await getUpdateDigest(ctx.publicClient, {
           eoaAddress: ctx.identityAddress as `0x${string}`,
@@ -286,8 +314,8 @@ export const patternMultiSig: Pattern = {
         // stash signatures on the context via a shared key — simplest: re-sign in step 3.
         // Instead, we return the digest + sigs for display and re-derive in step 3.
         return {
-          summary: `Digest ${digest.slice(0, 18)}… signed by 2 of 3 co-signers`,
-          detail: JSON.stringify({ digest, signers: signed.map((s) => s.address) }, null, 2),
+          summary: `Digest ${digest.slice(0, 18)}… signed by 2 of 3 co-signers (nonce=${nonce.toString()})`,
+          detail: JSON.stringify({ digest, nonce: nonce.toString(), signers: signed.map((s) => s.address) }, null, 2),
         }
       },
     },
@@ -300,7 +328,7 @@ export const patternMultiSig: Pattern = {
         const attrName = ATTR_DID_KEY
         const attrValue = keyValue('multisigkey')
         const validity = VALIDITY
-        const nonce = 0n
+        const nonce = await readMultiSigNonce(ctx)
 
         const digest = await getUpdateDigest(ctx.publicClient, {
           eoaAddress: ctx.identityAddress as `0x${string}`,
@@ -332,7 +360,7 @@ export const patternMultiSig: Pattern = {
               validity,
               signatures,
             }),
-          'DID attribute written via 2-of-3 multi-sig approval'
+          `DID attribute written via 2-of-3 multi-sig approval (nonce=${nonce.toString()})`
         )
       },
     },
@@ -357,7 +385,7 @@ export const patternMetaTx: Pattern = {
         'The identity EOA signs a SetAttribute typed-data message bound to the chain and verifyingContract (the EOA). Also signs the 7702 auth so the relayer can set the delegation atomically. No tx sent.',
       run: async (ctx) => {
         const eoaWallet = ctx.walletFor('identity')
-        const nonce = 0n
+        const nonce = await readMetaTxNonce(ctx)
         const chainId = ctx.network.chain.id
         const signature = await signMetaTxSetAttribute(eoaWallet, {
           metaTxDidManagerAddress: ctx.addresses.metaTxDidManager,
@@ -382,7 +410,7 @@ export const patternMetaTx: Pattern = {
       run: async (ctx) => {
         const eoaWallet = ctx.walletFor('identity')
         const relayerWallet = ctx.walletFor('sponsor')
-        const nonce = 0n
+        const nonce = await readMetaTxNonce(ctx)
         const chainId = ctx.network.chain.id
         const relayerAddress = relayerWallet.account!.address
 
@@ -508,6 +536,7 @@ export const patternCrossChain: Pattern = {
         const eoaWallet = ctx.walletFor('identity')
         const relayerAddress = ctx.walletFor('sponsor').account!.address
         const chainId = ctx.network.chain.id
+        const nonce = await readCrossChainNonce(ctx)
 
         const authorization = await signCrossChainAuthorization(eoaWallet, {
           crossChainDidManagerAddress: ctx.addresses.crossChainDidManager,
@@ -519,12 +548,16 @@ export const patternCrossChain: Pattern = {
           attrName: ATTR_SVC,
           attrValue: keyValue('crosschainkey'),
           validity: VALIDITY,
-          nonce: 0n,
+          nonce,
           chainId,
         })
         return {
-          summary: '7702 auth + EIP-712 update signed off-chain',
-          detail: JSON.stringify({ authorization, signature }, null, 2),
+          summary: `7702 auth + EIP-712 update signed off-chain (nonce=${nonce.toString()})`,
+          detail: JSON.stringify(
+            { authorization, signature },
+            (_k, v) => (typeof v === 'bigint' ? v.toString() : v),
+            2
+          ),
         }
       },
     },
@@ -537,6 +570,7 @@ export const patternCrossChain: Pattern = {
         const relayerWallet = ctx.walletFor('sponsor')
         const relayerAddress = relayerWallet.account!.address
         const chainId = ctx.network.chain.id
+        const nonce = await readCrossChainNonce(ctx)
 
         const authorization = await signCrossChainAuthorization(eoaWallet, {
           crossChainDidManagerAddress: ctx.addresses.crossChainDidManager,
@@ -548,7 +582,7 @@ export const patternCrossChain: Pattern = {
           attrName: ATTR_SVC,
           attrValue: keyValue('crosschainkey'),
           validity: VALIDITY,
-          nonce: 0n,
+          nonce,
           chainId,
         })
 
@@ -563,7 +597,7 @@ export const patternCrossChain: Pattern = {
               signature,
               authorization,
             }),
-          'DID attribute synced by relayer; EOA paid zero gas'
+          `DID attribute synced by relayer; EOA paid zero gas (nonce=${nonce.toString()})`
         )
       },
     },
@@ -724,15 +758,7 @@ export const patternExpiring: Pattern = {
         const hash = await wallet.sendTransaction({
           to: ctx.identityAddress as `0x${string}`,
           data: encodeFunctionData({
-            abi: [
-              {
-                name: 'configure',
-                type: 'function',
-                inputs: [{ name: '_expiry', type: 'uint256' }],
-                outputs: [],
-                stateMutability: 'nonpayable',
-              },
-            ] as const,
+            abi: EXPIRING_DID_MANAGER_ABI,
             functionName: 'configure',
             args: [expiry],
           }),
@@ -757,20 +783,7 @@ export const patternExpiring: Pattern = {
       run: async (ctx) => {
         const wallet = ctx.walletFor('identity')
         const data = encodeFunctionData({
-          abi: [
-            {
-              name: 'setAttributeForIdentity',
-              type: 'function',
-              inputs: [
-                { name: 'registry', type: 'address' },
-                { name: 'name', type: 'bytes32' },
-                { name: 'value', type: 'bytes' },
-                { name: 'validity', type: 'uint256' },
-              ],
-              outputs: [],
-              stateMutability: 'nonpayable',
-            },
-          ] as const,
+          abi: EXPIRING_DID_MANAGER_ABI,
           functionName: 'setAttributeForIdentity',
           args: [ctx.addresses.registry, ATTR_DID_KEY, keyValue('expiringkey'), VALIDITY],
         })

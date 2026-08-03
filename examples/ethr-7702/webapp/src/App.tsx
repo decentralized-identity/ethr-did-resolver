@@ -88,7 +88,7 @@ function App() {
     setDidDoc(null)
     if (!identityAddress) return
     try {
-      const doc = await resolveDid(network, identityAddress)
+      const doc = await resolveDid(network, identityAddress, addresses?.registry)
       setDidDoc(doc)
     } catch (err) {
       setDidError(err instanceof Error ? err.message : String(err))

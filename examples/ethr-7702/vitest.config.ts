@@ -4,6 +4,7 @@ export default defineConfig({
   test: {
     globalSetup: './test/globalSetup.ts',
     setupFiles: './test/setup.ts',
+    exclude: ['**/node_modules/**', 'webapp/**'],
     testTimeout: 60000,
     hookTimeout: 120000,
     pool: 'forks',

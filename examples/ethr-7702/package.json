@@ -11,6 +11,7 @@
     "dev:webapp": "vite --config webapp/vite.config.ts",
     "build:webapp": "vite build --config webapp/vite.config.ts",
     "preview:webapp": "vite preview --config webapp/vite.config.ts",
+    "test:webapp": "vitest run --config webapp/vitest.config.ts",
     "typecheck:webapp": "tsc -p webapp/tsconfig.json --noEmit"
   },
   "dependencies": {

@@ -65,6 +65,7 @@ export async function configureMultiSigDelegation(
     authorizationList: [authorization],
     to: eoaAddress,
     data,
+    gas: 300_000n,
     chain: eoaWalletClient.chain,
     account: eoaWalletClient.account!,
   })
