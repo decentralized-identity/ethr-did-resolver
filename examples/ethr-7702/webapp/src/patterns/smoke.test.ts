@@ -18,7 +18,7 @@ import { anvil as anvilChain } from 'viem/chains'
 import { startAnvil, stopAnvil, getAnvilPrivateKeys, type AnvilInstance } from '../../../src/utils/anvil.js'
 import { KeyManager, KEY_ROLES } from '../lib/keys'
 import { NETWORKS } from '../config/chains'
-import { deployAllInBrowser } from '../lib/deploy'
+import { deployAllInBrowser, deployRegistryInBrowser } from '../lib/deploy'
 import { resolveDid } from '../lib/resolve'
 import { PATTERNS, type Pattern } from './registry'
 import type { StepContext, StepResult } from './types'
@@ -115,6 +115,35 @@ describe('webapp pattern registry smoke test', () => {
 
     // The explainer must be usable end-to-end: every step of every pattern runs.
     expect(failures).toEqual([])
+  })
+
+  it('resolves the identity DID as step 0 — before any managers are deployed', async () => {
+    const network = NETWORKS.local
+    const publicClient = createPublicClient({
+      chain: anvilChain,
+      transport: http(rpcUrl()),
+    })
+    const walletClient = createWalletClient({
+      chain: anvilChain,
+      transport: http(rpcUrl()),
+      account: privateKeyToAccount(getAnvilPrivateKeys()[0]),
+    })
+    const keys = new KeyManager()
+    keys.seedWithAnvilKeys()
+    const identityAddress = keys.address('identity')
+
+    // Deploy ONLY the registry (mirrors the app's on-demand step-0 resolve).
+    const registry = await deployRegistryInBrowser(walletClient, publicClient)
+    const doc = await resolveDid(network, identityAddress, registry)
+
+    // Baseline document: identity EOA is the controller; no user attributes yet.
+    expect(doc.id.toLowerCase()).toContain(identityAddress.toLowerCase())
+    const vms = (doc.verificationMethod as unknown[] | undefined) ?? []
+    // Only the implicit identity key (#controller) exists — no user attributes.
+    expect(vms).toHaveLength(1)
+    expect((vms[0] as { id: string }).id).toContain('#controller')
+    expect(doc.authentication).toContain(`${doc.id}#controller`)
+    expect(doc.assertionMethod).toContain(`${doc.id}#controller`)
   })
 
   it('produces a resolvable DID document after the update patterns', async () => {

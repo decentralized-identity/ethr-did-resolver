@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.8.1] — Phase 16 — Resolve DID works as step 0
+
+### Fixed
+- `webapp/src/App.tsx` — the **Resolve DID** button now works *before* any contracts are deployed. Previously on Local Anvil it passed `undefined` as the registry, so the resolver fell back to the mainnet registry (no code on Anvil) and failed. Now the app tracks the registry address separately from the 7 managers: resolving on local mode deploys *only* the ERC-1056 registry on demand, and the full "Deploy contracts" flow reuses that registry instead of deploying a second one.
+
+### Added
+- Smoke test `webapp/src/patterns/smoke.test.ts` → "resolves the identity DID as step 0": deploys only the registry and asserts the baseline document (identity as `#controller`, no user attributes).
+
+### Test suite
+- 62/62 root tests passing; webapp smoke test 3/3 passing (incl. new step-0 resolve); typechecks clean (root + webapp); production build succeeds.
+
+---
+
 ## [1.8.0] — Phase 16 — Namespaced storage: cross-manager slot collision fix
 
 ### Fixed

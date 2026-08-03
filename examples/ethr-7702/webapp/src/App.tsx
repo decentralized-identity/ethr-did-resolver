@@ -2,13 +2,11 @@ import { useEffect, useMemo, useState } from 'react'
 import { NETWORKS, NETWORK_LIST, type NetworkConfig } from './config/chains'
 import { KeyManager, KEY_ROLES, type KeyRole } from './lib/keys'
 import { makePublicClient, makeWalletClientFromAccount } from './lib/clients'
-import { deployAllInBrowser, deployManagersInBrowser } from './lib/deploy'
+import { deployManagersInBrowser, deployRegistryInBrowser } from './lib/deploy'
 import { type ManagerAddresses } from './lib/deployed'
 import { resolveDid, type DidDoc } from './lib/resolve'
 import { PATTERNS, type Pattern } from './patterns/registry'
 import type { StepContext, StepResult } from './patterns/types'
-
-type Addresses = ManagerAddresses & { registry: `0x${string}` }
 
 function short(addr: string | undefined): string {
   if (!addr) return '—'
@@ -18,7 +16,8 @@ function short(addr: string | undefined): string {
 function App() {
   const [networkId, setNetworkId] = useState<'local' | 'sepolia' | 'gnosis'>('local')
   const [keys] = useState(() => new KeyManager())
-  const [addresses, setAddresses] = useState<Addresses | null>(null)
+  const [registry, setRegistry] = useState<`0x${string}` | null>(null)
+  const [addresses, setAddresses] = useState<ManagerAddresses | null>(null)
   const [deployState, setDeployState] = useState<'idle' | 'deploying' | 'failed' | 'done'>('idle')
   const [deployError, setDeployError] = useState('')
   const [selectedPattern, setSelectedPattern] = useState<Pattern>(PATTERNS[0])
@@ -33,6 +32,7 @@ function App() {
   useEffect(() => {
     // Reset per-network state when the network changes.
     setAddresses(null)
+    setRegistry(network.registry)
     setDeployState('idle')
     setDeployError('')
     setDidDoc(null)
@@ -68,14 +68,16 @@ function App() {
     setDeployError('')
     try {
       const wallet = makeWalletClientFromAccount(network, keys.account('identity'))
-      if (networkId === 'local') {
-        const all = await deployAllInBrowser(wallet, publicClient)
-        setAddresses(all)
-      } else {
-        const managers = await deployManagersInBrowser(wallet, publicClient)
-        const registry = network.registry as `0x${string}`
-        setAddresses({ ...managers, registry })
+      // Ensure the registry exists first (Resolve DID may have already deployed it
+      // on local mode — reuse it rather than deploying a second registry).
+      let registryAddr = registry
+      if (networkId === 'local' && !registryAddr) {
+        registryAddr = await deployRegistryInBrowser(wallet, publicClient)
+        setRegistry(registryAddr)
       }
+      const managers = await deployManagersInBrowser(wallet, publicClient)
+      setAddresses(managers)
+      if (networkId !== 'local') setRegistry(network.registry as `0x${string}`)
       setDeployState('done')
     } catch (err) {
       setDeployState('failed')
@@ -88,7 +90,19 @@ function App() {
     setDidDoc(null)
     if (!identityAddress) return
     try {
-      const doc = await resolveDid(network, identityAddress, addresses?.registry)
+      // Step 0: the identity's DID document resolves before any contracts are
+      // deployed (baseline: identity EOA as controller, no attributes). On local
+      // mode the registry must exist to resolve against, so deploy just the
+      // registry on demand — no managers needed.
+      let registryAddr = registry
+      if (networkId === 'local' && !registryAddr) {
+        registryAddr = await deployRegistryInBrowser(
+          makeWalletClientFromAccount(network, keys.account('identity')),
+          publicClient
+        )
+        setRegistry(registryAddr)
+      }
+      const doc = await resolveDid(network, identityAddress, registryAddr ?? undefined)
       setDidDoc(doc)
     } catch (err) {
       setDidError(err instanceof Error ? err.message : String(err))
@@ -96,12 +110,12 @@ function App() {
   }
 
   function buildStepContext(): StepContext {
-    if (!addresses) throw new Error('Contracts not deployed yet')
+    if (!addresses || !registry) throw new Error('Contracts not deployed yet')
     return {
       network,
       publicClient,
       keys,
-      addresses,
+      addresses: { ...addresses, registry },
       walletFor: (role: KeyRole) => makeWalletClientFromAccount(network, keys.account(role)),
       identityAddress,
     }
@@ -195,6 +209,12 @@ function App() {
                   : `The delegation managers are not yet pre-deployed to ${network.label}. Deploy them from your browser — the identity key needs a small balance (${
                       networkId === 'gnosis' ? 'xDAI' : 'test ETH'
                     }).`}
+              </p>
+              <p>
+                Step 0 — hit <strong>Resolve DID</strong> above first: the identity's DID document
+                already resolves (identity as controller, no attributes) before any contract is
+                deployed. On {network.label}, only a registry is needed for that, which the app
+                deploys on demand.
               </p>
               <p>
                 On {network.label}, the registry is already live at{' '}
