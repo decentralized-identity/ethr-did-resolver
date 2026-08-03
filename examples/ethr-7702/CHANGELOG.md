@@ -9,14 +9,22 @@
   - `src/config/chains.ts` — network config (RPC URLs, EIP-7702 registry addresses, faucets); `src/config/deployed.json` — placeholder for pre-deployed testnet addresses
   - `src/lib/keys.ts` — in-memory `KeyManager` (burner keys seeded with Anvil dev keys on local; MetaMask cannot sign 7702 auth tuples, so keys stay in-browser)
   - `src/lib/clients.ts`, `src/lib/deploy.ts` (sequential in-browser deploys to avoid nonce collisions), `src/lib/resolve.ts` (browser `ethr-did-resolver`)
-  - `src/patterns/types.ts` + `src/patterns/registry.ts` — 12 patterns (0, 1, 2, 3, 4, 1a, 6, 7, 8, 9, 10, 11) wired to the shared `src/patterns/*` implementations
-- `package.json` scripts: `dev:webapp`, `build:webapp`, `preview:webapp`, `typecheck:webapp`; devDeps vite 7.3.1, @vitejs/plugin-react 5.2.0, react 19.2.8
+  - `src/patterns/types.ts` + `src/patterns/registry.ts` — 12 patterns (0, 1, 2, 3, 4, 1a, 6, 7, 8, 9, 10, 11) wired to the shared `src/patterns/*` implementations; nonces read via `getStorageAt` (works before delegation exists)
+  - `src/patterns/smoke.test.ts` + `webapp/vitest.config.ts` — headless smoke test: deploys via the app's own code path, then runs all 22 pattern steps + DID resolution against Anvil
+- `scripts/deploy-testnet.ts` — one-time testnet pre-deploy of the 7 managers (registry already live); writes `webapp/src/config/deployed.json`
+- `.github/workflows/pages.yml` — build + deploy `webapp/dist` to GitHub Pages on push to `main`
+- `package.json` scripts: `dev:webapp`, `build:webapp`, `preview:webapp`, `test:webapp`, `typecheck:webapp`; devDeps vite 7.3.1, @vitejs/plugin-react 5.2.0, react 19.2.8
+- `README.md` — webapp usage, testnet pre-deploy, full structure tree
 
 ### Fixed
 - `src/patterns/*.ts` (7 files) + 2 test files — `signAuthorization`/`signTypedData` calls now pass `account: client.account!` explicitly (viem 2.47 made `account` required when the client's account generic is unresolved); repo now typechecks clean (root + webapp)
+- `src/patterns/multisig-updates.ts` — explicit `gas: 300_000n` on the configure tx (avoids Anvil estimation quirk when re-delegating an EOA)
+- `webapp/src/patterns/registry.ts` — live nonce reads via `getStorageAt` (multisig slot 0x2, meta-tx/cross-chain slot 0x0); JSON-safe BigInt serialization
+- `webapp/src/lib/resolve.ts` — `resolveDid` accepts a runtime registry address (required for local mode where the registry is deployed in-browser)
+- `vitest.config.ts` — excludes `webapp/**` from the root suite (smoke test runs via `test:webapp`)
 
 ### Test suite
-- 61/61 tests passing (12 files); webapp typecheck clean; production build succeeds
+- 61/61 tests passing (12 files); webapp smoke test 2/2 passing (all 22 pattern steps + DID resolution); webapp typecheck clean; production build succeeds
 
 ---
 
