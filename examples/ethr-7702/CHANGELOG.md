@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.9.0] — Dependency bump compatibility (viem 2.55, ethr-did-resolver 14, Vitest 4, TS 7)
+
+### Fixed
+- **DID resolution `notFound` error after bumping dependencies.** ethr-did-resolver v14 is a breaking resolver release: (1) `did/pub/Secp256k1/...` attribute values are now *validated* as real secp256k1 public keys (33/65 bytes) — the tests and the webapp's batched pattern wrote placeholder strings (`secp256k1pubkey`, `batchkey2`), which made the whole DID resolution fail with `error: notFound` ("Point of length 15 was invalid"). (2) Ed25519 keys now resolve as `Ed25519VerificationKey2020` + `publicKeyMultibase` instead of `Ed25519VerificationKey2018` + `publicKeyBase64`; Secp256k1 keys now emit `publicKeyJwk`.
+- **Vitest 4 test-suite breakage.** `poolOptions.forks.singleFork` was removed in Vitest 4 and silently ignored, so test files ran in parallel forks against one shared Anvil → `evm_revert: Resource not found`, `nonce too low`, and cascading timeouts. Replaced with the Vitest 4 equivalent `maxWorkers: 1, isolate: false` in both `vitest.config.ts` and `webapp/vitest.config.ts`.
+- **TypeScript 7 tsconfig breakage.** Removed `baseUrl` from `webapp/tsconfig.json` (TS7 error `TS5102: Option 'baseUrl' has been removed`); `paths` still resolves.
+- Tests updated to v14 output: `test/simple-update.test.ts`, `test/gasless-updates.test.ts`, `test/policy-enforced.test.ts`, `test/multisig-updates.test.ts`, `test/cross-chain-sync.test.ts` (Ed25519 → `Ed25519VerificationKey2020` + `publicKeyMultibase`); `test/batched-updates.test.ts` (real secp256k1 pubkey + `publicKeyJwk`); `webapp/src/patterns/registry.ts` batched pattern (real secp256k1 pubkey).
+
+### Test suite
+- 63/63 root tests passing; webapp smoke 3/3 passing; typechecks clean (root + webapp); production build succeeds.
+
+---
+
 ## [1.8.1] — Phase 16 — Resolve DID works as step 0
 
 ### Fixed

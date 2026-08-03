@@ -128,9 +128,8 @@ describe('Pattern 4: Multi-Sig 7702 DID Updates', () => {
 
     const newKey = doc.verificationMethod!.find((vm) => vm.id.endsWith('#delegate-1'))
     expect(newKey).toBeDefined()
-    expect(newKey!.type).toBe('Ed25519VerificationKey2018')
-    // 'multisigkeydata' base64 = 'bXVsdGlzaWdrZXlkYXRh'
-    expect((newKey as { publicKeyBase64?: string }).publicKeyBase64).toBe('bXVsdGlzaWdrZXlkYXRh')
+    expect(newKey!.type).toBe('Ed25519VerificationKey2020')
+    expect((newKey as { publicKeyMultibase?: string }).publicKeyMultibase).toBe('z3EBDPDgxjJveUWLsLVd5EEKr')
     expect(doc.assertionMethod).toContain(`${did}#delegate-1`)
   })
 

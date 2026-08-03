@@ -44,8 +44,8 @@ describe('Pattern 0: Simple 7702 DID Update', () => {
     })
 
     const attrName = stringToBytes32('did/pub/Ed25519/veriKey/base64') as `0x${string}`
-    // The resolver decodes the bytes value as UTF-8 and then base64-encodes it for
-    // publicKeyBase64. 'base64encodedpubkey' → UTF-8 bytes → base64 = 'YmFzZTY0ZW5jb2RlZHB1YmtleQ=='
+    // The resolver v14 encodes the raw bytes as publicKeyMultibase
+    // (base58btc of 0xed01 || bytes). 'base64encodedpubkey' → zFaHNPrHzCnSudUfDV1Vfo1hkkrR4t
     const attrValue = new TextEncoder().encode('base64encodedpubkey')
     const validity = 86400n // 1 day
 
@@ -78,10 +78,11 @@ describe('Pattern 0: Simple 7702 DID Update', () => {
     // The new entry should be the Ed25519 key we set
     const newKey = doc.verificationMethod!.find((vm) => vm.id.endsWith('#delegate-1'))
     expect(newKey).toBeDefined()
-    expect(newKey!.type).toBe('Ed25519VerificationKey2018')
+    expect(newKey!.type).toBe('Ed25519VerificationKey2020')
     expect(newKey!.controller).toBe(did)
-    // ethr-did-resolver base64-encodes the raw bytes value into publicKeyBase64
-    expect((newKey as { publicKeyBase64?: string }).publicKeyBase64).toBe('YmFzZTY0ZW5jb2RlZHB1YmtleQ==')
+    // ethr-did-resolver v14 emits the raw value as publicKeyMultibase
+    // (base58btc of 0xed01 || bytes) per the Multikey spec
+    expect((newKey as { publicKeyMultibase?: string }).publicKeyMultibase).toBe('zFaHNPrHzCnSudUfDV1Vfo1hkkrR4t')
 
     // The key should appear in assertionMethod (veriKey delegate type)
     expect(doc.assertionMethod).toContain(`${did}#delegate-1`)

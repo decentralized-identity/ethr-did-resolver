@@ -91,8 +91,8 @@ describe('Pattern 2: Gasless/Sponsored 7702 DID Update', () => {
 
     const newKey = doc.verificationMethod!.find((vm) => vm.id.endsWith('#delegate-1'))
     expect(newKey).toBeDefined()
-    expect(newKey!.type).toBe('Ed25519VerificationKey2018')
-    expect((newKey as { publicKeyBase64?: string }).publicKeyBase64).toBe('Z2FzbGVzc2tleWRhdGE=')
+    expect(newKey!.type).toBe('Ed25519VerificationKey2020')
+    expect((newKey as { publicKeyMultibase?: string }).publicKeyMultibase).toBe('zWGTL7VcmkDHeY1WWiegfrg')
 
     expect(doc.assertionMethod).toContain(`${did}#delegate-1`)
 

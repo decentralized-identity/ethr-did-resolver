@@ -106,8 +106,8 @@ describe('Pattern 3: Policy-Enforced 7702 DID Updates', () => {
 
     const newKey = doc.verificationMethod!.find((vm) => vm.id.endsWith('#delegate-1'))
     expect(newKey).toBeDefined()
-    expect(newKey!.type).toBe('Ed25519VerificationKey2018')
-    expect((newKey as { publicKeyBase64?: string }).publicKeyBase64).toBe('c2Vzc2lvbmtleWRhdGE=')
+    expect(newKey!.type).toBe('Ed25519VerificationKey2020')
+    expect((newKey as { publicKeyMultibase?: string }).publicKeyMultibase).toBe('zWGTQXhbENdze6tCkNncfnp')
 
     expect(doc.assertionMethod).toContain(`${did}#delegate-1`)
   })

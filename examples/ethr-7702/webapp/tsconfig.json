@@ -15,7 +15,6 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
     "types": ["vite/client"],
-    "baseUrl": ".",
     "paths": {
       "@patterns/*": ["../src/patterns/*"],
       "@utils/*": ["../src/utils/*"]

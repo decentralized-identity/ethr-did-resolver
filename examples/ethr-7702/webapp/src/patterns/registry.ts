@@ -45,6 +45,11 @@ const ATTR_DID_KEY = stringToBytes32('did/pub/Ed25519/veriKey/base64') as `0x${s
 const ATTR_SVC = stringToBytes32('did/svc/LinkedDomains') as `0x${string}`
 const VALIDITY = 3600n
 
+// ethr-did-resolver v14 validates Secp256k1 attribute values as real secp256k1
+// public keys (33 compressed / 65 uncompressed bytes). Placeholder strings are
+// rejected, so use an actual compressed public key.
+const SECP256K1_VERIKEY = '0x034646ae5047316b4230d0086c8acec687f00b1cd9d1dc634f6cb358ac0a9a8fff'
+
 function keyValue(label: string): `0x${string}` {
   return toHex(new TextEncoder().encode(label))
 }
@@ -154,7 +159,7 @@ export const patternBatched: Pattern = {
                 { name: ATTR_DID_KEY, value: keyValue('batchkey1'), validity: VALIDITY },
                 {
                   name: stringToBytes32('did/pub/Secp256k1/veriKey/base64') as `0x${string}`,
-                  value: keyValue('batchkey2'),
+                  value: SECP256K1_VERIKEY,
                   validity: VALIDITY,
                 },
               ],

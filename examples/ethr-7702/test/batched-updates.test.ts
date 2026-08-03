@@ -42,7 +42,11 @@ describe('Pattern 1: Batched 7702 DID Updates', () => {
       account,
     })
 
-    // Two different key types set in one transaction
+    // Two different key types set in one transaction.
+    // ethr-did-resolver v14 validates Secp256k1 attribute values as real
+    // secp256k1 public keys (33 compressed / 65 uncompressed bytes), so use an
+    // actual key rather than a placeholder.
+    const secp256k1Pubkey = '0x034646ae5047316b4230d0086c8acec687f00b1cd9d1dc634f6cb358ac0a9a8fff' as `0x${string}`
     const updates = [
       {
         name: stringToBytes32('did/pub/Ed25519/veriKey/base64') as `0x${string}`,
@@ -51,7 +55,7 @@ describe('Pattern 1: Batched 7702 DID Updates', () => {
       },
       {
         name: stringToBytes32('did/pub/Secp256k1/veriKey/base64') as `0x${string}`,
-        value: new TextEncoder().encode('secp256k1pubkey'),
+        value: secp256k1Pubkey,
         validity: 86400n,
       },
     ]
@@ -83,16 +87,20 @@ describe('Pattern 1: Batched 7702 DID Updates', () => {
     // Ed25519 key (#delegate-1)
     const ed25519Key = doc.verificationMethod!.find((vm) => vm.id.endsWith('#delegate-1'))
     expect(ed25519Key).toBeDefined()
-    expect(ed25519Key!.type).toBe('Ed25519VerificationKey2018')
-    // 'ed25519pubkey' → base64 = 'ZWQyNTUxOXB1YmtleQ=='
-    expect((ed25519Key as { publicKeyBase64?: string }).publicKeyBase64).toBe('ZWQyNTUxOXB1YmtleQ==')
+    expect(ed25519Key!.type).toBe('Ed25519VerificationKey2020')
+    // 'ed25519pubkey' → publicKeyMultibase (base58btc of 0xed01 || bytes)
+    expect((ed25519Key as { publicKeyMultibase?: string }).publicKeyMultibase).toBe('z7dabyfANbWt7x7vHQEacp')
 
-    // Secp256k1 key (#delegate-2)
+    // Secp256k1 key (#delegate-2) — v14 emits publicKeyJwk, not publicKeyBase64
     const secpKey = doc.verificationMethod!.find((vm) => vm.id.endsWith('#delegate-2'))
     expect(secpKey).toBeDefined()
     expect(secpKey!.type).toBe('EcdsaSecp256k1VerificationKey2019')
-    // 'secp256k1pubkey' → base64 = 'c2VjcDI1NmsxcHVia2V5'
-    expect((secpKey as { publicKeyBase64?: string }).publicKeyBase64).toBe('c2VjcDI1NmsxcHVia2V5')
+    expect((secpKey as { publicKeyJwk?: unknown }).publicKeyJwk).toEqual({
+      kty: 'EC',
+      crv: 'secp256k1',
+      x: 'RkauUEcxa0Iw0Ahsis7Gh_ALHNnR3GNPbLNYrAqaj_8',
+      y: '_ne03QpL-5WFHztzVceB3WD4QY_Ipl0UkHr_R8kDpVk',
+    })
 
     // Both should appear in assertionMethod
     expect(doc.assertionMethod).toContain(`${did}#delegate-1`)

@@ -101,9 +101,8 @@ describe('Pattern 7: Cross-Chain DID Sync', () => {
 
     const newKey = doc.verificationMethod!.find((vm) => vm.id.endsWith('#delegate-1'))
     expect(newKey).toBeDefined()
-    expect(newKey!.type).toBe('Ed25519VerificationKey2018')
-    // 'crosschainkey' base64 = 'Y3Jvc3NjaGFpbmtleQ=='
-    expect((newKey as { publicKeyBase64?: string }).publicKeyBase64).toBe('Y3Jvc3NjaGFpbmtleQ==')
+    expect(newKey!.type).toBe('Ed25519VerificationKey2020')
+    expect((newKey as { publicKeyMultibase?: string }).publicKeyMultibase).toBe('z7dabpGMjYusrx4CTC12hN')
     expect(doc.assertionMethod).toContain(`${did}#delegate-1`)
   })
 
