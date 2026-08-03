@@ -401,6 +401,33 @@ button {
   font-family: inherit;
 }
 
+/* Wide action buttons (connect wallet, reset keys) — not the tiny 26px rotate squares */
+.btn-wide {
+  width: auto !important;
+  height: auto !important;
+  padding: 6px 12px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.btn-action {
+  padding: 6px 12px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.banner .btn-action {
+  flex-shrink: 0;
+}
+
 @media (max-width: 1100px) {
   .layout {
     grid-template-columns: 1fr;

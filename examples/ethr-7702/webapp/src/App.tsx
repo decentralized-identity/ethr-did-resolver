@@ -214,7 +214,13 @@ function App() {
       {walletError && <div className="banner error">{walletError}</div>}
       {testnetNeedsWallet && (
         <div className="banner warn">
-          Connect your wallet to pay gas on {network.label}. The identity EOA (a local key) stays gasless.
+          <span>
+            Connect your wallet to pay gas on {network.label}. The identity EOA (a local key) stays
+            gasless.
+          </span>
+          <button className="btn-action" onClick={handleConnectWallet}>
+            Connect wallet to pay gas
+          </button>
         </div>
       )}
       {selectedPattern.localOnly && networkId !== 'local' && (
@@ -384,19 +390,19 @@ function App() {
             {networkId !== 'local' && (
               <div className="key-actions">
                 {connectedAccount ? (
-                  <button title="Connected" disabled>
-                    ✓
+                  <button title="Connected" className="btn-wide" disabled>
+                    ✓ Connected
                   </button>
                 ) : (
-                  <button title="Connect wallet to pay gas" onClick={handleConnectWallet}>
-                    Connect
+                  <button title="Connect wallet to pay gas" className="btn-wide" onClick={handleConnectWallet}>
+                    Connect wallet
                   </button>
                 )}
               </div>
             )}
           </div>
           <div className="key-actions panel-actions">
-            <button title="Reset keyring (new random keys)" onClick={() => keys.reset()}>
+            <button title="Reset keyring (new random keys)" className="btn-wide" onClick={() => keys.reset()}>
               Reset keys
             </button>
           </div>
