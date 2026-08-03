@@ -36,13 +36,37 @@ interface IEthereumDIDRegistry {
 ///           verifyingContract = address(this)  (= the EOA at call time)
 ///
 ///         Storage layout (on the delegating EOA):
-///           slot 0 — nonce (uint256)
+///           Namespaced storage at slot keccak256("ethr-7702.MetaTxDIDManager7702"):
+///             base + 0 — nonce (uint256)
+///
+///         The slot is a per-manager namespace derived from the contract name, so
+///         re-delegating a single EOA between different managers can never collide
+///         with their state.
 contract MetaTxDIDManager7702 {
     // -----------------------------------------------------------------------
-    // Storage (lives on the delegating EOA)
+    // Namespaced storage (lives on the delegating EOA)
     // -----------------------------------------------------------------------
 
-    uint256 public nonce;
+    struct State {
+        uint256 nonce;
+    }
+
+    function _state() private pure returns (State storage s) {
+        bytes32 slot = keccak256("ethr-7702.MetaTxDIDManager7702");
+        assembly {
+            s.slot := slot
+        }
+    }
+
+    /// @notice Returns the current nonce for replay protection.
+    function getNonce() external view returns (uint256) {
+        return _state().nonce;
+    }
+
+    /// @notice Alias for `getNonce` (public-variable getter parity).
+    function nonce() external view returns (uint256) {
+        return _state().nonce;
+    }
 
     // -----------------------------------------------------------------------
     // EIP-712 type hashes
@@ -92,11 +116,12 @@ contract MetaTxDIDManager7702 {
         uint256 validity,
         bytes calldata signature
     ) external {
-        bytes32 digest = attributeDigest(registry, name, value, validity, nonce);
+        State storage s = _state();
+        bytes32 digest = attributeDigest(registry, name, value, validity, s.nonce);
         address recovered = _recoverSigner(digest, signature);
         require(recovered == address(this), "invalid signature");
 
-        nonce++;
+        s.nonce++;
         IEthereumDIDRegistry(registry).setAttribute(address(this), name, value, validity);
     }
 
@@ -113,11 +138,12 @@ contract MetaTxDIDManager7702 {
         AttributeUpdate[] calldata updates,
         bytes calldata signature
     ) external {
-        bytes32 digest = batchAttributeDigest(registry, updates, nonce);
+        State storage s = _state();
+        bytes32 digest = batchAttributeDigest(registry, updates, s.nonce);
         address recovered = _recoverSigner(digest, signature);
         require(recovered == address(this), "invalid signature");
 
-        nonce++;
+        s.nonce++;
         IEthereumDIDRegistry reg = IEthereumDIDRegistry(registry);
         for (uint256 i = 0; i < updates.length; i++) {
             reg.setAttribute(address(this), updates[i].name, updates[i].value, updates[i].validity);
@@ -127,11 +153,6 @@ contract MetaTxDIDManager7702 {
     // -----------------------------------------------------------------------
     // View helpers
     // -----------------------------------------------------------------------
-
-    /// @notice Returns the current nonce for replay protection.
-    function getNonce() external view returns (uint256) {
-        return nonce;
-    }
 
     /// @notice Compute the EIP-712 digest the EOA must sign for a single setAttribute.
     /// @param registry ERC-1056 registry address.

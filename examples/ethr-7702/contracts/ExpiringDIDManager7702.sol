@@ -31,15 +31,34 @@ interface IEthereumDIDRegistry {
 ///         not an app-level one.
 ///
 ///         Storage layout (on the delegating EOA):
-///           slot 0 — expiry (uint256)
+///           Namespaced storage at slot keccak256("ethr-7702.ExpiringDIDManager7702"):
+///             base + 0 — expiry (uint256)
+///
+///         The slot is a per-manager namespace derived from the contract name, so
+///         re-delegating a single EOA between different managers can never collide
+///         with their state.
 contract ExpiringDIDManager7702 {
     // -----------------------------------------------------------------------
-    // Storage
+    // Namespaced storage (lives on the delegating EOA)
     // -----------------------------------------------------------------------
 
-    /// @notice Unix timestamp after which all DID writes revert.
-    ///         Zero means "not configured" — all writes revert until configured.
-    uint256 public expiry;
+    struct State {
+        /// @notice Unix timestamp after which all DID writes revert.
+        ///         Zero means "not configured" — all writes revert until configured.
+        uint256 expiry;
+    }
+
+    function _state() private pure returns (State storage s) {
+        bytes32 slot = keccak256("ethr-7702.ExpiringDIDManager7702");
+        assembly {
+            s.slot := slot
+        }
+    }
+
+    /// @notice Returns the configured expiry timestamp.
+    function expiry() external view returns (uint256) {
+        return _state().expiry;
+    }
 
     // -----------------------------------------------------------------------
     // Events
@@ -56,7 +75,7 @@ contract ExpiringDIDManager7702 {
     ///                 Pass 0 to disable writes (no writes until reconfigured).
     function configure(uint256 _expiry) external {
         require(msg.sender == address(this), "only owner");
-        expiry = _expiry;
+        _state().expiry = _expiry;
         emit ExpiryConfigured(_expiry);
     }
 
@@ -75,6 +94,7 @@ contract ExpiringDIDManager7702 {
         bytes calldata value,
         uint256 validity
     ) external {
+        uint256 expiry = _state().expiry;
         require(expiry != 0, "not configured");
         require(block.timestamp <= expiry, "delegation expired");
         IEthereumDIDRegistry(registry).setAttribute(address(this), name, value, validity);
@@ -86,6 +106,7 @@ contract ExpiringDIDManager7702 {
 
     /// @notice Returns true if the delegation is currently active (configured and not expired).
     function isActive() external view returns (bool) {
+        uint256 expiry = _state().expiry;
         return expiry != 0 && block.timestamp <= expiry;
     }
 }

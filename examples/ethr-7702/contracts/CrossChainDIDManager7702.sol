@@ -34,13 +34,32 @@ interface IEthereumDIDRegistry {
 ///           verifyingContract = address(this)  (= the EOA at call time)
 ///
 ///         Storage layout (on the delegating EOA):
-///           slot 0 — crossChainNonce (uint256)
+///           Namespaced storage at slot keccak256("ethr-7702.CrossChainDIDManager7702"):
+///             base + 0 — crossChainNonce (uint256)
+///
+///         The slot is a per-manager namespace derived from the contract name, so
+///         re-delegating a single EOA between different managers can never collide
+///         with their state.
 contract CrossChainDIDManager7702 {
     // -----------------------------------------------------------------------
-    // Storage
+    // Namespaced storage (lives on the delegating EOA)
     // -----------------------------------------------------------------------
 
-    uint256 public crossChainNonce;
+    struct State {
+        uint256 crossChainNonce;
+    }
+
+    function _state() private pure returns (State storage s) {
+        bytes32 slot = keccak256("ethr-7702.CrossChainDIDManager7702");
+        assembly {
+            s.slot := slot
+        }
+    }
+
+    /// @notice Returns the current cross-chain nonce for replay protection.
+    function crossChainNonce() external view returns (uint256) {
+        return _state().crossChainNonce;
+    }
 
     // -----------------------------------------------------------------------
     // EIP-712 type hashes
@@ -71,9 +90,10 @@ contract CrossChainDIDManager7702 {
         uint256 validity,
         bytes calldata signature
     ) external {
+        State storage s = _state();
         // Build the EIP-712 digest
         bytes32 structHash = keccak256(
-            abi.encode(UPDATE_AUTH_TYPE_HASH, registry, name, keccak256(value), validity, crossChainNonce)
+            abi.encode(UPDATE_AUTH_TYPE_HASH, registry, name, keccak256(value), validity, s.crossChainNonce)
         );
 
         bytes32 domainSeparator = keccak256(
@@ -92,7 +112,7 @@ contract CrossChainDIDManager7702 {
         address recovered = _recoverSigner(digest, signature);
         require(recovered == address(this), "invalid signature");
 
-        crossChainNonce++;
+        s.crossChainNonce++;
 
         IEthereumDIDRegistry(registry).setAttribute(address(this), name, value, validity);
     }

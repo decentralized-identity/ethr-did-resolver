@@ -23,19 +23,41 @@ interface IEthereumDIDRegistry {
 ///         - Only the current session key can update DID attributes.
 ///         - Attribute name is constrained to a caller-configurable prefix.
 ///         - Validity is capped at a maximum to prevent indefinite grants.
+///
+///         Namespaced storage (ERC-7201 style) at slot
+///         keccak256("ethr-7702.PolicyDIDManager7702") — see MultiSigDIDManager7702
+///         for why state is anchored at a per-manager keccak-derived slot.
 contract PolicyDIDManager7702 {
-    // --- Storage ---
+    // -----------------------------------------------------------------------
+    // Namespaced storage (lives on the delegating EOA)
+    // -----------------------------------------------------------------------
 
-    /// @dev The authorised session key for this identity.
-    ///      address(this) is the EOA; storage slots belong to the EOA.
-    address public sessionKey;
+    struct State {
+        address sessionKey;
+        uint256 maxValidity;
+        bytes32 allowedPrefix;
+    }
 
-    /// @dev Maximum validity in seconds that the session key may grant.
-    uint256 public maxValidity;
+    function _state() private pure returns (State storage s) {
+        bytes32 slot = keccak256("ethr-7702.PolicyDIDManager7702");
+        assembly {
+            s.slot := slot
+        }
+    }
 
-    /// @dev Allowed attribute name prefix (bytes32, right-padded with zeros).
-    ///      Only attribute names that start with this prefix are accepted.
-    bytes32 public allowedPrefix;
+    // --- Public getters (read from the namespaced slot) ---
+
+    function sessionKey() external view returns (address) {
+        return _state().sessionKey;
+    }
+
+    function maxValidity() external view returns (uint256) {
+        return _state().maxValidity;
+    }
+
+    function allowedPrefix() external view returns (bytes32) {
+        return _state().allowedPrefix;
+    }
 
     // --- Owner-only configuration (called via 7702 delegation by the EOA itself) ---
 
@@ -47,9 +69,10 @@ contract PolicyDIDManager7702 {
         bytes32 _allowedPrefix
     ) external {
         require(msg.sender == address(this), "only owner");
-        sessionKey = _sessionKey;
-        maxValidity = _maxValidity;
-        allowedPrefix = _allowedPrefix;
+        State storage s = _state();
+        s.sessionKey = _sessionKey;
+        s.maxValidity = _maxValidity;
+        s.allowedPrefix = _allowedPrefix;
     }
 
     // --- Session-key-accessible update ---
@@ -63,9 +86,10 @@ contract PolicyDIDManager7702 {
         bytes calldata value,
         uint256 validity
     ) external {
-        require(msg.sender == sessionKey, "not session key");
-        require(validity <= maxValidity, "validity exceeds cap");
-        require(_hasPrefix(name, allowedPrefix), "name prefix not allowed");
+        State storage s = _state();
+        require(msg.sender == s.sessionKey, "not session key");
+        require(validity <= s.maxValidity, "validity exceeds cap");
+        require(_hasPrefix(name, s.allowedPrefix), "name prefix not allowed");
 
         IEthereumDIDRegistry(registry).setAttribute(address(this), name, value, validity);
     }

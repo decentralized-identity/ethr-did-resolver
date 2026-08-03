@@ -22,21 +22,56 @@ interface IEthereumDIDRegistry {
 ///         incremented after every successful update.
 ///
 ///         Storage layout (on the delegating EOA):
-///           slot 0  — signers[]  (dynamic array length)
-///           slot 1  — threshold  (uint256)
-///           slot 2  — nonce      (uint256)
-///           slot keccak256(0)… — signer addresses (array elements)
+///           Namespaced storage at slot keccak256("ethr-7702.MultiSigDIDManager7702"):
+///             base + 0 — signers[] (dynamic array length; elements at keccak256(base))
+///             base + 1 — threshold  (uint256)
+///             base + 2 — nonce      (uint256)
+///
+///         The slot is a per-manager namespace derived from the contract name, so
+///         re-delegating a single EOA between different managers can never collide
+///         with their state (they live at distinct keccak-derived slots).
 ///
 /// @dev    All storage reads/writes affect the delegating EOA's storage, not this
 ///         contract's storage, because address(this) == EOA at call time.
 contract MultiSigDIDManager7702 {
     // -----------------------------------------------------------------------
-    // Storage (lives on the delegating EOA)
+    // Namespaced storage (lives on the delegating EOA)
     // -----------------------------------------------------------------------
 
-    address[] public signers;
-    uint256 public threshold;
-    uint256 public nonce;
+    /// @dev ERC-7201-style namespace for this manager's state. No `-1` mask is
+    ///      applied so the slot can never overlap EIP-1967 proxy slots.
+    struct State {
+        address[] signers;
+        uint256 threshold;
+        uint256 nonce;
+    }
+
+    function _state() private pure returns (State storage s) {
+        bytes32 slot = keccak256("ethr-7702.MultiSigDIDManager7702");
+        assembly {
+            s.slot := slot
+        }
+    }
+
+    // -----------------------------------------------------------------------
+    // Public getters (read from the namespaced slot)
+    // -----------------------------------------------------------------------
+
+    function getSigners() external view returns (address[] memory) {
+        return _state().signers;
+    }
+
+    function signers(uint256 index) external view returns (address) {
+        return _state().signers[index];
+    }
+
+    function threshold() external view returns (uint256) {
+        return _state().threshold;
+    }
+
+    function nonce() external view returns (uint256) {
+        return _state().nonce;
+    }
 
     // -----------------------------------------------------------------------
     // Configuration — only callable by the EOA itself (via 7702 self-call)
@@ -50,15 +85,17 @@ contract MultiSigDIDManager7702 {
         require(msg.sender == address(this), "only owner");
         require(_threshold >= 1 && _threshold <= _signers.length, "invalid threshold");
 
+        State storage s = _state();
+
         // Reset signer set
-        delete signers;
+        delete s.signers;
         for (uint256 i = 0; i < _signers.length; i++) {
             require(_signers[i] != address(0), "zero signer");
             // Require strictly ascending order to prevent duplicates in O(n) without a mapping
             require(i == 0 || _signers[i] > _signers[i - 1], "signers not sorted/dup");
-            signers.push(_signers[i]);
+            s.signers.push(_signers[i]);
         }
-        threshold = _threshold;
+        s.threshold = _threshold;
     }
 
     // -----------------------------------------------------------------------
@@ -79,17 +116,18 @@ contract MultiSigDIDManager7702 {
         uint256 validity,
         bytes[] calldata sigs
     ) external {
-        require(threshold > 0, "not configured");
-        require(sigs.length >= threshold, "not enough signatures");
+        State storage s = _state();
+        require(s.threshold > 0, "not configured");
+        require(sigs.length >= s.threshold, "not enough signatures");
 
         // Build the digest that signers must have signed
-        bytes32 digest = _updateDigest(registry, name, value, validity, nonce);
+        bytes32 digest = _updateDigest(registry, name, value, validity, s.nonce);
 
         // Recover signers and verify they are authorised + ordered (no duplicates)
         address prev = address(0);
         uint256 verified = 0;
 
-        for (uint256 i = 0; i < sigs.length && verified < threshold; i++) {
+        for (uint256 i = 0; i < sigs.length && verified < s.threshold; i++) {
             address recovered = _recoverSigner(digest, sigs[i]);
             require(recovered > prev, "sigs not ordered / duplicate");
             require(_isSigner(recovered), "not a registered signer");
@@ -97,9 +135,9 @@ contract MultiSigDIDManager7702 {
             prev = recovered;
         }
 
-        require(verified >= threshold, "threshold not met");
+        require(verified >= s.threshold, "threshold not met");
 
-        nonce++;
+        s.nonce++;
         IEthereumDIDRegistry(registry).setAttribute(address(this), name, value, validity);
     }
 
@@ -116,10 +154,6 @@ contract MultiSigDIDManager7702 {
         uint256 _nonce
     ) external view returns (bytes32) {
         return _updateDigest(registry, name, value, validity, _nonce);
-    }
-
-    function getSigners() external view returns (address[] memory) {
-        return signers;
     }
 
     // -----------------------------------------------------------------------
@@ -161,6 +195,7 @@ contract MultiSigDIDManager7702 {
     }
 
     function _isSigner(address addr) internal view returns (bool) {
+        address[] storage signers = _state().signers;
         for (uint256 i = 0; i < signers.length; i++) {
             if (signers[i] == addr) return true;
         }

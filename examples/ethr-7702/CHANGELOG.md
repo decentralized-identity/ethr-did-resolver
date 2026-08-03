@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.8.0] — Phase 16 — Namespaced storage: cross-manager slot collision fix
+
+### Fixed
+- All 6 stateful delegation contracts (`MultiSig`, `Policy`, `MetaTx`, `CrossChain`, `Expiring`, `Revocation`) now anchor their state at a unique ERC-7201-style namespace — `keccak256("ethr-7702.<ContractName>")` — via a storage-struct pointer set in assembly. Re-delegating a single EOA between different managers can no longer collide (previously Policy/MultiSig/MetaTx/CrossChain/Expiring all wrote EOA slots 0/1/2, so policy→multisig made `delete signers` read a stale `sessionKey` address as the array length → out-of-gas). Public getters preserved as explicit view functions.
+- `webapp/src/patterns/registry.ts` — live nonce reads now compute the namespaced slot: `BigInt(keccak256(toBytes("ethr-7702.<Name>"))) + offset` (multisig nonce +2, meta-tx/cross-chain +0).
+
+### Added
+- Regression test `test/edge-cases.test.ts` → "re-delegating one EOA from Policy to MultiSig does not collide storage": configures an EOA under Policy, re-delegates the same EOA to MultiSig, and asserts the new 2-of-3 signer set + nonce are intact.
+
+### Notes
+- Changed bytecode → all 6 artifacts regenerated. Testnet pre-deploy (`scripts/deploy-testnet.ts`) must be re-run before relying on pre-deployed `webapp/src/config/deployed.json` addresses.
+- Solidity gotcha: inline assembly cannot reference a `bytes32 constant` initialized from `keccak256` — compute the slot into a local `bytes32` var first.
+
+### Test suite
+- 62/62 tests passing (13 files incl. new collision regression); webapp smoke test 2/2 passing (all 22 pattern steps); typechecks clean (root + webapp); production build succeeds.
+
+---
+
 ## [1.7.0] — Phase 15 — Interactive Webapp Explainer
 
 ### Added

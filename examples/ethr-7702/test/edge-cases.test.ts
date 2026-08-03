@@ -705,6 +705,57 @@ describe('MultiSigDIDManager7702 edge cases', () => {
     })
     expect(success).toBe(false) // "not a registered signer"
   })
+
+  it('(BUG FIX) re-delegating one EOA from Policy to MultiSig does not collide storage', async () => {
+    // SECURITY: before the namespaced-storage fix, PolicyDIDManager7702 wrote its
+    // sessionKey/maxValidity/allowedPrefix into the EOA's slots 0/1/2. Re-delegating
+    // the same EOA to MultiSigDIDManager7702 then made `delete signers` read the stale
+    // sessionKey value as signers.length → out-of-gas. Now each manager anchors its
+    // state at a distinct keccak-derived slot, so re-delegation must succeed.
+    const { rpcUrl, contracts } = loadEnv()
+
+    const eoaAccount = privateKeyToAccount(keys[1])
+    const sessionKeyAccount = privateKeyToAccount(keys[2])
+    const signerAccounts = [
+      privateKeyToAccount(keys[6]),
+      privateKeyToAccount(keys[7]),
+      privateKeyToAccount(keys[8]),
+    ].sort((a, b) => a.address.toLowerCase().localeCompare(b.address.toLowerCase()))
+
+    const publicClient = createPublicClient({ chain: anvilChain, transport: http(rpcUrl) })
+    const eoaWalletClient = createWalletClient({ chain: anvilChain, transport: http(rpcUrl), account: eoaAccount })
+
+    // Step 1: configure the EOA under PolicyDIDManager7702 (writes slots at Policy's namespace)
+    const policyData = encodeFunctionData({
+      abi: POLICY_DID_MANAGER_ABI,
+      functionName: 'configure',
+      args: [sessionKeyAccount.address, VALIDITY, stringToBytes32('did/pub/') as `0x${string}`],
+    })
+    const { success: policyOk } = await delegateAndCall(eoaWalletClient, publicClient, contracts.policyDidManager, policyData)
+    expect(policyOk).toBe(true)
+
+    // Step 2: re-delegate the SAME EOA to MultiSigDIDManager7702 and configure a 2-of-3 set
+    const configData = encodeFunctionData({
+      abi: MULTISIG_DID_MANAGER_ABI,
+      functionName: 'configure',
+      args: [signerAccounts.map((a) => a.address), 2n],
+    })
+    const { success: multiSigOk } = await delegateAndCall(eoaWalletClient, publicClient, contracts.multiSigDidManager, configData)
+    expect(multiSigOk).toBe(true)
+
+    // Step 3: the new signer set must be intact — NOT garbage from Policy's stale slots
+    const signers = (await publicClient.readContract({
+      address: eoaAccount.address,
+      abi: MULTISIG_DID_MANAGER_ABI,
+      functionName: 'getSigners',
+    })) as `0x${string}`[]
+    expect(signers).toEqual(signerAccounts.map((a) => a.address))
+    expect(await publicClient.readContract({
+      address: eoaAccount.address,
+      abi: MULTISIG_DID_MANAGER_ABI,
+      functionName: 'nonce',
+    })).toBe(0n)
+  })
 })
 
 // ===========================================================================

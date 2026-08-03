@@ -2,7 +2,7 @@
 // interactive explainer UI. Each pattern = ordered steps; each step runs one
 // on-chain action and the UI re-resolves the DID document afterwards.
 
-import { toHex, encodeFunctionData, zeroAddress } from 'viem'
+import { toHex, encodeFunctionData, zeroAddress, keccak256, toBytes } from 'viem'
 import { stringToBytes32 } from 'ethr-did-resolver'
 import { EXPIRING_DID_MANAGER_ABI } from '@utils/abis.js'
 import { simpleDidUpdate } from '@patterns/simple-update.js'
@@ -62,31 +62,38 @@ async function txResult(
   }
 }
 
-/** Read the live multisig nonce from the EOA's storage slot 2. */
+/** ERC-7201-style namespace for a manager's state in EOA storage. Must match the
+ *  keccak256 strings in contracts/*.sol. */
+function managerStorageBase(managerName: string): bigint {
+  return BigInt(keccak256(toBytes(`ethr-7702.${managerName}`)))
+}
+
+/** Read a field at `offset` within a manager's namespaced storage region. */
+async function readNamespacedField(
+  ctx: StepContext,
+  managerName: string,
+  offset: number
+): Promise<bigint> {
+  const raw = await ctx.publicClient.getStorageAt({
+    address: ctx.identityAddress,
+    slot: toHex(managerStorageBase(managerName) + BigInt(offset)),
+  })
+  return raw === null ? 0n : BigInt(raw as `0x${string}`)
+}
+
+/** Read the live multisig nonce (MultiSig State.nonce at base + 2). */
 async function readMultiSigNonce(ctx: StepContext): Promise<bigint> {
-  const raw = await ctx.publicClient.getStorageAt({
-    address: ctx.identityAddress,
-    slot: '0x2',
-  })
-  return raw === null ? 0n : BigInt(raw as `0x${string}`)
+  return readNamespacedField(ctx, 'MultiSigDIDManager7702', 2)
 }
 
-/** Read the live meta-tx nonce from the EOA's storage slot 0. */
+/** Read the live meta-tx nonce (MetaTx State.nonce at base + 0). */
 async function readMetaTxNonce(ctx: StepContext): Promise<bigint> {
-  const raw = await ctx.publicClient.getStorageAt({
-    address: ctx.identityAddress,
-    slot: '0x0',
-  })
-  return raw === null ? 0n : BigInt(raw as `0x${string}`)
+  return readNamespacedField(ctx, 'MetaTxDIDManager7702', 0)
 }
 
-/** Read the live cross-chain nonce from the EOA's storage slot 0. */
+/** Read the live cross-chain nonce (CrossChain State.crossChainNonce at base + 0). */
 async function readCrossChainNonce(ctx: StepContext): Promise<bigint> {
-  const raw = await ctx.publicClient.getStorageAt({
-    address: ctx.identityAddress,
-    slot: '0x0',
-  })
-  return raw === null ? 0n : BigInt(raw as `0x${string}`)
+  return readNamespacedField(ctx, 'CrossChainDIDManager7702', 0)
 }
 
 // ---------------------------------------------------------------------------

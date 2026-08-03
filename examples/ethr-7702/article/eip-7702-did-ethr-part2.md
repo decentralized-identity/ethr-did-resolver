@@ -312,18 +312,20 @@ await relayerSubmitUpdate(relayerWalletClient, publicClient, {
 - ERC-1056 is a non-upgradeable, audited contract with no callbacks. Practical re-entrancy risk is negligible.
 - If you deploy against an unknown or upgradeable registry, add a `nonReentrant` guard.
 
-**Storage collision between delegation contracts**: Each contract uses different storage slots:
+**Storage collision between delegation contracts**: because delegated code runs in the EOA's storage, every stateful manager must anchor its state at a distinct slot. Each manager now uses ERC-7201-style namespaced storage — a struct anchored at `keccak256("ethr-7702.<ContractName>")`:
 
-| Contract | Slot 0 | Slot 1 | Slot 2 |
-|----------|--------|--------|--------|
-| MultiSigDIDManager7702 | `signers[]` (length) | `threshold` | `nonce` |
-| RevocationDIDManager7702 | `revocations` mapping | — | — |
-| CrossChainDIDManager7702 | `crossChainNonce` | — | — |
-| PolicyDIDManager7702 (Part 1) | `sessionKey` | `maxValidity` | `allowedPrefix` |
+| Contract | Namespaced base slot | Layout from base |
+|----------|----------------------|------------------|
+| MultiSigDIDManager7702 | `keccak256("ethr-7702.MultiSigDIDManager7702")` | `+0` `signers[]`, `+1` `threshold`, `+2` `nonce` |
+| RevocationDIDManager7702 | `keccak256("ethr-7702.RevocationDIDManager7702")` | `+0` `revocations` mapping |
+| CrossChainDIDManager7702 | `keccak256("ethr-7702.CrossChainDIDManager7702")` | `+0` `crossChainNonce` |
+| PolicyDIDManager7702 (Part 1) | `keccak256("ethr-7702.PolicyDIDManager7702")` | `+0` `sessionKey`, `+1` `maxValidity`, `+2` `allowedPrefix` |
+| MetaTxDIDManager7702 | `keccak256("ethr-7702.MetaTxDIDManager7702")` | `+0` `nonce` |
+| ExpiringDIDManager7702 | `keccak256("ethr-7702.ExpiringDIDManager7702")` | `+0` `expiry` |
 
-**Critical rule**: if you switch a delegating EOA from one contract to another, the new contract may misread stale values from the old contract's slots. Example: if an EOA was delegated to `PolicyDIDManager7702` (slot 0 = `sessionKey` address) and then re-delegated to `RevocationDIDManager7702` (slot 0 = `revocations` mapping length), the mapping's length slot already has a non-zero value (the old session key address cast to uint256). This is harmless for the revocation mapping (an existing credential ID would need to hash to slot 0 to collide), but demonstrates the risk.
+**Why namespaced slots matter**: the slot is derived from the contract name, so two different managers can never overlap even when a single EOA re-delegates between them. Before this fix, all stateful managers wrote slots 0/1/2 — re-delegating a policy-configured EOA to MultiSig made `delete signers` read the stale `sessionKey` address as the array length and revert out-of-gas. With distinct keccak-derived bases, re-delegation is collision-free: each manager reads/writes only its own region, and `configure` re-initializes exactly that region.
 
-**Mitigation**: before switching delegation contracts, call a cleanup function (or delegate to `address(0)` first to clear the delegation). Design new contracts to zero-initialize critical state during `configure`.
+**Rule**: any new stateful delegation contract must anchor its storage at a unique `keccak256(...)` namespace (and mirror the exact slot math off-chain when reading state with `getStorageAt`).
 
 ### Authorization Tuple Lifecycle
 
