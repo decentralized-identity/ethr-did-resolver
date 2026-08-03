@@ -182,7 +182,7 @@ export async function sessionKeyDidUpdate(
   publicClient: PublicClient,
   params: PolicyUpdateParams
 ): Promise<Hash> {
-  const { registry, policyDidManagerAddress, eoaAddress, attrName, attrValue, validity } = params
+  const { registry, eoaAddress, attrName, attrValue, validity } = params
   const chainId = sessionKeyWalletClient.chain!.id
 
   const valueHex = attrValue instanceof Uint8Array ? toHex(attrValue) : attrValue

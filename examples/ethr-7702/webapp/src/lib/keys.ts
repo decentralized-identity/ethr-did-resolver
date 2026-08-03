@@ -1,8 +1,9 @@
-// In-memory key manager for the interactive explainer.
+// Browser key manager for the interactive explainer.
 //
 // Because MetaMask (and most injected wallets) cannot sign EIP-7702 authorization
-// tuples from a dapp, the explainer manages local accounts entirely in browser
-// memory. Keys never leave the page and are not persisted anywhere.
+// tuples from a dapp, the explainer manages local accounts entirely in the
+// browser. Keys are persisted to localStorage so the DID subject's keys survive
+// reloads — the app fully manages the DIDs/keys it uses.
 
 import { type Hex } from 'viem'
 import { privateKeyToAccount, generatePrivateKey, type PrivateKeyAccount } from 'viem/accounts'
@@ -22,42 +23,88 @@ export const ANVIL_PRIVATE_KEYS: readonly Hex[] = [
   '0x2a871d0798f97d79848a013d4936a73bf4cc922c825d33c1cf7073dff6d409c6',
 ] as const
 
-export type KeyRole =
-  | 'identity' // the DID subject (EOA whose DID doc is updated)
-  | 'sessionKey' // Pattern 3
-  | 'sponsor' // Patterns 2, 1a, 7
-  | 'signer1' // Pattern 4
-  | 'signer2'
-  | 'signer3'
-
-export const KEY_ROLES: KeyRole[] = ['identity', 'sessionKey', 'sponsor', 'signer1', 'signer2', 'signer3']
+/**
+ * The dedicated broadcaster for local (Anvil) mode: a fixed, pre-funded dev key
+ * that pays the gas for every relayed transaction. Distinct from all KeyManager
+ * roles so the identity/session/signer keys never pay gas.
+ */
+export const ANVIL_BROADCASTER_INDEX = 6
+export const ANVIL_BROADCASTER_PRIVATE_KEY: Hex = ANVIL_PRIVATE_KEYS[ANVIL_BROADCASTER_INDEX]
 
 export function getAnvilKey(index: number): Hex {
   return ANVIL_PRIVATE_KEYS[index % ANVIL_PRIVATE_KEYS.length]
 }
 
+export type KeyRole = 'identity' | 'sessionKey' | 'signer1' | 'signer2' | 'signer3'
+
+export const KEY_ROLES: KeyRole[] = ['identity', 'sessionKey', 'signer1', 'signer2', 'signer3']
+
+const STORAGE_KEY = 'ethr-7702.keyring.v1'
+
+function storage(): Storage | null {
+  try {
+    return typeof localStorage !== 'undefined' ? localStorage : null
+  } catch {
+    return null
+  }
+}
+
+function loadPersisted(): Partial<Record<KeyRole, Hex>> | null {
+  const ls = storage()
+  if (!ls) return null
+  const raw = ls.getItem(STORAGE_KEY)
+  if (!raw) return null
+  try {
+    const parsed = JSON.parse(raw) as Record<string, string>
+    const out: Partial<Record<KeyRole, Hex>> = {}
+    for (const role of KEY_ROLES) {
+      if (typeof parsed[role] === 'string') out[role] = parsed[role] as Hex
+    }
+    return out
+  } catch {
+    return null
+  }
+}
+
 /**
- * A mutable in-memory account store. On construction, every role is seeded with
- * a random burner key. In local mode, call `seedWithAnvilKeys()` to replace them
- * with the pre-funded Anvil dev keys.
+ * A mutable account store persisted to localStorage. On construction, every role
+ * is restored from storage (if present) or seeded with a fresh random key. In
+ * local mode, call `seedWithAnvilKeys()` to replace them with the pre-funded
+ * Anvil dev keys.
  */
 export class KeyManager {
-  private accounts = new Map<KeyRole, PrivateKeyAccount>()
+  private keys = new Map<KeyRole, Hex>()
 
-  constructor(seedRandom = true) {
-    if (seedRandom) {
-      for (const role of KEY_ROLES) this.accounts.set(role, privateKeyToAccount(generatePrivateKey()))
+  constructor() {
+    const persisted = loadPersisted()
+    for (const role of KEY_ROLES) {
+      const pk = persisted?.[role]
+      this.keys.set(role, pk ?? generatePrivateKey())
     }
+    this.persist()
+  }
+
+  private persist(): void {
+    const ls = storage()
+    if (!ls) return
+    const raw: Record<string, string> = {}
+    for (const role of KEY_ROLES) raw[role] = this.key(role)
+    ls.setItem(STORAGE_KEY, JSON.stringify(raw))
+  }
+
+  key(role: KeyRole): Hex {
+    const pk = this.keys.get(role)
+    if (!pk) throw new Error(`No key for role ${role}`)
+    return pk
   }
 
   seedWithAnvilKeys(): void {
-    KEY_ROLES.forEach((role, i) => this.accounts.set(role, privateKeyToAccount(getAnvilKey(i))))
+    KEY_ROLES.forEach((role, i) => this.keys.set(role, getAnvilKey(i)))
+    this.persist()
   }
 
   account(role: KeyRole): PrivateKeyAccount {
-    const acc = this.accounts.get(role)
-    if (!acc) throw new Error(`No key for role ${role}`)
-    return acc
+    return privateKeyToAccount(this.key(role))
   }
 
   address(role: KeyRole): Hex {
@@ -65,11 +112,19 @@ export class KeyManager {
   }
 
   importKey(role: KeyRole, privateKey: Hex): void {
-    this.accounts.set(role, privateKeyToAccount(privateKey))
+    this.keys.set(role, privateKey)
+    this.persist()
   }
 
   rotate(role: KeyRole): void {
-    this.accounts.set(role, privateKeyToAccount(generatePrivateKey()))
+    this.keys.set(role, generatePrivateKey())
+    this.persist()
+  }
+
+  /** Wipe the persisted keyring and reseed with fresh random keys. */
+  reset(): void {
+    for (const role of KEY_ROLES) this.keys.set(role, generatePrivateKey())
+    this.persist()
   }
 
   all(): Record<KeyRole, Hex> {

@@ -5,7 +5,7 @@
 // human-readable result. The UI renders each step, runs it, and re-resolves the
 // DID document after it completes.
 
-import type { Hash, PublicClient, WalletClient } from 'viem'
+import type { Hash, PublicClient, WalletClient, Address } from 'viem'
 import type { NetworkConfig } from '../config/chains'
 import type { KeyManager, KeyRole } from '../lib/keys'
 import type { DeployedAll } from '../lib/deploy'
@@ -24,8 +24,12 @@ export type StepContext = {
   publicClient: PublicClient
   keys: KeyManager
   addresses: DeployedAll
-  /** Build a wallet client for a given key role. */
+  /** Build a wallet client for a given key role (local signer, never pays gas). */
   walletFor: (role: KeyRole) => WalletClient
+  /** The account that broadcasts transactions and pays the gas. */
+  broadcaster: WalletClient
+  /** The broadcaster account address (executor for 7702 authorizations). */
+  broadcasterAddress: Address
   /** The identity EOA (the DID subject). */
   identityAddress: `0x${string}`
 }

@@ -1,10 +1,13 @@
 // Pattern registry — wires the shared src/patterns/* implementations to the
 // interactive explainer UI. Each pattern = ordered steps; each step runs one
 // on-chain action and the UI re-resolves the DID document afterwards.
+//
+// Gasless by construction: every step signs with a local KeyManager key (the
+// identity/session/signer EOA) and broadcasts through `ctx.broadcaster` — the
+// account that pays the gas. The identity EOA never pays.
 
-import { toHex, encodeFunctionData, zeroAddress, keccak256, toBytes } from 'viem'
+import { toHex, keccak256, toBytes } from 'viem'
 import { stringToBytes32 } from 'ethr-did-resolver'
-import { EXPIRING_DID_MANAGER_ABI } from '@utils/abis.js'
 import { simpleDidUpdate } from '@patterns/simple-update.js'
 import { batchedDidUpdates } from '@patterns/batched-updates.js'
 import { gaslessDidUpdate } from '@patterns/gasless-updates.js'
@@ -31,8 +34,10 @@ import {
 import {
   signCrossChainAuthorization,
   signCrossChainUpdate,
-  relayerSubmitUpdate,
+  broadcasterSubmitUpdate,
 } from '@patterns/cross-chain-sync.js'
+import { setDelegation, revokeDelegation } from '@patterns/delegation.js'
+import { configureExpiringBySig, expiringSetAttribute } from '@patterns/expiring.js'
 import type { StepContext, Pattern, StepResult } from './types'
 
 export type { Pattern, StepContext, StepResult } from './types'
@@ -45,14 +50,14 @@ const ATTR_DID_KEY = stringToBytes32('did/pub/Ed25519/veriKey/base64') as `0x${s
 const ATTR_SVC = stringToBytes32('did/svc/LinkedDomains') as `0x${string}`
 const VALIDITY = 3600n
 
+function keyValue(label: string): `0x${string}` {
+  return toHex(new TextEncoder().encode(label))
+}
+
 // ethr-did-resolver v14 validates Secp256k1 attribute values as real secp256k1
 // public keys (33 compressed / 65 uncompressed bytes). Placeholder strings are
 // rejected, so use an actual compressed public key.
 const SECP256K1_VERIKEY = '0x034646ae5047316b4230d0086c8acec687f00b1cd9d1dc634f6cb358ac0a9a8fff'
-
-function keyValue(label: string): `0x${string}` {
-  return toHex(new TextEncoder().encode(label))
-}
 
 async function txResult(
   run: () => Promise<`0x${string}`>,
@@ -110,17 +115,17 @@ export const patternSimple: Pattern = {
   number: '0',
   title: 'Simple 7702 Self-Update',
   summary:
-    'The EOA signs an EIP-7702 authorization delegating to DIDManager7702 and updates its own DID document in a single type-4 transaction.',
+    'The EOA signs an EIP-7702 authorization delegating to DIDManager7702; a broadcaster relays the type-4 tx that sets the delegation and updates the DID document.',
   contract: 'DIDManager7702',
   steps: [
     {
-      title: 'Delegate + update in one tx',
+      title: 'EOA signs, broadcaster relays the update',
       description:
-        'The identity EOA signs a 7702 authorization (executor: self) and sends a type-4 tx that sets the delegation and calls setAttributeForIdentity on itself. address(this) inside the delegated code equals the EOA, so ERC-1056 sees the EOA as the caller.',
+        'The identity EOA signs a 7702 authorization (executor: broadcaster) and sends a type-4 tx that sets the delegation and calls setAttributeForIdentity on itself. address(this) inside the delegated code equals the EOA, so ERC-1056 sees the EOA as the caller. Gas comes from the broadcaster.',
       run: async (ctx) =>
         txResult(
           () =>
-            simpleDidUpdate(ctx.walletFor('identity'), ctx.publicClient, {
+            simpleDidUpdate(ctx.walletFor('identity'), ctx.broadcaster, ctx.publicClient, {
               registry: ctx.addresses.registry,
               didManagerAddress: ctx.addresses.didManager,
               attrName: ATTR_DID_KEY,
@@ -148,11 +153,11 @@ export const patternBatched: Pattern = {
     {
       title: 'Atomic multi-attribute write',
       description:
-        'setBatchAttributesForIdentity encodes an array of AttributeUpdate structs. ERC-1056 writes are sequential within one tx (DID-4), but all-or-nothing at the tx level.',
+        'setBatchAttributesForIdentity encodes an array of AttributeUpdate structs. ERC-1056 writes are sequential within one tx (DID-4), but all-or-nothing at the tx level. The broadcaster pays the gas.',
       run: async (ctx) =>
         txResult(
           () =>
-            batchedDidUpdates(ctx.walletFor('identity'), ctx.publicClient, {
+            batchedDidUpdates(ctx.walletFor('identity'), ctx.broadcaster, ctx.publicClient, {
               registry: ctx.addresses.registry,
               didManagerAddress: ctx.addresses.didManager,
               updates: [
@@ -179,20 +184,19 @@ export const patternGasless: Pattern = {
   number: '2',
   title: 'Gasless / Sponsored Update',
   summary:
-    'The EOA signs the 7702 auth offline; a sponsor broadcasts the type-4 tx and pays all gas. The EOA needs zero ETH.',
+    'The EOA signs the 7702 auth offline; a broadcaster relays the type-4 tx and pays all gas. The EOA needs zero ETH.',
   contract: 'DIDManager7702',
   steps: [
     {
-      title: 'EOA signs, sponsor pays',
+      title: 'EOA signs, broadcaster pays',
       description:
-        'The identity EOA signs the authorization with executor: sponsorAddress (so viem does NOT inflate the EOA nonce). The sponsor account then broadcasts the tx — gas comes from the sponsor, not the EOA.',
+        'The identity EOA signs the authorization with executor: broadcasterAddress (so viem does NOT inflate the EOA nonce). The broadcaster then broadcasts the tx — gas comes from the broadcaster, not the EOA.',
       run: async (ctx) => {
         const eoaWallet = ctx.walletFor('identity')
-        const sponsorWallet = ctx.walletFor('sponsor')
         const eoaBalanceBefore = await ctx.publicClient.getBalance({
           address: ctx.identityAddress,
         })
-        const hash = await gaslessDidUpdate(eoaWallet, sponsorWallet, ctx.publicClient, {
+        const hash = await gaslessDidUpdate(eoaWallet, ctx.broadcaster, ctx.publicClient, {
           registry: ctx.addresses.registry,
           didManagerAddress: ctx.addresses.didManager,
           attrName: ATTR_DID_KEY,
@@ -204,7 +208,7 @@ export const patternGasless: Pattern = {
         })
         return {
           txHash: hash,
-          summary: `DID updated; EOA balance ${eoaBalanceBefore.toString()} → ${eoaBalanceAfter.toString()} wei (unchanged — sponsor paid)`,
+          summary: `DID updated; EOA balance ${eoaBalanceBefore.toString()} → ${eoaBalanceAfter.toString()} wei (unchanged — broadcaster paid)`,
         }
       },
     },
@@ -224,14 +228,14 @@ export const patternPolicy: Pattern = {
   contract: 'PolicyDIDManager7702',
   steps: [
     {
-      title: 'Configure session key + policy',
+      title: 'Configure session key + policy (gasless)',
       description:
-        'The identity EOA signs a 7702 auth and calls configure(sessionKey, maxValidity, allowedPrefix) in one tx. Only the registered session key may write, names must start with the allowed prefix, and validity is capped.',
+        'The identity EOA signs a 7702 auth + an EIP-712 Configure intent; the broadcaster relays configureBySig. Only the registered session key may write, names must start with the allowed prefix, and validity is capped.',
       run: async (ctx) => {
         const sessionKeyAddress = ctx.keys.address('sessionKey')
         return txResult(
           () =>
-            configurePolicyDelegation(ctx.walletFor('identity'), ctx.publicClient, {
+            configurePolicyDelegation(ctx.walletFor('identity'), ctx.broadcaster, ctx.publicClient, {
               policyDidManagerAddress: ctx.addresses.policyDidManager,
               sessionKey: sessionKeyAddress,
               maxValidity: VALIDITY,
@@ -244,11 +248,11 @@ export const patternPolicy: Pattern = {
     {
       title: 'Session key writes DID attribute',
       description:
-        'The session key sends a plain (type-2) tx to the EOA address. The delegated PolicyDIDManager7702 code enforces the policy and calls ERC-1056 setAttribute as the EOA.',
+        'The session key signs an EIP-712 SetAttributeViaSessionKey intent; the broadcaster relays it. The delegated PolicyDIDManager7702 code enforces the policy and calls ERC-1056 setAttribute as the EOA.',
       run: async (ctx) =>
         txResult(
           () =>
-            sessionKeyDidUpdate(ctx.walletFor('sessionKey'), ctx.publicClient, {
+            sessionKeyDidUpdate(ctx.walletFor('sessionKey'), ctx.broadcaster, ctx.publicClient, {
               registry: ctx.addresses.registry,
               policyDidManagerAddress: ctx.addresses.policyDidManager,
               eoaAddress: ctx.identityAddress as `0x${string}`,
@@ -275,16 +279,16 @@ export const patternMultiSig: Pattern = {
   contract: 'MultiSigDIDManager7702',
   steps: [
     {
-      title: 'Configure 2-of-3 signer set',
+      title: 'Configure 2-of-3 signer set (gasless)',
       description:
-        'The identity EOA delegates to MultiSigDIDManager7702 and calls configure([s1,s2,s3], 2). Signers must be sorted ascending; duplicates and non-registered signatures are rejected.',
+        'The identity EOA signs a 7702 auth + an EIP-712 Configure intent; the broadcaster relays configureBySig. Signers must be sorted ascending; duplicates and non-registered signatures are rejected.',
       run: async (ctx) => {
         const signers = (['signer1', 'signer2', 'signer3'] as const)
           .map((r) => ctx.keys.address(r))
           .sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()))
         return txResult(
           () =>
-            configureMultiSigDelegation(ctx.walletFor('identity'), ctx.publicClient, {
+            configureMultiSigDelegation(ctx.walletFor('identity'), ctx.broadcaster, ctx.publicClient, {
               multiSigDidManagerAddress: ctx.addresses.multiSigDidManager,
               signers: signers as `0x${string}`[],
               threshold: 2n,
@@ -323,8 +327,6 @@ export const patternMultiSig: Pattern = {
         )
         signed.sort((a, b) => a.address.toLowerCase().localeCompare(b.address.toLowerCase()))
 
-        // stash signatures on the context via a shared key — simplest: re-sign in step 3.
-        // Instead, we return the digest + sigs for display and re-derive in step 3.
         return {
           summary: `Digest ${digest.slice(0, 18)}… signed by 2 of 3 co-signers (nonce=${nonce.toString()})`,
           detail: JSON.stringify({ digest, nonce: nonce.toString(), signers: signed.map((s) => s.address) }, null, 2),
@@ -334,7 +336,7 @@ export const patternMultiSig: Pattern = {
     {
       title: 'Submit update with 2 signatures',
       description:
-        'Any submitter (here: the identity EOA) calls setAttributeWithMultiSig with the ordered signatures. The contract verifies each recovers to a registered signer and enforces the threshold.',
+        'Any submitter (here: the broadcaster) calls setAttributeWithMultiSig with the ordered signatures. The contract verifies each recovers to a registered signer and enforces the threshold.',
       run: async (ctx) => {
         const registry = ctx.addresses.registry
         const attrName = ATTR_DID_KEY
@@ -363,7 +365,7 @@ export const patternMultiSig: Pattern = {
 
         return txResult(
           () =>
-            multiSigDidUpdate(ctx.walletFor('identity'), ctx.publicClient, {
+            multiSigDidUpdate(ctx.broadcaster, ctx.publicClient, {
               registry,
               multiSigDidManagerAddress: ctx.addresses.multiSigDidManager,
               eoaAddress: ctx.identityAddress as `0x${string}`,
@@ -388,13 +390,13 @@ export const patternMetaTx: Pattern = {
   number: '1a',
   title: 'EIP-712 Meta-Transactions',
   summary:
-    'The EOA signs an EIP-712 typed-data intent off-chain; a relayer submits the tx and pays gas. Replay protection via a per-EOA nonce. This is the security-hardened gasless pattern.',
+    'The EOA signs an EIP-712 typed-data intent off-chain; a broadcaster submits the tx and pays gas. Replay protection via a per-EOA nonce. This is the security-hardened gasless pattern.',
   contract: 'MetaTxDIDManager7702',
   steps: [
     {
       title: 'EOA signs EIP-712 intent (off-chain)',
       description:
-        'The identity EOA signs a SetAttribute typed-data message bound to the chain and verifyingContract (the EOA). Also signs the 7702 auth so the relayer can set the delegation atomically. No tx sent.',
+        'The identity EOA signs a SetAttribute typed-data message bound to the chain and verifyingContract (the EOA). Also signs the 7702 auth so the broadcaster can set the delegation atomically. No tx sent.',
       run: async (ctx) => {
         const eoaWallet = ctx.walletFor('identity')
         const nonce = await readMetaTxNonce(ctx)
@@ -416,15 +418,13 @@ export const patternMetaTx: Pattern = {
       },
     },
     {
-      title: 'Relayer submits the signed update',
+      title: 'Broadcaster submits the signed update',
       description:
-        'The sponsor/relayer includes the EOA 7702 auth and calls setAttribute with the signature. The contract checks the recovered signer equals address(this) (the EOA) and increments the nonce.',
+        'The broadcaster includes the EOA 7702 auth and calls setAttribute with the signature. The contract checks the recovered signer equals address(this) (the EOA) and increments the nonce.',
       run: async (ctx) => {
         const eoaWallet = ctx.walletFor('identity')
-        const relayerWallet = ctx.walletFor('sponsor')
         const nonce = await readMetaTxNonce(ctx)
         const chainId = ctx.network.chain.id
-        const relayerAddress = relayerWallet.account!.address
 
         const signature = await signMetaTxSetAttribute(eoaWallet, {
           metaTxDidManagerAddress: ctx.addresses.metaTxDidManager,
@@ -439,13 +439,13 @@ export const patternMetaTx: Pattern = {
 
         const authorization = await eoaWallet.signAuthorization({
           contractAddress: ctx.addresses.metaTxDidManager,
-          executor: relayerAddress,
+          executor: ctx.broadcasterAddress,
           account: eoaWallet.account!,
         })
 
         return txResult(
           () =>
-            relayMetaTxSetAttribute(relayerWallet, ctx.publicClient, {
+            relayMetaTxSetAttribute(ctx.broadcaster, ctx.publicClient, {
               registry: ctx.addresses.registry,
               eoaAddress: ctx.identityAddress as `0x${string}`,
               attrName: ATTR_DID_KEY,
@@ -454,7 +454,7 @@ export const patternMetaTx: Pattern = {
               signature,
               authorization,
             }),
-          'DID attribute written by relayer from an EIP-712 signed intent'
+          'DID attribute written by broadcaster from an EIP-712 signed intent'
         )
       },
     },
@@ -474,13 +474,13 @@ export const patternRevocation: Pattern = {
   contract: 'RevocationDIDManager7702',
   steps: [
     {
-      title: 'Delegate + add attribute',
+      title: 'EOA signs; broadcaster sets delegation + attribute',
       description:
-        'Delegation and the first setAttribute happen in one tx (avoids the Anvil gas-estimation quirk on nonce-0 EOAs).',
+        'The identity EOA signs a 7702 auth + an EIP-712 SetAttribute intent; the broadcaster relays setAttributeForIdentityBySig in one tx. Avoids the Anvil gas-estimation quirk on nonce-0 EOAs and keeps the EOA gasless.',
       run: async (ctx) =>
         txResult(
           () =>
-            setupRevocationDelegation(ctx.walletFor('identity'), ctx.publicClient, {
+            setupRevocationDelegation(ctx.walletFor('identity'), ctx.broadcaster, ctx.publicClient, {
               revocationDidManagerAddress: ctx.addresses.revocationDidManager,
               registry: ctx.addresses.registry,
               attrName: ATTR_DID_KEY,
@@ -493,11 +493,11 @@ export const patternRevocation: Pattern = {
     {
       title: 'Revoke attribute via ERC-1056',
       description:
-        'revokeAttributeForIdentity calls registry.revokeAttribute, setting validTo=0 so the resolver drops the key from the DID document.',
+        'The identity EOA signs a RevokeAttribute intent; the broadcaster relays revokeAttributeForIdentityBySig, setting validTo=0 so the resolver drops the key from the DID document.',
       run: async (ctx) =>
         txResult(
           () =>
-            revokeAttribute(ctx.walletFor('identity'), ctx.publicClient, {
+            revokeAttribute(ctx.walletFor('identity'), ctx.broadcaster, ctx.publicClient, {
               registry: ctx.addresses.registry,
               attrName: ATTR_DID_KEY,
               attrValue: keyValue('revokablekey'),
@@ -508,10 +508,10 @@ export const patternRevocation: Pattern = {
     {
       title: 'Revoke a credential + verify',
       description:
-        'revokeCredential writes a revocation flag in the EOA storage keyed by credentialId. Anyone can query isRevoked(credentialId) on the EOA address.',
+        'The identity EOA signs a RevokeCredential intent; the broadcaster relays it. The flag lands in EOA storage keyed by credentialId. Anyone can query isRevoked(credentialId) on the EOA address.',
       run: async (ctx) => {
         const credentialId = credentialIdFromString('credential-123')
-        const hash = await revokeCredential(ctx.walletFor('identity'), ctx.publicClient, {
+        const hash = await revokeCredential(ctx.walletFor('identity'), ctx.broadcaster, ctx.publicClient, {
           credentialId,
         })
         const revoked = await checkIsRevoked(ctx.publicClient, {
@@ -537,22 +537,21 @@ export const patternCrossChain: Pattern = {
   number: '7',
   title: 'Cross-Chain DID Sync',
   summary:
-    'The EOA signs a 7702 auth + an EIP-712 update off-chain; a relayer submits both atomically on the target chain. The EOA never needs ETH there.',
+    'The EOA signs a 7702 auth + an EIP-712 update off-chain; a broadcaster submits both atomically on the target chain. The EOA never needs ETH there.',
   contract: 'CrossChainDIDManager7702',
   steps: [
     {
       title: 'EOA signs auth + update (off-chain)',
       description:
-        'The identity EOA signs a 7702 authorization (executor: relayer) and an EIP-712 UpdateAuthorization. Both are bound to the target chain. No tx sent.',
+        'The identity EOA signs a 7702 authorization (executor: broadcaster) and an EIP-712 UpdateAuthorization. Both are bound to the target chain. No tx sent.',
       run: async (ctx) => {
         const eoaWallet = ctx.walletFor('identity')
-        const relayerAddress = ctx.walletFor('sponsor').account!.address
         const chainId = ctx.network.chain.id
         const nonce = await readCrossChainNonce(ctx)
 
         const authorization = await signCrossChainAuthorization(eoaWallet, {
           crossChainDidManagerAddress: ctx.addresses.crossChainDidManager,
-          relayerAddress,
+          relayerAddress: ctx.broadcasterAddress,
         })
         const signature = await signCrossChainUpdate(eoaWallet, {
           eoaAddress: ctx.identityAddress as `0x${string}`,
@@ -574,19 +573,17 @@ export const patternCrossChain: Pattern = {
       },
     },
     {
-      title: 'Relayer submits on the target chain',
+      title: 'Broadcaster submits on the target chain',
       description:
-        'The relayer bundles the EOA authorization into its own type-4 tx and calls setAttributeCrossChain. The EOA is delegated + updated atomically with zero EOA gas.',
+        'The broadcaster bundles the EOA authorization into its own type-4 tx and calls setAttributeCrossChain. The EOA is delegated + updated atomically with zero EOA gas.',
       run: async (ctx) => {
         const eoaWallet = ctx.walletFor('identity')
-        const relayerWallet = ctx.walletFor('sponsor')
-        const relayerAddress = relayerWallet.account!.address
         const chainId = ctx.network.chain.id
         const nonce = await readCrossChainNonce(ctx)
 
         const authorization = await signCrossChainAuthorization(eoaWallet, {
           crossChainDidManagerAddress: ctx.addresses.crossChainDidManager,
-          relayerAddress,
+          relayerAddress: ctx.broadcasterAddress,
         })
         const signature = await signCrossChainUpdate(eoaWallet, {
           eoaAddress: ctx.identityAddress as `0x${string}`,
@@ -600,7 +597,7 @@ export const patternCrossChain: Pattern = {
 
         return txResult(
           () =>
-            relayerSubmitUpdate(relayerWallet, ctx.publicClient, {
+            broadcasterSubmitUpdate(ctx.broadcaster, ctx.publicClient, {
               registry: ctx.addresses.registry,
               eoaAddress: ctx.identityAddress as `0x${string}`,
               attrName: ATTR_SVC,
@@ -609,7 +606,7 @@ export const patternCrossChain: Pattern = {
               signature,
               authorization,
             }),
-          `DID attribute synced by relayer; EOA paid zero gas (nonce=${nonce.toString()})`
+          `DID attribute synced by broadcaster; EOA paid zero gas (nonce=${nonce.toString()})`
         )
       },
     },
@@ -630,46 +627,20 @@ export const patternDelegationRevoke: Pattern = {
   steps: [
     {
       title: 'Delegate to DIDManager7702',
-      description: 'Sign a 7702 auth + send a minimal tx so the delegation code (0xef0100…) is set.',
-      run: async (ctx) => {
-        const wallet = ctx.walletFor('identity')
-        const hash = await wallet.sendTransaction({
-          to: ctx.identityAddress as `0x${string}`,
-          data: '0x',
-          gas: 50_000n,
-          chain: ctx.network.chain,
-          account: wallet.account!,
-          authorizationList: [
-            await wallet.signAuthorization({
-              contractAddress: ctx.addresses.didManager,
-              executor: 'self',
-              account: wallet.account!,
-            }),
-          ],
-        })
-        return { txHash: hash, summary: 'Delegation set to DIDManager7702' }
-      },
+      description:
+        'Sign a 7702 auth (executor: broadcaster) + send a minimal tx so the delegation code (0xef0100…) is set. The broadcaster pays the gas.',
+      run: async (ctx) =>
+        txResult(
+          () => setDelegation(ctx.walletFor('identity'), ctx.broadcaster, ctx.publicClient, ctx.addresses.didManager),
+          'Delegation set to DIDManager7702'
+        ),
     },
     {
       title: 'Revoke (authorize address(0))',
       description:
         'Sign a new auth pointing to address(0). The EVM clears the delegation code. Calling the EOA afterwards succeeds but does nothing — calldata is ignored.',
       run: async (ctx) => {
-        const wallet = ctx.walletFor('identity')
-        const hash = await wallet.sendTransaction({
-          to: ctx.identityAddress as `0x${string}`,
-          data: '0x',
-          gas: 50_000n,
-          chain: ctx.network.chain,
-          account: wallet.account!,
-          authorizationList: [
-            await wallet.signAuthorization({
-              contractAddress: zeroAddress,
-              executor: 'self',
-              account: wallet.account!,
-            }),
-          ],
-        })
+        const hash = await revokeDelegation(ctx.walletFor('identity'), ctx.broadcaster, ctx.publicClient)
         const code = await ctx.publicClient.getCode({ address: ctx.identityAddress as `0x${string}` })
         return {
           txHash: hash,
@@ -696,45 +667,23 @@ export const patternReDelegate: Pattern = {
       title: 'Delegate to DIDManager7702 (A)',
       description:
         'First delegation: the EOA authorizes DIDManager7702 so the EOA can write its own DID document. getCode returns the 0xef0100… designator.',
-      run: async (ctx) => {
-        const wallet = ctx.walletFor('identity')
-        const hash = await wallet.sendTransaction({
-          to: ctx.identityAddress as `0x${string}`,
-          data: '0x',
-          gas: 50_000n,
-          chain: ctx.network.chain,
-          account: wallet.account!,
-          authorizationList: [
-            await wallet.signAuthorization({
-              contractAddress: ctx.addresses.didManager,
-              executor: 'self',
-              account: wallet.account!,
-            }),
-          ],
-        })
-        return { txHash: hash, summary: 'Delegated to DIDManager7702 (contract A)' }
-      },
+      run: async (ctx) =>
+        txResult(
+          () => setDelegation(ctx.walletFor('identity'), ctx.broadcaster, ctx.publicClient, ctx.addresses.didManager),
+          'Delegated to DIDManager7702 (contract A)'
+        ),
     },
     {
       title: 'Re-delegate to ExpiringDIDManager7702 (B)',
       description:
         'A new authorization swaps the pointer atomically. getCode now references contract B, not A.',
       run: async (ctx) => {
-        const wallet = ctx.walletFor('identity')
-        const hash = await wallet.sendTransaction({
-          to: ctx.identityAddress as `0x${string}`,
-          data: '0x',
-          gas: 50_000n,
-          chain: ctx.network.chain,
-          account: wallet.account!,
-          authorizationList: [
-            await wallet.signAuthorization({
-              contractAddress: ctx.addresses.expiringDidManager,
-              executor: 'self',
-              account: wallet.account!,
-            }),
-          ],
-        })
+        const hash = await setDelegation(
+          ctx.walletFor('identity'),
+          ctx.broadcaster,
+          ctx.publicClient,
+          ctx.addresses.expiringDidManager
+        )
         const code = await ctx.publicClient.getCode({ address: ctx.identityAddress as `0x${string}` })
         return {
           txHash: hash,
@@ -760,54 +709,38 @@ export const patternExpiring: Pattern = {
   localOnly: true,
   steps: [
     {
-      title: 'Configure expiry (1 minute from now)',
+      title: 'Configure expiry (gasless)',
       description:
-        'The EOA delegates to ExpiringDIDManager7702 and calls configure(expiry) in the same tx. The contract stores a TTL in EOA storage; writes revert once block.timestamp exceeds it.',
+        'The identity EOA signs a 7702 auth + an EIP-712 Configure intent; the broadcaster relays configureBySig in the same tx. The contract stores a TTL in EOA storage; writes revert once block.timestamp exceeds it.',
       run: async (ctx) => {
-        const wallet = ctx.walletFor('identity')
         const block = await ctx.publicClient.getBlock()
         const expiry = block.timestamp + 60n
-        const hash = await wallet.sendTransaction({
-          to: ctx.identityAddress as `0x${string}`,
-          data: encodeFunctionData({
-            abi: EXPIRING_DID_MANAGER_ABI,
-            functionName: 'configure',
-            args: [expiry],
-          }),
-          gas: 100_000n,
-          chain: ctx.network.chain,
-          account: wallet.account!,
-          authorizationList: [
-            await wallet.signAuthorization({
-              contractAddress: ctx.addresses.expiringDidManager,
-              executor: 'self',
-              account: wallet.account!,
+        return txResult(
+          () =>
+            configureExpiringBySig(ctx.walletFor('identity'), ctx.broadcaster, ctx.publicClient, {
+              expiringDidManagerAddress: ctx.addresses.expiringDidManager,
+              expiry,
             }),
-          ],
-        })
-        return { txHash: hash, summary: `Expiry configured to block ${expiry.toString()}` }
+          `Expiry configured to block ${expiry.toString()}`
+        )
       },
     },
     {
       title: 'Write before expiry — succeeds',
       description:
         'setAttributeForIdentity runs through the delegated code. Because the current timestamp is still below the configured TTL, the write is allowed and the DID document is updated.',
-      run: async (ctx) => {
-        const wallet = ctx.walletFor('identity')
-        const data = encodeFunctionData({
-          abi: EXPIRING_DID_MANAGER_ABI,
-          functionName: 'setAttributeForIdentity',
-          args: [ctx.addresses.registry, ATTR_DID_KEY, keyValue('expiringkey'), VALIDITY],
-        })
-        const hash = await wallet.sendTransaction({
-          to: ctx.identityAddress as `0x${string}`,
-          data,
-          gas: 300_000n,
-          chain: ctx.network.chain,
-          account: wallet.account!,
-        })
-        return { txHash: hash, summary: 'Write before expiry succeeded' }
-      },
+      run: async (ctx) =>
+        txResult(
+          () =>
+            expiringSetAttribute(ctx.broadcaster, ctx.publicClient, {
+              registry: ctx.addresses.registry,
+              eoaAddress: ctx.identityAddress as `0x${string}`,
+              attrName: ATTR_DID_KEY,
+              attrValue: keyValue('expiringkey'),
+              validity: VALIDITY,
+            }),
+          'Write before expiry succeeded'
+        ),
     },
   ],
 }
@@ -827,24 +760,10 @@ export const patternExtCodeSize: Pattern = {
     {
       title: 'Delegate and inspect EOA code',
       description:
-        'getCode returns 0xef0100<20-byte-contract-address> (23 bytes) — not real bytecode. Any address.code.length > 0 guard is fooled.',
+        'getCode returns 0xef0100<20-byte-contract-address> (23 bytes) — not real bytecode. Any address.code.length > 0 guard is fooled. The broadcaster pays the gas.',
       run: async (ctx) => {
-        const wallet = ctx.walletFor('identity')
         const before = await ctx.publicClient.getCode({ address: ctx.identityAddress as `0x${string}` })
-        const hash = await wallet.sendTransaction({
-          to: ctx.identityAddress as `0x${string}`,
-          data: '0x',
-          gas: 50_000n,
-          chain: ctx.network.chain,
-          account: wallet.account!,
-          authorizationList: [
-            await wallet.signAuthorization({
-              contractAddress: ctx.addresses.didManager,
-              executor: 'self',
-              account: wallet.account!,
-            }),
-          ],
-        })
+        const hash = await setDelegation(ctx.walletFor('identity'), ctx.broadcaster, ctx.publicClient, ctx.addresses.didManager)
         const after = await ctx.publicClient.getCode({ address: ctx.identityAddress as `0x${string}` })
         return {
           txHash: hash,

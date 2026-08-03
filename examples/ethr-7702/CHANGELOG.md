@@ -1,6 +1,25 @@
 # Changelog
 
-## [1.9.0] — Dependency bump compatibility (viem 2.55, ethr-did-resolver 14, Vitest 4, TS 7)
+## [1.10.0] — Fully gasless delegation for the webapp's identity keys
+
+Every DID delegation/update in the webapp is now gasless for the keys the app manages. The identity/session/signer EOAs only ever sign (7702 auths + EIP-712 intents) off-chain; a separate **broadcaster** relays every type-4 tx and pays the gas. On Anvil the broadcaster is a dedicated fixed dev key; on Sepolia/Gnosis it is the connected injected wallet.
+
+### Added
+- **EIP-712 signature-relay (`*BySig`) in all owner/session-gated managers** so every pattern step is relayable: `PolicyDIDManager7702` (`configureBySig`, `setAttributeViaSessionKeyBySig`), `MultiSigDIDManager7702` (`configureBySig`), `RevocationDIDManager7702` (`setAttributeForIdentityBySig`, `revokeAttributeForIdentityBySig`, `revokeCredentialBySig`), `ExpiringDIDManager7702` (`configureBySig`). Design: digest = current stored nonce (no explicit nonce param), recovered signer must equal `address(this)` (the EOA) or the session key, EIP-2 low-s check, nonce incremented on relay. New nonce slots: Policy base+3/base+4, MultiSig base+2 (shared with update nonce), Revocation base+1, Expiring base+1.
+- `src/utils/storage.ts` — `managerStorageBase(name)` / `readNamespacedField(client, addr, name, offset)` via `getStorageAt` (works before any delegation is set). `src/utils/eip712.ts` — `managerDomain(name, chainId, verifyingContract)`.
+- `src/patterns/expiring.ts` (Pattern 10 now shared, was webapp-inline) and `src/patterns/delegation.ts` (set/revoke-delegation helpers for Patterns 8/9/11).
+- Webapp: keys persisted to localStorage (`ethr-7702.keyring.v1`), `StepContext.broadcaster`, connect-wallet UI on Sepolia/Gnosis (broadcaster = injected wallet), dedicated Anvil broadcaster key (`ANVIL_BROADCASTER_INDEX=6`) on local, "Reset keys" action, broadcaster panel + MetaMask type-4 restriction caveat.
+
+### Changed
+- All shared patterns now take `(signerWallet, broadcasterWallet, publicClient, params)` and use `executor: broadcasterAddress` on 7702 auths, so the EOA's account nonce is never inflated and gas is always paid by the broadcaster. `relayerSubmitUpdate` → `broadcasterSubmitUpdate` (cross-chain); sponsor role dropped from the webapp key manager.
+- Root tests pass a broadcaster client (anvil account[0]); multisig tests read the live nonce instead of hardcoding 0. New `test/expiring-updates.test.ts` proves the EOA balance is unchanged (zero gas).
+
+### Test suite
+- 64/64 root tests passing (13 files); webapp smoke 3/3 (all 12 patterns × all steps run gaslessly via the broadcaster); typechecks clean (root + webapp); production build succeeds.
+
+---
+
+
 
 ### Fixed
 - **DID resolution `notFound` error after bumping dependencies.** ethr-did-resolver v14 is a breaking resolver release: (1) `did/pub/Secp256k1/...` attribute values are now *validated* as real secp256k1 public keys (33/65 bytes) — the tests and the webapp's batched pattern wrote placeholder strings (`secp256k1pubkey`, `batchkey2`), which made the whole DID resolution fail with `error: notFound` ("Point of length 15 was invalid"). (2) Ed25519 keys now resolve as `Ed25519VerificationKey2020` + `publicKeyMultibase` instead of `Ed25519VerificationKey2018` + `publicKeyBase64`; Secp256k1 keys now emit `publicKeyJwk`.

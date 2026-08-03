@@ -76,26 +76,35 @@ describe('webapp pattern registry smoke test', () => {
       // Base anvil keys: identity starts at index (p*6) so each pattern gets a
       // disjoint slice (identity, sessionKey, sponsor, signer1..3).
       const base = 1 + p * 6
-      const keys = new KeyManager()
-      KEY_ROLES.forEach((role, j) => {
-        const pk = getAnvilPrivateKeys()[(base + j) % getAnvilPrivateKeys().length]
-        keys.importKey(role, pk)
-      })
-      keys.importKey('identity', getAnvilPrivateKeys()[base % getAnvilPrivateKeys().length])
+    const keys = new KeyManager()
+    KEY_ROLES.forEach((role, j) => {
+      const pk = getAnvilPrivateKeys()[(base + j) % getAnvilPrivateKeys().length]
+      keys.importKey(role, pk)
+    })
+    keys.importKey('identity', getAnvilPrivateKeys()[base % getAnvilPrivateKeys().length])
 
-      const ctx: StepContext = {
-        network,
-        publicClient,
-        keys,
-        addresses,
-        walletFor: (role) =>
-          createWalletClient({
-            chain: anvilChain,
-            transport: http(rpcUrl()),
-            account: keys.account(role),
-          }),
-        identityAddress: keys.address('identity'),
-      }
+    // Broadcaster: the same account used for deployment — pays all gas.
+    const broadcasterWallet = createWalletClient({
+      chain: anvilChain,
+      transport: http(rpcUrl()),
+      account: privateKeyToAccount(getAnvilPrivateKeys()[0]),
+    })
+
+    const ctx: StepContext = {
+      network,
+      publicClient,
+      keys,
+      addresses,
+      walletFor: (role) =>
+        createWalletClient({
+          chain: anvilChain,
+          transport: http(rpcUrl()),
+          account: keys.account(role),
+        }),
+      broadcaster: broadcasterWallet,
+      broadcasterAddress: broadcasterWallet.account!.address,
+      identityAddress: keys.address('identity'),
+    }
 
       for (let i = 0; i < pattern.steps.length; i++) {
         const step = pattern.steps[i]
@@ -172,6 +181,8 @@ describe('webapp pattern registry smoke test', () => {
           transport: http(rpcUrl()),
           account: keys.account(role),
         }),
+      broadcaster: walletClient,
+      broadcasterAddress: walletClient.account!.address,
       identityAddress,
     }
 

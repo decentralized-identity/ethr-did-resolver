@@ -1,12 +1,21 @@
 import { useEffect, useMemo, useState } from 'react'
 import { NETWORKS, NETWORK_LIST, type NetworkConfig } from './config/chains'
 import { KeyManager, KEY_ROLES, type KeyRole } from './lib/keys'
-import { makePublicClient, makeWalletClientFromAccount } from './lib/clients'
+import {
+  makePublicClient,
+  makeWalletClientFromAccount,
+  makeAnvilBroadcasterClient,
+  makeInjectedWalletClient,
+  requestAccounts,
+  injectedProvider,
+  type EIP1193Provider,
+} from './lib/clients'
 import { deployManagersInBrowser, deployRegistryInBrowser } from './lib/deploy'
 import { type ManagerAddresses } from './lib/deployed'
 import { resolveDid, type DidDoc } from './lib/resolve'
 import { PATTERNS, type Pattern } from './patterns/registry'
 import type { StepContext, StepResult } from './patterns/types'
+import type { WalletClient, Address } from 'viem'
 
 function short(addr: string | undefined): string {
   if (!addr) return '—'
@@ -26,6 +35,8 @@ function App() {
   const [didError, setDidError] = useState('')
   const [stepStates, setStepStates] = useState<Record<string, 'pending' | 'running' | 'done' | 'failed'>>({})
   const [stepResults, setStepResults] = useState<Record<string, StepResult>>({})
+  const [connectedAccount, setConnectedAccount] = useState<Address | null>(null)
+  const [walletError, setWalletError] = useState('')
 
   const network: NetworkConfig = NETWORKS[networkId]
 
@@ -39,12 +50,14 @@ function App() {
     setDidError('')
     setStepStates({})
     setStepResults({})
+    setConnectedAccount(null)
+    setWalletError('')
   }, [networkId])
 
   const publicClient = useMemo(() => makePublicClient(network), [network])
 
   // On local (Anvil), seed keys with pre-funded dev keys; on testnets, keep the
-  // random burner keys but leave funding to the user.
+  // persisted burner keys but leave funding to the user.
   useEffect(() => {
     if (networkId === 'local') keys.seedWithAnvilKeys()
   }, [networkId, keys])
@@ -63,13 +76,47 @@ function App() {
 
   const identityAddress = keys.address('identity')
 
+  /**
+   * The gas payer: on local (Anvil) a dedicated fixed dev key; on testnets the
+   * connected injected wallet. Always an account that is NOT the identity EOA.
+   */
+  const broadcaster: WalletClient = useMemo(() => {
+    if (networkId === 'local') return makeAnvilBroadcasterClient(network)
+    const provider = injectedProvider()
+    if (provider && connectedAccount) return makeInjectedWalletClient(network, provider, connectedAccount)
+    // Fallback never used for sending (guarded by UI); keep a no-op local client.
+    return makeAnvilBroadcasterClient(network)
+  }, [networkId, network, connectedAccount])
+
+  const broadcasterAddress: Address | null =
+    networkId === 'local' ? broadcaster.account?.address ?? null : connectedAccount
+
+  async function handleConnectWallet() {
+    setWalletError('')
+    const provider = injectedProvider() as EIP1193Provider | null
+    if (!provider) {
+      setWalletError('No injected wallet detected. Install MetaMask or Rabby, or switch to Local Anvil mode.')
+      return
+    }
+    try {
+      const accounts = await requestAccounts(provider)
+      if (accounts.length === 0) {
+        setWalletError('Wallet did not return any accounts.')
+        return
+      }
+      setConnectedAccount(accounts[0])
+      setLog((l) => [...l, `[network] connected wallet ${short(accounts[0])} — will pay gas on ${network.label}`])
+    } catch (err) {
+      setWalletError(err instanceof Error ? err.message : String(err))
+    }
+  }
+
   async function handleDeploy() {
     setDeployState('deploying')
     setDeployError('')
     try {
-      const wallet = makeWalletClientFromAccount(network, keys.account('identity'))
-      // Ensure the registry exists first (Resolve DID may have already deployed it
-      // on local mode — reuse it rather than deploying a second registry).
+      // The broadcaster pays for deployments too — the identity key stays gasless.
+      const wallet = broadcaster
       let registryAddr = registry
       if (networkId === 'local' && !registryAddr) {
         registryAddr = await deployRegistryInBrowser(wallet, publicClient)
@@ -90,16 +137,9 @@ function App() {
     setDidDoc(null)
     if (!identityAddress) return
     try {
-      // Step 0: the identity's DID document resolves before any contracts are
-      // deployed (baseline: identity EOA as controller, no attributes). On local
-      // mode the registry must exist to resolve against, so deploy just the
-      // registry on demand — no managers needed.
       let registryAddr = registry
       if (networkId === 'local' && !registryAddr) {
-        registryAddr = await deployRegistryInBrowser(
-          makeWalletClientFromAccount(network, keys.account('identity')),
-          publicClient
-        )
+        registryAddr = await deployRegistryInBrowser(broadcaster, publicClient)
         setRegistry(registryAddr)
       }
       const doc = await resolveDid(network, identityAddress, registryAddr ?? undefined)
@@ -111,12 +151,15 @@ function App() {
 
   function buildStepContext(): StepContext {
     if (!addresses || !registry) throw new Error('Contracts not deployed yet')
+    if (!broadcasterAddress) throw new Error('No broadcaster available — connect a wallet on testnets')
     return {
       network,
       publicClient,
       keys,
       addresses: { ...addresses, registry },
       walletFor: (role: KeyRole) => makeWalletClientFromAccount(network, keys.account(role)),
+      broadcaster,
+      broadcasterAddress,
       identityAddress,
     }
   }
@@ -147,6 +190,7 @@ function App() {
   }
 
   const isLocalOnlyDisabled = selectedPattern.localOnly && networkId !== 'local'
+  const testnetNeedsWallet = networkId !== 'local' && !connectedAccount
 
   return (
     <div className="app">
@@ -167,6 +211,12 @@ function App() {
       </header>
 
       {deployError && <div className="banner error">{deployError}</div>}
+      {walletError && <div className="banner error">{walletError}</div>}
+      {testnetNeedsWallet && (
+        <div className="banner warn">
+          Connect your wallet to pay gas on {network.label}. The identity EOA (a local key) stays gasless.
+        </div>
+      )}
       {selectedPattern.localOnly && networkId !== 'local' && (
         <div className="banner warn">
           Pattern {selectedPattern.number} (expiring delegation) requires a local Anvil to time-warp.
@@ -205,10 +255,8 @@ function App() {
               <h2>Deploy contracts</h2>
               <p>
                 {networkId === 'local'
-                  ? 'Auto-deploy ERC-1056 + all 7 delegation managers to the local Anvil node using the well-known Anvil dev key.'
-                  : `The delegation managers are not yet pre-deployed to ${network.label}. Deploy them from your browser — the identity key needs a small balance (${
-                      networkId === 'gnosis' ? 'xDAI' : 'test ETH'
-                    }).`}
+                  ? 'Auto-deploy ERC-1056 + all 7 delegation managers to the local Anvil node using the dedicated Anvil broadcaster key.'
+                  : `The delegation managers are not yet pre-deployed to ${network.label}. Deploy them from your browser — the connected wallet pays the gas.`}
               </p>
               <p>
                 Step 0 — hit <strong>Resolve DID</strong> above first: the identity's DID document
@@ -220,17 +268,27 @@ function App() {
                 On {network.label}, the registry is already live at{' '}
                 <code>{network.registry}</code>. On local Anvil it is deployed with everything else.
               </p>
-              <button onClick={handleDeploy} disabled={deployState === 'deploying'}>
-                {deployState === 'deploying' ? 'Deploying…' : 'Deploy contracts in browser'}
-              </button>
+              {networkId !== 'local' ? (
+                connectedAccount ? (
+                  <button onClick={handleDeploy} disabled={deployState === 'deploying'}>
+                    {deployState === 'deploying' ? 'Deploying…' : 'Deploy contracts (broadcaster pays)'}
+                  </button>
+                ) : (
+                  <button onClick={handleConnectWallet}>Connect wallet to pay gas</button>
+                )
+              ) : (
+                <button onClick={handleDeploy} disabled={deployState === 'deploying'}>
+                  {deployState === 'deploying' ? 'Deploying…' : 'Deploy contracts in browser'}
+                </button>
+              )}
               {deployState === 'failed' && <div className="banner error">{deployError}</div>}
               {networkId !== 'local' && network.faucetUrl && (
                 <p>
-                  Need funds? Get test funds from the{' '}
+                  Need funds for the broadcaster? Get test funds from the{' '}
                   <a href={network.faucetUrl} target="_blank" rel="noreferrer">
                     {network.label} faucet
                   </a>
-                  . Key manager below shows the identity address to fund.
+                  . The broadcaster (below) is the address to fund.
                 </p>
               )}
             </div>
@@ -260,7 +318,7 @@ function App() {
                         </div>
                         <button
                           onClick={() => runStep(selectedPattern, i)}
-                          disabled={state === 'running' || !addresses || isLocalOnlyDisabled}
+                          disabled={state === 'running' || !addresses || testnetNeedsWallet || isLocalOnlyDisabled}
                         >
                           {state === 'running' ? 'Running…' : state === 'done' ? 'Re-run' : 'Run'}
                         </button>
@@ -292,10 +350,10 @@ function App() {
         </section>
 
         <aside className="keys-panel">
-          <h2>Keys (in-memory)</h2>
+          <h2>DID keys (local)</h2>
           <p className="muted">
-            MetaMask cannot sign EIP-7702 authorizations, so keys are managed locally in browser memory.
-            Never persisted.
+            MetaMask cannot sign EIP-7702 authorizations, so the DID subject's keys are managed
+            locally and persisted to localStorage. They never pay gas.
           </p>
           <ul className="key-list">
             {KEY_ROLES.map((role) => (
@@ -312,6 +370,42 @@ function App() {
               </li>
             ))}
           </ul>
+          <div className="key-list broadcaster-row">
+            <div>
+              <strong>Broadcaster (pays gas)</strong>
+              <code>
+                {networkId === 'local'
+                  ? short(broadcasterAddress ?? undefined)
+                  : connectedAccount
+                    ? short(connectedAccount)
+                    : 'not connected'}
+              </code>
+            </div>
+            {networkId !== 'local' && (
+              <div className="key-actions">
+                {connectedAccount ? (
+                  <button title="Connected" disabled>
+                    ✓
+                  </button>
+                ) : (
+                  <button title="Connect wallet to pay gas" onClick={handleConnectWallet}>
+                    Connect
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+          <div className="key-actions panel-actions">
+            <button title="Reset keyring (new random keys)" onClick={() => keys.reset()}>
+              Reset keys
+            </button>
+          </div>
+          {networkId !== 'local' && (
+            <p className="muted">
+              Note: MetaMask currently restricts type-4 (EIP-7702) transactions to its own blessed
+              delegates. On testnets use a wallet that allows arbitrary delegated-code type-4 txs.
+            </p>
+          )}
           <div className="txlog">
             <h3>Activity</h3>
             {log.length === 0 && <p className="muted">No activity yet.</p>}
