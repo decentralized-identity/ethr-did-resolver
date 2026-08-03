@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.11.1] — Fix stale DID document reads on public testnet RPCs
+
+Public RPC pools (Sepolia/Gnosis via publicnode.com) load-balance across multiple backend nodes, so resolving the DID document immediately after a broadcast tx could hit a replica that hadn't indexed the new block yet, making a successful write look like it "didn't update". This affected every pattern equally — all of them share the same post-step resolve path.
+
+### Fixed
+- `runStep` now fetches the tx receipt's block number and waits (`waitForBlockVisible`, bounded ~12s) for the RPC's own view of the chain to reach it before resolving
+- `handleDeployManager` waits (`waitUntilDeployed`, bounded retries) for `eth_getCode` to actually observe the just-deployed contract before refreshing deployment status — same lagging-replica issue right after a CREATE2 deploy
+- `handleResolve` no longer clears the DID document to a blank placeholder while resolving (stale-while-revalidate: old doc stays visible with a "Resolving…" indicator until the fresh one arrives)
+- Added a monotonic generation counter so an out-of-order (slow, superseded) resolve response can never clobber a fresher one — protects against overlapping manual "Resolve DID" clicks and the automatic post-step resolve racing each other
+- `webapp/src/lib/rpcLag.ts` — extracted, unit-tested `waitForBlockVisible`/`waitUntilDeployed` helpers (6 new tests)
+
 ## [1.11.0] — Deterministic CREATE2 addresses + per-pattern lazy deployment
 
 The webapp no longer deploys all 7 delegation managers up front. Each pattern now declares exactly which manager(s) it needs (`Pattern.requires`); the app checks `eth_getCode` for just those and offers to deploy only what's missing. Addresses are deterministic: every manager is deployed through the canonical CREATE2 factory (`0x4e59b44847b379578588920cA78FbF26c0B4956C`, live on Sepolia and Gnosis; the same 69-byte runtime is injected on local Anvil via `anvil_setCode`). Since CREATE2 address derivation doesn't depend on chain ID, a manager's address is identical on Anvil, Sepolia, and Gnosis — "is it deployed?" is a single `eth_getCode` call against a precomputed address, no bookkeeping required.

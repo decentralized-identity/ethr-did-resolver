@@ -5,8 +5,6 @@
 import { defineConfig } from 'vitest/config'
 import { fileURLToPath } from 'node:url'
 
-const here = fileURLToPath(new URL('.', import.meta.url))
-
 export default defineConfig({
   resolve: {
     alias: {
@@ -15,7 +13,7 @@ export default defineConfig({
     },
   },
   test: {
-    include: [fileURLToPath(new URL('./src/patterns/smoke.test.ts', import.meta.url))],
+    include: [fileURLToPath(new URL('./src/**/*.test.ts', import.meta.url))],
     testTimeout: 120000,
     hookTimeout: 120000,
     pool: 'forks',

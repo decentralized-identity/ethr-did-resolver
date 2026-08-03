@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { NETWORKS, NETWORK_LIST, type NetworkConfig } from './config/chains'
 import { KeyManager, KEY_ROLES, type KeyRole } from './lib/keys'
 import {
@@ -13,6 +13,7 @@ import {
 import { deterministicManagerAddresses, deployManagerInBrowser, deployRegistryInBrowser, MANAGER_META } from './lib/deploy'
 import { isDeployed } from './lib/create2'
 import type { ManagerKey } from './lib/deployed'
+import { waitForBlockVisible, waitUntilDeployed } from './lib/rpcLag'
 import { resolveDid, type DidDoc } from './lib/resolve'
 import { PATTERNS, type Pattern } from './patterns/registry'
 import type { StepContext, StepResult } from './patterns/types'
@@ -41,10 +42,15 @@ function App() {
   const [log, setLog] = useState<string[]>([])
   const [didDoc, setDidDoc] = useState<DidDoc | null>(null)
   const [didError, setDidError] = useState('')
+  const [resolving, setResolving] = useState(false)
   const [stepStates, setStepStates] = useState<Record<string, 'pending' | 'running' | 'done' | 'failed'>>({})
   const [stepResults, setStepResults] = useState<Record<string, StepResult>>({})
   const [connectedAccount, setConnectedAccount] = useState<Address | null>(null)
   const [walletError, setWalletError] = useState('')
+  // Monotonic counter guarding against out-of-order resolve responses: if a
+  // slower, earlier resolveDid() call finishes after a newer one, its result
+  // must be discarded rather than clobbering the fresher document.
+  const resolveGeneration = useRef(0)
 
   const network: NetworkConfig = NETWORKS[networkId]
   const publicClient = useMemo(() => makePublicClient(network), [network])
@@ -149,6 +155,7 @@ function App() {
     try {
       const address = await deployManagerInBrowser(broadcaster, publicClient, key, network.rpcUrl)
       setLog((l) => [...l, `[deploy] ${MANAGER_META[key].label} → ${short(address)}`])
+      await waitUntilDeployed(publicClient, address)
       await refreshDeploymentStatus(selectedPattern)
       setManagerDeployState((s) => ({ ...s, [key]: 'idle' }))
     } catch (err) {
@@ -178,20 +185,36 @@ function App() {
     if (selectedPattern.needsRegistry && networkId === 'local' && !registry) await handleDeployRegistry()
   }
 
-  async function handleResolve() {
+  /**
+   * Resolve the DID document. `minBlock`, when passed, makes this wait for the
+   * RPC endpoint to catch up to that block before querying — see
+   * `waitForBlockVisible` for why this matters on public testnet RPCs. A
+   * generation counter discards out-of-order responses (e.g. a slow resolve
+   * finishing after a newer one started).
+   */
+  async function handleResolve(minBlock?: bigint) {
+    const generation = ++resolveGeneration.current
     setDidError('')
-    setDidDoc(null)
-    if (!identityAddress) return
+    setResolving(true)
+    if (!identityAddress) {
+      setResolving(false)
+      return
+    }
     try {
       let registryAddr = registry
       if (networkId === 'local' && !registryAddr) {
         registryAddr = await deployRegistryInBrowser(broadcaster, publicClient)
         setRegistry(registryAddr)
       }
+      if (minBlock !== undefined) await waitForBlockVisible(publicClient, minBlock)
       const doc = await resolveDid(network, identityAddress, registryAddr ?? undefined)
+      if (generation !== resolveGeneration.current) return // a newer resolve superseded this one
       setDidDoc(doc)
     } catch (err) {
+      if (generation !== resolveGeneration.current) return
       setDidError(err instanceof Error ? err.message : String(err))
+    } finally {
+      if (generation === resolveGeneration.current) setResolving(false)
     }
   }
 
@@ -225,9 +248,17 @@ function App() {
       setStepStates((s) => ({ ...s, [stepKey]: 'done' }))
       setStepResults((r) => ({ ...r, [stepKey]: result }))
       setLog((l) => [...l, `[${pattern.number}] ${step.title}: ${result.summary}`])
-      // Re-resolve the DID doc after a successful step.
+      // Re-resolve the DID doc after a successful step. If the step broadcast a
+      // tx, wait for the RPC's own view of the chain to reach that tx's block
+      // before reading — otherwise a public-RPC read can race the write (see
+      // waitForBlockVisible).
       if (pattern.number !== '8' && pattern.number !== '11') {
-        void handleResolve()
+        let minBlock: bigint | undefined
+        if (result.txHash) {
+          const receipt = await publicClient.getTransactionReceipt({ hash: result.txHash }).catch(() => null)
+          minBlock = receipt?.blockNumber
+        }
+        void handleResolve(minBlock)
       }
     } catch (err) {
       setStepStates((s) => ({ ...s, [stepKey]: 'failed' }))
@@ -306,7 +337,9 @@ function App() {
               <strong>Identity EOA</strong>
               <code>{identityAddress}</code>
             </div>
-            <button onClick={handleResolve}>Resolve DID</button>
+            <button onClick={() => handleResolve()} disabled={resolving}>
+              {resolving ? 'Resolving…' : 'Resolve DID'}
+            </button>
           </div>
 
           <div className="card contracts-card">
@@ -426,7 +459,12 @@ function App() {
           <div className="card did-card">
             <h2>DID Document</h2>
             {didError && <div className="banner error">{didError}</div>}
-            {!didDoc && !didError && <p className="muted">Resolve the DID to inspect the document.</p>}
+            {resolving && (
+              <p className="muted">
+                Resolving… {networkId !== 'local' && 'public RPCs can take a few seconds to catch up after a write.'}
+              </p>
+            )}
+            {!didDoc && !didError && !resolving && <p className="muted">Resolve the DID to inspect the document.</p>}
             {didDoc && <pre className="did-doc">{JSON.stringify(didDoc, null, 2)}</pre>}
           </div>
         </section>
