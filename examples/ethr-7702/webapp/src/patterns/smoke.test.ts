@@ -1,9 +1,12 @@
 // Headless smoke test for the interactive explainer's pattern registry.
 //
-// Boots an Anvil instance, deploys the registry + all 7 delegation managers via
-// the same code paths the webapp uses (webapp/src/lib/deploy.ts), then runs every
-// step of every pattern through webapp/src/patterns/registry.ts and proves each
-// one works. This is the same logic a user would trigger by clicking "Run".
+// Boots an Anvil instance and deploys contracts LAZILY, exactly like the
+// webapp: the registry once (shared infra), then only the manager(s) each
+// pattern's `requires` list declares — via the deterministic CREATE2 factory
+// (webapp/src/lib/create2.ts). Then it runs every step of every pattern
+// through webapp/src/patterns/registry.ts and proves each one works, while
+// also proving that laziness holds: a manager only gets deployed once a
+// pattern that needs it actually runs, never before.
 //
 // IMPORTANT: each pattern gets a FRESH identity EOA. EIP-7702 delegated contracts
 // share the EOA's storage slots, so re-delegating one shared EOA across the
@@ -18,7 +21,14 @@ import { anvil as anvilChain } from 'viem/chains'
 import { startAnvil, stopAnvil, getAnvilPrivateKeys, type AnvilInstance } from '../../../src/utils/anvil.js'
 import { KeyManager, KEY_ROLES } from '../lib/keys'
 import { NETWORKS } from '../config/chains'
-import { deployAllInBrowser, deployRegistryInBrowser } from '../lib/deploy'
+import {
+  deterministicManagerAddresses,
+  deployManagerInBrowser,
+  deployRegistryInBrowser,
+  MANAGER_KEYS,
+} from '../lib/deploy'
+import type { ManagerKey } from '../lib/deployed'
+import { isDeployed } from '../lib/create2'
 import { resolveDid } from '../lib/resolve'
 import { PATTERNS, type Pattern } from './registry'
 import type { StepContext, StepResult } from './types'
@@ -39,7 +49,7 @@ describe('webapp pattern registry smoke test', () => {
     if (anvil) await stopAnvil(anvil)
   })
 
-  it('runs every pattern step successfully against Anvil', async () => {
+  it('deploys only what each pattern needs, then runs every step successfully', async () => {
     const network = NETWORKS.local
 
     const publicClient = createPublicClient({
@@ -53,58 +63,77 @@ describe('webapp pattern registry smoke test', () => {
       account: privateKeyToAccount(getAnvilPrivateKeys()[0]),
     })
 
-    // 1. In-browser deployment (same path the app uses on local mode).
-    const addresses = await deployAllInBrowser(walletClient, publicClient)
-    expect(addresses.registry).toMatch(/^0x[0-9a-fA-F]{40}$/)
-    expect(addresses.didManager).toMatch(/^0x[0-9a-fA-F]{40}$/)
-    expect(addresses.policyDidManager).toMatch(/^0x[0-9a-fA-F]{40}$/)
-    expect(addresses.multiSigDidManager).toMatch(/^0x[0-9a-fA-F]{40}$/)
-    expect(addresses.revocationDidManager).toMatch(/^0x[0-9a-fA-F]{40}$/)
-    expect(addresses.crossChainDidManager).toMatch(/^0x[0-9a-fA-F]{40}$/)
-    expect(addresses.metaTxDidManager).toMatch(/^0x[0-9a-fA-F]{40}$/)
-    expect(addresses.expiringDidManager).toMatch(/^0x[0-9a-fA-F]{40}$/)
+    // Manager addresses are deterministic — computed up front, no deployment yet.
+    const managerAddresses = deterministicManagerAddresses()
+    expect(managerAddresses.didManager).toMatch(/^0x[0-9a-fA-F]{40}$/)
+
+    // Nothing is deployed yet — proves the app doesn't deploy anything up front.
+    for (const key of MANAGER_KEYS) {
+      expect(await isDeployed(publicClient, managerAddresses[key])).toBe(false)
+    }
+
+    // Registry is shared infra, deployed once (mirrors the app's on-demand Resolve DID).
+    const registry = await deployRegistryInBrowser(walletClient, publicClient)
+    expect(registry).toMatch(/^0x[0-9a-fA-F]{40}$/)
 
     const failures: string[] = []
     const ran: string[] = []
+    const everDeployed = new Set<ManagerKey>()
 
-    // Key index map: allocate distinct identity EOAs per pattern to avoid
-    // cross-pattern storage-slot collisions (see comment at top of file).
     const patterns = PATTERNS as Pattern[]
 
     for (let p = 0; p < patterns.length; p++) {
       const pattern = patterns[p]
+
+      // Laziness proof: before deploying for this pattern, every manager NOT
+      // required by any pattern seen so far must still be missing.
+      for (const key of MANAGER_KEYS) {
+        if (!everDeployed.has(key)) {
+          expect(await isDeployed(publicClient, managerAddresses[key])).toBe(false)
+        }
+      }
+
+      // Deploy only what this pattern declares it needs.
+      for (const key of pattern.requires) {
+        await deployManagerInBrowser(walletClient, publicClient, key, rpcUrl())
+        everDeployed.add(key)
+      }
+      for (const key of pattern.requires) {
+        expect(await isDeployed(publicClient, managerAddresses[key])).toBe(true)
+      }
+
       // Base anvil keys: identity starts at index (p*6) so each pattern gets a
       // disjoint slice (identity, sessionKey, sponsor, signer1..3).
       const base = 1 + p * 6
-    const keys = new KeyManager()
-    KEY_ROLES.forEach((role, j) => {
-      const pk = getAnvilPrivateKeys()[(base + j) % getAnvilPrivateKeys().length]
-      keys.importKey(role, pk)
-    })
-    keys.importKey('identity', getAnvilPrivateKeys()[base % getAnvilPrivateKeys().length])
+      const keys = new KeyManager()
+      KEY_ROLES.forEach((role, j) => {
+        const pk = getAnvilPrivateKeys()[(base + j) % getAnvilPrivateKeys().length]
+        keys.importKey(role, pk)
+      })
+      keys.importKey('identity', getAnvilPrivateKeys()[base % getAnvilPrivateKeys().length])
 
-    // Broadcaster: the same account used for deployment — pays all gas.
-    const broadcasterWallet = createWalletClient({
-      chain: anvilChain,
-      transport: http(rpcUrl()),
-      account: privateKeyToAccount(getAnvilPrivateKeys()[0]),
-    })
+      // Broadcaster: the same account used for deployment — pays all gas.
+      const broadcasterWallet = createWalletClient({
+        chain: anvilChain,
+        transport: http(rpcUrl()),
+        account: privateKeyToAccount(getAnvilPrivateKeys()[0]),
+      })
 
-    const ctx: StepContext = {
-      network,
-      publicClient,
-      keys,
-      addresses,
-      walletFor: (role) =>
-        createWalletClient({
-          chain: anvilChain,
-          transport: http(rpcUrl()),
-          account: keys.account(role),
-        }),
-      broadcaster: broadcasterWallet,
-      broadcasterAddress: broadcasterWallet.account!.address,
-      identityAddress: keys.address('identity'),
-    }
+      const ctx: StepContext = {
+        network,
+        publicClient,
+        keys,
+        addresses: { ...managerAddresses, registry },
+        walletFor: (role) =>
+          createWalletClient({
+            chain: anvilChain,
+            transport: http(rpcUrl()),
+            account: keys.account(role),
+          }),
+        broadcaster: broadcasterWallet,
+        broadcasterAddress: broadcasterWallet.account!.address,
+        identityAddress: keys.address('identity'),
+      }
 
       for (let i = 0; i < pattern.steps.length; i++) {
         const step = pattern.steps[i]
@@ -166,7 +195,18 @@ describe('webapp pattern registry smoke test', () => {
       transport: http(rpcUrl()),
       account: privateKeyToAccount(getAnvilPrivateKeys()[0]),
     })
-    const addresses = await deployAllInBrowser(walletClient, publicClient)
+    const managerAddresses = deterministicManagerAddresses()
+    const registry = await deployRegistryInBrowser(walletClient, publicClient)
+    const patternIds = ['simple', 'batched', 'gasless', 'policy', 'revocation']
+    const neededManagers = new Set<ManagerKey>()
+    for (const id of patternIds) {
+      const pattern = (PATTERNS as Pattern[]).find((p) => p.id === id)!
+      pattern.requires.forEach((key) => neededManagers.add(key))
+    }
+    for (const key of neededManagers) {
+      await deployManagerInBrowser(walletClient, publicClient, key, rpcUrl())
+    }
+
     const keys = new KeyManager()
     keys.seedWithAnvilKeys()
     const identityAddress = keys.address('identity')
@@ -174,7 +214,7 @@ describe('webapp pattern registry smoke test', () => {
       network,
       publicClient,
       keys,
-      addresses,
+      addresses: { ...managerAddresses, registry },
       walletFor: (role) =>
         createWalletClient({
           chain: anvilChain,
@@ -187,7 +227,7 @@ describe('webapp pattern registry smoke test', () => {
     }
 
     // Run the update-only patterns (0, 1, 2, 3, 6) which leave DID attributes set.
-    for (const id of ['simple', 'batched', 'gasless', 'policy', 'revocation']) {
+    for (const id of patternIds) {
       const pattern = (PATTERNS as Pattern[]).find((p) => p.id === id)!
       for (const step of pattern.steps) {
         // Skip non-DID-write steps (configure only).
@@ -195,7 +235,7 @@ describe('webapp pattern registry smoke test', () => {
       }
     }
 
-    const doc = await resolveDid(network, ctx.identityAddress, addresses.registry)
+    const doc = await resolveDid(network, ctx.identityAddress, registry)
     expect(doc.id.toLowerCase()).toContain(ctx.identityAddress.toLowerCase())
     const methods = [
       ...((doc.assertionMethod as unknown[] | undefined) ?? []),

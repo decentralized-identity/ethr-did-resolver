@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { NETWORKS, NETWORK_LIST, type NetworkConfig } from './config/chains'
 import { KeyManager, KEY_ROLES, type KeyRole } from './lib/keys'
 import {
@@ -10,8 +10,9 @@ import {
   injectedProvider,
   type EIP1193Provider,
 } from './lib/clients'
-import { deployManagersInBrowser, deployRegistryInBrowser } from './lib/deploy'
-import { type ManagerAddresses } from './lib/deployed'
+import { deterministicManagerAddresses, deployManagerInBrowser, deployRegistryInBrowser, MANAGER_META } from './lib/deploy'
+import { isDeployed } from './lib/create2'
+import type { ManagerKey } from './lib/deployed'
 import { resolveDid, type DidDoc } from './lib/resolve'
 import { PATTERNS, type Pattern } from './patterns/registry'
 import type { StepContext, StepResult } from './patterns/types'
@@ -22,12 +23,19 @@ function short(addr: string | undefined): string {
   return `${addr.slice(0, 6)}…${addr.slice(-4)}`
 }
 
+type DeployState = 'idle' | 'deploying' | 'failed'
+
 function App() {
   const [networkId, setNetworkId] = useState<'local' | 'sepolia' | 'gnosis'>('local')
   const [keys] = useState(() => new KeyManager())
+  // Manager addresses are DETERMINISTIC (CREATE2) — computed once, chain-independent.
+  // Whether a manager actually has code on the current network is tracked separately.
+  const addresses = useMemo(() => deterministicManagerAddresses(), [])
   const [registry, setRegistry] = useState<`0x${string}` | null>(null)
-  const [addresses, setAddresses] = useState<ManagerAddresses | null>(null)
-  const [deployState, setDeployState] = useState<'idle' | 'deploying' | 'failed' | 'done'>('idle')
+  const [deployedManagers, setDeployedManagers] = useState<Set<ManagerKey>>(new Set())
+  const [checkingContracts, setCheckingContracts] = useState(false)
+  const [managerDeployState, setManagerDeployState] = useState<Partial<Record<ManagerKey, DeployState>>>({})
+  const [registryDeployState, setRegistryDeployState] = useState<DeployState>('idle')
   const [deployError, setDeployError] = useState('')
   const [selectedPattern, setSelectedPattern] = useState<Pattern>(PATTERNS[0])
   const [log, setLog] = useState<string[]>([])
@@ -39,12 +47,14 @@ function App() {
   const [walletError, setWalletError] = useState('')
 
   const network: NetworkConfig = NETWORKS[networkId]
+  const publicClient = useMemo(() => makePublicClient(network), [network])
 
   useEffect(() => {
     // Reset per-network state when the network changes.
-    setAddresses(null)
     setRegistry(network.registry)
-    setDeployState('idle')
+    setDeployedManagers(new Set())
+    setManagerDeployState({})
+    setRegistryDeployState('idle')
     setDeployError('')
     setDidDoc(null)
     setDidError('')
@@ -52,9 +62,7 @@ function App() {
     setStepResults({})
     setConnectedAccount(null)
     setWalletError('')
-  }, [networkId])
-
-  const publicClient = useMemo(() => makePublicClient(network), [network])
+  }, [networkId, network.registry])
 
   // On local (Anvil), seed keys with pre-funded dev keys; on testnets, keep the
   // persisted burner keys but leave funding to the user.
@@ -75,6 +83,30 @@ function App() {
   }, [publicClient, network, networkId])
 
   const identityAddress = keys.address('identity')
+
+  /**
+   * Check which of the SELECTED pattern's required contracts already have
+   * code on the current network. Only checks what the pattern actually
+   * needs — this is the "ask for deployment only then" check.
+   */
+  const refreshDeploymentStatus = useCallback(
+    async (pattern: Pattern) => {
+      setCheckingContracts(true)
+      try {
+        const results = await Promise.all(
+          pattern.requires.map(async (key) => [key, await isDeployed(publicClient, addresses[key])] as const)
+        )
+        setDeployedManagers(new Set(results.filter(([, deployed]) => deployed).map(([key]) => key)))
+      } finally {
+        setCheckingContracts(false)
+      }
+    },
+    [publicClient, addresses]
+  )
+
+  useEffect(() => {
+    void refreshDeploymentStatus(selectedPattern)
+  }, [selectedPattern, refreshDeploymentStatus])
 
   /**
    * The gas payer: on local (Anvil) a dedicated fixed dev key; on testnets the
@@ -111,25 +143,39 @@ function App() {
     }
   }
 
-  async function handleDeploy() {
-    setDeployState('deploying')
+  async function handleDeployManager(key: ManagerKey) {
     setDeployError('')
+    setManagerDeployState((s) => ({ ...s, [key]: 'deploying' }))
     try {
-      // The broadcaster pays for deployments too — the identity key stays gasless.
-      const wallet = broadcaster
-      let registryAddr = registry
-      if (networkId === 'local' && !registryAddr) {
-        registryAddr = await deployRegistryInBrowser(wallet, publicClient)
-        setRegistry(registryAddr)
-      }
-      const managers = await deployManagersInBrowser(wallet, publicClient)
-      setAddresses(managers)
-      if (networkId !== 'local') setRegistry(network.registry as `0x${string}`)
-      setDeployState('done')
+      const address = await deployManagerInBrowser(broadcaster, publicClient, key, network.rpcUrl)
+      setLog((l) => [...l, `[deploy] ${MANAGER_META[key].label} → ${short(address)}`])
+      await refreshDeploymentStatus(selectedPattern)
+      setManagerDeployState((s) => ({ ...s, [key]: 'idle' }))
     } catch (err) {
-      setDeployState('failed')
+      setManagerDeployState((s) => ({ ...s, [key]: 'failed' }))
       setDeployError(err instanceof Error ? err.message : String(err))
     }
+  }
+
+  async function handleDeployRegistry() {
+    setDeployError('')
+    setRegistryDeployState('deploying')
+    try {
+      const addr = await deployRegistryInBrowser(broadcaster, publicClient)
+      setRegistry(addr)
+      setLog((l) => [...l, `[deploy] Registry → ${short(addr)}`])
+      setRegistryDeployState('idle')
+    } catch (err) {
+      setRegistryDeployState('failed')
+      setDeployError(err instanceof Error ? err.message : String(err))
+    }
+  }
+
+  async function handleDeployMissing() {
+    for (const key of selectedPattern.requires) {
+      if (!deployedManagers.has(key)) await handleDeployManager(key)
+    }
+    if (selectedPattern.needsRegistry && networkId === 'local' && !registry) await handleDeployRegistry()
   }
 
   async function handleResolve() {
@@ -149,14 +195,18 @@ function App() {
     }
   }
 
-  function buildStepContext(): StepContext {
-    if (!addresses || !registry) throw new Error('Contracts not deployed yet')
+  function buildStepContext(pattern: Pattern): StepContext {
     if (!broadcasterAddress) throw new Error('No broadcaster available — connect a wallet on testnets')
+    const missing = pattern.requires.filter((key) => !deployedManagers.has(key))
+    if (missing.length > 0) {
+      throw new Error(`Missing contracts: ${missing.map((key) => MANAGER_META[key].label).join(', ')}`)
+    }
+    if (pattern.needsRegistry && !registry) throw new Error('Registry not deployed yet')
     return {
       network,
       publicClient,
       keys,
-      addresses: { ...addresses, registry },
+      addresses: { ...addresses, registry: registry ?? '0x0000000000000000000000000000000000000000' },
       walletFor: (role: KeyRole) => makeWalletClientFromAccount(network, keys.account(role)),
       broadcaster,
       broadcasterAddress,
@@ -170,7 +220,7 @@ function App() {
     setStepStates((s) => ({ ...s, [stepKey]: 'running' }))
     setStepResults((r) => ({ ...r, [stepKey]: { summary: 'Running…' } }))
     try {
-      const ctx = buildStepContext()
+      const ctx = buildStepContext(pattern)
       const result = await step.run(ctx)
       setStepStates((s) => ({ ...s, [stepKey]: 'done' }))
       setStepResults((r) => ({ ...r, [stepKey]: result }))
@@ -191,6 +241,9 @@ function App() {
 
   const isLocalOnlyDisabled = selectedPattern.localOnly && networkId !== 'local'
   const testnetNeedsWallet = networkId !== 'local' && !connectedAccount
+  const missingManagers = selectedPattern.requires.filter((key) => !deployedManagers.has(key))
+  const registryReady = !selectedPattern.needsRegistry || Boolean(registry)
+  const contractsReady = missingManagers.length === 0 && registryReady
 
   return (
     <div className="app">
@@ -256,96 +309,119 @@ function App() {
             <button onClick={handleResolve}>Resolve DID</button>
           </div>
 
-          {!addresses ? (
-            <div className="card deploy-card">
-              <h2>Deploy contracts</h2>
-              <p>
-                {networkId === 'local'
-                  ? 'Auto-deploy ERC-1056 + all 7 delegation managers to the local Anvil node using the dedicated Anvil broadcaster key.'
-                  : `The delegation managers are not yet pre-deployed to ${network.label}. Deploy them from your browser — the connected wallet pays the gas.`}
-              </p>
-              <p>
-                Step 0 — hit <strong>Resolve DID</strong> above first: the identity's DID document
-                already resolves (identity as controller, no attributes) before any contract is
-                deployed. On {network.label}, only a registry is needed for that, which the app
-                deploys on demand.
-              </p>
-              <p>
-                On {network.label}, the registry is already live at{' '}
-                <code>{network.registry}</code>. On local Anvil it is deployed with everything else.
-              </p>
-              {networkId !== 'local' ? (
-                connectedAccount ? (
-                  <button onClick={handleDeploy} disabled={deployState === 'deploying'}>
-                    {deployState === 'deploying' ? 'Deploying…' : 'Deploy contracts (broadcaster pays)'}
+          <div className="card contracts-card">
+            <h2>Contracts for Pattern {selectedPattern.number}</h2>
+            <p className="muted">
+              Every manager has a deterministic CREATE2 address — the same on Anvil, Sepolia, and
+              Gnosis. Only the contract(s) this pattern actually calls are checked and, if missing,
+              deployed here — nothing else.
+            </p>
+            {checkingContracts && <p className="muted">Checking on-chain state…</p>}
+            {selectedPattern.needsRegistry && (
+              <div className="contract-row">
+                <div>
+                  <strong>Registry (ERC-1056)</strong>
+                  <code>{registry ?? (networkId === 'local' ? 'not deployed' : network.registry)}</code>
+                </div>
+                {registry ? (
+                  <span className="ok">✓ deployed</span>
+                ) : networkId === 'local' ? (
+                  <button onClick={handleDeployRegistry} disabled={registryDeployState === 'deploying'}>
+                    {registryDeployState === 'deploying' ? 'Deploying…' : 'Deploy registry'}
                   </button>
                 ) : (
-                  <button onClick={handleConnectWallet}>Connect wallet to pay gas</button>
-                )
-              ) : (
-                <button onClick={handleDeploy} disabled={deployState === 'deploying'}>
-                  {deployState === 'deploying' ? 'Deploying…' : 'Deploy contracts in browser'}
-                </button>
-              )}
-              {deployState === 'failed' && <div className="banner error">{deployError}</div>}
-              {networkId !== 'local' && network.faucetUrl && (
-                <p>
-                  Need funds for the broadcaster? Get test funds from the{' '}
-                  <a href={network.faucetUrl} target="_blank" rel="noreferrer">
-                    {network.label} faucet
-                  </a>
-                  . The broadcaster (below) is the address to fund.
-                </p>
-              )}
-            </div>
-          ) : (
-            <div className="card pattern-card">
-              <div className="pattern-head">
-                <span className="badge">Pattern {selectedPattern.number}</span>
-                <h2>{selectedPattern.title}</h2>
-                <p className="summary">{selectedPattern.summary}</p>
-                <p className="contract">
-                  Contract: <code>{selectedPattern.contract}</code>
-                </p>
+                  <span className="muted">pre-deployed on {network.label}</span>
+                )}
               </div>
+            )}
+            {selectedPattern.requires.map((key) => {
+              const meta = MANAGER_META[key]
+              const deployed = deployedManagers.has(key)
+              const state = managerDeployState[key] ?? 'idle'
+              return (
+                <div className="contract-row" key={key}>
+                  <div>
+                    <strong>{meta.label}</strong>
+                    <code>{short(addresses[key])}</code>
+                  </div>
+                  {deployed ? (
+                    <span className="ok">✓ deployed</span>
+                  ) : (
+                    <button
+                      onClick={() => handleDeployManager(key)}
+                      disabled={state === 'deploying' || (networkId !== 'local' && !connectedAccount)}
+                    >
+                      {state === 'deploying' ? 'Deploying…' : `Deploy ${meta.label}`}
+                    </button>
+                  )}
+                </div>
+              )
+            })}
+            {!contractsReady && (missingManagers.length > 0 || (selectedPattern.needsRegistry && !registry)) && (
+              <button className="btn-wide" onClick={handleDeployMissing} disabled={networkId !== 'local' && !connectedAccount}>
+                Deploy all missing for this pattern
+              </button>
+            )}
+            {networkId !== 'local' && !connectedAccount && !contractsReady && (
+              <button onClick={handleConnectWallet}>Connect wallet to pay gas</button>
+            )}
+            {networkId !== 'local' && network.faucetUrl && !contractsReady && (
+              <p>
+                Need funds? Get test funds from the{' '}
+                <a href={network.faucetUrl} target="_blank" rel="noreferrer">
+                  {network.label} faucet
+                </a>
+                .
+              </p>
+            )}
+          </div>
 
-              <div className="steps">
-                {selectedPattern.steps.map((step, i) => {
-                  const stepKey = `${selectedPattern.id}:${i}`
-                  const state = stepStates[stepKey] ?? 'pending'
-                  const result = stepResults[stepKey]
-                  return (
-                    <div key={stepKey} className={`step ${state}`}>
-                      <div className="step-header">
-                        <span className="step-num">{i + 1}</span>
-                        <div>
-                          <h3>{step.title}</h3>
-                          <p>{step.description}</p>
-                        </div>
-                        <button
-                          onClick={() => runStep(selectedPattern, i)}
-                          disabled={state === 'running' || !addresses || testnetNeedsWallet || isLocalOnlyDisabled}
-                        >
-                          {state === 'running' ? 'Running…' : state === 'done' ? 'Re-run' : 'Run'}
-                        </button>
-                      </div>
-                      {result && (
-                        <div className="step-result">
-                          <p>{result.summary}</p>
-                          {result.txHash && (
-                            <p>
-                              tx: <code>{result.txHash}</code>
-                            </p>
-                          )}
-                          {result.detail && <pre>{result.detail}</pre>}
-                        </div>
-                      )}
-                    </div>
-                  )
-                })}
-              </div>
+          <div className="card pattern-card">
+            <div className="pattern-head">
+              <span className="badge">Pattern {selectedPattern.number}</span>
+              <h2>{selectedPattern.title}</h2>
+              <p className="summary">{selectedPattern.summary}</p>
+              <p className="contract">
+                Contract: <code>{selectedPattern.contract}</code>
+              </p>
             </div>
-          )}
+
+            <div className="steps">
+              {selectedPattern.steps.map((step, i) => {
+                const stepKey = `${selectedPattern.id}:${i}`
+                const state = stepStates[stepKey] ?? 'pending'
+                const result = stepResults[stepKey]
+                return (
+                  <div key={stepKey} className={`step ${state}`}>
+                    <div className="step-header">
+                      <span className="step-num">{i + 1}</span>
+                      <div>
+                        <h3>{step.title}</h3>
+                        <p>{step.description}</p>
+                      </div>
+                      <button
+                        onClick={() => runStep(selectedPattern, i)}
+                        disabled={state === 'running' || !contractsReady || testnetNeedsWallet || isLocalOnlyDisabled}
+                      >
+                        {state === 'running' ? 'Running…' : state === 'done' ? 'Re-run' : 'Run'}
+                      </button>
+                    </div>
+                    {result && (
+                      <div className="step-result">
+                        <p>{result.summary}</p>
+                        {result.txHash && (
+                          <p>
+                            tx: <code>{result.txHash}</code>
+                          </p>
+                        )}
+                        {result.detail && <pre>{result.detail}</pre>}
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          </div>
 
           <div className="card did-card">
             <h2>DID Document</h2>

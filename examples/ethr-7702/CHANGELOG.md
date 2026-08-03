@@ -1,5 +1,26 @@
 # Changelog
 
+## [1.11.0] — Deterministic CREATE2 addresses + per-pattern lazy deployment
+
+The webapp no longer deploys all 7 delegation managers up front. Each pattern now declares exactly which manager(s) it needs (`Pattern.requires`); the app checks `eth_getCode` for just those and offers to deploy only what's missing. Addresses are deterministic: every manager is deployed through the canonical CREATE2 factory (`0x4e59b44847b379578588920cA78FbF26c0B4956C`, live on Sepolia and Gnosis; the same 69-byte runtime is injected on local Anvil via `anvil_setCode`). Since CREATE2 address derivation doesn't depend on chain ID, a manager's address is identical on Anvil, Sepolia, and Gnosis — "is it deployed?" is a single `eth_getCode` call against a precomputed address, no bookkeeping required.
+
+### Added
+- `webapp/src/lib/create2.ts` — `CREATE2_FACTORY`, `managerSalt`, `create2Address`, `isDeployed`, `ensureFactory` (Anvil injection via raw JSON-RPC `anvil_setCode`), `deployViaCreate2` (idempotent: skips the send if code already exists)
+- `Pattern.requires: ManagerKey[]` and `Pattern.needsRegistry: boolean` on all 12 patterns in `webapp/src/patterns/registry.ts`
+- App.tsx "Contracts for Pattern N" card: shows each required manager's deterministic address + deployed/missing status, with per-manager and "deploy all missing" buttons; registry gets its own row (local-only deploy button, pre-deployed note on testnets)
+
+### Changed
+- `webapp/src/lib/deploy.ts` rewritten around `MANAGER_META` (contract name + artifact per key) and `deterministicManagerAddresses()` (pure, sync — no RPC calls); `deployManagerInBrowser(key)` replaces `deployManagersInBrowser`/`deployAllInBrowser`
+- `webapp/src/patterns/smoke.test.ts` deploys lazily per pattern and asserts laziness: any manager outside the union of patterns run so far must still have no code
+- Removed the all-at-once "Deploy contracts" flow from App.tsx; step Run buttons are now gated on the selected pattern's specific requirements
+
+### Removed
+- `webapp/src/config/deployed.json`, `webapp/src/lib/deployed.ts`'s `loadPredeployedManagers`/`EMPTY_MANAGER_ADDRESSES`, and `scripts/deploy-testnet.ts` — the "pre-deploy everything to a committed address file" workflow is superseded by deterministic, checkable addresses
+
+### Verification
+- Empirically verified the CREATE2 factory's calldata interface (no selector; `salt (32 bytes) || initCode`) via `debug_traceCall` on Anvil, confirmed against the real deployed runtime fetched from Sepolia and Gnosis (identical 69-byte code at `0x4e59...` and `0x914d...` — the Safe singleton factory happens to run the same minimal deployer)
+- 64/64 root tests, webapp smoke 3/3, `tsc` clean (root + webapp), `vite build` succeeds
+
 ## [1.10.0] — Fully gasless delegation for the webapp's identity keys
 
 Every DID delegation/update in the webapp is now gasless for the keys the app manages. The identity/session/signer EOAs only ever sign (7702 auths + EIP-712 intents) off-chain; a separate **broadcaster** relays every type-4 tx and pays the gas. On Anvil the broadcaster is a dedicated fixed dev key; on Sepolia/Gnosis it is the connected injected wallet.

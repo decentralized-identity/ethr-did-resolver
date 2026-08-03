@@ -9,6 +9,7 @@ import type { Hash, PublicClient, WalletClient, Address } from 'viem'
 import type { NetworkConfig } from '../config/chains'
 import type { KeyManager, KeyRole } from '../lib/keys'
 import type { DeployedAll } from '../lib/deploy'
+import type { ManagerKey } from '../lib/deployed'
 
 export type StepResult = {
   /** Transaction hash if a tx was sent. */
@@ -50,5 +51,9 @@ export type Pattern = {
   contract: string
   /** True if this pattern needs a local Anvil (e.g. time-warp) to fully demo. */
   localOnly?: boolean
+  /** Delegation manager(s) this pattern needs deployed before its steps can run. */
+  requires: ManagerKey[]
+  /** True if any step writes through the ERC-1056 registry. */
+  needsRegistry: boolean
   steps: Step[]
 }

@@ -117,6 +117,8 @@ export const patternSimple: Pattern = {
   summary:
     'The EOA signs an EIP-7702 authorization delegating to DIDManager7702; a broadcaster relays the type-4 tx that sets the delegation and updates the DID document.',
   contract: 'DIDManager7702',
+  requires: ['didManager'],
+  needsRegistry: true,
   steps: [
     {
       title: 'EOA signs, broadcaster relays the update',
@@ -149,6 +151,8 @@ export const patternBatched: Pattern = {
   summary:
     'One 7702 authorization + one type-4 tx sets N DID attributes atomically — an Ed25519 key and a Secp256k1 recovery key in a single transaction.',
   contract: 'DIDManager7702',
+  requires: ['didManager'],
+  needsRegistry: true,
   steps: [
     {
       title: 'Atomic multi-attribute write',
@@ -186,6 +190,8 @@ export const patternGasless: Pattern = {
   summary:
     'The EOA signs the 7702 auth offline; a broadcaster relays the type-4 tx and pays all gas. The EOA needs zero ETH.',
   contract: 'DIDManager7702',
+  requires: ['didManager'],
+  needsRegistry: true,
   steps: [
     {
       title: 'EOA signs, broadcaster pays',
@@ -226,6 +232,8 @@ export const patternPolicy: Pattern = {
   summary:
     'The EOA delegates to PolicyDIDManager7702 and configures a session key with an allowed prefix + validity cap. The session key then updates the DID doc — without the EOA.',
   contract: 'PolicyDIDManager7702',
+  requires: ['policyDidManager'],
+  needsRegistry: true,
   steps: [
     {
       title: 'Configure session key + policy (gasless)',
@@ -277,6 +285,8 @@ export const patternMultiSig: Pattern = {
   summary:
     'The EOA configures a 2-of-3 co-signer set on MultiSigDIDManager7702. An update requires 2 valid signatures over the canonical update digest — no single key has unilateral control.',
   contract: 'MultiSigDIDManager7702',
+  requires: ['multiSigDidManager'],
+  needsRegistry: true,
   steps: [
     {
       title: 'Configure 2-of-3 signer set (gasless)',
@@ -392,6 +402,8 @@ export const patternMetaTx: Pattern = {
   summary:
     'The EOA signs an EIP-712 typed-data intent off-chain; a broadcaster submits the tx and pays gas. Replay protection via a per-EOA nonce. This is the security-hardened gasless pattern.',
   contract: 'MetaTxDIDManager7702',
+  requires: ['metaTxDidManager'],
+  needsRegistry: true,
   steps: [
     {
       title: 'EOA signs EIP-712 intent (off-chain)',
@@ -472,6 +484,8 @@ export const patternRevocation: Pattern = {
   summary:
     'Dual revocation: ERC-1056 attribute expiry (revokeAttribute sets validTo=0) plus an app-level credential revocation flag stored in EOA storage.',
   contract: 'RevocationDIDManager7702',
+  requires: ['revocationDidManager'],
+  needsRegistry: true,
   steps: [
     {
       title: 'EOA signs; broadcaster sets delegation + attribute',
@@ -539,6 +553,8 @@ export const patternCrossChain: Pattern = {
   summary:
     'The EOA signs a 7702 auth + an EIP-712 update off-chain; a broadcaster submits both atomically on the target chain. The EOA never needs ETH there.',
   contract: 'CrossChainDIDManager7702',
+  requires: ['crossChainDidManager'],
+  needsRegistry: true,
   steps: [
     {
       title: 'EOA signs auth + update (off-chain)',
@@ -624,6 +640,8 @@ export const patternDelegationRevoke: Pattern = {
   summary:
     'The EOA revokes its 7702 delegation by re-authorizing to address(0). EOA code is cleared; subsequent calls become no-ops.',
   contract: 'EIP-7702 (authorization)',
+  requires: ['didManager'],
+  needsRegistry: false,
   steps: [
     {
       title: 'Delegate to DIDManager7702',
@@ -662,6 +680,8 @@ export const patternReDelegate: Pattern = {
   summary:
     'Re-authorizing to a different contract atomically swaps the code pointer. Old contract functions revert; new ones work.',
   contract: 'DIDManager7702 → ExpiringDIDManager7702',
+  requires: ['didManager', 'expiringDidManager'],
+  needsRegistry: false,
   steps: [
     {
       title: 'Delegate to DIDManager7702 (A)',
@@ -707,6 +727,8 @@ export const patternExpiring: Pattern = {
     'ExpiringDIDManager7702 enforces an app-level time-to-live. Writes succeed before expiry, revert after. No protocol change needed.',
   contract: 'ExpiringDIDManager7702',
   localOnly: true,
+  requires: ['expiringDidManager'],
+  needsRegistry: true,
   steps: [
     {
       title: 'Configure expiry (gasless)',
@@ -756,6 +778,8 @@ export const patternExtCodeSize: Pattern = {
   summary:
     'A delegated EOA has non-zero code (the 23-byte 0xef0100… designator), so naive isContract() checks misidentify it as a contract.',
   contract: 'EIP-7702 (delegation designator)',
+  requires: ['didManager'],
+  needsRegistry: false,
   steps: [
     {
       title: 'Delegate and inspect EOA code',
