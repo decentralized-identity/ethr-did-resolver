@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.11.2] — Real-chain DID diagnostic tool
+
+Investigated "DID not updating after a write" on Sepolia by testing against **anvil forks of live Sepolia state** at both the prague and current osaka hardforks. Findings: Sepolia has every primitive required, and all contract addresses are correct and deployed (CREATE2 factory, ERC-1056 registry `0x03d5…`, deterministic DIDManager `0x80d26…`); write→resolve works end-to-end including reruns. The remaining failure modes are environmental (stale dev-tab bundle, publicnode read-after-write lag), so the investigation tooling was kept rather than the fix.
+
+### Added
+- `scripts/diagnose-did.ts` — one-shot on-chain diagnostic for "my update didn't show up": prints the identity's delegation code vs expected manager, inspects a broadcast tx (status/block/calldata/revert reason), reads `registry.changed()` + recent registry events, and resolves the DID with the exact webapp reader. Usage: `pnpm tsx scripts/diagnose-did.ts sepolia <identity> [txHash] [rpcUrl]`
+
 ## [1.11.1] — Fix stale DID document reads on public testnet RPCs
 
 Public RPC pools (Sepolia/Gnosis via publicnode.com) load-balance across multiple backend nodes, so resolving the DID document immediately after a broadcast tx could hit a replica that hadn't indexed the new block yet, making a successful write look like it "didn't update". This affected every pattern equally — all of them share the same post-step resolve path.
