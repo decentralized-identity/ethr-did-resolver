@@ -30,33 +30,20 @@ Tests start a local Anvil node (Prague hardfork), deploy ERC-1056 and both deleg
 
 ## Interactive webapp
 
-`webapp/` is a static Vite + React explainer that runs every pattern in the browser against a live network:
-
-- **Local Anvil** — auto-deploys the registry + all 7 delegation managers in-browser
-- **Sepolia / Gnosis** — uses the pre-deployed registry and (optionally) pre-deployed managers
+`webapp/` is a static Vite + React explainer that runs every pattern in the browser against a **local Anvil** node (Pectra). It auto-deploys the registry + all delegation managers in-browser, and broadcasts true type-4 (EIP-7702) txs locally from a fixed Anvil dev key — no wallet, no testnet, no faucet.
 
 ```bash
-pnpm dev:webapp          # dev server (needs anvil running for local mode)
-pnpm build:webapp        # production build → webapp/dist
-pnpm preview:webapp      # serve the production build
-pnpm typecheck:webapp    # typecheck webapp sources
-pnpm test:webapp         # headless smoke test: run all pattern steps against Anvil
+pnpm anvil              # start local node (Prague/Osaka hardfork)
+pnpm dev:webapp         # dev server
+pnpm build:webapp       # production build → webapp/dist
+pnpm preview:webapp     # serve the production build
+pnpm typecheck:webapp   # typecheck webapp sources
+pnpm test:webapp        # headless smoke test: run all pattern steps against Anvil
 ```
 
-GitHub Actions deploys `webapp/dist` to GitHub Pages on every push to `main` (`.github/workflows/pages.yml`).
+GitHub Actions deploys `webapp/dist` to GitHub Pages on every push to `main` (`.github/workflows/pages.yml`). The deployed page targets a local RPC, so it's a code/source explainer unless you run your own Anvil.
 
-### Pre-deploying managers to a testnet (one time)
-
-The registry is already live on Sepolia/Gnosis, but the 7 delegation managers must be deployed once and their addresses committed so the static app can use them without a server:
-
-```bash
-DEPLOYER_KEY=0x... pnpm tsx scripts/deploy-testnet.ts sepolia
-DEPLOYER_KEY=0x... pnpm tsx scripts/deploy-testnet.ts gnosis
-```
-
-This writes the addresses into `webapp/src/config/deployed.json`. Until then, testnet mode offers in-browser deployment via a funded burner key.
-
-> Note: keys in the webapp live only in browser memory. MetaMask cannot sign EIP-7702 authorization tuples, so the explainer manages local burner accounts (seeded with Anvil dev keys on local mode).
+> Note: keys in the webapp live only in browser memory. The identity EOA (local KeyManager key) signs the authorization; the fixed Anvil broadcaster dev key signs + broadcasts the type-4 envelope locally. No injected wallet is involved — wallets strip the EIP-7702 `authorizationList`, so they can never be the type-4 broadcaster.
 
 ## Structure
 
@@ -92,12 +79,12 @@ webapp/
   src/
     App.tsx                   # main explainer UI
     patterns/registry.ts      # 12 patterns wired to src/patterns/*
-    lib/                      # keys, clients, deploy, resolve, deployed
-    config/                   # chains + pre-deployed addresses
+    lib/                      # keys, clients, deploy, resolve
+    config/                   # chains config
 
 scripts/
   compile.ts                  # solc compile → artifacts/
-  deploy-testnet.ts           # one-time testnet pre-deploy
+  diagnose-did.ts             # one-shot real-chain DID diagnostic (read-only)
 
 test/
   globalSetup.ts              # start Anvil, deploy, write /tmp env file

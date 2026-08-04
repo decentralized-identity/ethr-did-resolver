@@ -15,7 +15,6 @@
 import { createPublicClient, http, decodeFunctionData, defineChain } from 'viem'
 import { Resolver } from 'did-resolver'
 import { getResolver, EthereumDIDRegistry } from 'ethr-did-resolver'
-import { NETWORKS } from '../webapp/src/config/chains.js'
 import { deterministicManagerAddresses } from '../webapp/src/lib/deploy.js'
 import { CREATE2_FACTORY, isDeployed } from '../webapp/src/lib/create2.js'
 import { DID_MANAGER_ABI } from '../src/utils/abis.js'
@@ -25,15 +24,27 @@ const CURRENCY: Record<string, { name: string; symbol: string; decimals: number 
   sepolia: { name: 'Sepolia Ether', symbol: 'SEP', decimals: 18 },
   gnosis: { name: 'xDai', symbol: 'xDAI', decimals: 18 },
 }
+const NETWORK_CFG: Record<string, { rpcUrl: string; registry: string; didNetworkName: string }> = {
+  sepolia: {
+    rpcUrl: 'https://ethereum-sepolia-rpc.publicnode.com',
+    registry: '0x03d5003bf0e79C5F5223588F347ebA39AfbC3818',
+    didNetworkName: 'sepolia',
+  },
+  gnosis: {
+    rpcUrl: 'https://gnosis-rpc.publicnode.com',
+    registry: '0x03d5003bf0e79C5F5223588F347ebA39AfbC3818',
+    didNetworkName: 'gno',
+  },
+}
 
 async function main() {
   const [, , netArg = 'sepolia', identityArg, txHashArg, rpcOverride] = process.argv
   const net = netArg as 'sepolia' | 'gnosis'
-  const cfg = NETWORKS[net]
+  const cfg = NETWORK_CFG[net]
   if (!cfg) throw new Error(`network must be sepolia|gnosis (got "${net}")`)
   if (!identityArg) throw new Error('usage: diagnose-did.ts <sepolia|gnosis> <identity> [txHash] [rpcUrl]')
   const identity = identityArg.toLowerCase() as `0x${string}`
-  const rpcUrl = rpcOverride ?? cfg.resolverRpcUrl
+  const rpcUrl = rpcOverride ?? cfg.rpcUrl
   const chain = defineChain({
     id: CHAINID[net],
     name: net,
@@ -42,7 +53,7 @@ async function main() {
   })
 
   const publicClient = createPublicClient({ chain, transport: http(rpcUrl) })
-  const registry = cfg.registry!
+  const registry = cfg.registry as `0x${string}`
   const managers = deterministicManagerAddresses()
   const expectedManager = managers.didManager
 

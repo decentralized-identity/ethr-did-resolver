@@ -1,6 +1,25 @@
 # Changelog
 
+## [1.14.0] — Local-Anvil-only demo (drop Sepolia/Gnosis)
+
+The app is now a local demo/explainer only. Sepolia and Gnosis support, the injected-wallet broadcaster, and the type-4 support detection layer are all removed.
+
+### Why
+Ground truth: **Rabby also strips the EIP-7702 `authorizationList`** — it reports EIP-7702 type-4 capability, yet the tx mined as `type: legacy` with no auth. No injected wallet can reliably broadcast a type-4 tx: whoever assembles the envelope signs it, so any wallet's `eth_sendTransaction` may drop the authorization. Capability/brand detection is only a hint and can't be the basis of correctness. The only reliable broadcaster is one the app controls on a chain it owns — the local Anvil dev key.
+
+### Changed
+- `chains.ts`: local-only. `type NetworkId = 'local'`; one-entry `NETWORKS`; removed `NETWORK_LIST`, Sepolia/Gnosis registries, `faucetUrl`
+- `clients.ts`: trimmed to `makePublicClient`/`makeWalletClient`/`makeWalletClientFromAccount`/`makeAnvilBroadcasterClient`; removed injected-provider, account-request, and tx-tracking clients
+- Deleted `webapp/src/lib/type4.ts` + tests (detection approach abandoned)
+- `App.tsx`: rewritten local-only — static network label, no connect-wallet / type-4 / funding UI; type-4 txs are signed + broadcast locally by the fixed Anvil broadcaster dev key (index 6)
+- `styles.css`: removed dead `.broadcaster-actions`/`.btn-action`/`select`/`.network-picker label` rules
+- `scripts/diagnose-did.ts`: made self-contained (no longer imports removed testnet config)
+- 13 webapp + 64 root tests green; tsc + build clean
+- To run: `pnpm anvil` then `pnpm dev`
+
 ## [1.13.0] — Detect wallet EIP-7702 type-4 support; drop the funding workaround
+
+> **Superseded by 1.14.0**: the wallet-based broadcaster approach was abandoned after Rabby (which reports type-4 support) still stripped the authorization on Sepolia. See 1.14.0.
 
 Removed the "Fund (0.1 ETH)" flow entirely. The testnet broadcaster is now the **connected wallet itself**, gated on runtime detection of EIP-7702 type-4 support, with a ground-truth check on each mined tx.
 
