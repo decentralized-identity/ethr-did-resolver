@@ -2,9 +2,11 @@
 
 ## Introduction
 
-[Part 1](./eip-7702-did-ethr.md) covered the foundational EIP-7702 delegation patterns for `did:ethr`: simple self-updates, batched attribute writes, gasless sponsorship, and policy-enforced session keys. This article goes further — three advanced patterns that address real production requirements, followed by a production hardening guide covering gas optimization, storage safety, authorization tuple lifecycle, and key compromise response.
+[Part 1](./eip-7702-did-ethr.md) covered the foundational EIP-7702 delegation patterns for `did:ethr`: simple self-updates, batched attribute writes, gasless sponsorship, and policy-enforced session keys (patterns 0–3). This article goes further — three advanced patterns that address real production requirements, followed by a production hardening guide covering gas optimization, storage safety, authorization tuple lifecycle, and key compromise response.
 
-All patterns are tested against an Anvil Prague hardfork node. Code lives in `src/patterns/` and `contracts/`.
+> **Pattern numbering** matches the interactive webapp and the repository layout (see the [README patterns table](../README.md)). Part 1 covers patterns 0–3; this part covers 4, 6 and 7. The repo additionally ships pattern **1a** (EIP-712 meta-transactions, `MetaTxDIDManager7702` — a security-hardened form of the pattern 2 sponsorship) and patterns **8–11** (delegation revocation, re-delegation, expiring/TTL delegation, and the `EXTCODESIZE` pitfall) — see the webapp and `test/delegation-lifecycle.test.ts`.
+
+All patterns are tested against an Anvil Prague hardfork node. Code lives in `src/patterns/` and `contracts/`. The [interactive webapp](../webapp/) runs every pattern live in the browser against a local Anvil.
 
 ---
 
@@ -112,7 +114,7 @@ await setAttributeWithMultiSig(anyWalletClient, publicClient, {
 
 ---
 
-## Pattern 5: Revocation Registry Integration
+## Pattern 6: Revocation Registry Integration
 
 **Scenario**: An issuer EOA needs to provide two revocation mechanisms: (1) ERC-1056 key expiry (set `validTo = 0` on an attribute) and (2) credential-level revocation — a per-credential boolean that verifiers can query on-chain without resolving the full DID document.
 
@@ -183,7 +185,7 @@ The ERC-1056 path is resolver-visible: after `revokeAttribute`, the `did:ethr` r
 
 ---
 
-## Pattern 6: Cross-Chain DID Sync
+## Pattern 7: Cross-Chain DID Sync
 
 **Scenario**: An EOA's DID document exists on Ethereum mainnet. The same identity needs to be usable on an L2 or sidechain where the EOA has no ETH. A relayer on the target chain should be able to propagate signed DID updates from the EOA without requiring the EOA to bridge ETH or hold any native token on the target chain.
 
@@ -307,7 +309,7 @@ await relayerSubmitUpdate(relayerWalletClient, publicClient, {
 
 ### Re-entrancy and Storage Collision Audit
 
-**Re-entrancy**: All write functions in all four contracts follow checks-effects-interactions:
+**Re-entrancy**: All write functions in all six stateful manager contracts follow checks-effects-interactions:
 - State is updated (`nonce++`, `p.status = Executed`) *before* the external `setAttribute` call.
 - ERC-1056 is a non-upgradeable, audited contract with no callbacks. Practical re-entrancy risk is negligible.
 - If you deploy against an unknown or upgradeable registry, add a `nonReentrant` guard.
@@ -414,15 +416,22 @@ pnpm install
 pnpm test
 ```
 
-All tests pass against a local Anvil Prague hardfork node.
+All tests pass against a local Anvil Prague hardfork node (the harness starts it on port 8545 and tears it down).
 
-| File | Tests | Pattern |
-|------|-------|---------|
-| `test/infrastructure.test.ts` | 2 | Registry deployment |
-| `test/simple-update.test.ts` | 1 | Pattern 0 |
-| `test/batched-updates.test.ts` | 1 | Pattern 1 |
-| `test/gasless-updates.test.ts` | 1 | Pattern 2 |
-| `test/policy-enforced.test.ts` | 3 | Pattern 3 |
-| `test/multisig-updates.test.ts` | 3 | Pattern 4 |
-| `test/revocation.test.ts` | 3 | Pattern 5 |
-| `test/cross-chain-sync.test.ts` | 3 | Pattern 6 |
+| File | Covers |
+|------|--------|
+| `test/infrastructure.test.ts` | ERC-1056 registry deployment baseline |
+| `test/simple-update.test.ts` | Pattern 0 |
+| `test/batched-updates.test.ts` | Pattern 1 |
+| `test/gasless-updates.test.ts` | Pattern 2 |
+| `test/policy-enforced.test.ts` | Pattern 3 |
+| `test/multisig-updates.test.ts` | Pattern 4 |
+| `test/meta-tx-updates.test.ts` | Pattern 1a |
+| `test/revocation.test.ts` | Pattern 6 |
+| `test/cross-chain-sync.test.ts` | Pattern 7 |
+| `test/delegation-lifecycle.test.ts` | Patterns 8–11 |
+| `test/expiring-updates.test.ts` | Pattern 10 |
+| `test/edge-cases.test.ts` | Edge cases |
+| `test/metamask-delegation.test.ts` | MetaMask Delegation Framework |
+
+The full suite is **64 tests** across these 13 files. The interactive webapp mirrors every pattern — `pnpm anvil` + `pnpm dev:webapp` to try them live.

@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "build:contracts": "tsx scripts/compile.ts",
+    "anvil": "anvil --hardfork prague",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",

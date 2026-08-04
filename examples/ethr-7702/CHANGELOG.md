@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.14.2] — Docs refresh (README + articles)
+
+- Added missing `pnpm anvil` script to `package.json` (`anvil --hardfork prague`); README instructed it but it didn't exist.
+- `README.md`: patterns table now lists all **12** patterns (was 4); fixed test count (64 integration + 13 webapp smoke, was "61"); corrected the **localStorage** persistence note (keys survive reloads, not "browser memory only"); expanded the structure block to include `DIDAttributeEnforcer.sol`, `delegation.ts`/`expiring.ts`, `eip712.ts`/`metamask-framework.ts`/`storage.ts`, `probe-did.ts`, `edge-cases`/`expiring-updates` tests; clarified how the fixed broadcaster key works.
+- `article/eip-7702-did-ethr-part2.md`: pattern numbering corrected to match the code/UI (revocation **5→6**, cross-chain **6→7**, plus internal refs and summary table); added a note on patterns 1a + 8–11; "four contracts" → six stateful managers; replaced the stale per-file test-count table with an honest file→pattern map and 64-test total.
+- `article/eip-7702-did-ethr.md`: noted part 1 → part 2/webapp linkage; added the gasless-relay caveat for pattern 0 (`executor: broadcaster` vs the canonical `executor: self`); fixed Running-the-Examples.
+- No code changes (docs + package.json script only).
+
 ## [1.14.1] — Fix right-pane reactivity + realistic Ed25519 keys
 
 ### Changed

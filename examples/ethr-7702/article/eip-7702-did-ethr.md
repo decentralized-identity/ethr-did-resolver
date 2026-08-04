@@ -4,7 +4,7 @@
 
 The Ethereum Pectra hard fork (2025) introduces [EIP-7702](https://eips.ethereum.org/EIPS/eip-7702), which allows externally owned accounts (EOAs) to temporarily set their code to that of a deployed smart contract. This is a subtle but profound change: an EOA can, in a single transaction, delegate execution to a contract *and* use that contract's code to interact with other protocols — all while retaining its identity as the original address.
 
-For the `did:ethr` method, which anchors decentralized identifiers to Ethereum addresses via the [ERC-1056 EthereumDIDRegistry](https://github.com/uport-project/ethr-did-registry), this opens up update patterns that were previously impossible or required deploying a proxy contract. This article explores four such patterns, explains how they work technically, and discusses their security implications.
+For the `did:ethr` method, which anchors decentralized identifiers to Ethereum addresses via the [ERC-1056 EthereumDIDRegistry](https://github.com/uport-project/ethr-did-registry), this opens up update patterns that were previously impossible or required deploying a proxy contract. This article (part 1) explores four such patterns, explains how they work technically, and discusses their security implications. Part 2 ([`eip-7702-did-ethr-part2.md`](eip-7702-did-ethr-part2.md)) covers the advanced patterns and production hardening; an [interactive webapp](../webapp/) runs every pattern live against a local Anvil node.
 
 ---
 
@@ -110,6 +110,8 @@ const hash = await eoaWalletClient.sendTransaction({
 ```
 
 **What changes vs. a plain EOA call**: Nothing observable on-chain — the DID document update is identical. The difference is the delegation code (`0xef0100...`) is now set on the EOA. This can be cleared by a later authorization to `address(0)`.
+
+> **In this repo, pattern 0 is actually broadcast gasless-relay style**: the EOA signs with `executor: broadcasterAddress` (see `src/patterns/simple-update.ts`) and an app-controlled broadcaster sends the type-4 tx. `executor: 'self'` above is the canonical form and the two are interchangeable from the EVM's perspective — the important part is the EOA signs the authorization. The repo relays because injected wallets strip the `authorizationList`, so the broadcaster is the only reliable sender.
 
 **Security note**: Pattern 0 has no access control by design — the EOA is the transaction sender, so no other party can invoke the delegation. EIP-7702 does not inherently improve security; it simply shifts where authorization is enforced. Once an EOA delegates to a contract that calls `setAttribute(address(this), ...)`, anyone who can call that function can update the DID document on the EOA's behalf. For patterns where a third party (relayer) sends the transaction, explicit on-chain authorization is required. Pattern 1a introduces `MetaTxDIDManager7702`, which adds EIP-712 typed-data signatures so the EOA authorizes each specific update — the relayer can submit it but cannot forge or alter the content.
 
@@ -305,6 +307,13 @@ pnpm install
 pnpm test
 ```
 
-All four patterns are tested against a local Anvil node running the Prague hardfork, with the ERC-1056 registry and both delegation contracts deployed. Tests use `vitest` with per-test Anvil snapshot/revert for isolation.
+All patterns are tested against a local Anvil node running the Prague hardfork, with the ERC-1056 registry and the delegation contracts deployed. Tests use `vitest` with per-test Anvil snapshot/revert for isolation (64 tests total — see the [README](../README.md) and part 2 for the full pattern → test mapping).
+
+An [interactive webapp](../webapp/) mirrors these patterns in the browser against a local Anvil:
+
+```bash
+pnpm anvil              # start the local node (Prague hardfork)
+pnpm dev:webapp         # open the explainer
+```
 
 See `src/patterns/` for the TypeScript implementations and `contracts/` for the Solidity delegation contracts.
