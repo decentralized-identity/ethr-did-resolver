@@ -2,7 +2,16 @@
 
 Proof-of-concept demonstrating how [EIP-7702](https://eips.ethereum.org/EIPS/eip-7702) (Pectra hardfork) enables new DID update patterns for [`did:ethr`](https://github.com/decentralized-identity/ethr-did-resolver) identities.
 
-Includes a **headless integration-test suite** (64 tests) and an **interactive browser explainer** (Vite + React) that runs every pattern live against a local Anvil node.
+Includes an **interactive browser explainer** (Vite + React) that runs a few example patterns live against a local Anvil node.
+The choice for using a local node (with programmatic funding and lower level signing) is a placeholder as wallets still don't have full support of EIP7702.
+This will be updated as support grows, to an example that uses a browser extension wallet as the gas sponsor for transactions.
+
+## First, a **DISCLAIMER**
+This is a proof-of-concept, not a production-ready implementation. It is intended to demonstrate the new patterns enabled by EIP-7702, and to explore the implications for DID management.
+None of the code is audited, and MUST not be used in production.
+
+EIP7702 allows an Externally owned account (EOA) to delegate its authority to a contract. It is very easy to delegate to a poorer security model and lose control of both the DID and the underlying assets.
+The patterns presented here are examples of how EIP-7702 can be used to improve management of a did:ethr identifier, as inspiration, NOT production-ready code.
 
 ## Patterns
 
@@ -21,9 +30,8 @@ All pattern numbers refer to the entries in the interactive webapp and the code 
 | 8 | **Delegation revocation** | EIP-7702 auth | Re-authorizing to `address(0)` clears the delegation code; calls become no-ops |
 | 9 | **Re-delegation** | `DIDManager7702` → `ExpiringDIDManager7702` | A new authorization atomically swaps the code pointer (A → B) |
 | 10 | **Expiring delegation** | `ExpiringDIDManager7702` | App-level time-to-live: writes succeed before expiry, revert after — no protocol change |
-| 11 | **EXTCODESIZE pitfall** | EIP-7702 designator | A delegated EOA has non-zero code (`0xef0100…`), fooling naive `isContract()` checks |
 
-The technical writeups live in [`article/`](article/):
+You'll find more detailed technical descriptions in [`article/`](article/):
 - [`article/eip-7702-did-ethr.md`](article/eip-7702-did-ethr.md) — part 1: simple, batched, gasless, policy session keys (patterns 0–3)
 - [`article/eip-7702-did-ethr-part2.md`](article/eip-7702-did-ethr-part2.md) — part 2: multi-sig, revocation, cross-chain sync, production hardening (patterns 4–7)
 
@@ -44,20 +52,14 @@ Tests start their own Anvil node on port 8545 (spawned + torn down by the test h
 
 ## Interactive webapp
 
-`webapp/` is a static Vite + React explainer that runs every pattern in the browser against a **local Anvil** node (Pectra). It auto-deploys the registry + each required delegation manager in-browser, and broadcasts true type-4 (EIP-7702) txs locally from a fixed Anvil dev key — no wallet, no testnet, no faucet.
+`webapp/` is a static Vite + React explainer that runs every pattern in the browser against a **local Anvil** node (Pectra). It auto-deploys the registry + each required delegation manager in-browser, and broadcasts true type-4 (EIP-7702) txs locally from a fixed Anvil dev key.
 
 ```bash
 pnpm anvil              # start local node (Prague hardfork) — port 8545
 pnpm dev:webapp         # dev server
-pnpm build:webapp       # production build → webapp/dist
-pnpm preview:webapp     # serve the production build
-pnpm typecheck:webapp   # typecheck webapp sources
-pnpm test:webapp        # 13 headless smoke tests: run all pattern steps against Anvil
 ```
 
-GitHub Actions deploys `webapp/dist` to GitHub Pages on every push to `main` (`.github/workflows/pages.yml`). The deployed page targets a local RPC, so it's a code/source explainer unless you run your own Anvil.
-
-> **Why a fixed broadcaster key?** The identity EOA (a local KeyManager key) signs the EIP-7702 authorization; a **fixed Anvil dev key** signs and broadcasts the type-4 envelope locally via viem. No injected wallet is involved — wallets strip the EIP-7702 `authorizationList` (even wallets that *report* type-4 support, e.g. Rabby, mine as legacy with no auth), so they can never be the type-4 broadcaster.
+> **Why a fixed broadcaster key?** The identity EOA (a local KeyManager key) signs the EIP-7702 authorization; a **fixed Anvil dev key** signs and broadcasts the type-4 envelope locally via viem.
 >
 > KeyManager keys persist to **localStorage** (survive reloads) and never pay gas; the broadcaster dev key pays all gas.
 
