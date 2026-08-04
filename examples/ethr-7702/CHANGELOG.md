@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.11.4] — Reliable type-4 broadcasting: local broadcaster private key
+
+Second root cause of "Sepolia DID not updating": even with a fresh identity, the broadcast tx was hitting the chain as **`type: legacy` with `authorizationList: (none)`** — the injected wallet (MetaMask-class) strips the EIP-7702 authorization and sends a plain call to the identity EOA, which silently no-ops (no code, no write, `changed()=0`). Verified on-chain via `diagnose-did.ts` + raw tx inspection. An anvil fork of live Sepolia proves the same flow with a **local viem broadcaster** mines a true `eip7702` tx, applies delegation, and resolves with the new keys.
+
+### Added / changed
+- Testnet broadcasting no longer depends on the injected wallet. The app now accepts a **broadcaster private key** in the keys panel; when set, viem signs and broadcasts the real type-4 tx locally (`sendRawTransaction`), guaranteeing the authorization survives
+- Wallet-connect remains as an alternative, with UI/notice explaining the auth-stripping pitfall and urging the private-key path
+- `testnetNeedsWallet` gating now treats a provided key as funded broadcaster present
+
 ## [1.11.3] — Guard against shared-dev-key testnet identities
 
 Root-caused the "Sepolia DID not updating": the webapp's identity EOA was the shared Anvil dev key `0xf39F…2266` (seeded in local mode, persisted across the network switch). On Sepolia that public key has a nonce of ~47k and a leftover persistent delegation to a stale manager, so the EIP-7702 auth is silently skipped and the tx "succeeds" without touching the registry (`registry.changed(identity) = 0`). The contract code, addresses, and resolve path were all proven correct via anvil forks of live Sepolia.

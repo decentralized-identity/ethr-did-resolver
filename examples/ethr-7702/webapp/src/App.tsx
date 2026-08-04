@@ -3,6 +3,7 @@ import { NETWORKS, NETWORK_LIST, type NetworkConfig } from './config/chains'
 import { KeyManager, KEY_ROLES, type KeyRole, isWellKnownKey } from './lib/keys'
 import {
   makePublicClient,
+  makeWalletClient,
   makeWalletClientFromAccount,
   makeAnvilBroadcasterClient,
   makeInjectedWalletClient,
@@ -17,7 +18,7 @@ import { waitForBlockVisible, waitUntilDeployed } from './lib/rpcLag'
 import { resolveDid, type DidDoc } from './lib/resolve'
 import { PATTERNS, type Pattern } from './patterns/registry'
 import type { StepContext, StepResult } from './patterns/types'
-import type { WalletClient, Address } from 'viem'
+import type { WalletClient, Address, Hex } from 'viem'
 
 function short(addr: string | undefined): string {
   if (!addr) return '—'
@@ -45,8 +46,9 @@ function App() {
   const [resolving, setResolving] = useState(false)
   const [stepStates, setStepStates] = useState<Record<string, 'pending' | 'running' | 'done' | 'failed'>>({})
   const [stepResults, setStepResults] = useState<Record<string, StepResult>>({})
-  const [connectedAccount, setConnectedAccount] = useState<Address | null>(null)
-  const [walletError, setWalletError] = useState('')
+const [connectedAccount, setConnectedAccount] = useState<Address | null>(null)
+   const [walletError, setWalletError] = useState('')
+   const [broadcasterKey, setBroadcasterKey] = useState<Hex | ''>('')
   // Monotonic counter guarding against out-of-order resolve responses: if a
   // slower, earlier resolveDid() call finishes after a newer one, its result
   // must be discarded rather than clobbering the fresher document.
@@ -114,20 +116,25 @@ function App() {
     void refreshDeploymentStatus(selectedPattern)
   }, [selectedPattern, refreshDeploymentStatus])
 
-  /**
-   * The gas payer: on local (Anvil) a dedicated fixed dev key; on testnets the
-   * connected injected wallet. Always an account that is NOT the identity EOA.
-   */
-  const broadcaster: WalletClient = useMemo(() => {
-    if (networkId === 'local') return makeAnvilBroadcasterClient(network)
-    const provider = injectedProvider()
-    if (provider && connectedAccount) return makeInjectedWalletClient(network, provider, connectedAccount)
-    // Fallback never used for sending (guarded by UI); keep a no-op local client.
-    return makeAnvilBroadcasterClient(network)
-  }, [networkId, network, connectedAccount])
+   /**
+    * The gas payer. ALWAYS an account that is NOT the identity EOA.
+    * - local (Anvil): a dedicated fixed dev key
+    * - testnet: preferred — a locally-provided broadcaster PRIVATE KEY, so the
+    *   app signs and broadcasts the real type-4 (EIP-7702) tx itself. Injected
+    *   wallets are the fallback, but many (MetaMask) strip the authorizationList
+    *   and send a plain tx that silently no-ops.
+    */
+   const broadcaster: WalletClient = useMemo(() => {
+     if (networkId === 'local') return makeAnvilBroadcasterClient(network)
+     if (broadcasterKey) return makeWalletClient(network, broadcasterKey)
+     const provider = injectedProvider()
+     if (provider && connectedAccount) return makeInjectedWalletClient(network, provider, connectedAccount)
+     // Fallback never used for sending (guarded by UI); keep a no-op local client.
+     return makeAnvilBroadcasterClient(network)
+   }, [networkId, network, connectedAccount, broadcasterKey])
 
-  const broadcasterAddress: Address | null =
-    networkId === 'local' ? broadcaster.account?.address ?? null : connectedAccount
+   const broadcasterAddress: Address | null =
+     networkId === 'local' || broadcasterKey ? broadcaster.account?.address ?? null : connectedAccount
 
   async function handleConnectWallet() {
     setWalletError('')
@@ -271,7 +278,7 @@ function App() {
   }
 
   const isLocalOnlyDisabled = selectedPattern.localOnly && networkId !== 'local'
-  const testnetNeedsWallet = networkId !== 'local' && !connectedAccount
+  const testnetNeedsWallet = networkId !== 'local' && !connectedAccount && !broadcasterKey
   const missingManagers = selectedPattern.requires.filter((key) => !deployedManagers.has(key))
   const registryReady = !selectedPattern.needsRegistry || Boolean(registry)
   const contractsReady = missingManagers.length === 0 && registryReady
@@ -299,8 +306,9 @@ function App() {
       {testnetNeedsWallet && (
         <div className="banner warn">
           <span>
-            Connect your wallet to pay gas on {network.label}. The identity EOA (a local key) stays
-            gasless.
+            Provide a funded broadcaster private key (or connect your wallet) to pay gas on {network.label}.
+            The identity EOA (a local key) stays gasless. NB: most injected wallets strip the EIP-7702
+            authorization, so a locally-provided private key is the reliable path for type-4 txs.
           </span>
           <button className="btn-action" onClick={handleConnectWallet}>
             Connect wallet to pay gas
@@ -502,7 +510,7 @@ function App() {
             <div>
               <strong>Broadcaster (pays gas)</strong>
               <code>
-                {networkId === 'local'
+                {networkId === 'local' || broadcasterKey
                   ? short(broadcasterAddress ?? undefined)
                   : connectedAccount
                     ? short(connectedAccount)
@@ -517,10 +525,21 @@ function App() {
                   </button>
                 ) : (
                   <button title="Connect wallet to pay gas" className="btn-wide" onClick={handleConnectWallet}>
-                    Connect wallet
+                    {broadcasterKey ? 'Wallet not used (key set)' : 'Connect wallet'}
                   </button>
                 )}
               </div>
+            )}
+            {networkId !== 'local' && (
+              <label className="broadcaster-key">
+                <span>Broadcaster private key (reliable type-4, funds gas)</span>
+                <input
+                  type="password"
+                  placeholder="0x…"
+                  value={broadcasterKey}
+                  onChange={(e) => setBroadcasterKey((e.target.value as Hex) || '')}
+                />
+              </label>
             )}
           </div>
           <div className="key-actions panel-actions">
@@ -530,8 +549,9 @@ function App() {
           </div>
           {networkId !== 'local' && (
             <p className="muted">
-              Note: MetaMask currently restricts type-4 (EIP-7702) transactions to its own blessed
-              delegates. On testnets use a wallet that allows arbitrary delegated-code type-4 txs.
+              Note: many injected wallets (MetaMask) strip the EIP-7702 authorizationList and silently
+              send a plain tx that no-ops. Prefer pasting a funded <strong>broadcaster private key</strong>{' '}
+              above so the type-4 tx is signed and broadcast locally — the reliable path on testnets.
             </p>
           )}
           <div className="txlog">

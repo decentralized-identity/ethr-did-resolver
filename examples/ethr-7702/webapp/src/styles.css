@@ -409,6 +409,25 @@ select {
   text-transform: capitalize;
 }
 
+.broadcaster-key {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.broadcaster-key input {
+  font-family: var(--mono);
+  font-size: 11px;
+  padding: 5px 7px;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  background: var(--panel-2);
+  color: var(--text);
+}
+
 .key-list code {
   font-family: var(--mono);
   font-size: 12px;
