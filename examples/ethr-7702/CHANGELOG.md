@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.12.0] — Self-funding broadcaster: no private keys, no wallet type-4 support
+
+Replaced the paste-a-private-key workaround with the correct explainer UX. Testnet broadcasting now uses an **app-generated broadcaster key** that the connected wallet funds with a single normal value transfer, after which the app signs and broadcasts true type-4 (EIP-7702) txs locally.
+
+### Why
+An EIP-7702 type-4 tx needs a funded sender. Injected wallets (MetaMask-class) strip the `authorizationList` and send a plain legacy call to the identity EOA, which silently no-ops (confirmed on-chain: `0xb463b3ee…` was mined `type: legacy`, no auth, `changed()=0`). The only reliable path is assembling + signing the type-4 tx with a key the app controls — but requiring users to source/paste funded private keys is unacceptable for an explainer.
+
+### Changed
+- App generates and persists a per-network broadcaster key; the connected wallet funds it with one `0.1 ETH` value transfer (every wallet supports plain sends)
+- All testnet type-4 txs are signed + broadcast locally from that key (`sendRawTransaction`); proven on an osaka fork of Sepolia: mined `type: eip7702`, delegation applied, resolution shows the new delegates
+- New "Fund (0.1 ETH)" flow in the keys panel + warning banner; balance polling gates steps on funding
+- Removed the pasted broadcaster-private-key input and the now-unused injected-wallet broadcaster
+- `keys.ts`: `loadBroadcasterKey`/`saveBroadcasterKey` per-network persistence
+
 ## [1.11.4] — Reliable type-4 broadcasting: local broadcaster private key
 
 Second root cause of "Sepolia DID not updating": even with a fresh identity, the broadcast tx was hitting the chain as **`type: legacy` with `authorizationList: (none)`** — the injected wallet (MetaMask-class) strips the EIP-7702 authorization and sends a plain call to the identity EOA, which silently no-ops (no code, no write, `changed()=0`). Verified on-chain via `diagnose-did.ts` + raw tx inspection. An anvil fork of live Sepolia proves the same flow with a **local viem broadcaster** mines a true `eip7702` tx, applies delegation, and resolves with the new keys.

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { NETWORKS, NETWORK_LIST, type NetworkConfig } from './config/chains'
-import { KeyManager, KEY_ROLES, type KeyRole, isWellKnownKey } from './lib/keys'
+import { KeyManager, KEY_ROLES, type KeyRole, isWellKnownKey, loadBroadcasterKey, saveBroadcasterKey } from './lib/keys'
 import {
   makePublicClient,
   makeWalletClient,
@@ -18,7 +18,8 @@ import { waitForBlockVisible, waitUntilDeployed } from './lib/rpcLag'
 import { resolveDid, type DidDoc } from './lib/resolve'
 import { PATTERNS, type Pattern } from './patterns/registry'
 import type { StepContext, StepResult } from './patterns/types'
-import type { WalletClient, Address, Hex } from 'viem'
+import { parseEther, type WalletClient, type Address, type Hex } from 'viem'
+import { privateKeyToAccount, generatePrivateKey } from 'viem/accounts'
 
 function short(addr: string | undefined): string {
   if (!addr) return '—'
@@ -47,8 +48,12 @@ function App() {
   const [stepStates, setStepStates] = useState<Record<string, 'pending' | 'running' | 'done' | 'failed'>>({})
   const [stepResults, setStepResults] = useState<Record<string, StepResult>>({})
 const [connectedAccount, setConnectedAccount] = useState<Address | null>(null)
-   const [walletError, setWalletError] = useState('')
-   const [broadcasterKey, setBroadcasterKey] = useState<Hex | ''>('')
+  const [walletError, setWalletError] = useState('')
+  // The testnet broadcaster is an app-generated key that the connected wallet
+  // funds with a one-time plain transfer — no pasted private keys needed.
+  const [broadcasterKey, setBroadcasterKey] = useState<Hex | ''>('')
+  const [broadcasterBalance, setBroadcasterBalance] = useState<bigint | null>(null)
+  const [funding, setFunding] = useState(false)
   // Monotonic counter guarding against out-of-order resolve responses: if a
   // slower, earlier resolveDid() call finishes after a newer one, its result
   // must be discarded rather than clobbering the fresher document.
@@ -77,6 +82,38 @@ const [connectedAccount, setConnectedAccount] = useState<Address | null>(null)
   useEffect(() => {
     if (networkId === 'local') keys.seedWithAnvilKeys()
   }, [networkId, keys])
+
+  // On testnets, ensure a broadcaster key exists for this network (created once,
+  // persisted). On local mode the dedicated Anvil dev broadcaster is used instead.
+  useEffect(() => {
+    if (networkId === 'local') return
+    const key = loadBroadcasterKey(networkId) ?? generatePrivateKey()
+    saveBroadcasterKey(networkId, key)
+    setBroadcasterKey(key)
+  }, [networkId])
+
+  // Poll the broadcaster's balance so the UI can gate steps on it being funded.
+  useEffect(() => {
+    if (networkId === 'local' || !broadcasterKey) {
+      setBroadcasterBalance(networkId === 'local' ? null : null)
+      return
+    }
+    let stop = false
+    const poll = async () => {
+      try {
+        const bal = await publicClient.getBalance({ address: privateKeyToAccount(broadcasterKey).address })
+        if (!stop) setBroadcasterBalance(bal)
+      } catch {
+        /* transient RPC failure — retry next tick */
+      }
+    }
+    void poll()
+    const t = setInterval(poll, 3000)
+    return () => {
+      stop = true
+      clearInterval(t)
+    }
+  }, [networkId, broadcasterKey, publicClient])
 
   useEffect(() => {
     void (async () => {
@@ -119,22 +156,18 @@ const [connectedAccount, setConnectedAccount] = useState<Address | null>(null)
    /**
     * The gas payer. ALWAYS an account that is NOT the identity EOA.
     * - local (Anvil): a dedicated fixed dev key
-    * - testnet: preferred — a locally-provided broadcaster PRIVATE KEY, so the
-    *   app signs and broadcasts the real type-4 (EIP-7702) tx itself. Injected
-    *   wallets are the fallback, but many (MetaMask) strip the authorizationList
-    *   and send a plain tx that silently no-ops.
+    * - testnet: an app-generated key that viem signs + broadcasts locally, so
+    *   the real type-4 (EIP-7702) tx is assembled correctly (injected wallets
+    *   strip the authorizationList). The connected wallet only funds it.
     */
    const broadcaster: WalletClient = useMemo(() => {
      if (networkId === 'local') return makeAnvilBroadcasterClient(network)
      if (broadcasterKey) return makeWalletClient(network, broadcasterKey)
-     const provider = injectedProvider()
-     if (provider && connectedAccount) return makeInjectedWalletClient(network, provider, connectedAccount)
-     // Fallback never used for sending (guarded by UI); keep a no-op local client.
+     // Never used for sending (guarded by UI); keep a no-op local client.
      return makeAnvilBroadcasterClient(network)
-   }, [networkId, network, connectedAccount, broadcasterKey])
+   }, [networkId, network, broadcasterKey])
 
-   const broadcasterAddress: Address | null =
-     networkId === 'local' || broadcasterKey ? broadcaster.account?.address ?? null : connectedAccount
+   const broadcasterAddress: Address | null = broadcaster.account?.address ?? null
 
   async function handleConnectWallet() {
     setWalletError('')
@@ -153,6 +186,36 @@ const [connectedAccount, setConnectedAccount] = useState<Address | null>(null)
       setLog((l) => [...l, `[network] connected wallet ${short(accounts[0])} — will pay gas on ${network.label}`])
     } catch (err) {
       setWalletError(err instanceof Error ? err.message : String(err))
+    }
+  }
+
+  /**
+   * Fund the app-managed broadcaster with a plain value transfer from the
+   * connected wallet. Every wallet supports a normal 1559 send (no EIP-7702
+   * needed), after which the app broadcasts true type-4 txs from the local key.
+   */
+  async function handleFundBroadcaster() {
+    setFunding(true)
+    setWalletError('')
+    try {
+      const provider = injectedProvider() as EIP1193Provider | null
+      if (!provider) throw new Error('No injected wallet detected — connect a wallet first.')
+      const address = privateKeyToAccount(broadcasterKey as Hex).address
+      const wc = makeInjectedWalletClient(network, provider, connectedAccount as Address)
+      const hash = await wc.sendTransaction({
+        to: address,
+        value: parseEther('0.1'),
+        chain: network.chain,
+        account: connectedAccount as Address,
+      })
+      await publicClient.waitForTransactionReceipt({ hash })
+      const bal = await publicClient.getBalance({ address })
+      setBroadcasterBalance(bal)
+      setLog((l) => [...l, `[network] funded broadcaster ${short(address)} with 0.1 ${network.label} ETH`])
+    } catch (err) {
+      setWalletError(err instanceof Error ? err.message : String(err))
+    } finally {
+      setFunding(false)
     }
   }
 
@@ -278,7 +341,8 @@ const [connectedAccount, setConnectedAccount] = useState<Address | null>(null)
   }
 
   const isLocalOnlyDisabled = selectedPattern.localOnly && networkId !== 'local'
-  const testnetNeedsWallet = networkId !== 'local' && !connectedAccount && !broadcasterKey
+  const broadcasterFunded = networkId === 'local' || (broadcasterBalance ?? 0n) > 0n
+  const testnetNeedsFunding = networkId !== 'local' && !broadcasterFunded
   const missingManagers = selectedPattern.requires.filter((key) => !deployedManagers.has(key))
   const registryReady = !selectedPattern.needsRegistry || Boolean(registry)
   const contractsReady = missingManagers.length === 0 && registryReady
@@ -303,16 +367,23 @@ const [connectedAccount, setConnectedAccount] = useState<Address | null>(null)
 
       {deployError && <div className="banner error">{deployError}</div>}
       {walletError && <div className="banner error">{walletError}</div>}
-      {testnetNeedsWallet && (
+      {testnetNeedsFunding && (
         <div className="banner warn">
           <span>
-            Provide a funded broadcaster private key (or connect your wallet) to pay gas on {network.label}.
-            The identity EOA (a local key) stays gasless. NB: most injected wallets strip the EIP-7702
-            authorization, so a locally-provided private key is the reliable path for type-4 txs.
+            Fund the app's broadcaster to pay gas on {network.label}: connect your wallet and send a small
+            amount of             test ETH to <code>{short(broadcasterAddress ?? undefined)}</code>. The identity EOA (a local key)
+            stays gasless, and type-4 txs are signed locally (wallets strip the EIP-7702 authorization).
           </span>
-          <button className="btn-action" onClick={handleConnectWallet}>
-            Connect wallet to pay gas
-          </button>
+          {!connectedAccount && (
+            <button className="btn-action" onClick={handleConnectWallet}>
+              Connect wallet
+            </button>
+          )}
+          {connectedAccount && (
+            <button className="btn-action" onClick={handleFundBroadcaster} disabled={funding}>
+              {funding ? 'Funding…' : `Send 0.1 ${network.label} ETH to broadcaster`}
+            </button>
+          )}
         </div>
       )}
       {selectedPattern.localOnly && networkId !== 'local' && (
@@ -407,12 +478,12 @@ const [connectedAccount, setConnectedAccount] = useState<Address | null>(null)
               )
             })}
             {!contractsReady && (missingManagers.length > 0 || (selectedPattern.needsRegistry && !registry)) && (
-              <button className="btn-wide" onClick={handleDeployMissing} disabled={networkId !== 'local' && !connectedAccount}>
+              <button className="btn-wide" onClick={handleDeployMissing} disabled={networkId !== 'local' && !broadcasterFunded}>
                 Deploy all missing for this pattern
               </button>
             )}
-            {networkId !== 'local' && !connectedAccount && !contractsReady && (
-              <button onClick={handleConnectWallet}>Connect wallet to pay gas</button>
+            {networkId !== 'local' && !connectedAccount && !broadcasterFunded && !contractsReady && (
+              <button onClick={handleConnectWallet}>Connect wallet to fund broadcaster</button>
             )}
             {networkId !== 'local' && network.faucetUrl && !contractsReady && (
               <p>
@@ -450,7 +521,7 @@ const [connectedAccount, setConnectedAccount] = useState<Address | null>(null)
                       </div>
                       <button
                         onClick={() => runStep(selectedPattern, i)}
-                        disabled={state === 'running' || !contractsReady || testnetNeedsWallet || isLocalOnlyDisabled}
+                        disabled={state === 'running' || !contractsReady || !broadcasterFunded || isLocalOnlyDisabled}
                       >
                         {state === 'running' ? 'Running…' : state === 'done' ? 'Re-run' : 'Run'}
                       </button>
@@ -509,37 +580,33 @@ const [connectedAccount, setConnectedAccount] = useState<Address | null>(null)
           <div className="key-list broadcaster-row">
             <div>
               <strong>Broadcaster (pays gas)</strong>
-              <code>
-                {networkId === 'local' || broadcasterKey
-                  ? short(broadcasterAddress ?? undefined)
-                  : connectedAccount
-                    ? short(connectedAccount)
-                    : 'not connected'}
-              </code>
+              <code>{short(broadcasterAddress ?? undefined)}</code>
+              {networkId !== 'local' && (
+                <span className="broadcaster-balance">
+                  {broadcasterBalance === null
+                    ? '…'
+                    : `${Number(broadcasterBalance) / 1e18 >= 1 ? 'ready' : `${Number(broadcasterBalance) / 1e18} ETH`}`}
+                </span>
+              )}
             </div>
             {networkId !== 'local' && (
-              <div className="key-actions">
-                {connectedAccount ? (
-                  <button title="Connected" className="btn-wide" disabled>
-                    ✓ Connected
+              <div className="key-actions broadcaster-actions">
+                {!broadcasterFunded && !connectedAccount && (
+                  <button title="Connect wallet to fund broadcaster" className="btn-wide" onClick={handleConnectWallet}>
+                    Connect wallet
                   </button>
-                ) : (
-                  <button title="Connect wallet to pay gas" className="btn-wide" onClick={handleConnectWallet}>
-                    {broadcasterKey ? 'Wallet not used (key set)' : 'Connect wallet'}
+                )}
+                {!broadcasterFunded && connectedAccount && (
+                  <button title="Send test ETH to the app broadcaster" className="btn-wide" onClick={handleFundBroadcaster} disabled={funding}>
+                    {funding ? 'Funding…' : 'Fund (0.1 ETH)'}
+                  </button>
+                )}
+                {broadcasterFunded && (
+                  <button title="Broadcaster is funded" className="btn-wide" disabled>
+                    ✓ funded
                   </button>
                 )}
               </div>
-            )}
-            {networkId !== 'local' && (
-              <label className="broadcaster-key">
-                <span>Broadcaster private key (reliable type-4, funds gas)</span>
-                <input
-                  type="password"
-                  placeholder="0x…"
-                  value={broadcasterKey}
-                  onChange={(e) => setBroadcasterKey((e.target.value as Hex) || '')}
-                />
-              </label>
             )}
           </div>
           <div className="key-actions panel-actions">
@@ -549,9 +616,9 @@ const [connectedAccount, setConnectedAccount] = useState<Address | null>(null)
           </div>
           {networkId !== 'local' && (
             <p className="muted">
-              Note: many injected wallets (MetaMask) strip the EIP-7702 authorizationList and silently
-              send a plain tx that no-ops. Prefer pasting a funded <strong>broadcaster private key</strong>{' '}
-              above so the type-4 tx is signed and broadcast locally — the reliable path on testnets.
+              The app generated a fresh broadcaster key here — the connected wallet funds it with one normal
+              transfer, then type-4 txs are signed locally (wallets strip the EIP-7702 authorization, so this
+              is the reliable testnet path).
             </p>
           )}
           <div className="txlog">
