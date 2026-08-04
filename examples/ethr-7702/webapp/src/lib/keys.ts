@@ -57,31 +57,6 @@ export type KeyRole = 'identity' | 'sessionKey' | 'signer1' | 'signer2' | 'signe
 export const KEY_ROLES: KeyRole[] = ['identity', 'sessionKey', 'signer1', 'signer2', 'signer3']
 
 const STORAGE_KEY = 'ethr-7702.keyring.v1'
-const BROADCASTER_STORAGE_PREFIX = 'ethr-7702.broadcaster.'
-
-/**
- * The testnet broadcaster key, persisted per-network. The app generates a fresh
- * random key and the connected wallet funds it with a plain value transfer —
- * no pasted private keys, no wallet type-4 support required.
- */
-export function loadBroadcasterKey(networkId: string): Hex | null {
-  const ls = storage()
-  if (!ls) return null
-  const raw = ls.getItem(BROADCASTER_STORAGE_PREFIX + networkId)
-  return raw && /^0x[0-9a-fA-F]{64}$/.test(raw) ? (raw as Hex) : null
-}
-
-export function saveBroadcasterKey(networkId: string, key: Hex): void {
-  const ls = storage()
-  if (!ls) return
-  ls.setItem(BROADCASTER_STORAGE_PREFIX + networkId, key)
-}
-
-export function clearBroadcasterKey(networkId: string): void {
-  const ls = storage()
-  if (!ls) return
-  ls.removeItem(BROADCASTER_STORAGE_PREFIX + networkId)
-}
 
 function storage(): Storage | null {
   try {

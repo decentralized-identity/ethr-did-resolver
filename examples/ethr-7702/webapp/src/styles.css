@@ -409,13 +409,6 @@ select {
   text-transform: capitalize;
 }
 
-.broadcaster-balance {
-  display: block;
-  font-size: 11px;
-  color: var(--muted);
-  margin-top: 2px;
-}
-
 .broadcaster-actions {
   display: flex;
   flex-direction: column;

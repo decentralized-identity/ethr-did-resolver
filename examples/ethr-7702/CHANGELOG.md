@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.13.0] — Detect wallet EIP-7702 type-4 support; drop the funding workaround
+
+Removed the "Fund (0.1 ETH)" flow entirely. The testnet broadcaster is now the **connected wallet itself**, gated on runtime detection of EIP-7702 type-4 support, with a ground-truth check on each mined tx.
+
+### Why
+The app-generated + wallet-funded broadcaster worked but forced a manual funding step. Wallets that natively support type-4 (Rabby) can broadcast directly — the wallet just needs to be told to. There is no standard capability flag for EIP-7702, so support is detected best-effort, and every type-4 step is verified post-hoc on the mined tx (the only ground truth).
+
+### Changed
+- `webapp/src/lib/type4.ts` (new): `detectType4Support` (via `wallet_getCapabilities`, falling back to a brand matrix — Rabby=`supported`, MetaMask=`unsupported`), `detectWalletBrand`, `verifyMinedType4` (mined-tx ground truth)
+- `webapp/src/lib/clients.ts`: `makeTrackingWalletClient` / `getSentTxs` — records whether each sent tx carried an `authorizationList`
+- `App.tsx`: broadcaster is the injected wallet when `supported`/`unknown`, and is **blocked with a "use a type-4-capable wallet (Rabby)" message** when `unsupported`; `unknown` is allowed but each type-4 step's mined tx is verified and a failed verification surfaces an error; removed the app-generated key, balance polling, and fund handler/UI
+- `keys.ts`: removed dead `loadBroadcasterKey`/`saveBroadcasterKey`/`clearBroadcasterKey`
+- 11 new unit tests (24 webapp total); 64 root tests still green; tsc + build clean
+
 ## [1.12.0] — Self-funding broadcaster: no private keys, no wallet type-4 support
 
 Replaced the paste-a-private-key workaround with the correct explainer UX. Testnet broadcasting now uses an **app-generated broadcaster key** that the connected wallet funds with a single normal value transfer, after which the app signs and broadcasts true type-4 (EIP-7702) txs locally.
