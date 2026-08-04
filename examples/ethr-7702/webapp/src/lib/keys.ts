@@ -31,6 +31,23 @@ export const ANVIL_PRIVATE_KEYS: readonly Hex[] = [
 export const ANVIL_BROADCASTER_INDEX = 6
 export const ANVIL_BROADCASTER_PRIVATE_KEY: Hex = ANVIL_PRIVATE_KEYS[ANVIL_BROADCASTER_INDEX]
 
+/** The 10 public addresses behind ANVIL_PRIVATE_KEYS (lowercase). */
+export const ANVIL_ACCOUNTS: readonly string[] = ANVIL_PRIVATE_KEYS.map(
+  (pk) => privateKeyToAccount(pk).address.toLowerCase()
+)
+
+/**
+ * True if `address` is one of the well-known Anvil dev accounts. These keys are
+ * public and heavily used on live testnets (e.g. #0 has a nonce of ~47k on
+ * Sepolia), so their EIP-7702 authorizations are routinely invalidated and they
+ * can carry leftover persistent delegation. They must never be used as the DID
+ * identity on a real network.
+ */
+export function isWellKnownKey(address: string | undefined): boolean {
+  if (!address) return false
+  return ANVIL_ACCOUNTS.includes(address.toLowerCase())
+}
+
 export function getAnvilKey(index: number): Hex {
   return ANVIL_PRIVATE_KEYS[index % ANVIL_PRIVATE_KEYS.length]
 }

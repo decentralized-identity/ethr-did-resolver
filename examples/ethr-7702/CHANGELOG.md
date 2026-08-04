@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.11.3] — Guard against shared-dev-key testnet identities
+
+Root-caused the "Sepolia DID not updating": the webapp's identity EOA was the shared Anvil dev key `0xf39F…2266` (seeded in local mode, persisted across the network switch). On Sepolia that public key has a nonce of ~47k and a leftover persistent delegation to a stale manager, so the EIP-7702 auth is silently skipped and the tx "succeeds" without touching the registry (`registry.changed(identity) = 0`). The contract code, addresses, and resolve path were all proven correct via anvil forks of live Sepolia.
+
+### Added
+- `keys.isWellKnownKey()` + `ANVIL_ACCOUNTS` — detect the 10 well-known Anvil dev-account addresses
+- App shows a warning banner on testnets when the identity is a shared dev key, telling the user why updates won't land and to click **Reset keys** (4 new unit tests)
+
 ## [1.11.2] — Real-chain DID diagnostic tool
 
 Investigated "DID not updating after a write" on Sepolia by testing against **anvil forks of live Sepolia state** at both the prague and current osaka hardforks. Findings: Sepolia has every primitive required, and all contract addresses are correct and deployed (CREATE2 factory, ERC-1056 registry `0x03d5…`, deterministic DIDManager `0x80d26…`); write→resolve works end-to-end including reruns. The remaining failure modes are environmental (stale dev-tab bundle, publicnode read-after-write lag), so the investigation tooling was kept rather than the fix.

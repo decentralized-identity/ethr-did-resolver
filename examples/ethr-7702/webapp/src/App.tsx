@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { NETWORKS, NETWORK_LIST, type NetworkConfig } from './config/chains'
-import { KeyManager, KEY_ROLES, type KeyRole } from './lib/keys'
+import { KeyManager, KEY_ROLES, type KeyRole, isWellKnownKey } from './lib/keys'
 import {
   makePublicClient,
   makeWalletClientFromAccount,
@@ -311,6 +311,14 @@ function App() {
         <div className="banner warn">
           Pattern {selectedPattern.number} (expiring delegation) requires a local Anvil to time-warp.
           Switch to Local Anvil mode.
+        </div>
+      )}
+      {networkId !== 'local' && isWellKnownKey(identityAddress) && (
+        <div className="banner warn">
+          The identity EOA <code>{short(identityAddress)}</code> is a shared Anvil dev key. On{' '}
+          {network.label} these public keys have huge nonces and may already hold a leftover delegation, so
+          EIP-7702 authorizations are silently skipped and DID updates will not appear. Click{' '}
+          <strong>Reset keys</strong> to use a fresh, private identity, then re-run.
         </div>
       )}
 
