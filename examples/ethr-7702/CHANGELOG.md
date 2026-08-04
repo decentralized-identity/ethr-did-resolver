@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.14.1] — Fix right-pane reactivity + realistic Ed25519 keys
+
+### Changed
+- `App.tsx`: key mutate/rotate/reset/seed now force a re-render via a revision counter — `KeyManager` mutates in place (persisted to localStorage) and never replaced the object, so button clicks appeared dead. Rotating/resetting the identity EOA now also clears the stale DID document (it referenced the old address).
+- `patterns/registry.ts`: Ed25519 veriKey attribute values are now realistic **32-byte public keys** (`keccak256`-derived, deterministic per pattern) instead of short ASCII labels; the resolver encodes them as proper `publicKeyMultibase` (`0xed01 || 32 bytes`) / `publicKeyBase64` entries. Secp256k1 and service attributes unchanged.
+- 13 webapp + 64 root tests green; `tsc --noEmit` + `pnpm build:webapp` clean.
+- Note: `pnpm test:webapp` requires port 8545 free (the smoke test spawns its own Anvil); a stray `anvil --hardfork prague` on 8545 poisons it.
+
 ## [1.14.0] — Local-Anvil-only demo (drop Sepolia/Gnosis)
 
 The app is now a local demo/explainer only. Sepolia and Gnosis support, the injected-wallet broadcaster, and the type-4 support detection layer are all removed.

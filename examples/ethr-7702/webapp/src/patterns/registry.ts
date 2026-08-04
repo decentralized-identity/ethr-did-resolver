@@ -6,7 +6,7 @@
 // identity/session/signer EOA) and broadcasts through `ctx.broadcaster` — the
 // account that pays the gas. The identity EOA never pays.
 
-import { toHex, keccak256, toBytes } from 'viem'
+import { toHex, keccak256, toBytes, type Hex } from 'viem'
 import { stringToBytes32 } from 'ethr-did-resolver'
 import { simpleDidUpdate } from '@patterns/simple-update.js'
 import { batchedDidUpdates } from '@patterns/batched-updates.js'
@@ -52,6 +52,17 @@ const VALIDITY = 3600n
 
 function keyValue(label: string): `0x${string}` {
   return toHex(new TextEncoder().encode(label))
+}
+
+/**
+ * A realistic 32-byte Ed25519 public key, derived deterministically from a
+ * label. Ed25519 public keys are exactly 32 bytes; ethr-did-resolver encodes
+ * these veriKeys as publicKeyMultibase (`0xed01 || bytes`, b58btc) with a 34-byte
+ * payload. Deterministic so each pattern gets a stable, distinct veriKey while
+ * remaining a correct-size real public key (not a short ASCII label).
+ */
+function ed25519VeriKey(label: string): Hex {
+  return keccak256(toBytes(`ethr-7702.ed25519.${label}`))
 }
 
 // ethr-did-resolver v14 validates Secp256k1 attribute values as real secp256k1
@@ -131,7 +142,7 @@ export const patternSimple: Pattern = {
               registry: ctx.addresses.registry,
               didManagerAddress: ctx.addresses.didManager,
               attrName: ATTR_DID_KEY,
-              attrValue: keyValue('simplekey'),
+              attrValue: ed25519VeriKey('simplekey'),
               validity: VALIDITY,
             }),
           'DID attribute written via delegated DIDManager7702 code'
@@ -165,7 +176,7 @@ export const patternBatched: Pattern = {
               registry: ctx.addresses.registry,
               didManagerAddress: ctx.addresses.didManager,
               updates: [
-                { name: ATTR_DID_KEY, value: keyValue('batchkey1'), validity: VALIDITY },
+                { name: ATTR_DID_KEY, value: ed25519VeriKey('batchkey1'), validity: VALIDITY },
                 {
                   name: stringToBytes32('did/pub/Secp256k1/veriKey/base64') as `0x${string}`,
                   value: SECP256K1_VERIKEY,
@@ -206,7 +217,7 @@ export const patternGasless: Pattern = {
           registry: ctx.addresses.registry,
           didManagerAddress: ctx.addresses.didManager,
           attrName: ATTR_DID_KEY,
-          attrValue: keyValue('gaslesskey'),
+          attrValue: ed25519VeriKey('gaslesskey'),
           validity: VALIDITY,
         })
         const eoaBalanceAfter = await ctx.publicClient.getBalance({
@@ -265,7 +276,7 @@ export const patternPolicy: Pattern = {
               policyDidManagerAddress: ctx.addresses.policyDidManager,
               eoaAddress: ctx.identityAddress as `0x${string}`,
               attrName: ATTR_DID_KEY,
-              attrValue: keyValue('sessionkey'),
+              attrValue: ed25519VeriKey('sessionkey'),
               validity: VALIDITY,
             }),
           'DID attribute written by the session key under enforced policy'
@@ -314,7 +325,7 @@ export const patternMultiSig: Pattern = {
       run: async (ctx) => {
         const registry = ctx.addresses.registry
         const attrName = ATTR_DID_KEY
-        const attrValue = keyValue('multisigkey')
+        const attrValue = ed25519VeriKey('multisigkey')
         const validity = VALIDITY
         const nonce = await readMultiSigNonce(ctx)
 
@@ -350,7 +361,7 @@ export const patternMultiSig: Pattern = {
       run: async (ctx) => {
         const registry = ctx.addresses.registry
         const attrName = ATTR_DID_KEY
-        const attrValue = keyValue('multisigkey')
+        const attrValue = ed25519VeriKey('multisigkey')
         const validity = VALIDITY
         const nonce = await readMultiSigNonce(ctx)
 
@@ -418,7 +429,7 @@ export const patternMetaTx: Pattern = {
           registry: ctx.addresses.registry,
           eoaAddress: ctx.identityAddress as `0x${string}`,
           attrName: ATTR_DID_KEY,
-          attrValue: keyValue('metatxkey'),
+          attrValue: ed25519VeriKey('metatxkey'),
           validity: VALIDITY,
           nonce,
           chainId,
@@ -443,7 +454,7 @@ export const patternMetaTx: Pattern = {
           registry: ctx.addresses.registry,
           eoaAddress: ctx.identityAddress as `0x${string}`,
           attrName: ATTR_DID_KEY,
-          attrValue: keyValue('metatxkey'),
+          attrValue: ed25519VeriKey('metatxkey'),
           validity: VALIDITY,
           nonce,
           chainId,
@@ -461,7 +472,7 @@ export const patternMetaTx: Pattern = {
               registry: ctx.addresses.registry,
               eoaAddress: ctx.identityAddress as `0x${string}`,
               attrName: ATTR_DID_KEY,
-              attrValue: keyValue('metatxkey'),
+              attrValue: ed25519VeriKey('metatxkey'),
               validity: VALIDITY,
               signature,
               authorization,
@@ -498,7 +509,7 @@ export const patternRevocation: Pattern = {
               revocationDidManagerAddress: ctx.addresses.revocationDidManager,
               registry: ctx.addresses.registry,
               attrName: ATTR_DID_KEY,
-              attrValue: keyValue('revokablekey'),
+              attrValue: ed25519VeriKey('revokablekey'),
               validity: VALIDITY,
             }),
           'Delegation set + attribute added'
@@ -514,7 +525,7 @@ export const patternRevocation: Pattern = {
             revokeAttribute(ctx.walletFor('identity'), ctx.broadcaster, ctx.publicClient, {
               registry: ctx.addresses.registry,
               attrName: ATTR_DID_KEY,
-              attrValue: keyValue('revokablekey'),
+              attrValue: ed25519VeriKey('revokablekey'),
             }),
           'ERC-1056 attribute revoked (validTo → 0)'
         ),
@@ -758,7 +769,7 @@ export const patternExpiring: Pattern = {
               registry: ctx.addresses.registry,
               eoaAddress: ctx.identityAddress as `0x${string}`,
               attrName: ATTR_DID_KEY,
-              attrValue: keyValue('expiringkey'),
+              attrValue: ed25519VeriKey('expiringkey'),
               validity: VALIDITY,
             }),
           'Write before expiry succeeded'

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react'
 import { NETWORKS, type NetworkConfig } from './config/chains'
 import { KeyManager, KEY_ROLES, type KeyRole } from './lib/keys'
 import { makePublicClient, makeWalletClientFromAccount, makeAnvilBroadcasterClient } from './lib/clients'
@@ -20,6 +20,11 @@ type DeployState = 'idle' | 'deploying' | 'failed'
 
 function App() {
   const [keys] = useState(() => new KeyManager())
+  // KeyManager is a MUTABLE store (persisted to localStorage): rotate/reset/seed
+  // change it in place without ever replacing the object, so React can't detect
+  // the change itself. bumpKeyRevision() forces a re-render that re-reads
+  // keys.address(role) so the right pane stays live.
+  const [, bumpKeyRevision] = useReducer((x: number) => x + 1, 0)
   // Manager addresses are DETERMINISTIC (CREATE2) — computed once, chain-independent.
   // Whether a manager actually has code on the local node is tracked separately.
   const addresses = useMemo(() => deterministicManagerAddresses(), [])
@@ -47,6 +52,7 @@ function App() {
   // Seed the identity/session/signer roles with pre-funded Anvil dev keys.
   useEffect(() => {
     keys.seedWithAnvilKeys()
+    bumpKeyRevision()
   }, [keys])
 
   useEffect(() => {
@@ -159,6 +165,28 @@ function App() {
     } finally {
       if (generation === resolveGeneration.current) setResolving(false)
     }
+  }
+
+  /**
+   * Rotate one key. If the rotating role is the identity EOA, the resolved DID
+   * document is for the OLD address, so drop it and force a re-render.
+   */
+  function rotateKey(role: KeyRole) {
+    const before = keys.address('identity')
+    keys.rotate(role)
+    if (role === 'identity' && keys.address('identity') !== before) {
+      setDidDoc(null)
+      setDidError('')
+    }
+    bumpKeyRevision()
+  }
+
+  /** Wipe the keyring with fresh random keys and invalidate the solved DID. */
+  function resetKeys() {
+    keys.reset()
+    setDidDoc(null)
+    setDidError('')
+    bumpKeyRevision()
   }
 
   function buildStepContext(pattern: Pattern): StepContext {
@@ -374,7 +402,7 @@ function App() {
                   <code>{short(keys.address(role))}</code>
                 </div>
                 <div className="key-actions">
-                  <button title="Generate new key" onClick={() => keys.rotate(role)}>
+                  <button title="Generate new key" onClick={() => rotateKey(role)}>
                     ↻
                   </button>
                 </div>
@@ -388,7 +416,7 @@ function App() {
             </div>
           </div>
           <div className="key-actions panel-actions">
-            <button title="Reset keyring (new random keys)" className="btn-wide" onClick={() => keys.reset()}>
+            <button title="Reset keyring (new random keys)" className="btn-wide" onClick={resetKeys}>
               Reset keys
             </button>
           </div>
