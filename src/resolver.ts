@@ -293,7 +293,13 @@ export class EthrDidResolver {
                 switch (pk.type) {
                   case VMTypes.EcdsaSecp256k1VerificationKey2019:
                     // Spec mandates publicKeyJwk for Secp256k1 attribute keys regardless of encoding hint.
-                    pk.publicKeyJwk = secp256k1ToJwk(event.value)
+                    const jwk = secp256k1ToJwk(event.value)
+                    if (jwk) {
+                      pk.publicKeyJwk = jwk
+                      break
+                    } else {
+                      continue
+                    }
                     break
                   case VMTypes.Ed25519VerificationKey2020:
                   case VMTypes.X25519KeyAgreementKey2020:
@@ -386,14 +392,20 @@ export class EthrDidResolver {
     ]
 
     if (controllerKey && controller == address) {
-      publicKeys.push({
-        id: `${did}#controllerKey`,
-        type: VMTypes.EcdsaSecp256k1VerificationKey2019,
-        controller: did,
-        publicKeyJwk: secp256k1ToJwk(controllerKey),
-      })
-      authentication.push(`${did}#controllerKey`)
-      assertionMethod.push(`${did}#controllerKey`)
+      const publicKeyJwk = secp256k1ToJwk(controllerKey)
+      if (publicKeyJwk) {
+        publicKeys.push({
+          id: `${did}#controllerKey`,
+          type: VMTypes.EcdsaSecp256k1VerificationKey2019,
+          controller: did,
+          publicKeyJwk,
+        })
+        authentication.push(`${did}#controllerKey`)
+        assertionMethod.push(`${did}#controllerKey`)
+      } else {
+        // TODO: should be a notFound or invalidDID error
+      }
+
     }
 
     const didDocument: DIDDocument = {
