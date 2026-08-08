@@ -24,6 +24,21 @@ describe('error handling', () => {
     })
   })
 
+  // 33-byte hex (passes the identifier regex) but x=5 is not on the secp256k1 curve
+  const OFF_CURVE_KEY = '0x020000000000000000000000000000000000000000000000000000000000000005'
+
+  it('rejects DID whose compressed secp256k1 key is not on the curve', async () => {
+    expect.assertions(1)
+    await expect(didResolver.resolve(`did:ethr:${OFF_CURVE_KEY}`)).resolves.toEqual({
+      didDocument: null,
+      didDocumentMetadata: {},
+      didResolutionMetadata: {
+        error: 'invalidDid',
+        message: `Not a valid did:ethr: ${OFF_CURVE_KEY}`,
+      },
+    })
+  })
+
   it('rejects resolution on unconfigured network', async () => {
     expect.assertions(1)
     await expect(

@@ -79,4 +79,25 @@ describe('wrapDidDocument', () => {
     )
     expect(addedDoc.verificationMethod).toHaveLength(2) // controller + delegate
   })
+
+  it('4.4 drops an invalid controller public key instead of crashing', () => {
+    // 33-byte hex (would pass the identifier regex) but x=5 is not on the secp256k1 curve.
+    // resolve() rejects such identifiers up front; wrapping defensively drops the key.
+    const offCurveKey = '0x020000000000000000000000000000000000000000000000000000000000000005'
+    const { didDocument, deactivated } = resolver.wrapDidDocument(
+      DID,
+      ADDRESS,
+      offCurveKey,
+      [],
+      CHAIN_ID,
+      'latest',
+      NOW
+    )
+    // No #controllerKey verification method/references - only the base controller remains.
+    expect(deactivated).toBe(false)
+    expect(didDocument.verificationMethod).toHaveLength(1)
+    expect(didDocument.verificationMethod?.[0].id).toBe(`${DID}#controller`)
+    expect(didDocument.authentication).toEqual([`${DID}#controller`])
+    expect(didDocument.assertionMethod).toEqual([`${DID}#controller`])
+  })
 })

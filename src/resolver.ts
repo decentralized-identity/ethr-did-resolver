@@ -293,7 +293,13 @@ export class EthrDidResolver {
                 switch (pk.type) {
                   case VMTypes.EcdsaSecp256k1VerificationKey2019:
                     // Spec mandates publicKeyJwk for Secp256k1 attribute keys regardless of encoding hint.
-                    pk.publicKeyJwk = secp256k1ToJwk(event.value)
+                    const jwk = secp256k1ToJwk(event.value)
+                    if (jwk) {
+                      pk.publicKeyJwk = jwk
+                      break
+                    } else {
+                      continue
+                    }
                     break
                   case VMTypes.Ed25519VerificationKey2020:
                   case VMTypes.X25519KeyAgreementKey2020:
@@ -386,14 +392,19 @@ export class EthrDidResolver {
     ]
 
     if (controllerKey && controller == address) {
-      publicKeys.push({
-        id: `${did}#controllerKey`,
-        type: VMTypes.EcdsaSecp256k1VerificationKey2019,
-        controller: did,
-        publicKeyJwk: secp256k1ToJwk(controllerKey),
-      })
-      authentication.push(`${did}#controllerKey`)
-      assertionMethod.push(`${did}#controllerKey`)
+      const publicKeyJwk = secp256k1ToJwk(controllerKey)
+      if (publicKeyJwk) {
+        publicKeys.push({
+          id: `${did}#controllerKey`,
+          type: VMTypes.EcdsaSecp256k1VerificationKey2019,
+          controller: did,
+          publicKeyJwk,
+        })
+        authentication.push(`${did}#controllerKey`)
+        assertionMethod.push(`${did}#controllerKey`)
+      }
+      // Invalid keys are rejected in resolve() (invalidDid) before this point, so this
+      // guard is only defensive against direct wrapDidDocument calls - drop the key.
     }
 
     const didDocument: DIDDocument = {
@@ -453,6 +464,19 @@ export class EthrDidResolver {
       }
     }
     const id = fullId[2]
+    // A 33-byte hex identifier denotes a compressed secp256k1 public key. The regex only
+    // checks its shape, so reject identifiers whose key is not on the curve here, before
+    // any network work (interpretIdentifier would otherwise throw an internal crypto error).
+    if (id.length > 42 && !secp256k1ToJwk(id)) {
+      return {
+        didResolutionMetadata: {
+          error: Errors.invalidDid,
+          message: `Not a valid did:ethr: ${parsed.id}`,
+        },
+        didDocumentMetadata: {},
+        didDocument: null,
+      }
+    }
     const networkId = !fullId[1] ? 'mainnet' : fullId[1].slice(0, -1)
     let blockTag: string | number = options.blockTag || 'latest'
     let versionTimeTimestamp: number | undefined
