@@ -402,10 +402,9 @@ export class EthrDidResolver {
         })
         authentication.push(`${did}#controllerKey`)
         assertionMethod.push(`${did}#controllerKey`)
-      } else {
-        // TODO: should be a notFound or invalidDID error
       }
-
+      // Invalid keys are rejected in resolve() (invalidDid) before this point, so this
+      // guard is only defensive against direct wrapDidDocument calls - drop the key.
     }
 
     const didDocument: DIDDocument = {
@@ -465,6 +464,19 @@ export class EthrDidResolver {
       }
     }
     const id = fullId[2]
+    // A 33-byte hex identifier denotes a compressed secp256k1 public key. The regex only
+    // checks its shape, so reject identifiers whose key is not on the curve here, before
+    // any network work (interpretIdentifier would otherwise throw an internal crypto error).
+    if (id.length > 42 && !secp256k1ToJwk(id)) {
+      return {
+        didResolutionMetadata: {
+          error: Errors.invalidDid,
+          message: `Not a valid did:ethr: ${parsed.id}`,
+        },
+        didDocumentMetadata: {},
+        didDocument: null,
+      }
+    }
     const networkId = !fullId[1] ? 'mainnet' : fullId[1].slice(0, -1)
     let blockTag: string | number = options.blockTag || 'latest'
     let versionTimeTimestamp: number | undefined
