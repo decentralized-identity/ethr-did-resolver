@@ -25,12 +25,13 @@ We love your input! We want to make contributing to this project as easy and tra
 ### Commit messages
 
 We use GitHub to host code, to track issues and feature requests, as well as accept pull requests.
-We Use [semantic-release](https://github.com/semantic-release/semantic-release) and
-[commitlint](https://github.com/conventional-changelog/commitlint) to automate our release process.
-Versioning, changelogs and publication is all covered by this automation.
+[Changesets](https://changesets.dev) is used to manage automated release versioning, changelogs and
+publication, triggered from the conventional commit messages.
 Please see some [commit message examples](https://github.com/semantic-release/semantic-release#commit-message-format)
 
-Commit messages are really important in this process, and the build will fail if your commits don't adhere to this.
+Every PR that changes published code must include a changeset (run `pnpm changeset` and answer the
+prompts), otherwise the release automation won't know what to release. The Changesets Action opens
+a versioning PR and publishes new versions when it lands on `master`.
 
 ### Code style
 
