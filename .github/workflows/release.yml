@@ -8,9 +8,16 @@ jobs:
   release:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
+    # No GH_TOKEN / NPM_TOKEN secrets needed:
+    #  - the built-in GITHUB_TOKEN (contents: write) creates the version PR, tags and releases
+    #  - id-token: write enables npm OIDC trusted publishing (publisher is configured in the
+    #    package settings on npmjs.com for this repo + workflow file name "release.yml")
+    # Provenance attestations are generated automatically by npm for public packages
+    # published via trusted publishing from a public repository.
     permissions:
-      contents: read
+      contents: write
       pull-requests: write
+      id-token: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -23,11 +30,15 @@ jobs:
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 24
+          registry-url: 'https://registry.npmjs.org'
 
       - run: pnpm install --frozen-lockfile
 
       # Creates/updates the "chore(release): version packages" PR when changesets
-      # are present, or publishes the newly versioned packages on merge.
+      # are present, or publishes the newly versioned packages when it merges.
+      # Note: PRs created with the built-in GITHUB_TOKEN do not trigger CI runs on
+      # that PR (GitHub limitation); the version PR only contains version bumps and
+      # changelog edits, so this is safe.
       - name: 'Create release PR or publish packages'
         id: changesets
         uses: changesets/action@v2
@@ -36,8 +47,4 @@ jobs:
           commit: 'chore(release): version packages'
           publish: 'pnpm run release:publish'
         env:
-          # Needs a token with "contents: write" to create the release PR and tag commits
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-          # npm publish token (via pnpm). If the package has trusted publishing
-          # configured, this can be replaced with pnpm publish --publish-tag --no-git-checks
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

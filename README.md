@@ -53,6 +53,14 @@ Releases are driven by [changesets](https://changesets.dev) — see
 
 Each package is versioned and tagged independently (tags look like `ethr-did-resolver@14.2.0`).
 
+The release pipeline needs **no repository secrets**:
+
+- npm publishing uses [OIDC trusted publishing](https://docs.npmjs.com/trusted-publishers)
+  (`id-token: write`), which also attaches provenance automatically for public packages in
+  this public repository. The npm-side publisher (package settings → Access → Trusted
+  Publisher) must point at this repository with the workflow file name `release.yml`.
+- All GitHub-side work (version PR, tags, releases) uses the built-in `GITHUB_TOKEN`.
+
 ## License
 
 Apache-2.0 — see [LICENSE](LICENSE).
