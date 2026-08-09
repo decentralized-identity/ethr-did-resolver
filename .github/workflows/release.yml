@@ -4,16 +4,13 @@ on:
   push:
     branches:
       - 'master'
-      - 'alpha'
 jobs:
-  build-test-publish:
+  release:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     permissions:
       contents: read
-      issues: read
-      pull-requests: read
-      id-token: write
+      pull-requests: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -28,20 +25,19 @@ jobs:
           node-version: 24
 
       - run: pnpm install --frozen-lockfile
-      - run: pnpm run format
-      - run: pnpm run build
-      - run: pnpm run lint
-      - run: pnpm run test:ci
 
-      - name: 'Setup git coordinates'
+      # Creates/updates the "chore(release): version packages" PR when changesets
+      # are present, or publishes the newly versioned packages on merge.
+      - name: 'Create release PR or publish packages'
+        id: changesets
+        uses: changesets/action@v2
+        with:
+          title: 'chore(release): version packages'
+          commit: 'chore(release): version packages'
+          publish: 'pnpm run release:publish'
         env:
-          GIT_USER: ${{ secrets.GH_USER }}
-          GIT_EMAIL: ${{ secrets.GH_EMAIL }}
-        run: |
-          git config user.name "$GIT_USER"
-          git config user.email "$GIT_EMAIL"
-
-      - name: 'Run semantic-release'
-        env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
-        run: pnpm run release
+          # Needs a token with "contents: write" to create the release PR and tag commits
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+          # npm publish token (via pnpm). If the package has trusted publishing
+          # configured, this can be replaced with pnpm publish --publish-tag --no-git-checks
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}

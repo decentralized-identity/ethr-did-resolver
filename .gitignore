@@ -1,6 +1,6 @@
-lib.commonjs/
-lib.esm/
-lib/
+packages/*/lib.commonjs/
+packages/*/lib.esm/
+packages/*/lib/
 
 # Created by https://www.gitignore.io/api/node,linux,macos,windows,intellij
 # Edit at https://www.gitignore.io/?templates=node,linux,macos,windows,intellij
@@ -230,3 +230,6 @@ $RECYCLE.BIN/
 
 dist/
 /planning/
+
+# Local agent workspace
+.pi/

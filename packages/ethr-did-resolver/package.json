@@ -1,0 +1,81 @@
+{
+  "name": "ethr-did-resolver",
+  "version": "14.1.1",
+  "description": "Resolve DID documents for Ethereum addresses and public keys",
+  "type": "commonjs",
+  "main": "./lib.commonjs/index.js",
+  "module": "./lib.esm/index.js",
+  "types": "./lib.commonjs/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./lib.esm/index.d.ts",
+        "default": "./lib.esm/index.js"
+      },
+      "require": {
+        "types": "./lib.commonjs/index.d.ts",
+        "default": "./lib.commonjs/index.js"
+      }
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/decentralized-identity/ethr-did-resolver.git"
+  },
+  "files": [
+    "lib.commonjs",
+    "lib.esm",
+    "LICENSE"
+  ],
+  "author": "Pelle Braendgaard",
+  "contributors": [
+    "Mircea Nistor <work@mirceanis.xyz>"
+  ],
+  "license": "Apache-2.0",
+  "keywords": [
+    "did:ethr",
+    "DID",
+    "DID document",
+    "PKI",
+    "resolver",
+    "Verifiable Credential",
+    "W3C",
+    "ethereum",
+    "ethereumAddress",
+    "blockchainAccountId",
+    "registry",
+    "EIP1056",
+    "EcdsaSecp256k1RecoveryMethod2020",
+    "EcdsaSecp256k1VerificationKey2019",
+    "Ed25519VerificationKey2020",
+    "X25519KeyAgreementKey2020",
+    "Multikey"
+  ],
+  "scripts": {
+    "test": "HARDHAT_CONFIG=hardhat.config.mts vitest run",
+    "test:ci": "HARDHAT_CONFIG=hardhat.config.mts vitest run --coverage",
+    "build": "pnpm run build:common && pnpm run build:esm",
+    "build:common": "tsc --project tsconfig.common.json",
+    "build:esm": "tsc --project tsconfig.esm.json && echo '{\"type\":\"module\"}' > lib.esm/package.json",
+    "clean": "rm -rf ./lib ./lib.commonjs ./lib.esm",
+    "format": "prettier --write \"src/**/*.[jt]s\"",
+    "lint": "eslint \"src/**/*.[jt]s\""
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "8.66.0",
+    "@typescript-eslint/parser": "8.66.0",
+    "@vitest/coverage-v8": "4.1.10",
+    "@vitest/eslint-plugin": "1.6.26",
+    "eslint": "10.8.0",
+    "eslint-config-prettier": "10.1.8",
+    "eslint-plugin-prettier": "5.5.6",
+    "hardhat": "3.12.0",
+    "prettier": "3.9.6",
+    "typescript": "6.0.3",
+    "vitest": "4.1.10"
+  },
+  "dependencies": {
+    "did-resolver": "^5.0.1",
+    "ethers": "^6.16.0"
+  }
+}
