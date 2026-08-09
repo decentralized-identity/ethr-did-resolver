@@ -1,6 +1,6 @@
 [![npm](https://img.shields.io/npm/dt/ethr-did-resolver.svg)](https://www.npmjs.com/package/ethr-did-resolver)
 [![npm](https://img.shields.io/npm/v/ethr-did-resolver.svg)](https://www.npmjs.com/package/ethr-did-resolver)
-[![codecov](https://codecov.io/gh/decentralized-identity/ethr-did-resolver/branch/develop/graph/badge.svg)](https://codecov.io/gh/decentralized-identity/ethr-did-resolver)
+[![codecov](https://codecov.io/gh/decentralized-identity/ethr-did-resolver/branch/master/graph/badge.svg)](https://codecov.io/gh/decentralized-identity/ethr-did-resolver)
 
 # ethr DID Resolver
 
@@ -73,8 +73,8 @@ type `EcdsaSecp256k1RecoveryMethod2020` and an `blockchainAccountId` attribute c
 The DID document is not stored as a file, but is built by using read only functions and contract events on
 the [ethr-did-registry](https://github.com/uport-project/ethr-did-registry) Ethereum smart contract.
 
-Please see the [spec](doc/did-method-spec.md) for details of how the DID document and corresponding metadata are
-computed.
+Please see the [spec](https://github.com/decentralized-identity/ethr-did-resolver/blob/master/doc/did-method-spec.md) for
+details of how the DID document and corresponding metadata are computed.
 
 ## Resolving a DID document
 
