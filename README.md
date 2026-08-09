@@ -59,7 +59,8 @@ The release pipeline needs **no repository secrets**:
   (`id-token: write`), which also attaches provenance automatically for public packages in
   this public repository. The npm-side publisher (package settings → Access → Trusted
   Publisher) must point at this repository with the workflow file name `release.yml`.
-- All GitHub-side work (version PR, tags, releases) uses the built-in `GITHUB_TOKEN`.
+- All GitHub-side work (version PR, tags, releases) uses the built-in `github.token` — the
+  Changesets Action's `github-token` input already defaults to it, so no token needs to be passed.
 
 ## License
 
