@@ -267,4 +267,20 @@ describe('ethrResolver (alt-chains)', () => {
       })
     })
   })
+
+  describe('polygon', () => {
+    it('gracefully skips invalid 96-byte secp256k1 key on polygon', async () => {
+      const did = 'did:ethr:polygon:0x4a21b852ea26d0d2784aa85db156cd6310619c48'
+      const resolver = new Resolver(
+        getResolver({ networks: [{ name: 'polygon', rpcUrl: 'https://polygon.gateway.tenderly.co' }] })
+      )
+      const result = await resolver.resolve(did)
+      // Expect a valid document — the invalid Secp256k1 key is skipped, but the
+      // base DID document (controller verification method) is still produced.
+      expect(result.didDocument).not.toBeNull()
+      expect(result.didResolutionMetadata.error).toBeUndefined()
+      expect(result.didDocument!.verificationMethod).toHaveLength(1)
+      expect(result.didDocument!.verificationMethod?.[0].id).toBe(`${did}#controller`)
+    })
+  })
 })

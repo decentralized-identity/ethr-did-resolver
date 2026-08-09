@@ -280,16 +280,20 @@ export function toMultibase(hexValue: string, prefix?: Uint8Array): string {
 }
 
 /**
- * Decompresses a 33-byte secp256k1 public key (hex, with or without 0x prefix) and
- * returns a JWK object suitable for use as `publicKeyJwk` in a DID document.
+ * Decompresses a 33-byte or 65-byte secp256k1 public key (hex, with or without 0x prefix) and
+ * returns a JWK object suitable for use as `publicKeyJwk` in a DID document, or null if the input is invalid.
  */
-export function secp256k1ToJwk(hex: string): JsonWebKey {
-  const uncompressed = SigningKey.computePublicKey(hex.startsWith('0x') ? hex : `0x${hex}`, false)
-  // uncompressed is 0x04 || x (32 bytes) || y (32 bytes)
-  const raw = getBytes(uncompressed)
-  const toBase64url = (bytes: Uint8Array) =>
-    encodeBase64(bytes).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
-  const x = toBase64url(raw.slice(1, 33))
-  const y = toBase64url(raw.slice(33, 65))
-  return { kty: 'EC', crv: 'secp256k1', x, y }
+export function secp256k1ToJwk(hex: string): JsonWebKey | null {
+  try {
+    const uncompressed = SigningKey.computePublicKey(hex.startsWith('0x') ? hex : `0x${hex}`, false)
+    // uncompressed is 0x04 || x (32 bytes) || y (32 bytes)
+    const raw = getBytes(uncompressed)
+    const toBase64url = (bytes: Uint8Array) =>
+      encodeBase64(bytes).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
+    const x = toBase64url(raw.slice(1, 33))
+    const y = toBase64url(raw.slice(33, 65))
+    return { kty: 'EC', crv: 'secp256k1', x, y }
+  } catch {
+    return null
+  }
 }
