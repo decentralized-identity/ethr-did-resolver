@@ -1,3 +1,10 @@
+## [14.1.1](https://github.com/decentralized-identity/ethr-did-resolver/compare/14.1.0...14.1.1) (2026-08-09)
+
+
+### Bug Fixes
+
+* Handle invalid secp256k1 keys ([#284](https://github.com/decentralized-identity/ethr-did-resolver/issues/284)) ([765b15e](https://github.com/decentralized-identity/ethr-did-resolver/commit/765b15e24922c4736eab930d3949fc1753eb10b9))
+
 # [14.1.0](https://github.com/decentralized-identity/ethr-did-resolver/compare/14.0.1...14.1.0) (2026-07-28)
 
 
