@@ -27,6 +27,13 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
+      # Verify the whole workspace before any release work happens, mirroring the
+      # pre-changesets release pipeline (these also run on every PR via test.yml).
+      - run: pnpm run format
+      - run: pnpm run build
+      - run: pnpm run lint
+      - run: pnpm run test:ci
+
       - name: 'Create release PR or publish packages'
         id: changesets
         uses: changesets/action@a45c4d594aa4e2c509dc14a9f2b3b67ba3780d0d # v1.9.0
