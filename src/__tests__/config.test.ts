@@ -115,7 +115,9 @@ describe('configuration', () => {
 
   it('override deployment registry address', () => {
     const contracts = configureResolverWithNetworks({
-      networks: [{ name: 'mainnet', rpcUrl: 'http://localhost:8545', registry: '0x9af37603e98e0dc2b855be647c39abe984fc2445' }],
+      networks: [
+        { name: 'mainnet', rpcUrl: 'http://localhost:8545', registry: '0x9af37603e98e0dc2b855be647c39abe984fc2445' },
+      ],
     })
     expect(contracts['mainnet']).toBeDefined()
     expect(contracts['0x1']).toBeDefined()

@@ -291,7 +291,7 @@ export class EthrDidResolver {
                   controller: did,
                 }
                 switch (pk.type) {
-                  case VMTypes.EcdsaSecp256k1VerificationKey2019:
+                  case VMTypes.EcdsaSecp256k1VerificationKey2019: {
                     // Spec mandates publicKeyJwk for Secp256k1 attribute keys regardless of encoding hint.
                     const jwk = secp256k1ToJwk(event.value)
                     if (jwk) {
@@ -300,7 +300,7 @@ export class EthrDidResolver {
                     } else {
                       continue
                     }
-                    break
+                  }
                   case VMTypes.Ed25519VerificationKey2020:
                   case VMTypes.X25519KeyAgreementKey2020:
                     // Always produce publicKeyMultibase regardless of encoding hint, to match spec.
