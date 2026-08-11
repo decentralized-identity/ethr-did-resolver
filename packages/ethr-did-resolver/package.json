@@ -62,11 +62,11 @@
     "lint": "eslint \"src/**/*.[jt]s\""
   },
   "devDependencies": {
-    "@typescript-eslint/eslint-plugin": "8.66.0",
-    "@typescript-eslint/parser": "8.66.0",
+    "@typescript-eslint/eslint-plugin": "8.67.0",
+    "@typescript-eslint/parser": "8.67.0",
     "@vitest/coverage-v8": "4.1.10",
-    "@vitest/eslint-plugin": "1.6.26",
-    "eslint": "10.8.0",
+    "@vitest/eslint-plugin": "1.6.27",
+    "eslint": "10.8.1",
     "eslint-config-prettier": "10.1.8",
     "eslint-plugin-prettier": "5.5.6",
     "hardhat": "3.12.0",
