@@ -16,6 +16,9 @@ jobs:
         with:
           version: 11.21.0
 
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@908c540300062bd5a7e473851cdb4282204cee09 # v1.9.1
+
       - name: Setup node with pnpm cache
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
