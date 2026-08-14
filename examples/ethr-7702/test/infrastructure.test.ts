@@ -24,7 +24,6 @@ describe('Infrastructure', () => {
     const { rpcUrl, chainId, contracts } = loadEnv()
     const address = getAnvilAccounts()[1] // use account[1] as the identity
 
-    const provider = new JsonRpcProvider(rpcUrl)
     const resolver = new Resolver(
       getResolver({
         networks: [

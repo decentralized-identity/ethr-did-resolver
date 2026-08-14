@@ -88,10 +88,6 @@ describe('Pattern 4: Multi-Sig 7702 DID Updates', () => {
       chain: anvilChain, transport: http(rpcUrl), account: privateKeyToAccount(keys[0]),
     })
 
-    const signerWallets = signerAccounts.map((acc) =>
-      createWalletClient({ chain: anvilChain, transport: http(rpcUrl), account: acc })
-    )
-
     // Step 1+2: configure 2-of-3 multi-sig delegation
     await configureMultiSigDelegation(eoaWalletClient, broadcasterWallet, publicClient, {
       multiSigDidManagerAddress: contracts.multiSigDidManager,

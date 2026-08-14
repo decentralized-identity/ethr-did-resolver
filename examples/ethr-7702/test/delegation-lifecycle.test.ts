@@ -26,7 +26,7 @@ import { privateKeyToAccount } from 'viem/accounts'
 import { anvil as anvilChain } from 'viem/chains'
 import { stringToBytes32 } from 'ethr-did-resolver'
 import { TEST_ENV_FILE } from './globalSetup.js'
-import { getAnvilPrivateKeys, ANVIL_RPC_URL } from '../src/utils/anvil.js'
+import { getAnvilPrivateKeys } from '../src/utils/anvil.js'
 import {
   DID_MANAGER_ABI,
   EXPIRING_DID_MANAGER_ABI,
@@ -243,7 +243,6 @@ describe('Pattern 9: Re-delegation (A → B)', () => {
 
     const publicClient = createPublicClient({ chain: anvilChain, transport: http(rpcUrl) })
     const eoaWalletClient = createWalletClient({ chain: anvilChain, transport: http(rpcUrl), account: eoaAccount })
-    const testClient = createTestClient({ chain: anvilChain, transport: http(rpcUrl), mode: 'anvil' })
 
     // Delegate to ExpiringDIDManager7702
     const auth = await eoaWalletClient.signAuthorization({

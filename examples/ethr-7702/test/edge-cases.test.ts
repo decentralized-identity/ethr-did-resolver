@@ -16,7 +16,6 @@ import {
   http,
   toHex,
   keccak256,
-  encodeAbiParameters,
 } from 'viem'
 import { privateKeyToAccount } from 'viem/accounts'
 import { anvil as anvilChain } from 'viem/chains'

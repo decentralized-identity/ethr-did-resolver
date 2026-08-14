@@ -13,7 +13,7 @@ import { createPublicClient, createWalletClient, http } from 'viem'
 import { privateKeyToAccount } from 'viem/accounts'
 import { anvil as anvilChain } from 'viem/chains'
 import { TEST_ENV_FILE } from './globalSetup.js'
-import { getAnvilAccounts, getAnvilPrivateKeys } from '../src/utils/anvil.js'
+import { getAnvilPrivateKeys } from '../src/utils/anvil.js'
 import {
   configurePolicyDelegation,
   sessionKeyDidUpdate,

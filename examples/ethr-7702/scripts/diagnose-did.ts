@@ -55,7 +55,6 @@ async function main() {
   const publicClient = createPublicClient({ chain, transport: http(rpcUrl) })
   const registry = cfg.registry as `0x${string}`
   const managers = deterministicManagerAddresses()
-  const expectedManager = managers.didManager
 
   console.log(`network=${net}  identity=${identity}`)
   console.log(`rpc=${rpcUrl}`)
