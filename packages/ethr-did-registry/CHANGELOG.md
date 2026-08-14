@@ -1,0 +1,1 @@
+# ethr-did-registry
