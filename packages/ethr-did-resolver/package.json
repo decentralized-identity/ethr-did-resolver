@@ -20,7 +20,8 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/decentralized-identity/ethr-did-resolver.git"
+    "url": "git+https://github.com/decentralized-identity/ethr-did-resolver.git",
+    "directory": "packages/ethr-did-resolver"
   },
   "files": [
     "lib.commonjs",

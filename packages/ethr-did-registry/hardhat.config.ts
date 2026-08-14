@@ -1,60 +1,64 @@
-import * as dotenv from 'dotenv'
+import { existsSync } from 'node:fs'
+import { dirname, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
+import { defineConfig } from 'hardhat/config'
+import hardhatEthers from '@nomicfoundation/hardhat-ethers'
+import hardhatTypechain from '@nomicfoundation/hardhat-typechain'
+import hardhatMocha from '@nomicfoundation/hardhat-mocha'
+import hardhatChaiMatchers from '@nomicfoundation/hardhat-ethers-chai-matchers'
 
-import { HardhatUserConfig, task } from 'hardhat/config'
-import '@nomiclabs/hardhat-etherscan'
-import '@nomiclabs/hardhat-waffle'
-import '@typechain/hardhat'
-import 'hardhat-gas-reporter'
-import 'solidity-coverage'
-
-dotenv.config()
-
-// This is a sample Hardhat task. To learn how to create your own go to
-// https://hardhat.org/guides/create-task.html
-task('accounts', 'Prints the list of accounts', async (taskArgs, hre) => {
-  const accounts = await hre.ethers.getSigners()
-
-  for (const account of accounts) {
-    console.log(account.address)
-  }
-})
-
-// You need to export an object to set up your config
-// Go to https://hardhat.org/config/ to learn more
-
-const config: HardhatUserConfig = {
-  solidity: {
-    compilers: [
-      {
-        version: '0.8.6',
-        settings: {
-          optimizer: {
-            enabled: true,
-            runs: 1000,
-          },
-        },
-      },
-    ],
-  },
-  paths: {
-    sources: './contracts',
-    tests: './test',
-    cache: './cache',
-    artifacts: './artifacts',
-  },
-  networks: {
-    ropsten: {
-      url: process.env.ROPSTEN_URL || '',
-      accounts: process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
-    },
-  },
-  gasReporter: {
-    enabled: process.env.REPORT_GAS !== undefined,
-    currency: 'USD',
-  },
-  etherscan: {
-    apiKey: process.env.ETHERSCAN_API_KEY,
-  },
+// Load deployment credentials from .env before config resolution. The file is
+// gitignored (see .env.example) — key material never enters the repository.
+const configDir = dirname(fileURLToPath(import.meta.url))
+const envFile = resolve(configDir, '.env')
+if (existsSync(envFile)) {
+  process.loadEnvFile(envFile)
 }
 
-export default config
+const { DEPLOY_RPC_URL, DEPLOY_PRIVATE_KEY, DEPLOY_CHAIN_ID } = process.env
+
+/**
+ * The `deploy` network exists only when `DEPLOY_RPC_URL` is set. It is the
+ * target of `pnpm run deploy:registry` (scripts/deploy.ts) — see docs/deploy.md. When a
+ * private key is configured, Hardhat signs transactions locally and submits
+ * them as raw transactions; without one, the RPC node's own accounts are used.
+ */
+const deployNetwork =
+  DEPLOY_RPC_URL === undefined
+    ? {}
+    : {
+        deploy: {
+          type: 'http' as const,
+          url: DEPLOY_RPC_URL,
+          accounts: DEPLOY_PRIVATE_KEY === undefined ? undefined : [DEPLOY_PRIVATE_KEY],
+          ...(DEPLOY_CHAIN_ID === undefined ? {} : { chainId: Number(DEPLOY_CHAIN_ID) }),
+        },
+      }
+
+export default defineConfig({
+  plugins: [hardhatEthers, hardhatTypechain, hardhatMocha, hardhatChaiMatchers],
+  paths: {
+    tests: './src/__tests__',
+  },
+  typechain: {
+    outDir: `${process.cwd()}/typechain-types`,
+  },
+  solidity: {
+    version: '0.8.36',
+    settings: {
+      optimizer: {
+        enabled: true,
+        runs: 1000,
+      },
+    },
+  },
+  networks: {
+    hardhat: {
+      type: 'edr-simulated',
+      chainId: 1337,
+      hardfork: 'prague',
+      allowBlocksWithSameTimestamp: true,
+    },
+    ...deployNetwork,
+  },
+})
