@@ -8,6 +8,8 @@ and released with [changesets](https://changesets.dev).
 | Package | Description |
 | --- | --- |
 | [`ethr-did-resolver`](packages/ethr-did-resolver) | Resolve DID documents for Ethereum addresses and public keys |
+| [`ethr-did-registry`](packages/ethr-did-registry) | Ethereum contract for a registry of DIDs — the ERC-1056 contract anchoring `did:ethr` |
+| [`ethr-7702`](examples/ethr-7702) | EIP-7702 PoC: EOA → ERC-1056 (did:ethr) interactions enabled by Pectra hardfork |
 
 ## Getting started
 
@@ -32,12 +34,19 @@ pnpm --filter ethr-did-resolver test -- --watch
 
 ```
 packages/
-  <package>/        # one publishable library per folder
-  ethr-did-resolver/
-    src/            # package source
-    lib.commonjs/   # build output (CJS, generated)
-    lib.esm/        # build output (ESM, generated)
-.changeset/         # changesets (release management)
+  ethr-did-resolver/    # DID resolver library
+    src/
+    lib.commonjs/       # build output (CJS, generated)
+    lib.esm/            # build output (ESM, generated)
+  ethr-did-registry/    # ERC-1056 registry contract
+    contracts/
+    src/
+    artifacts/
+examples/
+  ethr-7702/            # EIP-7702 PoC example (not published)
+    contracts/
+    webapp/
+.changeset/             # changesets (release management)
 ```
 
 ## Release workflow
