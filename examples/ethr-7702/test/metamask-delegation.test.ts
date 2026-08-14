@@ -15,45 +15,17 @@
 //   3. Enforcer blocks: wrong prefix → revert
 //   4. Gas comparison: custom DIDManager7702 vs framework overhead
 
-import { describe, it, expect } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { readFileSync } from 'fs'
-import {
-  createPublicClient,
-  createWalletClient,
-  encodeFunctionData,
-  http,
-  toHex,
-} from 'viem'
+import { createPublicClient, createWalletClient, encodeFunctionData, http, toHex, } from 'viem'
 import { privateKeyToAccount } from 'viem/accounts'
 import { anvil as anvilChain } from 'viem/chains'
 import { stringToBytes32 } from 'ethr-did-resolver'
-import { createRequire } from 'module'
-import { fileURLToPath } from 'url'
+import { encodeDelegations, ROOT_AUTHORITY } from '@metamask/delegation-core'
 import { TEST_ENV_FILE } from './globalSetup.js'
 import { getAnvilPrivateKeys } from '../src/utils/anvil.js'
 import { DID_MANAGER_ABI } from '../src/utils/abis.js'
 import { DelegationManagerABI } from '../src/utils/metamask-framework.js'
-
-// ---------------------------------------------------------------------------
-// Import delegation-core helpers (via pnpm store path)
-// ---------------------------------------------------------------------------
-
-const _require = createRequire(
-  fileURLToPath(
-    new URL(
-      '../node_modules/.pnpm/@metamask+smart-accounts-kit@0.4.0-beta.1_viem@2.47.0_typescript@5.9.3_/node_modules/@metamask/smart-accounts-kit/dist/index.mjs',
-      import.meta.url
-    )
-  )
-)
-
-const {
-  encodeDelegations,
-  ROOT_AUTHORITY,
-} = _require('@metamask/delegation-core') as {
-  encodeDelegations: (delegations: Delegation[]) => `0x${string}`
-  ROOT_AUTHORITY: `0x${string}`
-}
 
 // ---------------------------------------------------------------------------
 // Types
@@ -124,11 +96,9 @@ async function signDelegation(
   delegationManagerAddress: `0x${string}`
 ): Promise<`0x${string}`> {
   // Read the DelegationManager's EIP-712 domain
-  const dmABIFull = _require('@metamask/delegation-abis') as { DelegationManager: readonly unknown[] }
-
   const domainResult = await publicClient.readContract({
     address: delegationManagerAddress,
-    abi: dmABIFull.DelegationManager,
+    abi: DelegationManagerABI,
     functionName: 'eip712Domain',
   }) as [string, string, string, bigint, `0x${string}`, `0x${string}`, bigint[]]
 
@@ -139,7 +109,8 @@ async function signDelegation(
   // NOT part of the EIP-712 signing type (per SIGNABLE_DELEGATION_TYPED_DATA in
   // @metamask/smart-accounts-kit). Including `args` in the type produces a different
   // CAVEAT_TYPEHASH and therefore an invalid signature.
-  const signature = await walletClient.signTypedData({
+
+  return await walletClient.signTypedData({
     domain: {
       name,
       version,
@@ -170,8 +141,6 @@ async function signDelegation(
     },
     account: walletClient.account!,
   })
-
-  return signature
 }
 
 // ---------------------------------------------------------------------------

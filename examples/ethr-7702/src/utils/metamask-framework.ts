@@ -2,7 +2,9 @@
 // Deploy the MetaMask Delegation Framework contracts to a local Anvil instance.
 //
 // The framework contracts are NOT deployed to Anvil (chainId 31337) by default.
-// We load their bytecodes from @metamask/delegation-abis and deploy them manually.
+// We load their ABIs and bytecodes directly from @metamask/delegation-abis, which
+// is declared as a direct dependency (see package.json) so Node resolution finds
+// it without needing to know the exact pnpm store layout of its sibling packages.
 //
 // Deployment order (dependencies):
 //   1. EntryPoint          — no deps
@@ -11,38 +13,17 @@
 //
 // The returned addresses are consumed by the test suite and by deploy.ts.
 
-import { createRequire } from 'module'
-import { fileURLToPath } from 'url'
 import type { PublicClient, WalletClient } from 'viem'
-
-// Resolve delegation-abis from the pnpm store (not directly accessible via package name)
-// The package lives as a transitive dep of @metamask/smart-accounts-kit.
-const _require = createRequire(
-  fileURLToPath(
-    new URL(
-      '../../node_modules/.pnpm/@metamask+smart-accounts-kit@0.4.0-beta.1_viem@2.47.0_typescript@5.9.3_/node_modules/@metamask/smart-accounts-kit/dist/index.mjs',
-      import.meta.url
-    )
-  )
-)
-
-// ABIs (from the main index barrel)
-const {
-  DelegationManager: DelegationManagerABI,
-  EIP7702StatelessDeleGator: EIP7702StatelessDeleGatorABI,
-  EntryPoint: EntryPointABI,
-} = _require('@metamask/delegation-abis') as {
-  DelegationManager: readonly unknown[]
-  EIP7702StatelessDeleGator: readonly unknown[]
-  EntryPoint: readonly unknown[]
-}
-
-// Bytecodes (from the bytecode barrel — each export is a raw hex string)
-const bytecodes = _require('@metamask/delegation-abis/bytecode') as Record<string, `0x${string}`>
-
-const DelegationManagerBytecode = bytecodes.DelegationManager
-const EIP7702StatelessDeleGatorBytecode = bytecodes.EIP7702StatelessDeleGator
-const EntryPointBytecode = bytecodes.EntryPoint
+import {
+  DelegationManager as DelegationManagerABI,
+  EIP7702StatelessDeleGator as EIP7702StatelessDeleGatorABI,
+  EntryPoint as EntryPointABI,
+} from '@metamask/delegation-abis'
+import {
+  DelegationManager as DelegationManagerBytecode,
+  EIP7702StatelessDeleGator as EIP7702StatelessDeleGatorBytecode,
+  EntryPoint as EntryPointBytecode,
+} from '@metamask/delegation-abis/bytecode'
 
 export type MetaMaskFramework = {
   entryPoint: `0x${string}`
@@ -109,5 +90,5 @@ export async function deployMetaMaskFramework(
   return { entryPoint, delegationManager, statelessDeleGator }
 }
 
-// Re-export ABIs so callers don't need to repeat the _require dance
+// Re-export ABIs so callers get them from one place
 export { DelegationManagerABI, EIP7702StatelessDeleGatorABI, EntryPointABI }

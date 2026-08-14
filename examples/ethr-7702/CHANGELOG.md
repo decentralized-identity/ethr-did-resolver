@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.14.4] — Resolve MetaMask delegation-core/delegation-abis via Node resolution
+
+### Fixed
+- `test/metamask-delegation.test.ts` and `src/utils/metamask-framework.ts` previously loaded `@metamask/delegation-core` and `@metamask/delegation-abis` via `createRequire` pointed at a hard-coded pnpm store path containing an exact `@metamask/smart-accounts-kit@0.4.0-beta.1_viem@2.47.0_typescript@5.9.3_` hash — stale even at the time (the declared dependency was already `1.7.0`), and guaranteed to break on any dependency bump, lockfile change, or different pnpm store layout.
+  - Added `@metamask/delegation-abis` (`^1.1.0`) and `@metamask/delegation-core` (`^2.2.1`) as direct dependencies in `package.json`, matching the versions `@metamask/smart-accounts-kit@1.7.0` itself depends on.
+  - Both packages ship standard ESM `exports` maps (including the `@metamask/delegation-abis/bytecode` subpath), so they're now imported directly (`import { encodeDelegations, ROOT_AUTHORITY } from '@metamask/delegation-core'`, `import { DelegationManager, EntryPoint, EIP7702StatelessDeleGator } from '@metamask/delegation-abis'`) with no `createRequire`/path-juggling needed.
+
+### Test suite
+- 65/65 root tests passing (13 files); `tsc --noEmit` clean; `pnpm --filter ethr-7702 run build` succeeds.
+
 ## [1.14.3] — Security fix: DIDAttributeEnforcer target binding
 
 ### Fixed (Security)

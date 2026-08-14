@@ -18,11 +18,13 @@
     "typecheck:webapp": "tsc -p webapp/tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@metamask/smart-accounts-kit": "1.7.0",
+    "@metamask/delegation-abis": "^2.0.0",
+    "@metamask/delegation-core": "^3.0.0",
+    "@metamask/smart-accounts-kit": "^2.0.0",
     "did-resolver": "^5.0.1",
     "ethers": "^6.17.0",
     "ethr-did-resolver": "workspace:^",
-    "viem": "^2.55.10"
+    "viem": "^2.55.16"
   },
   "devDependencies": {
     "@types/node": "^26.1.2",
