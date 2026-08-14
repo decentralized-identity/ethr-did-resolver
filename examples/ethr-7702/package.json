@@ -1,0 +1,43 @@
+{
+  "name": "ethr-7702",
+  "version": "1.1.0",
+  "description": "EIP-7702 PoC: EOA → ERC-1056 (did:ethr) interactions enabled by Pectra hardfork",
+  "license": "MIT",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "anvil": "anvil --hardfork prague",
+    "build": "pnpm run build:contracts && pnpm run build:webapp",
+    "build:contracts": "tsx scripts/compile.ts",
+    "test:patterns": "vitest run",
+    "test": "pnpm run test:patterns && pnpm run test:webapp",
+    "test:ci": "pnpm run test:patterns --coverage && pnpm run test:webapp --coverage",
+    "dev": "vite --config webapp/vite.config.ts",
+    "build:webapp": "pnpm run typecheck:webapp && vite build --config webapp/vite.config.ts",
+    "test:webapp": "vitest run --config webapp/vitest.config.ts",
+    "typecheck:webapp": "tsc -p webapp/tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@metamask/delegation-abis": "^2.0.0",
+    "@metamask/delegation-core": "^3.0.0",
+    "@metamask/smart-accounts-kit": "^2.0.0",
+    "did-resolver": "^5.0.1",
+    "ethers": "^6.17.0",
+    "ethr-did-resolver": "workspace:^",
+    "viem": "^2.55.16"
+  },
+  "devDependencies": {
+    "@types/node": "^26.1.2",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
+    "@vitejs/plugin-react": "^6.0.5",
+    "@vitest/coverage-v8": "^4.1.10",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "solc": "0.8.36",
+    "tsx": "^4.23.5",
+    "typescript": "^7.0.2",
+    "vite": "8.2.0",
+    "vitest": "^4.1.10"
+  }
+}
