@@ -1,0 +1,7 @@
+{
+  "extends": "solhint:recommended",
+  "rules": {
+    "gas-custom-errors": "off",
+    "gas-indexed-events": "off"
+  }
+}

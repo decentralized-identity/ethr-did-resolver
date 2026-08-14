@@ -233,3 +233,8 @@ dist/
 
 # Local agent workspace
 .pi/
+
+# Local planning/scratch docs (not for VCS — decide explicitly before committing)
+.scratch/
+CONTEXT.md
+docs/adr/
