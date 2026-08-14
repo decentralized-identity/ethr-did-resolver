@@ -27,11 +27,8 @@ package, not here:
 
 - `packages/ethr-did-resolver/src/config/deployments.ts`
 
-Deployments are intentionally resolver-owned (see
-`docs/adr/0001-registry-package-modern-scaffolding.md` in the monorepo root):
-this package refers to the list but never writes or publishes it. New
-deployments are added there via a reviewable PR; the deploy flow below prints
-everything needed to record one.
+Deployments are intentionally resolver-owned: this package refers to the list but never writes or publishes it. New
+deployments are added there via a reviewable PR; the deploy flow below prints everything needed to record one.
 
 ## Using the Registry
 

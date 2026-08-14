@@ -2,6 +2,7 @@ import { existsSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'hardhat/config'
+import type { NetworkUserConfig } from 'hardhat/types/config'
 import hardhatEthers from '@nomicfoundation/hardhat-ethers'
 import hardhatTypechain from '@nomicfoundation/hardhat-typechain'
 import hardhatMocha from '@nomicfoundation/hardhat-mocha'
@@ -23,17 +24,27 @@ const { DEPLOY_RPC_URL, DEPLOY_PRIVATE_KEY, DEPLOY_CHAIN_ID } = process.env
  * private key is configured, Hardhat signs transactions locally and submits
  * them as raw transactions; without one, the RPC node's own accounts are used.
  */
-const deployNetwork =
+const hardhatNetwork: NetworkUserConfig = {
+  type: 'edr-simulated' as const,
+  chainId: 1337,
+  hardfork: 'prague' as const,
+  allowBlocksWithSameTimestamp: true,
+} as const
+
+const deployNetwork: NetworkUserConfig | undefined =
   DEPLOY_RPC_URL === undefined
-    ? {}
+    ? undefined
     : {
-        deploy: {
-          type: 'http' as const,
-          url: DEPLOY_RPC_URL,
-          accounts: DEPLOY_PRIVATE_KEY === undefined ? undefined : [DEPLOY_PRIVATE_KEY],
-          ...(DEPLOY_CHAIN_ID === undefined ? {} : { chainId: Number(DEPLOY_CHAIN_ID) }),
-        },
+        type: 'http' as const,
+        url: DEPLOY_RPC_URL,
+        accounts: DEPLOY_PRIVATE_KEY === undefined ? undefined : [DEPLOY_PRIVATE_KEY],
+        ...(DEPLOY_CHAIN_ID === undefined ? {} : { chainId: Number(DEPLOY_CHAIN_ID) }),
       }
+
+const networks: Record<string, NetworkUserConfig> =
+  deployNetwork === undefined
+    ? { hardhat: hardhatNetwork }
+    : { hardhat: hardhatNetwork, deploy: deployNetwork }
 
 export default defineConfig({
   plugins: [hardhatEthers, hardhatTypechain, hardhatMocha, hardhatChaiMatchers],
@@ -41,7 +52,7 @@ export default defineConfig({
     tests: './src/__tests__',
   },
   typechain: {
-    outDir: `${process.cwd()}/typechain-types`,
+    outDir: `./src/typechain-types`,
   },
   solidity: {
     version: '0.8.36',
@@ -52,13 +63,5 @@ export default defineConfig({
       },
     },
   },
-  networks: {
-    hardhat: {
-      type: 'edr-simulated',
-      chainId: 1337,
-      hardfork: 'prague',
-      allowBlocksWithSameTimestamp: true,
-    },
-    ...deployNetwork,
-  },
+  networks,
 })

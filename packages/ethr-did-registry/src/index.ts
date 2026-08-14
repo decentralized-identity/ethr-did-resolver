@@ -1,5 +1,5 @@
 import artifact from '../artifacts/contracts/EthereumDIDRegistry.sol/EthereumDIDRegistry.json' with { type: 'json' }
-import type { EthereumDIDRegistry as EthereumDIDRegistryType } from '../typechain-types/index.js'
+import type { EthereumDIDRegistry as EthereumDIDRegistryType } from './typechain-types/index.js'
 
 /**
  * The compiled Hardhat artifact for `EthereumDIDRegistry` (ABI + bytecode + metadata).
@@ -37,4 +37,4 @@ export type EthereumDIDRegistry = EthereumDIDRegistryType
  * Typed factory for deploying or connecting an `EthereumDIDRegistry` contract.
  * Returns instances typed as the generated `EthereumDIDRegistry` interface.
  */
-export { EthereumDIDRegistry__factory } from '../typechain-types/index.js'
+export { EthereumDIDRegistry__factory } from './typechain-types/index.js'

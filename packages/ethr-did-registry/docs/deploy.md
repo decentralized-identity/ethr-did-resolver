@@ -52,7 +52,7 @@ pnpm run deploy:registry                # account 0 of the local node
 
 ## The verification record
 
-The script prints a **source-verification record** — the audit trail of the deployment (see `CONTEXT.md`):
+The script prints a **source-verification record** — the audit trail of the deployment:
 
 - `contract` — the deployed contract address
 - `tx hash` — the deployment transaction hash

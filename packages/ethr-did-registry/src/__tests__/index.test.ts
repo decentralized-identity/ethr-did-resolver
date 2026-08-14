@@ -2,10 +2,10 @@ import { expect } from 'chai'
 import { describe, it } from 'mocha'
 import { Contract, ContractFactory } from 'ethers'
 
-import { EthereumDIDRegistry, EthereumDIDRegistry__factory } from 'ethr-did-registry'
-import artifactRaw from 'ethr-did-registry/artifacts/contracts/EthereumDIDRegistry.sol/EthereumDIDRegistry.json' with { type: 'json' }
-import { EthereumDIDRegistry__factory as BarrelFactory } from 'ethr-did-registry/typechain-types'
-import { EthereumDIDRegistry__factory as DeepFileFactory } from 'ethr-did-registry/typechain-types/factories/EthereumDIDRegistry__factory'
+import { EthereumDIDRegistry, EthereumDIDRegistry__factory } from '../index.js'
+import artifactRaw from '../../artifacts/contracts/EthereumDIDRegistry.sol/EthereumDIDRegistry.json' with { type: 'json' }
+import { EthereumDIDRegistry__factory as BarrelFactory } from '../typechain-types/index.js'
+import { EthereumDIDRegistry__factory as DeepFileFactory } from '../typechain-types/factories/EthereumDIDRegistry__factory.js'
 
 const resolveImport = (specifier: string): string =>
   (import.meta as ImportMeta & { resolve: (specifier: string) => string }).resolve(specifier)
@@ -101,7 +101,7 @@ describe('deep subpath imports', () => {
 
 describe('exports map resolution (self-reference)', () => {
   it('root resolves to the built dist entry', () => {
-    expect(resolveImport('ethr-did-registry')).to.include('/dist/src/index.js')
+    expect(resolveImport('ethr-did-registry')).to.include('/dist/index.js')
   })
 
   it('typechain-types resolves to the compiled dist copies', () => {

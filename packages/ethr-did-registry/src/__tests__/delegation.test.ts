@@ -4,8 +4,8 @@ import { concat, decodeBytes32String, encodeBytes32String, getBytes, toBeHex, to
 // Type augmentation for `.revertedWith` matcher
 import '@nomicfoundation/hardhat-ethers-chai-matchers'
 import type { Block, ContractTransactionReceipt, JsonRpcSigner, Provider } from 'ethers'
-import type { EthereumDIDRegistry } from '../../typechain-types/index.js'
-import type { DIDAttributeChangedEvent, DIDDelegateChangedEvent } from '../../typechain-types/EthereumDIDRegistry.js'
+import type { EthereumDIDRegistry } from '../typechain-types/index.js'
+import type { DIDAttributeChangedEvent, DIDDelegateChangedEvent } from '../typechain-types/EthereumDIDRegistry.js'
 import { deployRegistry, signData } from './testUtils.js'
 
 describe('ERC1056', () => {

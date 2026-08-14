@@ -7,12 +7,12 @@
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
-    "rootDir": ".",
+    "rootDir": "src",
     "outDir": "dist",
     "strict": true,
     "skipLibCheck": true,
     "resolveJsonModule": true,
     "forceConsistentCasingInFileNames": true
   },
-  "include": ["src", "typechain-types"]
+  "include": ["src", "src/typechain-types"]
 }

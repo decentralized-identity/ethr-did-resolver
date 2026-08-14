@@ -2,8 +2,8 @@ import { concat, keccak256, SigningKey, toBeHex, zeroPadValue } from 'ethers'
 import type { BytesLike, JsonRpcSigner, Provider, Signature } from 'ethers'
 import hre from 'hardhat'
 
-import { EthereumDIDRegistry__factory } from '../../typechain-types/index.js'
-import type { EthereumDIDRegistry } from '../../typechain-types/index.js'
+import { EthereumDIDRegistry__factory } from '../typechain-types/index.js'
+import type { EthereumDIDRegistry } from '../typechain-types/index.js'
 
 /**
  * Connects to the local EDR (hardhat) network via hre.network.create(), deploys

@@ -3,8 +3,8 @@ import { before, describe, it } from 'mocha'
 import { Wallet } from 'ethers'
 import type { JsonRpcSigner, Provider } from 'ethers'
 import hre from 'hardhat'
-import { EthereumDIDRegistry__factory } from '../../typechain-types/index.js'
-import type { EthereumDIDRegistry } from '../../typechain-types/index.js'
+import { EthereumDIDRegistry__factory } from '../typechain-types/index.js'
+import type { EthereumDIDRegistry } from '../typechain-types/index.js'
 
 /**
  * Smoke test: proves the runner → network → deploy path that every ported
