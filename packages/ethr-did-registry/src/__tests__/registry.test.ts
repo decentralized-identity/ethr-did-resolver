@@ -8,25 +8,6 @@ import type { DIDOwnerChangedEvent } from '../../typechain-types/EthereumDIDRegi
 import '@nomicfoundation/hardhat-ethers-chai-matchers'
 import { deployRegistry, signData } from './testUtils.js'
 
-/**
- * Core identity tests, ported from the legacy suite (../ethr-did-registry/test/
- * registry.test.ts, chai/waffle/ethers-v5) to vitest + ethers v6. Behavior is
- * identical — the legacy describe blocks `identityOwner()`, `changeOwner()` and
- * `Events` are reproduced here with the same scenarios and expected outcomes.
- * The delegate/attribute sections (addDelegate, revokeDelegate, setAttribute,
- * revokeAttribute) live in the delegation suite ported next (issue 07).
- *
- * Porting notes (ethers v5 → v6):
- * - `deployed()` → `waitForDeployment()`, `arrayify` → `getBytes`,
- *   `hexConcat` → `concat`, `zeroPad`/`hexZeroPad` → `zeroPadValue`,
- *   `SigningKey.signDigest` → `SigningKey.sign`
- * - `tx.wait()` receipts no longer expose `.events`; event assertions parse the
- *   receipt logs through the contract interface and cast to the generated typed
- *   event (EthereumDIDRegistry.DIDOwnerChangedEvent.LogDescription)
- * - bigint return values: `.toNumber()` → `Number(...)`
- * - vitest `.toBe` → chai `.to.equal`, `.rejects.toThrow` → `.to.be.revertedWith`,
- *   `.toEqual` → `.to.deep.equal`
- */
 describe('ERC1056', () => {
   let didReg: EthereumDIDRegistry
   let didRegAddress: string

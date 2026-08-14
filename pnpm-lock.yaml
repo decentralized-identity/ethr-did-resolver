@@ -41,9 +41,6 @@ importers:
       '@typescript-eslint/parser':
         specifier: 8.66.0
         version: 8.66.0(eslint@10.8.0(supports-color@7.2.0))(supports-color@8.1.1)(typescript@6.0.3)
-      '@vitest/eslint-plugin':
-        specifier: 1.6.26
-        version: 1.6.26(@typescript-eslint/eslint-plugin@8.66.0(@typescript-eslint/parser@8.66.0(eslint@10.8.0(supports-color@7.2.0))(supports-color@8.1.1)(typescript@6.0.3))(eslint@10.8.0(supports-color@7.2.0))(supports-color@8.1.1)(typescript@6.0.3))(eslint@10.8.0(supports-color@7.2.0))(supports-color@8.1.1)(typescript@6.0.3)(vitest@4.1.10)
       chai:
         specifier: 6.2.2
         version: 6.2.2
@@ -3549,17 +3546,6 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@typescript-eslint/utils@8.67.0(eslint@10.8.0(supports-color@7.2.0))(supports-color@8.1.1)(typescript@6.0.3)':
-    dependencies:
-      '@eslint-community/eslint-utils': 4.9.1(eslint@10.8.0(supports-color@7.2.0))
-      '@typescript-eslint/scope-manager': 8.67.0
-      '@typescript-eslint/types': 8.67.0
-      '@typescript-eslint/typescript-estree': 8.67.0(supports-color@8.1.1)(typescript@6.0.3)
-      eslint: 10.8.0(supports-color@7.2.0)
-      typescript: 6.0.3
-    transitivePeerDependencies:
-      - supports-color
-
   '@typescript-eslint/utils@8.67.0(eslint@10.8.0(supports-color@8.1.1))(supports-color@8.1.1)(typescript@6.0.3)':
     dependencies:
       '@eslint-community/eslint-utils': 4.9.1(eslint@10.8.0(supports-color@8.1.1))
@@ -3594,18 +3580,6 @@ snapshots:
       std-env: 4.0.0
       tinyrainbow: 3.1.0
       vitest: 4.1.10(@types/node@22.7.5)(@vitest/coverage-v8@4.1.10)(vite@8.0.3(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)(@types/node@22.7.5)(esbuild@0.27.4)(tsx@4.23.5))
-
-  '@vitest/eslint-plugin@1.6.26(@typescript-eslint/eslint-plugin@8.66.0(@typescript-eslint/parser@8.66.0(eslint@10.8.0(supports-color@7.2.0))(supports-color@8.1.1)(typescript@6.0.3))(eslint@10.8.0(supports-color@7.2.0))(supports-color@8.1.1)(typescript@6.0.3))(eslint@10.8.0(supports-color@7.2.0))(supports-color@8.1.1)(typescript@6.0.3)(vitest@4.1.10)':
-    dependencies:
-      '@typescript-eslint/scope-manager': 8.67.0
-      '@typescript-eslint/utils': 8.67.0(eslint@10.8.0(supports-color@7.2.0))(supports-color@8.1.1)(typescript@6.0.3)
-      eslint: 10.8.0(supports-color@7.2.0)
-    optionalDependencies:
-      '@typescript-eslint/eslint-plugin': 8.66.0(@typescript-eslint/parser@8.66.0(eslint@10.8.0(supports-color@7.2.0))(supports-color@8.1.1)(typescript@6.0.3))(eslint@10.8.0(supports-color@7.2.0))(supports-color@8.1.1)(typescript@6.0.3)
-      typescript: 6.0.3
-      vitest: 4.1.10(@types/node@22.7.5)(@vitest/coverage-v8@4.1.10)(vite@8.0.3(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)(@types/node@22.7.5)(esbuild@0.27.4)(tsx@4.23.5))
-    transitivePeerDependencies:
-      - supports-color
 
   '@vitest/eslint-plugin@1.6.26(@typescript-eslint/eslint-plugin@8.66.0(@typescript-eslint/parser@8.66.0(eslint@10.8.0(supports-color@8.1.1))(supports-color@8.1.1)(typescript@6.0.3))(eslint@10.8.0(supports-color@8.1.1))(supports-color@8.1.1)(typescript@6.0.3))(eslint@10.8.0(supports-color@8.1.1))(supports-color@8.1.1)(typescript@6.0.3)(vitest@4.1.10)':
     dependencies:

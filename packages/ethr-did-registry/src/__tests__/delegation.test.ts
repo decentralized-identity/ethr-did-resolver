@@ -8,48 +8,6 @@ import type { EthereumDIDRegistry } from '../../typechain-types/index.js'
 import type { DIDAttributeChangedEvent, DIDDelegateChangedEvent } from '../../typechain-types/EthereumDIDRegistry.js'
 import { deployRegistry, signData } from './testUtils.js'
 
-/**
- * Delegate and attribute management suite, ported from the legacy suite
- * (../ethr-did-registry/test/registry.test.ts, chai/waffle/ethers-v5) to
- * vitest + ethers v6 (issue 07). The legacy describe blocks `addDelegate()`,
- * `revokeDelegate()`, `setAttribute()` and `revokeAttribute()` — msg.sender
- * and signature variants, including the nonce edge cases — are reproduced
- * here with the same scenarios, same test names and same expected outcomes.
- * The identity-owner sections of the legacy file live in registry.test.ts
- * (issue 06); each ported test file gets its own fresh EDR network, so the
- * two files are independent.
- *
- * Ownership setup (fresh network, single file): the legacy sections ran after
- * the `changeOwner()` tests in the same file, which left `owner(identity) ==
- * delegate2` (changed by delegate in "as new owner") and `owner(signerAddress)
- * == signerAddress2` (established by the `changeOwnerSigned` meta-tx). Both
- * states are reproduced in `beforeAll` so the ported sections see the same
- * world. `identity`'s setup tx (accounts[0] -> delegate2) is the canonical
- * one referenced by the events-history ticket (issue 13): it emits exactly
- * one DIDOwnerChanged with previousChange 0.
- *
- * Porting notes (ethers v5 → v6):
- * - `formatBytes32String`/`parseBytes32String` → `encodeBytes32String`/
- *   `decodeBytes32String`, `hexlify` → `toBeHex`, `zeroPad(hexlify(x), 32)` →
- *   `zeroPadValue(toBeHex(x), 32)`, `ethers.provider.getBlock` → harness
- *   `provider.getBlock`, `.toNumber()` → `Number(...)`
- * - chai `to.equal` → `.toBe`, `not.to.equal` → `.not.toBe`,
- *   `.to.be.lessThanOrEqual` → `.toBeLessThanOrEqual`,
- *   `rejectedWith`/`revertedWith` → `.rejects.toThrow` (v6 CallException
- *   messages embed `reason="bad_actor"`/`"bad_signature"`, so the regexes match)
- * - receipt events: v6 receipts have no `.events`; assertions parse
- *   `receipt.logs[0]` via `didReg.interface.parseLog(...)` cast to the
- *   generated typed event (same pattern as registry.test.ts)
- * - one legacy line `expect(parseBytes32String(event.args.delegateType),
- *   'attestor')` was a chai no-op (missing `.to.equal`); here it asserts for
- *   real, matching the sibling msg.sender assertion — the intent, not the bug
- *
- * The `Events` history walker at the end of this file (issue 13) walks
- * `identity`'s complete previousChange back-chain and asserts the full
- * five-event history emitted in this file; combined with the walker in
- * registry.test.ts, every event type the legacy `Events` scenario asserted
- * is covered — full legacy parity.
- */
 describe('ERC1056', () => {
   let didReg: EthereumDIDRegistry
   let didRegAddress: string

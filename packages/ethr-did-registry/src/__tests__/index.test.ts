@@ -2,35 +2,11 @@ import { expect } from 'chai'
 import { describe, it } from 'mocha'
 import { Contract, ContractFactory } from 'ethers'
 
-/**
- * Package entry and published-surface tests.
- *
- * Every import below is by package name (`ethr-did-registry`, ...). Node self-reference
- * resolution routes those through the package's own `exports` map, so the tests exercise
- * the real consumer-facing wiring — the built `dist/` entry, the deep subpath conditions,
- * the raw artifact passthroughs — rather than the source files. That is why the test
- * script builds `dist/` first (`hardhat compile && tsc && vitest run`).
- *
- * Value/type naming collision: the entry exports the compiled artifact as the
- * `EthereumDIDRegistry` *value* and the generated typed contract as the `EthereumDIDRegistry`
- * *type* (same name, two declaration spaces — see `docs/adr/0001-registry-package-modern-scaffolding.md`
- * and issue 03's notes). A plain `import { EthereumDIDRegistry }` binds both: in value
- * position it is the ABI artifact, in type position it is the typed contract. The
- * `import type` alias below documents the type-only form.
- *
- * Note: `expectTypeOf` assertions (vitest) are removed — TypeScript compilation
- * catches type errors. Chai has no type-level assertions.
- */
 import { EthereumDIDRegistry, EthereumDIDRegistry__factory } from 'ethr-did-registry'
 import artifactRaw from 'ethr-did-registry/artifacts/contracts/EthereumDIDRegistry.sol/EthereumDIDRegistry.json' with { type: 'json' }
 import { EthereumDIDRegistry__factory as BarrelFactory } from 'ethr-did-registry/typechain-types'
 import { EthereumDIDRegistry__factory as DeepFileFactory } from 'ethr-did-registry/typechain-types/factories/EthereumDIDRegistry__factory'
 
-/**
- * Node's `import.meta.resolve` is a runtime API not covered by the ES2022 lib types
- * (this package has no `@types/node`); the single cast keeps the editor quiet while
- * vitest verifies the resolution at runtime.
- */
 const resolveImport = (specifier: string): string =>
   (import.meta as ImportMeta & { resolve: (specifier: string) => string }).resolve(specifier)
 

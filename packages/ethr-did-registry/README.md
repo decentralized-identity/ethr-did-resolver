@@ -448,15 +448,15 @@ step that records the deployment.
 The package is a member of the pnpm workspace at the monorepo root. From this
 package directory (or from the root with `--filter ethr-did-registry`):
 
-| Command               | What it does                                                        |
-|-----------------------|---------------------------------------------------------------------|
-| `pnpm install`        | Install dependencies (run once from the monorepo root).             |
-| `pnpm build`          | Compile contracts (`hardhat compile`) and the TS entry (`tsc`).     |
-| `pnpm test`           | Compile contracts and run the vitest suite against a local EDR network. |
-| `pnpm run test:ci`    | Same as `pnpm test`, with coverage (`--coverage`).                  |
-| `pnpm lint`           | `solhint` on contracts, `eslint` on TS sources and scripts.         |
-| `pnpm format`         | `prettier` (with the solidity plugin) on contracts and TS sources.  |
-| `pnpm clean`          | Remove generated artifacts, caches, typechain types and dist output.|
+| Command               | What it does                                                                   |
+|-----------------------|--------------------------------------------------------------------------------|
+| `pnpm install`        | Install dependencies (run once from the monorepo root).                        |
+| `pnpm build`          | Compile contracts (`hardhat compile`) and the TS entry (`tsc`).                |
+| `pnpm test`           | Compile contracts and run the hardhat suite against a local EDR network. |
+| `pnpm run test:ci`    | Same as `pnpm test`, with coverage (`--coverage`).                             |
+| `pnpm lint`           | `solhint` on contracts, `eslint` on TS sources and scripts.                    |
+| `pnpm format`         | `prettier` (with the solidity plugin) on contracts and TS sources.             |
+| `pnpm clean`          | Remove generated artifacts, caches, typechain types and dist output.           |
 
 ## License
 
