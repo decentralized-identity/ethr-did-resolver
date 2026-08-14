@@ -1,5 +1,5 @@
 // scripts/compile.ts
-// Compile Solidity contracts using solc-js (npm package solc@0.8.28)
+// Compile Solidity contracts using solc-js (see examples/ethr-7702/package.json for the pinned solc version)
 // Output: artifacts/<ContractName>.json containing { abi, bytecode }
 // Usage: pnpm tsx scripts/compile.ts
 

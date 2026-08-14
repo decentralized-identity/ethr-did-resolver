@@ -189,6 +189,14 @@ const ATTR_NAME = stringToBytes32('did/pub/Ed25519/veriKey/base64') as `0x${stri
 // prefix = first 4 bytes of ATTR_NAME
 const ALLOWED_PREFIX = ATTR_NAME.slice(0, 10) as `0x${string}` // '0x' + 8 hex chars = bytes4
 
+// Caveat terms: abi.encodePacked(bytes4 allowedPrefix, address allowedTarget).
+// Binds the delegation to both the attribute-name prefix AND the specific
+// registry contract — without the target, a delegate could redirect the same
+// setAttribute-shaped calldata to any contract sharing the selector.
+function encodeEnforcerTerms(prefix: `0x${string}`, target: `0x${string}`): `0x${string}` {
+  return `${prefix}${target.slice(2).toLowerCase()}` as `0x${string}`
+}
+
 // Wrong attribute: starts with 'svc/' (0x7376632f) — different 4-byte prefix than 'did/' (0x6469642f)
 const WRONG_ATTR_NAME = stringToBytes32('svc/LinkedDomains/serviceEndpoint/https') as `0x${string}`
 
@@ -277,7 +285,7 @@ describe('Phase 13: MetaMask Delegation Framework', () => {
     //         call setAttribute on the DID registry, constrained to allowed prefix.
     const caveat: Caveat = {
       enforcer: contracts.didAttributeEnforcer,
-      terms: ALLOWED_PREFIX, // bytes4 allowed prefix
+      terms: encodeEnforcerTerms(ALLOWED_PREFIX, contracts.registry),
       args: '0x',
     }
 
@@ -362,7 +370,7 @@ describe('Phase 13: MetaMask Delegation Framework', () => {
     // Caveat: only allow ATTR_NAME prefix (did/pub/...)
     const caveat: Caveat = {
       enforcer: contracts.didAttributeEnforcer,
-      terms: ALLOWED_PREFIX,
+      terms: encodeEnforcerTerms(ALLOWED_PREFIX, contracts.registry),
       args: '0x',
     }
 
@@ -456,7 +464,7 @@ describe('Phase 13: MetaMask Delegation Framework', () => {
 
     const caveat: Caveat = {
       enforcer: contracts.didAttributeEnforcer,
-      terms: ALLOWED_PREFIX,
+      terms: encodeEnforcerTerms(ALLOWED_PREFIX, contracts.registry),
       args: '0x',
     }
     const delegation: Omit<Delegation, 'signature'> = {
@@ -533,7 +541,7 @@ describe('Phase 13: MetaMask Delegation Framework', () => {
 
     const caveat: Caveat = {
       enforcer: contracts.didAttributeEnforcer,
-      terms: ALLOWED_PREFIX,
+      terms: encodeEnforcerTerms(ALLOWED_PREFIX, contracts.registry),
       args: '0x',
     }
     const delegation: Omit<Delegation, 'signature'> = {
@@ -567,6 +575,78 @@ describe('Phase 13: MetaMask Delegation Framework', () => {
       args: [eoaAccount.address, ATTR_NAME, ATTR_VALUE],
     })
     const executionCalldata = encodeExecution(contracts.registry, 0n, revokeCalldata)
+    const permissionContext = encodeDelegations([signedDelegation])
+
+    const redeemHash = await relayerWallet.writeContract({
+      address: contracts.delegationManager,
+      abi: DelegationManagerABI,
+      functionName: 'redeemDelegations',
+      args: [[permissionContext], [SINGLE_DEFAULT_MODE], [executionCalldata]],
+      gas: 500_000n,
+      chain: anvilChain,
+      account: relayerAccount,
+    })
+    const receipt = await publicClient.waitForTransactionReceipt({ hash: redeemHash })
+    expect(receipt.status).toBe('reverted')
+  })
+
+  // -------------------------------------------------------------------------
+  // Enforcer: redirecting the setAttribute-shaped call to a non-approved
+  // target contract is rejected — the prefix check alone is not enough to
+  // bind the delegation to the real DID registry.
+  // -------------------------------------------------------------------------
+
+  it('enforcer reverts when the execution target is not the approved registry', async () => {
+    const { rpcUrl, contracts } = loadEnv()
+
+    const eoaAccount = privateKeyToAccount(keys[8])
+    const relayerAccount = privateKeyToAccount(keys[1])
+
+    const publicClient = createPublicClient({ chain: anvilChain, transport: http(rpcUrl) })
+    const eoaWallet = createWalletClient({ chain: anvilChain, transport: http(rpcUrl), account: eoaAccount })
+    const relayerWallet = createWalletClient({ chain: anvilChain, transport: http(rpcUrl), account: relayerAccount })
+
+    // EIP-7702 delegate to statelessDeleGator
+    const auth = await eoaWallet.signAuthorization({
+      contractAddress: contracts.statelessDeleGator,
+      executor: relayerAccount.address,
+    })
+    await publicClient.waitForTransactionReceipt({
+      hash: await relayerWallet.sendTransaction({
+        to: eoaAccount.address,
+        data: '0x',
+        gas: 100_000n,
+        chain: anvilChain,
+        account: relayerAccount,
+        authorizationList: [auth],
+      }),
+    })
+
+    // Caveat approves ONLY `contracts.registry` as the execution target.
+    const caveat: Caveat = {
+      enforcer: contracts.didAttributeEnforcer,
+      terms: encodeEnforcerTerms(ALLOWED_PREFIX, contracts.registry),
+      args: '0x',
+    }
+    const delegation: Omit<Delegation, 'signature'> = {
+      delegate: relayerAccount.address,
+      delegator: eoaAccount.address,
+      authority: ROOT_AUTHORITY as `0x${string}`,
+      caveats: [caveat],
+      salt: 100n,
+    }
+    const sig = await signDelegation(eoaWallet, publicClient, delegation, contracts.delegationManager)
+    const signedDelegation: Delegation = { ...delegation, signature: sig }
+
+    // Same well-formed setAttribute calldata (correct selector + allowed prefix),
+    // but redirected at `contracts.didManager` instead of the approved registry.
+    // Before the fix, the enforcer never inspected the target, so this would pass.
+    const setAttrCalldata = encodeFunctionData({
+      abi: REGISTRY_SET_ATTRIBUTE_ABI,
+      functionName: 'setAttribute',
+      args: [eoaAccount.address, ATTR_NAME, ATTR_VALUE, VALIDITY],
+    })
+    const executionCalldata = encodeExecution(contracts.didManager, 0n, setAttrCalldata)
     const permissionContext = encodeDelegations([signedDelegation])
 
     const redeemHash = await relayerWallet.writeContract({

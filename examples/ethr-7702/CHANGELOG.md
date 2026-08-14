@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.14.3] — Security fix: DIDAttributeEnforcer target binding
+
+### Fixed (Security)
+- `contracts/DIDAttributeEnforcer.sol` — `beforeHook` previously only checked the 4-byte `setAttribute` selector and the attribute-name prefix; it never validated the execution `target` address or the attached ETH `value`. A delegate could redirect the same setAttribute-shaped calldata to any attacker-controlled contract that happened to implement a function with the same selector, bypassing the intended "only the real DID registry" restriction, and the doc-commented "value must be 0" invariant was never enforced.
+  - `_terms` now encodes `abi.encodePacked(bytes4 allowedPrefix, address allowedTarget)` (24 bytes, was 4).
+  - `beforeHook` decodes `target` (first 20 bytes) and `value` (next 32 bytes) from `_executionCalldata` and requires `target == allowedTarget` and `value == 0` before checking the selector/prefix.
+- `test/metamask-delegation.test.ts` — caveats now build `terms` via `encodeEnforcerTerms(prefix, registryAddress)`; added a regression test asserting the enforcer reverts when the well-formed `setAttribute` calldata is redirected at a non-approved target contract.
+
+### Test suite
+- 65/65 root tests passing (13 files, +1 new target-binding regression test); typechecks clean.
+
 ## [1.14.2] — Docs refresh (README + articles)
 
 - Added missing `pnpm anvil` script to `package.json` (`anvil --hardfork prague`); README instructed it but it didn't exist.
