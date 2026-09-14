@@ -79,7 +79,7 @@ describe('ethrResolver (alt-chains)', () => {
       // The flashbots.net RPC endpoint is not an archive node - it returns empty logs for old blocks.
       // The integrity check detects the missing events and returns an actionable error.
       expect(result.didDocument).toBeNull()
-      expect(result.didResolutionMetadata.error).toBe('notFound')
+      expect(result.didResolutionMetadata.error).toBe('internalError')
       expect(result.didResolutionMetadata.message).toMatch(/archive node/)
     })
 

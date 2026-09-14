@@ -496,25 +496,49 @@ export class EthrDidResolver {
         }
       }
 
-      if (versionIdStr) {
-        blockTag = versionIdStr
-        const parsedBlockTag = Number.parseInt(blockTag as string, 10)
-        if (!Number.isNaN(parsedBlockTag)) {
-          blockTag = parsedBlockTag
-        } else {
-          blockTag = 'latest'
+      // A caller asking for a specific version must not silently receive the current one: a malformed, empty or
+      // repeated selector is an invalidOptions error instead of a fallback to the latest state.
+      if (qParams.getAll('versionId').length > 1 || qParams.getAll('versionTime').length > 1) {
+        return {
+          didResolutionMetadata: {
+            error: Errors.invalidOptions,
+            message: 'Repeated options: versionId and versionTime may each appear at most once.',
+          },
+          didDocumentMetadata: {},
+          didDocument: null,
         }
       }
 
-      if (versionTimeStr) {
-        if (/^\d+$/.test(versionTimeStr)) {
-          versionTimeTimestamp = parseInt(versionTimeStr, 10)
-        } else {
-          versionTimeTimestamp = Math.floor(new Date(versionTimeStr).getTime() / 1000)
+      if (versionIdStr !== null) {
+        const parsedBlockTag = /^\d+$/.test(versionIdStr) ? Number.parseInt(versionIdStr, 10) : Number.NaN
+        if (!Number.isSafeInteger(parsedBlockTag)) {
+          return {
+            didResolutionMetadata: {
+              error: Errors.invalidOptions,
+              message: `Invalid versionId '${versionIdStr}': expected a block number.`,
+            },
+            didDocumentMetadata: {},
+            didDocument: null,
+          }
         }
-        if (isNaN(versionTimeTimestamp)) {
-          versionTimeTimestamp = undefined
+        blockTag = parsedBlockTag
+      }
+
+      if (versionTimeStr !== null) {
+        const parsedTime = /^\d+$/.test(versionTimeStr)
+          ? Number.parseInt(versionTimeStr, 10)
+          : Math.floor(new Date(versionTimeStr).getTime() / 1000)
+        if (Number.isNaN(parsedTime)) {
+          return {
+            didResolutionMetadata: {
+              error: Errors.invalidOptions,
+              message: `Invalid versionTime '${versionTimeStr}': expected a unix timestamp in seconds or an ISO 8601 date/time.`,
+            },
+            didDocumentMetadata: {},
+            didDocument: null,
+          }
         }
+        versionTimeTimestamp = parsedTime
       }
     }
 
@@ -611,7 +635,8 @@ export class EthrDidResolver {
 
       return {
         didResolutionMetadata: {
-          error: Errors.notFound,
+          // Registration is implicit, so the DID exists: any failure here is an unexpected error (DID Resolution).
+          error: Errors.internalError,
           message: `${message}${hint}`,
         },
         didDocumentMetadata: {},
