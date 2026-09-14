@@ -435,6 +435,57 @@ describe('versioning', () => {
     })
   })
 
+  it('returns invalidOptions error when versionId is neither a block number nor latest', async () => {
+    const values = ['123junk', 'LATEST', '', '-1', '1e3', '9007199254740993']
+    expect.assertions(values.length)
+    const { shortDID: identifier } = await randomAccount(provider)
+    for (const versionId of values) {
+      const result = await didResolver.resolve(`${identifier}?versionId=${versionId}`)
+      expect(result).toEqual({
+        didDocumentMetadata: {},
+        didResolutionMetadata: {
+          error: 'invalidOptions',
+          message: `Invalid versionId '${versionId}': expected a block number or 'latest'.`,
+        },
+        didDocument: null,
+      })
+    }
+  })
+
+  it('returns invalidOptions error when versionTime is not a timestamp or a date', async () => {
+    const values = ['yesterday', '2021-13-45', '']
+    expect.assertions(values.length)
+    const { shortDID: identifier } = await randomAccount(provider)
+    for (const versionTime of values) {
+      const result = await didResolver.resolve(`${identifier}?versionTime=${versionTime}`)
+      expect(result).toEqual({
+        didDocumentMetadata: {},
+        didResolutionMetadata: {
+          error: 'invalidOptions',
+          message: `Invalid versionTime '${versionTime}': expected a unix timestamp in seconds or an ISO 8601 date/time.`,
+        },
+        didDocument: null,
+      })
+    }
+  })
+
+  it('returns invalidOptions error when versionId or versionTime is repeated', async () => {
+    const queries = ['versionId=1&versionId=2', 'versionTime=1000000000&versionTime=1000000001']
+    expect.assertions(queries.length)
+    const { shortDID: identifier } = await randomAccount(provider)
+    for (const query of queries) {
+      const result = await didResolver.resolve(`${identifier}?${query}`)
+      expect(result).toEqual({
+        didDocumentMetadata: {},
+        didResolutionMetadata: {
+          error: 'invalidOptions',
+          message: 'Repeated options: versionId and versionTime may each appear at most once.',
+        },
+        didDocument: null,
+      })
+    }
+  })
+
   it('returns invalidOptions error when both versionId and versionTime are set', async () => {
     expect.assertions(1)
     const { shortDID: identifier } = await randomAccount(provider)

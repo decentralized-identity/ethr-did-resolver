@@ -219,9 +219,8 @@ export function interpretIdentifier(identifier: string): { address: string; publ
 
 export const Errors = {
   /**
-   * The resolver has failed to construct the DID document.
-   * This can be caused by a network issue, a wrong registry address or malformed logs while parsing the registry
-   * history. Please inspect the `DIDResolutionMetadata.message` to debug further.
+   * The DID document could not be found. `EthrDidResolver` does not return it for resolution failures: registration
+   * is implicit, so every `did:ethr` on a configured network exists, and a failure is reported as `internalError`.
    */
   notFound: 'notFound',
 
@@ -244,6 +243,13 @@ export const Errors = {
    * The DID URL contains conflicting options, e.g. both versionId and versionTime.
    */
   invalidOptions: 'invalidOptions',
+
+  /**
+   * An unexpected error occurred during resolution, e.g. the RPC endpoint could not be reached, timed out, answered
+   * with a server error or lacks the historical state (non-archive node). Nothing was learned about the DID, so a
+   * caller can retry or fail over. Please inspect the `DIDResolutionMetadata.message` for the hint.
+   */
+  internalError: 'internalError',
 } as const
 export type Errors = (typeof Errors)[keyof typeof Errors]
 
