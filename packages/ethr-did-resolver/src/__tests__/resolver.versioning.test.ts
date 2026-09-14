@@ -15,10 +15,10 @@ describe('versioning', () => {
     provider = reg.provider
   })
 
-  it('can resolve virgin DID at the latest block', async () => {
+  it('can resolve virgin DID with versionId=latest', async () => {
     expect.assertions(1)
     const { address: virginAddress, shortDID: virginDID } = await randomAccount(provider)
-    const result = await didResolver.resolve(virginDID)
+    const result = await didResolver.resolve(`${virginDID}?versionId=latest`)
     expect(result).toEqual({
       didDocumentMetadata: {},
       didResolutionMetadata: {
@@ -71,13 +71,13 @@ describe('versioning', () => {
     })
   })
 
-  it('can resolve modified did at the latest block', async () => {
+  it('can resolve modified did with versionId=latest', async () => {
     expect.assertions(2)
     const { shortDID: identifier, signer } = await randomAccount(provider)
     const { address: newOwner } = await randomAccount(provider)
     const blockHeightBeforeChange = (await provider.getBlock('latest'))!.number
     await new EthrDidController(identifier, registryContract, signer).changeOwner(newOwner)
-    const result = await didResolver.resolve(identifier)
+    const result = await didResolver.resolve(`${identifier}?versionId=latest`)
     expect(parseInt(result?.didDocumentMetadata.versionId ?? '')).toBeGreaterThanOrEqual(blockHeightBeforeChange + 1)
     expect(result).toEqual({
       didDocumentMetadata: { versionId: expect.anything(), updated: expect.anything() },
@@ -435,8 +435,8 @@ describe('versioning', () => {
     })
   })
 
-  it('returns invalidOptions error when versionId is not a block number', async () => {
-    const values = ['123junk', 'latest', '', '-1', '1e3', '9007199254740993']
+  it('returns invalidOptions error when versionId is neither a block number nor latest', async () => {
+    const values = ['123junk', 'LATEST', '', '-1', '1e3', '9007199254740993']
     expect.assertions(values.length)
     const { shortDID: identifier } = await randomAccount(provider)
     for (const versionId of values) {
@@ -445,7 +445,7 @@ describe('versioning', () => {
         didDocumentMetadata: {},
         didResolutionMetadata: {
           error: 'invalidOptions',
-          message: `Invalid versionId '${versionId}': expected a block number.`,
+          message: `Invalid versionId '${versionId}': expected a block number or 'latest'.`,
         },
         didDocument: null,
       })

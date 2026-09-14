@@ -509,13 +509,16 @@ export class EthrDidResolver {
         }
       }
 
-      if (versionIdStr !== null) {
+      if (versionIdStr === 'latest') {
+        // Not a block number, but the resolver has always resolved it to the latest state; kept for compatibility.
+        blockTag = 'latest'
+      } else if (versionIdStr !== null) {
         const parsedBlockTag = /^\d+$/.test(versionIdStr) ? Number.parseInt(versionIdStr, 10) : Number.NaN
         if (!Number.isSafeInteger(parsedBlockTag)) {
           return {
             didResolutionMetadata: {
               error: Errors.invalidOptions,
-              message: `Invalid versionId '${versionIdStr}': expected a block number.`,
+              message: `Invalid versionId '${versionIdStr}': expected a block number or 'latest'.`,
             },
             didDocumentMetadata: {},
             didDocument: null,
