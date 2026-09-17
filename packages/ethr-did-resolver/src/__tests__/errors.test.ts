@@ -90,7 +90,7 @@ describe('RPC failure handling', () => {
     const parsed = { did, id: `dev:${address}`, method: 'ethr', didUrl: did }
     const result = await registryResolver.resolve(did, parsed as never, null as never, {})
     expect(result.didDocument).toBeNull()
-    expect(result.didResolutionMetadata.error).toBe('notFound')
+    expect(result.didResolutionMetadata.error).toBe('internalError')
     expect(result.didResolutionMetadata.message).toMatch(/missing response/)
   })
 
@@ -100,7 +100,7 @@ describe('RPC failure handling', () => {
     vi.spyOn(registryResolver, 'changeLog').mockRejectedValueOnce(new Error('missing response'))
     const parsed = { did, id: `dev:${address}`, method: 'ethr', didUrl: did }
     const result = await registryResolver.resolve(did, parsed as never, null as never, {})
-    expect(result.didResolutionMetadata.error).toBe('notFound')
+    expect(result.didResolutionMetadata.error).toBe('internalError')
     // Connectivity error on a non-historical query: should not mention archive nodes
     expect(result.didResolutionMetadata.message).toMatch(/reachable/)
     expect(result.didResolutionMetadata.message).not.toMatch(/archive/)
@@ -112,7 +112,7 @@ describe('RPC failure handling', () => {
     vi.spyOn(registryResolver, 'changeLog').mockRejectedValueOnce(new Error('missing trie node abc (path )'))
     const parsed = { did, id: `dev:${address}`, method: 'ethr', didUrl: did }
     const result = await registryResolver.resolve(did, parsed as never, null as never, {})
-    expect(result.didResolutionMetadata.error).toBe('notFound')
+    expect(result.didResolutionMetadata.error).toBe('internalError')
     expect(result.didResolutionMetadata.message).toMatch(/archive node/)
   })
 
@@ -124,7 +124,7 @@ describe('RPC failure handling', () => {
     )
     const parsed = { did, id: `dev:${address}`, method: 'ethr', didUrl: did }
     const result = await registryResolver.resolve(did, parsed as never, null as never, {})
-    expect(result.didResolutionMetadata.error).toBe('notFound')
+    expect(result.didResolutionMetadata.error).toBe('internalError')
     expect(result.didResolutionMetadata.message).toMatch(/archive node/)
   })
 
@@ -136,7 +136,7 @@ describe('RPC failure handling', () => {
     )
     const parsed = { did, id: `dev:${address}`, method: 'ethr', didUrl: did }
     const result = await registryResolver.resolve(did, parsed as never, null as never, {})
-    expect(result.didResolutionMetadata.error).toBe('notFound')
+    expect(result.didResolutionMetadata.error).toBe('internalError')
     expect(result.didResolutionMetadata.message).toMatch(/archive node/)
   })
 
@@ -147,7 +147,7 @@ describe('RPC failure handling', () => {
     vi.spyOn(registryResolver, 'getBlockMetadata').mockRejectedValueOnce(new Error('missing response'))
     const parsed = { did, id: `dev:${address}`, method: 'ethr', didUrl: did }
     const result = await registryResolver.resolve(did, parsed as never, null as never, { blockTag: 5 } as never)
-    expect(result.didResolutionMetadata.error).toBe('notFound')
+    expect(result.didResolutionMetadata.error).toBe('internalError')
     expect(result.didResolutionMetadata.message).toMatch(/archive node/)
   })
 
@@ -159,9 +159,33 @@ describe('RPC failure handling', () => {
     vi.spyOn(registryResolver, 'getBlockMetadata').mockRejectedValueOnce(timeoutErr)
     const parsed = { did, id: `dev:${address}`, method: 'ethr', didUrl: did }
     const result = await registryResolver.resolve(did, parsed as never, null as never, { blockTag: 5 } as never)
-    expect(result.didResolutionMetadata.error).toBe('notFound')
+    expect(result.didResolutionMetadata.error).toBe('internalError')
     expect(result.didResolutionMetadata.message).toMatch(/reachable/)
     expect(result.didResolutionMetadata.message).not.toMatch(/archive/)
+  })
+
+  it('returns internalError when the RPC endpoint cannot be reached', async () => {
+    expect.assertions(3)
+    const { shortDID: did, address } = await randomAccount(provider)
+    const networkErr = Object.assign(new Error('could not detect network'), { code: 'NETWORK_ERROR' })
+    vi.spyOn(registryResolver, 'changeLog').mockRejectedValueOnce(networkErr)
+    const parsed = { did, id: `dev:${address}`, method: 'ethr', didUrl: did }
+    const result = await registryResolver.resolve(did, parsed as never, null as never, {})
+    expect(result.didDocument).toBeNull()
+    expect(result.didResolutionMetadata.error).toBe('internalError')
+    expect(result.didResolutionMetadata.message).toMatch(/reachable/)
+  })
+
+  it('returns internalError for failures the RPC hints do not recognize', async () => {
+    expect.assertions(3)
+    const { shortDID: did, address } = await randomAccount(provider)
+    const refused = Object.assign(new Error('connect ECONNREFUSED 127.0.0.1:8545'), { code: 'ECONNREFUSED' })
+    vi.spyOn(registryResolver, 'changeLog').mockRejectedValueOnce(refused)
+    const parsed = { did, id: `dev:${address}`, method: 'ethr', didUrl: did }
+    const result = await registryResolver.resolve(did, parsed as never, null as never, {})
+    expect(result.didDocument).toBeNull()
+    expect(result.didResolutionMetadata.error).toBe('internalError')
+    expect(result.didResolutionMetadata.message).toBe('connect ECONNREFUSED 127.0.0.1:8545')
   })
 
   it('returns DIDResolutionResult when getBlockMetadata fails for a historical query', async () => {
@@ -172,7 +196,7 @@ describe('RPC failure handling', () => {
     // blockTag as a number triggers getBlockMetadata before changeLog
     const result = await registryResolver.resolve(did, parsed as never, null as never, { blockTag: 5 } as never)
     expect(result.didDocument).toBeNull()
-    expect(result.didResolutionMetadata.error).toBe('notFound')
+    expect(result.didResolutionMetadata.error).toBe('internalError')
     expect(result.didResolutionMetadata.message).toMatch(/archive node/)
   })
 
@@ -191,7 +215,7 @@ describe('RPC failure handling', () => {
     const result = await registryResolver.resolve(did, parsed as never, null as never, {})
     getLogsSpy.mockRestore()
     expect(result.didDocument).toBeNull()
-    expect(result.didResolutionMetadata.error).toBe('notFound')
+    expect(result.didResolutionMetadata.error).toBe('internalError')
     expect(result.didResolutionMetadata.message).toMatch(/archive node/)
   })
 })
