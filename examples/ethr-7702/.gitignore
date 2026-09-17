@@ -1,6 +1,7 @@
 node_modules/
 dist/
 coverage/
+artifacts/
 webapp/dist/
 artifacts/TimelockDIDManager7702.json
 .env
