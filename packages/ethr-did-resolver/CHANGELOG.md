@@ -1,5 +1,12 @@
 ## [14.1.1](https://github.com/decentralized-identity/ethr-did-resolver/compare/14.1.0...14.1.1) (2026-08-09)
 
+## 14.1.3
+
+### Patch Changes
+
+- 053316a: report resolution failures, including RPC connectivity, timeout, server and archive-node errors, as `internalError` instead of `notFound`
+- 053316a: reject malformed, empty and repeated `versionId` / `versionTime` query parameters with `invalidOptions` instead of resolving the latest state; `versionId` must be a block number
+
 ## 14.1.2
 
 ### Patch Changes
