@@ -5,4 +5,5 @@ allowBuilds:
   esbuild: false
 minimumReleaseAgeExclude:
   - solhint@6.2.4
-  - viem@2.55.16
+  - viem@2.56.7
+  - ox@0.14.45
