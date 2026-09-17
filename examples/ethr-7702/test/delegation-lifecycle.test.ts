@@ -374,8 +374,8 @@ describe('Pattern 10: Expiring Delegation (app-level TTL)', () => {
     })
     expect((await publicClient.waitForTransactionReceipt({ hash: hashConfigure })).status).toBe('success')
 
-    // Warp time past expiry
-    await testClient.increaseTime({ seconds: 120 }) // 2 minutes — past the 1-minute expiry
+    // Warp time past expiry — deterministically.
+    await testClient.setNextBlockTimestamp({ timestamp: expiryTimestamp + 600n }) // 10m past expiry
     await testClient.mine({ blocks: 1 })
 
     // Write after expiry — should revert
@@ -463,8 +463,8 @@ describe('Pattern 10: Expiring Delegation (app-level TTL)', () => {
     })
     expect(activeBefore).toBe(true)
 
-    // Warp past expiry
-    await testClient.increaseTime({ seconds: 60 })
+    // Warp past expiry — deterministically.
+    await testClient.setNextBlockTimestamp({ timestamp: expiryTimestamp + 3600n }) // 1h past expiry
     await testClient.mine({ blocks: 1 })
 
     // isActive() should be false now
@@ -507,8 +507,8 @@ describe('Pattern 10: Expiring Delegation (app-level TTL)', () => {
     })
     expect((await publicClient.waitForTransactionReceipt({ hash: h1 })).status).toBe('success')
 
-    // Warp past short expiry
-    await testClient.increaseTime({ seconds: 60 })
+    // Warp past short expiry — deterministically
+    await testClient.setNextBlockTimestamp({ timestamp: shortExpiry + 600n }) // 10m past short expiry
     await testClient.mine({ blocks: 1 })
 
     // Write should fail
