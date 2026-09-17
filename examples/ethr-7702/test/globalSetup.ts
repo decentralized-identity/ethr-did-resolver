@@ -8,7 +8,7 @@ import { fileURLToPath } from 'url'
 import { createPublicClient, createWalletClient, http } from 'viem'
 import { privateKeyToAccount } from 'viem/accounts'
 import { anvil as anvilChain } from 'viem/chains'
-import { startAnvil, stopAnvil, getAnvilPrivateKeys, type AnvilInstance } from '../src/utils/anvil.js'
+import { startAnvil, stopAnvil, getAnvilPrivateKeys, ANVIL_BINARY, type AnvilInstance } from '../src/utils/anvil.js'
 import { deployAll } from '../src/deploy.js'
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url))
@@ -30,6 +30,14 @@ function ensureArtifacts(): void {
 
 export async function setup(): Promise<void> {
   ensureArtifacts()
+
+  // Log the anvil version — timestamp/automine behavior varies across anvil
+  // releases (this caused a hard-to-reproduce flaky test once).
+  try {
+    console.log(`[globalSetup] ${execSync(`${ANVIL_BINARY} --version`).toString().trim().split('\n')[0]}`)
+  } catch {
+    // version check is best-effort only
+  }
 
   anvilInstance = await startAnvil()
 

@@ -3,7 +3,7 @@
 
 import { ChildProcess, spawn } from 'child_process'
 
-const ANVIL_BINARY = process.env.ANVIL_BINARY ?? `${process.env.HOME}/.foundry/bin/anvil`
+export const ANVIL_BINARY = process.env.ANVIL_BINARY ?? `${process.env.HOME}/.foundry/bin/anvil`
 const ANVIL_PORT = 8545
 const ANVIL_HOST = '127.0.0.1'
 export const ANVIL_RPC_URL = `http://${ANVIL_HOST}:${ANVIL_PORT}`
