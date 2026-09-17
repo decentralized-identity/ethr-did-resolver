@@ -351,6 +351,12 @@ describe('Pattern 10: Expiring Delegation (app-level TTL)', () => {
     const eoaWalletClient = createWalletClient({ chain: anvilChain, transport: http(rpcUrl), account: eoaAccount })
     const testClient = createTestClient({ chain: anvilChain, transport: http(rpcUrl), mode: 'anvil' })
 
+    // Anchor expiry on a freshly mined block. After the previous test's
+    // evm_revert (setup.ts), `latest` can be a stale reverted tip whose
+    // timestamp lags anvil's live block-stamping basis (anvil >= 1.6 stamps
+    // automined blocks near wall-clock time). Anchoring on a stale tip made
+    // the expiry appear already elapsed on slow CI.
+    await testClient.mine({ blocks: 1 })
     const block = await publicClient.getBlock()
     const expiryTimestamp = block.timestamp + 60n // 1 minute from now
 
@@ -432,8 +438,14 @@ describe('Pattern 10: Expiring Delegation (app-level TTL)', () => {
     const eoaWalletClient = createWalletClient({ chain: anvilChain, transport: http(rpcUrl), account: eoaAccount })
     const testClient = createTestClient({ chain: anvilChain, transport: http(rpcUrl), mode: 'anvil' })
 
+    // Anchor expiry on a freshly mined block — see note in
+    // 'write reverts after expiry (time-warp)' for why the reverted-tip
+    // timestamp can't be trusted on newer anvil versions.
+    // 5-minute margin: dwarfs any intra-test wall-clock advance (test
+    // timeout is 60s), so the pre-warp isActive() read can't race the expiry.
+    await testClient.mine({ blocks: 1 })
     const block = await publicClient.getBlock()
-    const expiryTimestamp = block.timestamp + 30n // 30 seconds
+    const expiryTimestamp = block.timestamp + 300n // 5 minutes
 
     // Delegate + configure
     const auth = await eoaWalletClient.signAuthorization({
@@ -484,8 +496,11 @@ describe('Pattern 10: Expiring Delegation (app-level TTL)', () => {
     const eoaWalletClient = createWalletClient({ chain: anvilChain, transport: http(rpcUrl), account: eoaAccount })
     const testClient = createTestClient({ chain: anvilChain, transport: http(rpcUrl), mode: 'anvil' })
 
+    // Freshly mined anchor
+    // 5-minute margin (see 'isActive() returns false after expiry').
+    await testClient.mine({ blocks: 1 })
     const block = await publicClient.getBlock()
-    const shortExpiry = block.timestamp + 30n
+    const shortExpiry = block.timestamp + 300n
 
     // Delegate + configure short expiry
     const auth = await eoaWalletClient.signAuthorization({
