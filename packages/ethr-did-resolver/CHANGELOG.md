@@ -4,7 +4,7 @@
 
 ### Patch Changes
 
-- 0789218: exports refactored for better ESM/CJS separation
+- f6cbe15: exports refactored for better ESM/CJS separation
 
 ## 14.1.3
 
