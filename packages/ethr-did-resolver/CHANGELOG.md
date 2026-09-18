@@ -1,5 +1,11 @@
 ## [14.1.1](https://github.com/decentralized-identity/ethr-did-resolver/compare/14.1.0...14.1.1) (2026-08-09)
 
+## 14.1.4
+
+### Patch Changes
+
+- f6cbe15: exports refactored for better ESM/CJS separation
+
 ## 14.1.3
 
 ### Patch Changes
