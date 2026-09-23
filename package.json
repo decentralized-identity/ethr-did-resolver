@@ -16,7 +16,7 @@
   "packageManager": "pnpm@12.5.1",
   "devDependencies": {
     "@changesets/cli": "3.0.3",
-    "prettier": "3.9.7",
+    "prettier": "3.9.8",
     "prettier-plugin-solidity": "2.4.1"
   }
 }
