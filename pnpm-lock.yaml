@@ -300,8 +300,8 @@ importers:
   packages/ethr-did-resolver:
     dependencies:
       did-resolver:
-        specifier: ^5.0.1
-        version: 5.0.1
+        specifier: ^6.0.0
+        version: 6.0.0
       ethers:
         specifier: ^6.16.0
         version: 6.17.0
@@ -1707,6 +1707,9 @@ packages:
 
   did-resolver@5.0.1:
     resolution: {integrity: sha512-AtbIfBt/D9Z6GeNKhm1AzCbF7y5PhsNukgmVYnsdxbIX8UAsquQpbm8ECfPwDRXAOM3EsGdHheK5WMojcPlAPg==}
+
+  did-resolver@6.0.0:
+    resolution: {integrity: sha512-qYlNpucsgfBE0foIqlnEjLx7ZvMTUOkPeIjOhVKPJKm4h8afFNS78zDLbiJPZ2yvY3Z7C79FW1UHSRyehRCpOg==}
 
   diff@7.0.0:
     resolution: {integrity: sha512-PJWHUb1RFevKCwaFA9RlG5tCd+FO5iRh9A8HEtkmBH2Li03iJriB6m6JIN4rGz3K3JLawI7/veA1xzRKP6ISBw==}
@@ -4199,6 +4202,8 @@ snapshots:
   detect-libc@2.1.2: {}
 
   did-resolver@5.0.1: {}
+
+  did-resolver@6.0.0: {}
 
   diff@7.0.0: {}
 
