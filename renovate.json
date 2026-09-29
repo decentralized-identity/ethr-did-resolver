@@ -1,35 +1,33 @@
 {
-  "extends": [
-    "config:base",
-    "group:allNonMajor"
-  ],
-  "labels": [
-    "maintenance"
-  ],
+  "extends": ["config:recommended", "group:allNonMajor"],
+  "labels": ["maintenance"],
   "automergeType": "branch",
   "automerge": true,
+  "minimumReleaseAge": "3 days",
+  "minimumReleaseAgeBehaviour": "timestamp-optional",
   "packageRules": [
     {
-      "matchPackagePatterns": [
-        "did"
-      ],
-      "matchUpdateTypes": [
-        "bump",
-        "patch",
-        "minor",
-        "major"
-      ],
-      "groupName": "did-dependencies",
-      "commitMessagePrefix": "fix(deps):"
+      "description": "Lengthen the minimum release age",
+      "matchUpdateTypes": ["bump", "patch", "minor", "major"],
+      "minimumReleaseAge": "3 days"
     },
     {
-      "matchDepTypes": [
-        "devDependencies"
-      ],
+      "matchUpdateTypes": ["bump", "patch", "minor", "major"],
+      "groupName": "did-dependencies",
+      "commitMessagePrefix": "fix(deps):",
+      "matchPackageNames": ["/did/"]
+    },
+    {
+      "matchDepTypes": ["devDependencies"],
       "groupName": "devDeps",
-      "schedule": [
-        "before 5am on Monday"
-      ]
+      "extends": ["schedule:earlyMondays"]
+    },
+    {
+      "description": "Track TypeScript independently from the other devDeps.",
+      "matchPackageNames": ["typescript", "@typescript/*"],
+      "minimumReleaseAge": null,
+      "groupName": "typescript",
+      "extends": ["schedule:earlyMondays"]
     }
   ]
 }
