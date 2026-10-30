@@ -1,5 +1,6 @@
-import { BlockTag, encodeBase58, encodeBase64, getAddress, toUtf8String } from 'ethers'
+import { BlockTag, encodeBase58, encodeBase64, getAddress, toUtf8String, type Contract, type LogParams } from 'ethers'
 import { ConfigurationOptions, ConfiguredNetworks, configureResolverWithNetworks } from './configuration.js'
+import { isArbitrumFamily, mapL1PointerToL2Range } from './arbitrumFallback.js'
 
 import type {
   ContextEntry,
@@ -99,6 +100,12 @@ export function getResolver(options: ConfigurationOptions): Record<string, DIDRe
 
 export class EthrDidResolver {
   private readonly contracts: ConfiguredNetworks
+  /**
+   * Cache of Arbitrum-family detection per network id. On Arbitrum-family
+   * chains the registry stores an L1 block estimate in `changed()`, which
+   * cannot be used as a local block number for `eth_getLogs`.
+   */
+  private readonly arbitrumFamilyChains = new Map<string, boolean>()
 
   constructor(_options: ConfigurationOptions) {
     this.contracts = configureResolverWithNetworks(_options)
@@ -145,6 +152,9 @@ export class EthrDidResolver {
     const controllerKey = publicKey
 
     let previousChange = Number(await this.previousChange(address, networkId, blockTag))
+    // History pointers strictly decrease while walking, so on the Arbitrum
+    // fallback each later bucket lies entirely below the previous one.
+    let bucketCeil: number | undefined
 
     while (previousChange !== 0) {
       const blockNumber = previousChange
@@ -159,9 +169,33 @@ export class EthrDidResolver {
         provider.getBlock(blockNumber),
       ])
       if (logs.length === 0) {
+        // On Arbitrum-family chains `previousChange` is an L1 block estimate,
+        // not a local block height - try resolving the local block range it
+        // maps to before giving up.
+        const bucket = await this.arbitrumL1PointerBucket(
+          address,
+          networkId,
+          previousChange,
+          chainId,
+          registryAddress,
+          contract,
+          bucketCeil
+        )
+        if (bucket) {
+          bucketCeil = bucket.bucketStart - 1
+          previousChange = bucket.previousChange
+          bucket.events.reverse()
+          for (const event of bucket.events) history.unshift(event)
+          continue
+        }
+        // The archive-node hint below is misleading on Arbitrum-family chains
+        // (an archive node fails the same way), so say so when detected.
+        const arbitrumNote = this.arbitrumFamilyChains.get(networkId)
+          ? ' On Arbitrum-family chains changed() stores an L1 block estimate rather than the local block height, so the archive-node hint above may not apply.'
+          : ''
         throw new Error(
           `No logs found for block ${blockNumber} but previousChange points here. ` +
-            `The RPC node may not have historical log data. Use an archive node for complete DID resolution.`
+            `The RPC node may not have historical log data. Use an archive node for complete DID resolution.${arbitrumNote}`
         )
       }
       if (!block) {
@@ -181,6 +215,92 @@ export class EthrDidResolver {
     }
 
     return { address, history, controllerKey, chainId }
+  }
+
+  /**
+   * Arbitrum-family fallback for a `changed()` pointer that found no logs.
+   *
+   * On Arbitrum-family chains the pointer is an L1 block estimate, so this
+   * maps it to the contiguous range of local blocks whose header
+   * `l1BlockNumber` equals it, decodes that bucket's logs (each block with its
+   * own timestamp, all compared against the L1 pointer - never a local height),
+   * and returns the events plus the next (strictly older) pointer. Returns
+   * null when the chain is not Arbitrum-family or the pointer cannot be mapped.
+   */
+  private async arbitrumL1PointerBucket(
+    address: string,
+    networkId: string,
+    l1Pointer: number,
+    chainId: number,
+    registryAddress: string,
+    contract: Contract,
+    maxBlock?: number
+  ): Promise<{ events: CanonicalDIDEvent[]; previousChange: number; bucketStart: number } | null> {
+    const provider = contract.runner?.provider
+    if (!provider) return null
+    let isArbitrum = this.arbitrumFamilyChains.get(networkId)
+    if (isArbitrum === undefined) {
+      try {
+        isArbitrum = await isArbitrumFamily(provider)
+      } catch {
+        return null
+      }
+      this.arbitrumFamilyChains.set(networkId, isArbitrum)
+    }
+    if (!isArbitrum) return null
+    let range: Awaited<ReturnType<typeof mapL1PointerToL2Range>>
+    try {
+      range = await mapL1PointerToL2Range(provider, l1Pointer, maxBlock)
+    } catch {
+      return null
+    }
+    if (!range) return null
+    let logs: LogParams[]
+    try {
+      logs = await provider.getLogs({
+        address: registryAddress,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        topics: [null as any, `0x000000000000000000000000${address.slice(2)}`],
+        fromBlock: range.fromBlock,
+        toBlock: range.toBlock,
+      })
+    } catch {
+      return null
+    }
+    if (logs.length === 0) return null
+
+    const byBlock = new Map<number, LogParams[]>()
+    for (const log of logs) {
+      const bucket = byBlock.get(log.blockNumber)
+      if (bucket) bucket.push(log)
+      else byBlock.set(log.blockNumber, [log])
+    }
+    const events: CanonicalDIDEvent[] = []
+    let previousChange = 0
+    const blockNumbers = [...byBlock.keys()].sort((a, b) => a - b)
+    for (const blockNumber of blockNumbers) {
+      const timestamp = range.timestamps.get(blockNumber)
+      const blockLogs = byBlock.get(blockNumber)
+      if (timestamp === undefined || !blockLogs) return null
+      const { events: blockEvents, previousChange: blockPointer } = logDecoder(
+        contract,
+        blockLogs,
+        blockNumber,
+        timestamp,
+        chainId,
+        registryAddress,
+        // Compare pointers against the L1 estimate, not a local block height:
+        // an L1 estimate is far below any local height, so the local height
+        // would wrongly accept this bucket's own pointer as its predecessor.
+        l1Pointer
+      )
+      events.push(...blockEvents)
+      if (blockPointer !== 0 && (previousChange === 0 || blockPointer < previousChange)) {
+        previousChange = blockPointer
+      }
+    }
+    events.sort((a, b) => a.blockNumber - b.blockNumber || a.logIndex - b.logIndex)
+    return { events, previousChange, bucketStart: range.fromBlock }
   }
 
   wrapDidDocument(

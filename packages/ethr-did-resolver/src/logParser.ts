@@ -66,10 +66,19 @@ export interface DecodedLogs {
 
 /**
  * Decodes raw logs in a single pass, returning both:
- * - `events`: valid DID events as CanonicalDIDEvent objects, sorted by logIndex ASC
- *   (non-DID events like non-UTF-8 bytes32 are filtered out)
+ * - `events`: valid DID events as CanonicalDIDEvent objects, sorted by
+ *   (blockNumber, logIndex) ASC (non-DID events like non-UTF-8 bytes32 are
+ *   filtered out)
  * - `previousChange`: the earliest valid previousChange pointer found across ALL logs
  *   (including filtered ones), so chain-walking is independent of event filtering
+ *
+ * @param pointerBound - exclusive upper bound for collected `previousChange`
+ *   pointers. Defaults to `blockNumber`, which is correct when every log comes
+ *   from that single block. When the logs span several blocks (e.g. the
+ *   Arbitrum L1-pointer bucket fallback), pass the pointer the bucket was
+ *   resolved from instead: an L1 estimate is far below any local block height,
+ *   so using a local height as the bound would wrongly accept the bucket's own
+ *   pointer as its predecessor and make the history walk loop forever.
  */
 export function logDecoder(
   contract: Contract,
@@ -77,7 +86,8 @@ export function logDecoder(
   blockNumber: number,
   blockTimestamp: number,
   chainId: number,
-  registryAddress: string
+  registryAddress: string,
+  pointerBound: number = blockNumber
 ): DecodedLogs {
   let previousChange = 0
   const events: CanonicalDIDEvent[] = []
@@ -85,12 +95,12 @@ export function logDecoder(
     const parsed = contract.interface.parseLog({ topics: [...log.topics], data: log.data })
     if (!parsed) continue
     const pc = extractPreviousChange(parsed)
-    if (pc > 0 && pc < blockNumber && (previousChange === 0 || pc < previousChange)) {
+    if (pc > 0 && pc < pointerBound && (previousChange === 0 || pc < previousChange)) {
       previousChange = pc
     }
     const event = toCanonicalEvent(parsed, log, blockTimestamp, chainId, registryAddress)
     if (event) events.push(event)
   }
-  events.sort((a, b) => a.logIndex - b.logIndex)
+  events.sort((a, b) => a.blockNumber - b.blockNumber || a.logIndex - b.logIndex)
   return { events, previousChange }
 }
