@@ -65,7 +65,7 @@
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "8.72.1",
     "@typescript-eslint/parser": "8.72.1",
-    "@vitest/coverage-v8": "5.0.5",
+    "@vitest/coverage-v8": "5.1.0",
     "@vitest/eslint-plugin": "1.6.28",
     "eslint": "10.14.0",
     "eslint-config-prettier": "10.1.8",
@@ -73,7 +73,7 @@
     "hardhat": "3.21.2",
     "prettier": "3.9.10",
     "typescript": "6.0.3",
-    "vitest": "5.0.5"
+    "vitest": "5.1.0"
   },
   "dependencies": {
     "did-resolver": "^6.0.0",
